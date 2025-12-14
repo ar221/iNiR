@@ -104,6 +104,16 @@ case "${SKIP_QUICKSHELL}" in
     
     v mkdir -p "$II_TARGET"
     
+    # Create backup before update (if this is an update)
+    if [[ "${IS_UPDATE}" == "true" ]]; then
+      log_info "Creating backup before update..."
+      create_update_backup "$II_TARGET" >/dev/null
+    fi
+    
+    # Generate manifest BEFORE syncing (to know what should exist)
+    log_info "Generating file manifest..."
+    generate_manifest "$II_SOURCE" "${II_TARGET}/.ii-manifest.new"
+    
     # Copy all .qml files from root (auto-detect, no manual list needed)
     for qml_file in "${II_SOURCE}"/*.qml; do
       if [[ -f "$qml_file" ]]; then
@@ -124,11 +134,39 @@ case "${SKIP_QUICKSHELL}" in
       install_file "${II_SOURCE}/requirements.txt" "${II_TARGET}/requirements.txt"
     fi
     
+    # Finalize manifest
+    mv "${II_TARGET}/.ii-manifest.new" "${II_TARGET}/.ii-manifest"
+    
+    # Cleanup orphan files (files that no longer exist in repo)
+    if [[ "${IS_UPDATE}" == "true" ]]; then
+      log_info "Cleaning up orphan files..."
+      cleanup_orphans "$II_TARGET" "${II_TARGET}/.ii-manifest"
+    fi
+    
+    # Fix script permissions
+    log_info "Setting script permissions..."
+    find "$II_TARGET/scripts" \( -name "*.sh" -o -name "*.fish" -o -name "*.py" \) -exec chmod +x {} \; 2>/dev/null || true
+    
     log_success "Quickshell ii config installed"
     
     # Install Python packages now that requirements.txt is in place
     showfun install-python-packages
     v install-python-packages
+    
+    # Verify installation (only on updates, not fresh install)
+    if [[ "${IS_UPDATE}" == "true" && "${SKIP_VERIFICATION}" != "true" ]]; then
+      log_info "Verifying installation..."
+      if ! verify_qs_loads 8; then
+        log_error "Verification failed!"
+        echo ""
+        echo -e "${STY_YELLOW}The update may have issues. Options:${STY_RST}"
+        echo "  1. Run ${STY_CYAN}./setup doctor${STY_RST} to diagnose"
+        echo "  2. Run ${STY_CYAN}./setup restore${STY_RST} to rollback"
+        echo ""
+      else
+        log_success "Verification passed"
+      fi
+    fi
     ;;
 esac
 

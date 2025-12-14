@@ -19,6 +19,8 @@ source ./sdata/lib/tui.sh
 source ./sdata/lib/conflicts.sh
 source ./sdata/lib/migrations.sh
 source ./sdata/lib/versioning.sh
+source ./sdata/lib/robust-update.sh
+source ./sdata/lib/doctor.sh
 
 prevent_sudo_or_root
 set -e
@@ -42,6 +44,7 @@ Syntax:
 Subcommands:
   install        Install ii-niri (dependencies + configs)
   update         Update ii-niri (QML code only, respects your configs)
+  doctor         Diagnose and fix common issues
   migrate        Apply optional config migrations (interactive)
   status         Show installation status and pending migrations
   changelog      Show recent changes and release notes
@@ -97,6 +100,10 @@ case $1 in
   update)
     SUBCMD_NAME="update"
     SUBCMD_DIR=./sdata/subcmd-install
+    shift
+    ;;
+  doctor)
+    SUBCMD_NAME="doctor"
     shift
     ;;
   migrate)
@@ -251,6 +258,28 @@ case ${SUBCMD_NAME} in
         echo -e "Skipped. Run ${STY_CYAN}./setup migrate${STY_RST} later to review."
       fi
     fi
+    ;;
+  
+  doctor)
+    # Diagnose and fix common issues
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+      echo "Usage: $0 doctor"
+      echo ""
+      echo "Diagnose and fix common issues with your ii-niri installation."
+      echo ""
+      echo "Checks:"
+      echo "  - Critical files present"
+      echo "  - Script permissions"
+      echo "  - User config validity"
+      echo "  - Orphan files"
+      echo "  - Dependencies installed"
+      echo "  - Quickshell loads correctly"
+      echo "  - State directories exist"
+      echo "  - Python packages installed"
+      exit 0
+    fi
+    
+    run_doctor
     ;;
     
   migrate)
