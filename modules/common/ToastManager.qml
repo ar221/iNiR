@@ -29,8 +29,10 @@ Scope {
     }
     
     function addToast(title, message, icon, isError, duration, source, accentColor) {
-        // Prevent duplicates: remove existing toast from same source with same error state
-        toasts = toasts.filter(t => !(t.source === source && t.isError === isError))
+        // Prevent duplicates: if same source already has a toast, ignore
+        if (toasts.some(t => t.source === source && t.isError === isError)) {
+            return
+        }
         
         const toast = {
             id: Date.now(),
