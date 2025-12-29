@@ -35,13 +35,16 @@ Singleton {
     onUseUSCSChanged: root.getData()
     onCityChanged: root._geocodeCity()
 
-    Component.onCompleted: {
-        if (root.enabled && (Config.ready ?? false)) {
-            if (root.gpsActive && !positionSource.active) {
-                console.info("[WeatherService] Starting GPS service.")
-                positionSource.start()
+    Connections {
+        target: Config
+        function onReadyChanged(): void {
+            if (Config.ready && root.enabled) {
+                console.info("[WeatherService] Config ready, fetching weather data")
+                if (root.gpsActive && !positionSource.active) {
+                    positionSource.start()
+                }
+                Qt.callLater(() => root.getData())
             }
-            Qt.callLater(() => root.getData())
         }
     }
 
