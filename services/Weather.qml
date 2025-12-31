@@ -79,12 +79,12 @@ Singleton {
         ipLocator.running = true;
     }
 
-    // Step 2: Fetch weather using coordinates
+    // Step 2: Fetch weather using city name (more accurate than coordinates)
     function fetchWeather() {
         if (!root.location.valid || fetcher.running) return;
         
-        const loc = `${root.location.lat},${root.location.lon}`;
-        const cmd = `curl -s --max-time 15 'wttr.in/${loc}?format=j1' | jq '{current: .current_condition[0], astronomy: .weather[0].astronomy[0]}'`;
+        const city = encodeURIComponent(root.location.name.split(',')[0].trim());
+        const cmd = `curl -s --max-time 15 'wttr.in/${city}?format=j1' | jq '{current: .current_condition[0], astronomy: .weather[0].astronomy[0]}'`;
         fetcher.command = ["/usr/bin/bash", "-c", cmd];
         fetcher.running = true;
     }
