@@ -302,12 +302,13 @@ Item {
                     }
                 }
 
-                // Long press to drag
+                // Long press to drag - only activates on empty areas, not on interactive elements
                 MouseArea {
                     id: dragArea
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton
-                    propagateComposedEvents: !root.editMode
+                    // Don't block events - let them pass to children
+                    propagateComposedEvents: true
                     
                     property bool longPressTriggered: false
                     property real pressY: 0
@@ -315,6 +316,8 @@ Item {
                     onWheel: (wheel) => wheel.accepted = false
 
                     onPressed: (mouse) => {
+                        // Always allow event to propagate to children
+                        mouse.accepted = false
                         longPressTriggered = false
                         pressY = mapToItem(column, mouse.x, mouse.y).y
                         longPressTimer.restart()
