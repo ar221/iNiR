@@ -43,6 +43,21 @@ Scope {
     }
 
     property var windowData: []
+    
+    // Fallback lock screen when QS lock fails
+    function useFallbackLock(): void {
+        console.warn("[Lock] Activating fallback lock screen")
+        // Release QS lock first
+        GlobalStates.screenLocked = false
+        // Try swaylock first (works on both Niri and Hyprland), then hyprlock
+        // Using shell to check existence and run
+        Quickshell.execDetached(["/usr/bin/bash", "-c", 
+            "command -v swaylock && exec swaylock -f -c 1a1a2e || " +
+            "command -v hyprlock && exec hyprlock || " +
+            "notify-send -u critical 'Lock Failed' 'Install swaylock or hyprlock as fallback'"
+        ])
+    }
+    
     function saveWindowPositionAndTile() {
         if (!CompositorService.isHyprland) return;
         Quickshell.execDetached(["/usr/bin/hyprctl", "keyword", "dwindle:pseudotile", "true"])
@@ -162,6 +177,17 @@ Scope {
             id: lockSurface
             color: root._cachedUseWaffleLock ? Looks.colors.bg0 : Appearance.colors.colLayer0
             
+            // Fallback timer - if lock surface doesn't load properly, use swaylock
+            Timer {
+                id: fallbackTimer
+                interval: 2000
+                running: GlobalStates.screenLocked && !lockSurfaceLoader.item
+                onTriggered: {
+                    console.warn("[Lock] Lock surface failed to load, using swaylock fallback")
+                    root.useFallbackLock()
+                }
+            }
+            
             Loader {
                 id: lockSurfaceLoader
                 active: GlobalStates.screenLocked && Config.ready
@@ -172,10 +198,19 @@ Scope {
                     ? (CompositorService.isNiri ? waffleLockSafeComponent : waffleLockComponent)
                     : iiLockComponent
                 
+                // Detect load errors
+                onStatusChanged: {
+                    if (status === Loader.Error) {
+                        console.error("[Lock] Lock surface failed to load: " + sourceComponent.errorString())
+                        root.useFallbackLock()
+                    }
+                }
+                
                 // Force focus to loaded item
                 onLoaded: {
                     if (item) {
                         item.forceActiveFocus()
+                        fallbackTimer.stop()
                     }
                 }
                 
