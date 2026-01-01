@@ -356,6 +356,7 @@ Singleton {
                 }
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
+                property string fillMode: "fill" // "fill", "fit", "center", "tile"
                 property bool hideWhenFullscreen: true
                 property JsonObject effects: JsonObject {
                     property bool enableBlur: false
@@ -757,6 +758,7 @@ Singleton {
             property JsonObject sidebar: JsonObject {
                 property bool cardStyle: false
                 property bool keepRightSidebarLoaded: true
+                property bool keepLeftSidebarLoaded: true
                 property JsonObject translator: JsonObject {
                     property bool enable: true
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.

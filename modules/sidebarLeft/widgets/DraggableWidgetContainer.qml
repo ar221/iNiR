@@ -5,10 +5,14 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.services
+import "root:"
 
 Item {
     id: root
     implicitHeight: column.implicitHeight
+    
+    // Animation property from parent
+    property bool animateIn: false
 
     property var widgetOrder: {
         const saved = Config.options?.sidebar?.widgets?.widgetOrder
@@ -86,13 +90,50 @@ Item {
                 Layout.leftMargin: needsMargin ? 12 : 0
                 Layout.rightMargin: needsMargin ? 12 : 0
                 visible: Layout.preferredHeight > 0
-                opacity: root.dragIndex === index ? 0.5 : 1
 
                 readonly property bool needsMargin: modelData === "context" || modelData === "note" || modelData === "media" || modelData === "crypto" || modelData === "wallpaper"
+                
+                // Staggered animation - elegant cascade from top to bottom
+                readonly property int staggerDelay: 45
+                property bool animatedIn: false
+                
+                onVisibleChanged: if (!visible) animatedIn = false
+                
+                Timer {
+                    id: staggerTimer
+                    interval: widgetWrapper.index * widgetWrapper.staggerDelay + 20
+                    running: root.animateIn && !widgetWrapper.animatedIn
+                    onTriggered: widgetWrapper.animatedIn = true
+                }
+                
+                opacity: root.dragIndex === index ? 0.5 : (animatedIn ? 1 : 0)
+                scale: animatedIn ? 1 : 0.96
+                transformOrigin: Item.Top
+                transform: Translate { y: widgetWrapper.animatedIn ? 0 : 24 }
 
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
-                    NumberAnimation { duration: 150 }
+                    NumberAnimation { 
+                        duration: 500
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                    }
+                }
+                Behavior on scale {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation { 
+                        duration: 550
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
+                    }
+                }
+                Behavior on transform {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation { 
+                        duration: 500
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                    }
                 }
 
                 // Drop zone indicator - más visible con fondo semitransparente
@@ -101,8 +142,8 @@ Item {
                     anchors.fill: parent
                     anchors.margins: -4
                     radius: Appearance.rounding.small + 2
-                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
-                    border.width: 2
+                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
+                    border.width: 1
                     border.color: Appearance.colors.colPrimary
                     opacity: (root.dropIndex === widgetWrapper.index && root.dragIndex !== widgetWrapper.index) ? 1 : 0
                     visible: opacity > 0
@@ -114,31 +155,8 @@ Item {
                     }
 
                     // Linea superior animada para indicar "insertar aquí"
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.top
-                        anchors.topMargin: -6
-                        width: parent.width * 0.6
-                        height: 4
-                        radius: 2
-                        color: Appearance.colors.colPrimary
-
-                        SequentialAnimation on opacity {
-                            running: dropIndicator.visible && Appearance.animationsEnabled
-                            loops: Animation.Infinite
-                            NumberAnimation { to: 0.5; duration: 400 }
-                            NumberAnimation { to: 1; duration: 400 }
-                        }
-                    }
 
                     // Icono de drop
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "move_item"
-                        iconSize: 32
-                        color: Appearance.colors.colPrimary
-                        opacity: 0.7
-                    }
                 }
 
                 Loader {
@@ -211,34 +229,6 @@ Item {
                 }
 
                 // Icono de drag visible cuando se está arrastrando
-                Rectangle {
-                    id: dragIcon
-                    anchors.centerIn: parent
-                    width: 48
-                    height: 48
-                    radius: Appearance.rounding.normal
-                    color: Appearance.colors.colPrimaryContainer
-                    opacity: root.dragIndex === widgetWrapper.index ? 1 : 0
-                    visible: opacity > 0
-                    z: 100
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "drag_indicator"
-                        iconSize: 28
-                        color: Appearance.colors.colOnPrimaryContainer
-                    }
-
-                    Behavior on opacity {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 150 }
-                    }
-                    Behavior on scale {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 150; easing.type: Easing.OutBack }
-                    }
-                    scale: opacity > 0 ? 1 : 0.5
-                }
             }
         }
     }
