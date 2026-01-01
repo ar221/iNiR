@@ -70,6 +70,7 @@ Variants {
             const sensitiveNetwork = (CF.StringUtils.stringListContainsSubstring(Network.networkName.toLowerCase(), networkKeywords));
             return enabled && sensitiveWallpaper && sensitiveNetwork;
         }
+        readonly property string fillMode: bgRoot.backgroundOptions.fillMode ?? "fill"
         property real wallpaperToScreenRatio: Math.min(wallpaperWidth / screen.width, wallpaperHeight / screen.height)
         property real preferredWallpaperScale: bgRoot.parallaxOptions.workspaceZoom ?? 1
         property real effectiveWallpaperScale: 1
@@ -218,10 +219,13 @@ Variants {
                 }
                 property real effectiveValueX: Math.max(0, Math.min(1, valueX))
                 property real effectiveValueY: Math.max(0, Math.min(1, valueY))
-                x: -(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace
-                y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
+                x: bgRoot.fillMode === "fill" ? (-(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace) : ((bgRoot.screen.width - width) / 2)
+                y: bgRoot.fillMode === "fill" ? (-(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace) : ((bgRoot.screen.height - height) / 2)
                 source: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
-                fillMode: Image.PreserveAspectCrop
+                fillMode: bgRoot.fillMode === "fit" ? Image.PreserveAspectFit
+                        : bgRoot.fillMode === "tile" ? Image.Tile
+                        : bgRoot.fillMode === "center" ? Image.Pad
+                        : Image.PreserveAspectCrop
                 Behavior on x { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
                 Behavior on y { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
                 sourceSize {

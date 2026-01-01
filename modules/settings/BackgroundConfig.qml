@@ -93,6 +93,31 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
+        expanded: false
+        icon: "aspect_ratio"
+        title: Translation.tr("Wallpaper scaling")
+
+        SettingsGroup {
+            ContentSubsection {
+                title: Translation.tr("Fill crops, Fit shows bars")
+                ConfigSelectionArray {
+                    currentValue: Config.options?.background?.fillMode ?? "fill"
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.fillMode", newValue);
+                    }
+                    options: [
+                        { displayName: Translation.tr("Fill"), icon: "crop", value: "fill" },
+                        { displayName: Translation.tr("Fit"), icon: "fit_screen", value: "fit" },
+                        { displayName: Translation.tr("Center"), icon: "center_focus_strong", value: "center" },
+                        { displayName: Translation.tr("Tile"), icon: "grid_view", value: "tile" }
+                    ]
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
         expanded: true
         icon: "wallpaper"
         title: Translation.tr("Wallpaper effects")

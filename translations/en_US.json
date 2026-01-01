@@ -1,4 +1,10 @@
 {
+  "Wallpaper scaling": "Wallpaper scaling",
+  "Fill crops, Fit shows bars": "Fill crops, Fit shows bars",
+  "Fill": "Fill",
+  "Fit": "Fit",
+  "Center": "Center",
+  "Tile": "Tile",
   "Style: Blurred": "Style: Blurred",
   "Unknown device": "Unknown device",
   "Change any time later with /dark, /light, /wallpaper in the launcher\nIf the shell's colors aren't changing:\n    1. Open the right sidebar with Super+N\n    2. Click \"Reload Hyprland & Quickshell\" in the top-right corner": "Change any time later with /dark, /light, /wallpaper in the launcher\nIf the shell's colors aren't changing:\n    1. Open the right sidebar with Super+N\n    2. Click \"Reload Hyprland & Quickshell\" in the top-right corner",
