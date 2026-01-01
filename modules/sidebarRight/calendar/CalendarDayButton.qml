@@ -16,21 +16,20 @@ RippleButton {
     implicitHeight: 38;
 
     toggled: (isToday == 1) && !isHeader  // Headers don't get toggled background
-    buttonRadius: Appearance.rounding.small
+    buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
     
     contentItem: StyledText {
         anchors.fill: parent
         text: day
         horizontalAlignment: Text.AlignHCenter
         font.weight: bold ? Font.DemiBold : Font.Normal
-        // isHeader + isToday: use same color as toggled button background (colPrimary)
-        // isToday (not header): white text on primary background
-        // normal day: standard text color
-        // other month days: muted color
-        color: isHeader && (isToday == 1) ? Appearance.colors.colPrimary :
-               (isToday == 1) ? Appearance.colors.colOnPrimary : 
-               (isToday == 0) ? Appearance.colors.colOnLayer1 : 
-               Appearance.colors.colOutlineVariant
+        color: isHeader && (isToday == 1) 
+            ? (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+            : (isToday == 1) 
+                ? (Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary)
+                : (isToday == 0) 
+                    ? (Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1)
+                    : (Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colOutlineVariant)
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)

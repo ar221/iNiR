@@ -13,11 +13,15 @@ RippleButton {
 
     implicitWidth: vertical ? (implicitHeight - topInset - bottomInset) : (implicitHeight - topInset - bottomInset)
     implicitHeight: 50
-    buttonRadius: Appearance.rounding.normal
+    buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.normal
 
     // Hover colors for dock (Layer0 context)
-    colBackgroundHover: Appearance.colors.colLayer0Hover
-    colRipple: Appearance.colors.colLayer0Active
+    colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover
+        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+        : Appearance.colors.colLayer0Hover
+    colRipple: Appearance.inirEverywhere ? Appearance.inir.colLayer1Active
+        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive
+        : Appearance.colors.colLayer0Active
 
     background.implicitHeight: 50
     background.implicitWidth: 50

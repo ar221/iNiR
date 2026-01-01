@@ -62,7 +62,7 @@ Item {
         const r = root.overviewMaxPanelWidthRatio;
         return Math.max(0.1, Math.min(1.0, r));
     }
-    property color activeBorderColor: Appearance.colors.colSecondary
+    property color activeBorderColor: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colSecondary
     property bool focusAnimEnabled: root.overviewFocusAnimEnabled
     property int focusAnimDuration: root.overviewFocusAnimDurationMs
     property bool keepOverviewOpenOnWindowClick: root.overviewKeepOpenOnWindowClick
@@ -201,6 +201,7 @@ Item {
 
     StyledRectangularShadow {
         target: overviewBackground
+        visible: !Appearance.inirEverywhere && !Appearance.auroraEverywhere
     }
 
     Rectangle {
@@ -211,9 +212,13 @@ Item {
 
         implicitWidth: workspaceColumnLayout.implicitWidth + padding * 2
         implicitHeight: workspaceColumnLayout.implicitHeight + padding * 2
-        radius: Appearance.rounding.large + padding
+        radius: Appearance.inirEverywhere ? Appearance.inir.roundingLarge : (Appearance.rounding.large + padding)
         clip: false
-        color: Appearance.colors.colBackgroundSurfaceContainer
+        color: Appearance.inirEverywhere ? Appearance.inir.colLayer1
+             : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface
+             : Appearance.colors.colBackgroundSurfaceContainer
+        border.width: Appearance.inirEverywhere ? 1 : 0
+        border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
 
         Column {
             id: workspaceColumnLayout
@@ -252,10 +257,15 @@ Item {
                             property bool workspaceExists: workspaceObj !== null
                             property bool isActive: workspaceObj && workspaceObj.is_active
                             property color defaultWorkspaceColor: workspaceExists
-                                ? Appearance.colors.colBackgroundSurfaceContainer
-                                : ColorUtils.transparentize(Appearance.colors.colBackgroundSurfaceContainer, 0.3)
-                            property color hoveredWorkspaceColor: ColorUtils.mix(defaultWorkspaceColor, Appearance.colors.colLayer1Hover, 0.1)
-                            property color hoveredBorderColor: Appearance.colors.colLayer2Hover
+                                ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2 
+                                    : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface 
+                                    : Appearance.colors.colBackgroundSurfaceContainer)
+                                : ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir.colLayer2 
+                                    : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface 
+                                    : Appearance.colors.colBackgroundSurfaceContainer, 0.3)
+                            property color hoveredWorkspaceColor: ColorUtils.mix(defaultWorkspaceColor, 
+                                Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover : Appearance.colors.colLayer1Hover, 0.1)
+                            property color hoveredBorderColor: Appearance.inirEverywhere ? Appearance.inir.colBorder : Appearance.colors.colLayer2Hover
                             property bool hoveredWhileDragging: false
 
                             implicitWidth: root.workspaceImplicitWidth
@@ -267,8 +277,8 @@ Item {
                             property bool workspaceAtRight: colIndex === root.overviewColumns - 1
                             property bool workspaceAtTop: row.index === 0
                             property bool workspaceAtBottom: row.index === root.overviewRows - 1
-                            property real largeWorkspaceRadius: Appearance.rounding.large
-                            property real smallWorkspaceRadius: Appearance.rounding.verysmall
+                            property real largeWorkspaceRadius: Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.large
+                            property real smallWorkspaceRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.verysmall
                             topLeftRadius: (workspaceAtLeft && workspaceAtTop) ? largeWorkspaceRadius : smallWorkspaceRadius
                             topRightRadius: (workspaceAtRight && workspaceAtTop) ? largeWorkspaceRadius : smallWorkspaceRadius
                             bottomLeftRadius: (workspaceAtLeft && workspaceAtBottom) ? largeWorkspaceRadius : smallWorkspaceRadius
@@ -369,7 +379,7 @@ Item {
                                     weight: Font.DemiBold
                                     family: Appearance.font.family.expressive
                                 }
-                                color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.8)
+                                color: ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1, 0.8)
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                                 visible: root.showWorkspaceNumber

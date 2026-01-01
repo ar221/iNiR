@@ -28,9 +28,41 @@ Item {
         0.8
     ) || Appearance.m3colors.m3secondaryContainer
     property bool downloaded: false
+    property int _artCacheBuster: 0
+    property int _downloadRetryCount: 0
+    readonly property int _maxRetries: 3
     property real radius: Appearance.rounding.large
 
-    property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+    property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) + "?v=" + _artCacheBuster : ""
+
+    function checkAndDownloadArt() {
+        if (!artUrl || artUrl.length === 0) {
+            downloaded = false
+            _downloadRetryCount = 0
+            return
+        }
+        artExistsChecker.running = true
+    }
+
+    function retryDownload() {
+        if (_downloadRetryCount < _maxRetries && artUrl) {
+            _downloadRetryCount++
+            retryTimer.start()
+        }
+    }
+
+    Timer {
+        id: retryTimer
+        interval: 1000 * root._downloadRetryCount
+        repeat: false
+        onTriggered: {
+            if (root.artUrl && !root.downloaded) {
+                coverArtDownloader.targetFile = root.artUrl
+                coverArtDownloader.artFilePath = root.artFilePath
+                coverArtDownloader.running = true
+            }
+        }
+    }
 
     Timer {
         running: root.player?.playbackState == MprisPlaybackState.Playing
@@ -40,13 +72,15 @@ Item {
     }
 
     onArtFilePathChanged: {
-        if (root.artUrl?.length == 0) {
-            root.artDominantColor = Appearance.m3colors.m3secondaryContainer
-            root.downloaded = false
-            return
+        _downloadRetryCount = 0
+        checkAndDownloadArt()
+    }
+
+    // Re-check cover art when becoming visible (important for lock screen)
+    onVisibleChanged: {
+        if (visible && artFilePath) {
+            checkAndDownloadArt()
         }
-        // Check if file already exists before resetting downloaded flag
-        artExistsChecker.running = true
     }
 
     Process {
@@ -54,10 +88,10 @@ Item {
         command: ["/usr/bin/test", "-f", root.artFilePath]
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                // File exists, mark as downloaded
                 root.downloaded = true
+                root._artCacheBuster++
+                root._downloadRetryCount = 0
             } else {
-                // File doesn't exist, download it
                 root.downloaded = false
                 coverArtDownloader.targetFile = root.artUrl
                 coverArtDownloader.artFilePath = root.artFilePath
@@ -74,10 +108,21 @@ Item {
             if [ -f '${artFilePath}' ]; then
                 exit 0
             fi
+            mkdir -p '${root.artDownloadLocation}'
             tmp='${artFilePath}.tmp'
-            /usr/bin/curl -sSL '${targetFile}' -o "$tmp" && /usr/bin/mv -f "$tmp" '${artFilePath}'
+            /usr/bin/curl -sSL --connect-timeout 10 --max-time 30 '${targetFile}' -o "$tmp" && \
+            [ -s "$tmp" ] && /usr/bin/mv -f "$tmp" '${artFilePath}' || { rm -f "$tmp"; exit 1; }
         `]
-        onExited: (exitCode, exitStatus) => root.downloaded = (exitCode === 0)
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                root.downloaded = true
+                root._artCacheBuster++
+                root._downloadRetryCount = 0
+            } else {
+                root.downloaded = false
+                root.retryDownload()
+            }
+        }
     }
 
     ColorQuantizer {

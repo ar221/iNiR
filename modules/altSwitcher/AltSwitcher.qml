@@ -346,13 +346,17 @@ Scope {
                 color: {
                     if (Appearance.inirEverywhere)
                         return Appearance.inir.colLayer0
+                    if (Appearance.auroraEverywhere)
+                        return Appearance.colors.colLayer0Base
                     if (root.altUseM3Layout)
                         return Appearance.colors.colLayer0
                     const base = ColorUtils.mix(Appearance.colors.colLayer0, Qt.rgba(0, 0, 0, 1), 0.35)
                     return ColorUtils.applyAlpha(base, root.altBackgroundOpacity)
                 }
-                border.width: Appearance.inirEverywhere ? 1 : (root.altUseM3Layout ? 1 : 0)
-                border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : Appearance.colors.colLayer0Border
+                border.width: Appearance.inirEverywhere || Appearance.auroraEverywhere ? 1 : (root.altUseM3Layout ? 1 : 0)
+                border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder 
+                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer0Border 
+                    : Appearance.colors.colLayer0Border
             }
 
             Rectangle {
@@ -360,13 +364,18 @@ Scope {
                 visible: root.compactStyle
                 anchors.fill: parent
                 radius: Appearance.inirEverywhere ? Appearance.inir.roundingLarge : Appearance.rounding.large
-                color: Appearance.inirEverywhere ? Appearance.inir.colLayer2 : Appearance.m3colors.m3surfaceContainerHigh
-                border.width: Appearance.inirEverywhere ? 1 : 0
-                border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+                color: Appearance.inirEverywhere ? Appearance.inir.colLayer2 
+                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer1Base 
+                    : Appearance.m3colors.m3surfaceContainerHigh
+                border.width: Appearance.inirEverywhere || Appearance.auroraEverywhere ? 1 : 0
+                border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder 
+                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer0Border 
+                    : "transparent"
             }
 
             StyledRectangularShadow {
                 target: root.compactStyle ? compactBackground : panelBackground
+                visible: !Appearance.inirEverywhere && !Appearance.auroraEverywhere
             }
 
             MultiEffect {
@@ -401,10 +410,16 @@ Scope {
                             anchors.centerIn: parent
                             width: parent.width
                             height: parent.height
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.inirEverywhere ? Appearance.inir.roundingNormal 
+                                : Appearance.auroraEverywhere ? Appearance.rounding.normal 
+                                : Appearance.rounding.normal
                             color: listView.currentIndex === index 
-                                   ? Appearance.m3colors.m3primaryContainer 
-                                   : Appearance.m3colors.m3surfaceContainerHighest
+                                   ? (Appearance.inirEverywhere ? Appearance.inir.colPrimary 
+                                       : Appearance.auroraEverywhere ? Appearance.colors.colPrimaryContainer 
+                                       : Appearance.m3colors.m3primaryContainer)
+                                   : (Appearance.inirEverywhere ? Appearance.inir.colLayer3 
+                                       : Appearance.auroraEverywhere ? Appearance.colors.colLayer2Base 
+                                       : Appearance.m3colors.m3surfaceContainerHighest)
                             scale: compactMouseArea.pressed ? 0.92 : (compactMouseArea.containsMouse ? 1.05 : 1.0)
                             
                             Behavior on color { 
@@ -483,12 +498,17 @@ Scope {
                 width: 400
                 implicitHeight: listHeader.height + listSeparator.height + listColumn.height
                 radius: Appearance.inirEverywhere ? Appearance.inir.roundingLarge : Appearance.rounding.large
-                color: Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colSurfaceContainer
+                color: Appearance.inirEverywhere ? Appearance.inir.colLayer1 
+                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer1Base 
+                    : Appearance.colors.colSurfaceContainer
+                border.width: Appearance.auroraEverywhere ? 1 : 0
+                border.color: Appearance.auroraEverywhere ? Appearance.colors.colLayer0Border : "transparent"
 
                 StyledRectangularShadow {
                     target: listContent
                     blur: 0.5 * Appearance.sizes.elevationMargin
                     spread: 0
+                    visible: !Appearance.inirEverywhere && !Appearance.auroraEverywhere
                 }
 
                 Column {
@@ -505,13 +525,17 @@ Scope {
                             text: Translation.tr("Switch windows")
                             font.pixelSize: Appearance.font.pixelSize.larger
                             font.weight: Font.DemiBold
-                            color: Appearance.colors.colOnLayer1
+                            color: Appearance.inirEverywhere ? Appearance.inir.colText 
+                                : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer1 
+                                : Appearance.colors.colOnLayer1
                         }
                         Item { Layout.fillWidth: true }
                         StyledText {
                             text: (root.itemSnapshot?.length ?? 0) + " " + Translation.tr("windows")
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary 
+                                : Appearance.auroraEverywhere ? Appearance.colors.colSubtext 
+                                : Appearance.colors.colSubtext
                         }
                         Item { width: 16 }
                     }
@@ -520,7 +544,9 @@ Scope {
                         id: listSeparator
                         width: parent.width
                         height: 1
-                        color: Appearance.colors.colLayer0Border
+                        color: Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle 
+                            : Appearance.auroraEverywhere ? Appearance.colors.colLayer0Border 
+                            : Appearance.colors.colLayer0Border
                     }
 
                     Column {
@@ -542,15 +568,25 @@ Scope {
 
                                 width: listColumn.width - listColumn.leftPadding - listColumn.rightPadding
                                 implicitHeight: 52
-                                buttonRadius: Appearance.rounding.normal
+                                buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
                                 toggled: listView.currentIndex === index
 
                                 colBackground: "transparent"
-                                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.88)
-                                colBackgroundToggled: Appearance.colors.colPrimaryContainer
-                                colBackgroundToggledHover: ColorUtils.mix(Appearance.colors.colPrimaryContainer, Appearance.colors.colPrimary, 0.9)
-                                colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.7)
-                                colRippleToggled: ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.7)
+                                colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover 
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer2Hover 
+                                    : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.88)
+                                colBackgroundToggled: Appearance.inirEverywhere ? Appearance.inir.colPrimary 
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colPrimaryContainer 
+                                    : Appearance.colors.colPrimaryContainer
+                                colBackgroundToggledHover: Appearance.inirEverywhere ? Appearance.inir.colPrimaryHover 
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colPrimaryContainerHover 
+                                    : ColorUtils.mix(Appearance.colors.colPrimaryContainer, Appearance.colors.colPrimary, 0.9)
+                                colRipple: Appearance.inirEverywhere ? Appearance.inir.colLayer2Active 
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colLayer2Active 
+                                    : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.7)
+                                colRippleToggled: Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive 
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colPrimaryContainerActive 
+                                    : ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.7)
 
                                 onClicked: {
                                     listView.currentIndex = index
@@ -570,7 +606,9 @@ Scope {
                                         width: 6
                                         height: 6
                                         radius: 3
-                                        color: Appearance.colors.colOnPrimaryContainer
+                                        color: Appearance.inirEverywhere ? Appearance.inir.colOnPrimary 
+                                            : Appearance.auroraEverywhere ? Appearance.colors.colOnPrimaryContainer 
+                                            : Appearance.colors.colOnPrimaryContainer
                                         visible: listTile.toggled
                                     }
 
@@ -592,7 +630,13 @@ Scope {
                                             text: listTile.modelData?.appName ?? listTile.modelData?.title ?? "Window"
                                             font.pixelSize: Appearance.font.pixelSize.normal
                                             font.weight: listTile.toggled ? Font.DemiBold : Font.Normal
-                                            color: listTile.toggled ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+                                            color: listTile.toggled 
+                                                ? (Appearance.inirEverywhere ? Appearance.inir.colOnPrimary 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colOnPrimaryContainer 
+                                                    : Appearance.colors.colOnPrimaryContainer)
+                                                : (Appearance.inirEverywhere ? Appearance.inir.colText 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer1 
+                                                    : Appearance.colors.colOnLayer1)
                                             elide: Text.ElideRight
                                         }
 
@@ -612,8 +656,13 @@ Scope {
                                             visible: text !== ""
                                             font.pixelSize: Appearance.font.pixelSize.smaller
                                             color: listTile.toggled 
-                                                ? ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.3) 
-                                                : Appearance.colors.colSubtext
+                                                ? ColorUtils.transparentize(
+                                                    Appearance.inirEverywhere ? Appearance.inir.colOnPrimary 
+                                                        : Appearance.auroraEverywhere ? Appearance.colors.colOnPrimaryContainer 
+                                                        : Appearance.colors.colOnPrimaryContainer, 0.3)
+                                                : (Appearance.inirEverywhere ? Appearance.inir.colTextSecondary 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colSubtext 
+                                                    : Appearance.colors.colSubtext)
                                             elide: Text.ElideRight
                                         }
                                     }
@@ -623,10 +672,15 @@ Scope {
                                         visible: (listTile.modelData?.workspaceIdx ?? 0) > 0
                                         width: wsText.implicitWidth + 12
                                         height: 22
-                                        radius: Appearance.rounding.small
+                                        radius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
                                         color: listTile.toggled 
-                                            ? ColorUtils.transparentize(Appearance.colors.colOnPrimaryContainer, 0.85)
-                                            : Appearance.colors.colLayer2
+                                            ? ColorUtils.transparentize(
+                                                Appearance.inirEverywhere ? Appearance.inir.colOnPrimary 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colOnPrimaryContainer 
+                                                    : Appearance.colors.colOnPrimaryContainer, 0.85)
+                                            : (Appearance.inirEverywhere ? Appearance.inir.colLayer3 
+                                                : Appearance.auroraEverywhere ? Appearance.colors.colLayer2 
+                                                : Appearance.colors.colLayer2)
 
                                         StyledText {
                                             id: wsText
@@ -634,7 +688,13 @@ Scope {
                                             text: listTile.modelData?.workspaceIdx ?? ""
                                             font.pixelSize: Appearance.font.pixelSize.smaller
                                             font.weight: Font.DemiBold
-                                            color: listTile.toggled ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                                            color: listTile.toggled 
+                                                ? (Appearance.inirEverywhere ? Appearance.inir.colOnPrimary 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colOnPrimaryContainer 
+                                                    : Appearance.colors.colOnPrimaryContainer)
+                                                : (Appearance.inirEverywhere ? Appearance.inir.colTextSecondary 
+                                                    : Appearance.auroraEverywhere ? Appearance.colors.colSubtext 
+                                                    : Appearance.colors.colSubtext)
                                         }
                                     }
                                 }

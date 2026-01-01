@@ -38,11 +38,19 @@ RippleButton {
     implicitWidth: rowLayout.implicitWidth + root.buttonHorizontalPadding * 2
     buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
     // M3 consistent colors: transparent by default, layer3 on hover/select, primaryContainer on press
-    colBackground: (root.down || root.keyboardDown) ? (Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive : Appearance.colors.colPrimaryContainerActive) : 
-        ((root.hovered || root.focus || root.isSelected) ? (Appearance.inirEverywhere ? Appearance.inir.colLayer3 : Appearance.colors.colLayer3) : 
-        "transparent")
-    colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer3Hover : Appearance.colors.colLayer3Hover
-    colRipple: Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive : Appearance.colors.colPrimaryContainerActive
+    colBackground: (root.down || root.keyboardDown) 
+        ? (Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive : Appearance.colors.colPrimaryContainerActive)
+        : ((root.hovered || root.focus || root.isSelected) 
+            ? (Appearance.inirEverywhere ? Appearance.inir.colLayer3 
+                : Appearance.auroraEverywhere ? Appearance.colors.colLayer3 
+                : Appearance.colors.colLayer3)
+            : "transparent")
+    colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer3Hover 
+        : Appearance.auroraEverywhere ? Appearance.colors.colLayer3Hover 
+        : Appearance.colors.colLayer3Hover
+    colRipple: Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive 
+        : Appearance.auroraEverywhere ? Appearance.colors.colLayer3Active 
+        : Appearance.colors.colPrimaryContainerActive
 
     property string highlightPrefix: `<u><font color="${Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary}">`
     property string highlightSuffix: `</font></u>`
