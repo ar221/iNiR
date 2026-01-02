@@ -26,8 +26,20 @@ Singleton {
 
     // Public API
     property bool active: _manualActive || _autoActive
-    property bool autoDetect: Config.options?.gameMode?.autoDetect ?? true
+    readonly property bool autoDetect: Config.options?.gameMode?.autoDetect ?? true
     property bool manuallyActivated: _manualActive
+    
+    // When autoDetect is disabled, immediately clear auto state
+    onAutoDetectChanged: {
+        if (!autoDetect) {
+            _autoActive = false
+            _fullscreenCount = 0
+            root._log("[GameMode] autoDetect disabled, clearing auto state")
+        } else {
+            // Re-check when enabled
+            checkFullscreen()
+        }
+    }
     
     // True if ANY window in ANY workspace is fullscreen (for toast suppression)
     property bool hasAnyFullscreenWindow: false
@@ -40,10 +52,22 @@ Singleton {
     property bool _autoActive: false
     property bool _initialized: false
 
-    // Config-driven behavior
+    // Config-driven behavior (reactive bindings - re-evaluated when Config changes)
     readonly property bool disableAnimations: Config.options?.gameMode?.disableAnimations ?? true
     readonly property bool disableEffects: Config.options?.gameMode?.disableEffects ?? true
-    readonly property int checkInterval: Config.options?.gameMode?.checkInterval ?? 2000
+    readonly property bool disableReloadToasts: Config.options?.gameMode?.disableReloadToasts ?? true
+    readonly property bool minimalMode: Config.options?.gameMode?.minimalMode ?? true
+    readonly property int checkInterval: Config.options?.gameMode?.checkInterval ?? 5000
+    readonly property bool controlNiriAnimations: Config.options?.gameMode?.disableNiriAnimations ?? true
+    
+    // React to controlNiriAnimations changes while active
+    onControlNiriAnimationsChanged: {
+        if (active && CompositorService.isNiri) {
+            // When setting enabled AND gamemode active -> disable niri animations
+            // When setting disabled -> re-enable niri animations
+            setNiriAnimations(!active || !controlNiriAnimations)
+        }
+    }
 
     // External process control (optional)
     readonly property bool disableDiscoverOverlay: Config.options?.gameMode?.disableDiscoverOverlay ?? true
@@ -154,7 +178,7 @@ Singleton {
     // Debounce timer for fullscreen checks
     Timer {
         id: checkDebounce
-        interval: 500
+        interval: 300  // Faster response
         onTriggered: root._doCheckFullscreen()
     }
 
@@ -241,19 +265,20 @@ Singleton {
         }
 
         function onWindowsChanged() {
-            root.hasAnyFullscreenWindow = root.checkAnyFullscreenWindow()
+            // Only update hasAnyFullscreenWindow if not already checking
+            if (!checkDebounce.running) {
+                root.hasAnyFullscreenWindow = root.checkAnyFullscreenWindow()
+            }
         }
     }
 
-    // Periodic check as fallback - runs less frequently since NiriService events handle most cases
-    // This catches edge cases where events might be missed (e.g., external window state changes)
+    // Periodic check as fallback - uses config interval
     Timer {
         id: fallbackTimer
-        interval: 5000  // 5 seconds - just a safety net, not primary detection
+        interval: root.checkInterval
         running: root.autoDetect && CompositorService.isNiri && root._initialized
         repeat: true
         onTriggered: {
-            // Only do work if we haven't checked recently via event handlers
             if (!checkDebounce.running) {
                 root.checkFullscreen()
             }
@@ -279,7 +304,6 @@ Singleton {
     }
 
     // Niri animations control
-    readonly property bool controlNiriAnimations: Config.options?.gameMode?.disableNiriAnimations ?? true
     readonly property string niriConfigPath: Quickshell.env("HOME") + "/.config/niri/config.kdl"
 
     function setNiriAnimations(enabled) {
@@ -340,8 +364,8 @@ Singleton {
             niriAnimDebounce.restart()
         }
 
-        // External processes: discover-overlay is known to be heavy under gaming load.
-        if (CompositorService.isNiri && root.disableDiscoverOverlay) {
+        // External processes control
+        if (root.disableDiscoverOverlay) {
             discoverOverlayDebounce.restart()
         }
     }

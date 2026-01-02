@@ -557,6 +557,18 @@ ContentPage {
                     text: Translation.tr("Turn off compositor animations when Game Mode is active")
                 }
             }
+
+            SettingsSwitch {
+                buttonIcon: "visibility_off"
+                text: Translation.tr("Minimal mode")
+                checked: Config.options?.gameMode?.minimalMode ?? true
+                onCheckedChanged: {
+                    Config.setNestedValue("gameMode.minimalMode", checked)
+                }
+                StyledToolTip {
+                    text: Translation.tr("Make panels transparent and hide backgrounds for maximum performance")
+                }
+            }
         }
     }
 

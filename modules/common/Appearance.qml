@@ -54,12 +54,17 @@ Singleton {
 
     // GameMode integration - disable effects/animations when fullscreen detected
     property bool _gameModeActive: GameMode?.active ?? false
-    property bool _gameModeDisablesEffects: _gameModeActive && (Config.options?.gameMode?.disableEffects ?? true)
-    property bool _gameModeDisablesAnimations: _gameModeActive && (Config.options?.gameMode?.disableAnimations ?? true)
+    property bool _gameModeDisablesEffects: _gameModeActive && (GameMode?.disableEffects ?? true)
+    property bool _gameModeDisablesAnimations: _gameModeActive && (GameMode?.disableAnimations ?? true)
+    property bool _gameModeMinimalMode: _gameModeActive && (GameMode?.minimalMode ?? true)
 
     // Master switches for effects and animations
     property bool effectsEnabled: !Config.options?.performance?.lowPower && !_gameModeDisablesEffects
     property bool animationsEnabled: !_gameModeDisablesAnimations && !(Config.options?.performance?.reduceAnimations ?? false)
+    
+    // Minimal mode: panels become transparent, no backgrounds, reduced visual weight
+    // Components should check this to hide backgrounds/shadows during GameMode
+    readonly property bool gameModeMinimal: _gameModeMinimalMode
 
     onEffectsEnabledChanged: console.log("[Appearance] effectsEnabled:", effectsEnabled, "gameModeActive:", _gameModeActive)
     onAnimationsEnabledChanged: console.log("[Appearance] animationsEnabled:", animationsEnabled)

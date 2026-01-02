@@ -277,10 +277,11 @@ Singleton {
                 property bool disableNiriAnimations: true
                 property bool disableReloadToasts: true
                 property bool disableDiscoverOverlay: true
+                property bool minimalMode: true // Make panels transparent/minimal during GameMode
                 // Throttle Niri window list updates - 100ms = 10 FPS, sufficient for smooth UI
                 // Lower values increase CPU usage with diminishing returns on perceived smoothness
                 property int niriWindowListUpdateIntervalMs: 100
-                property int niriWindowListUpdateIntervalMsGameMode: 250
+                property int niriWindowListUpdateIntervalMsGameMode: 500 // 2 FPS during gaming - minimal overhead
                 property int checkInterval: 5000 // ms - fallback only, events are primary
             }
 
