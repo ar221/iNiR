@@ -20,22 +20,21 @@ Item {
     readonly property string nerdGlyph: forceNerd ? text : NerdIconMap.get(text)
     readonly property bool hasNerdGlyph: nerdGlyph !== ""
     
-    // Debug removed - was: onUseNerdChanged log
-    
-    // Use iconSize for consistent sizing regardless of font metrics
-    implicitWidth: iconSize
-    implicitHeight: iconSize
-    
-    property real truncatedFill: fill.toFixed(1)
-    
     // Nerd fonts need slightly larger size to match Material Symbols visually
     readonly property real effectiveFontSize: (useNerd && hasNerdGlyph) ? iconSize * 1.1 : iconSize
+    readonly property real effectiveSize: (useNerd && hasNerdGlyph) ? iconSize * 1.1 : iconSize
+    
+    // Use iconSize for consistent sizing regardless of font metrics
+    implicitWidth: effectiveSize
+    implicitHeight: effectiveSize
+    
+    property real truncatedFill: fill.toFixed(1)
     
     Text {
         id: iconText
         anchors.centerIn: parent
-        width: root.iconSize
-        height: root.iconSize
+        width: root.effectiveSize
+        height: root.effectiveSize
         text: (root.useNerd && root.hasNerdGlyph) ? root.nerdGlyph : root.text
         color: root.color
         horizontalAlignment: Text.AlignHCenter
