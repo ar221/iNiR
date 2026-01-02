@@ -5,6 +5,31 @@ All notable changes to ii-niri will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-01-02
+
+### Added
+- **Timer pause persistence**: Pomodoro, stopwatch, and countdown now persist pause state across restarts
+- **ContextCard timer idle view**: Navigate between Focus/Timer/Stopwatch with slide animations
+- **Dock showOnDesktop option**: Control dock visibility when no window is focused
+- **Quick Launch editor**: Inline editor in settings to customize quick launch shortcuts
+- **Context card weather toggle**: Option to hide weather in context card
+- **Cover art blur transition**: Smooth blur effect when track changes
+
+### Changed
+- Region search now uses 0x0.st (uguu.se was down)
+- Settings search includes Global Style entries
+- Faster settings page preloading for search indexing
+- Search results show breadcrumb path with chevron icons
+
+### Fixed
+- Dock context menu now keeps dock visible while open
+- StyledPopup supports buttonHovered fallback for RippleButton
+- WeekStrip scroll fixed with acceptedButtons: Qt.NoButton
+- NotificationAppIcon safer image error handling
+- Aurora colors for workspaces occupied indicator
+- Calendar other-month text color in aurora style
+- ConfigSelectionArray includes option names in search
+
 ## [2.3.0] - 2026-01-01
 
 ### Added
