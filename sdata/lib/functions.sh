@@ -1,4 +1,4 @@
-# Core functions for ii-niri installer
+# Core functions for iNiR installer
 # This is NOT a script for execution, but for loading functions
 
 # shellcheck shell=bash

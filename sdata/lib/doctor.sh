@@ -1,4 +1,4 @@
-# Doctor command for ii-niri
+# Doctor command for iNiR
 # Diagnoses AND FIXES common issues
 # This script is meant to be sourced.
 

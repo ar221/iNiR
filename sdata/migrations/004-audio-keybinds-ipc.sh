@@ -3,7 +3,7 @@
 
 MIGRATION_ID="004-audio-keybinds-ipc"
 MIGRATION_TITLE="Audio Keybinds with OSD"
-MIGRATION_DESCRIPTION="Updates audio keybinds to use ii-niri IPC instead of wpctl.
+MIGRATION_DESCRIPTION="Updates audio keybinds to use iNiR IPC instead of wpctl.
   This shows an on-screen display when changing volume with hardware keys."
 MIGRATION_TARGET_FILE="~/.config/niri/config.kdl"
 MIGRATION_REQUIRED=false

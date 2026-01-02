@@ -1,4 +1,4 @@
-# Migration system for ii-niri
+# Migration system for iNiR
 # Respects user configs - never modifies without explicit consent
 # This script is meant to be sourced.
 

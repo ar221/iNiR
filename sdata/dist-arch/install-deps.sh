@@ -1,4 +1,4 @@
-# Install dependencies for ii-niri on Arch-based systems
+# Install dependencies for iNiR on Arch-based systems
 # This script is meant to be sourced, not run directly.
 
 # shellcheck shell=bash
@@ -111,14 +111,14 @@ install_pkgbuild_deps() {
 }
 
 # Install from each PKGBUILD
-for pkgdir in ./sdata/dist-arch/ii-niri-*/; do
+for pkgdir in ./sdata/dist-arch/inir-*/; do
   # Check group flags
   pkgname=$(basename "$pkgdir")
   case "$pkgname" in
-    ii-niri-audio) $INSTALL_AUDIO || continue ;;
-    ii-niri-toolkit) $INSTALL_TOOLKIT || continue ;;
-    ii-niri-screencapture) $INSTALL_SCREENCAPTURE || continue ;;
-    ii-niri-fonts) $INSTALL_FONTS || continue ;;
+    inir-audio) $INSTALL_AUDIO || continue ;;
+    inir-toolkit) $INSTALL_TOOLKIT || continue ;;
+    inir-screencapture) $INSTALL_SCREENCAPTURE || continue ;;
+    inir-fonts) $INSTALL_FONTS || continue ;;
   esac
   
   v install_pkgbuild_deps "$pkgdir"
@@ -193,7 +193,7 @@ if $INSTALL_FONTS; then
 fi
 
 if $INSTALL_AUDIO; then
-  : # cava moved to ii-niri-audio PKGBUILD
+  : # cava moved to inir-audio PKGBUILD
 fi
 
 if $INSTALL_TOOLKIT; then

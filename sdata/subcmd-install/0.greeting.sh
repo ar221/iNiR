@@ -1,4 +1,4 @@
-# Greeting for ii-niri installer
+# Greeting for iNiR installer
 # This script is meant to be sourced.
 
 # shellcheck shell=bash

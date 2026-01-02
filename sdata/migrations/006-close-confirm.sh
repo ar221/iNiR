@@ -3,7 +3,7 @@
 
 MIGRATION_ID="006-close-confirm"
 MIGRATION_TITLE="Close Window Confirmation"
-MIGRATION_DESCRIPTION="Replaces Mod+Q close-window with ii-niri's closeConfirm script.
+MIGRATION_DESCRIPTION="Replaces Mod+Q close-window with iNiR's closeConfirm script.
   This shows a confirmation dialog before closing windows,
   preventing accidental data loss."
 MIGRATION_TARGET_FILE="~/.config/niri/config.kdl"

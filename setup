@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ii-niri setup - Simplified installer
+# iNiR setup - Simplified installer
 # Commands: install, update, doctor, rollback (or TUI if no args)
 
 cd "$(dirname "$0")"
@@ -18,7 +18,7 @@ cleanup() {
 ###############################################################################
 run_migrate() {
     echo ""
-    tui_title "ii-niri Migrations"
+    tui_title "iNiR Migrations"
     echo ""
 
     # Always apply REQUIRED migrations first
@@ -59,7 +59,7 @@ quiet=false
 ###############################################################################
 show_help() {
     echo ""
-    tui_title "ii-niri setup"
+    tui_title "iNiR setup"
     
     tui_key_value "Usage:" "./setup [command] [options]"
     echo ""
@@ -308,7 +308,7 @@ run_update() {
     local repo_commit=$(get_repo_commit)
     
     echo ""
-    tui_info "Syncing ii-niri..."
+    tui_info "Syncing iNiR..."
     
     II_SOURCE="${REPO_ROOT}"
     II_TARGET="${XDG_CONFIG_HOME}/quickshell/ii"
@@ -453,7 +453,7 @@ run_update() {
 ###############################################################################
 run_doctor() {
     echo ""
-    tui_title "ii-niri Doctor"
+    tui_title "iNiR Doctor"
     echo ""
     run_doctor_with_fixes
 }

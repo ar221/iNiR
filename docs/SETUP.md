@@ -3,8 +3,8 @@
 ## Install
 
 ```bash
-git clone https://github.com/snowarch/quickshell-ii-niri.git
-cd quickshell-ii-niri
+git clone https://github.com/snowarch/inir.git
+cd inir
 ./setup install
 ```
 
@@ -81,7 +81,7 @@ Some features need config changes (new keybinds, layer rules, etc). After `updat
 
 ## Backups
 
-- Install backups: `~/ii-niri-backup/`
+- Install backups: `~/inir-backup/`
 - Update backups: `~/.local/state/quickshell/backups/`
 
 ## Uninstall

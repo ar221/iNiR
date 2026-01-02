@@ -1,4 +1,4 @@
-# Config file installation for ii-niri
+# Config file installation for iNiR
 # This script is meant to be sourced.
 
 # shellcheck shell=bash
@@ -210,7 +210,7 @@ for gtkver in gtk-3.0 gtk-4.0; do
 done
 
 # KDE settings (for Dolphin and Qt apps)
-# These are controlled by ii-niri for theming - always overwrite
+# These are controlled by iNiR for theming - always overwrite
 if [[ -f "defaults/kde/kdeglobals" ]]; then
   install_file "defaults/kde/kdeglobals" "${XDG_CONFIG_HOME}/kdeglobals"
 elif [[ -f "dots/.config/kdeglobals" ]]; then
@@ -367,9 +367,9 @@ fi
 
 # Clean up legacy shell-specific files from previous versions
 for legacy_file in \
-    "${XDG_CONFIG_HOME}/fish/conf.d/ii-niri-env.fish" \
-    "${XDG_CONFIG_HOME}/ii-niri-env.sh" \
-    "${XDG_CONFIG_HOME}/environment.d/60-ii-niri.conf"
+    "${XDG_CONFIG_HOME}/fish/conf.d/inir-env.fish" \
+    "${XDG_CONFIG_HOME}/inir-env.sh" \
+    "${XDG_CONFIG_HOME}/environment.d/60-inir.conf"
 do
     if [[ -f "$legacy_file" ]]; then
         rm -f "$legacy_file"
@@ -379,14 +379,14 @@ done
 
 # Clean up legacy lines in shell rc files
 if [[ -f "$HOME/.bashrc" ]]; then
-    if grep -q "ii-niri-env.sh" "$HOME/.bashrc"; then
-        sed -i '/ii-niri-env.sh/d' "$HOME/.bashrc"
+    if grep -q "iNiR-env.sh" "$HOME/.bashrc"; then
+        sed -i '/iNiR-env.sh/d' "$HOME/.bashrc"
         log_success "Cleaned up .bashrc"
     fi
 fi
 if [[ -f "$HOME/.zshrc" ]]; then
-    if grep -q "ii-niri-env.sh" "$HOME/.zshrc"; then
-        sed -i '/ii-niri-env.sh/d' "$HOME/.zshrc"
+    if grep -q "iNiR-env.sh" "$HOME/.zshrc"; then
+        sed -i '/iNiR-env.sh/d' "$HOME/.zshrc"
         log_success "Cleaned up .zshrc"
     fi
 fi
@@ -685,9 +685,9 @@ fi
 # In quiet mode, just print a simple status line
 if ${quiet:-false}; then
   if [[ "${IS_UPDATE}" == "true" ]]; then
-    echo "ii-niri: update complete"
+    echo "iNiR: update complete"
   else
-    echo "ii-niri: install complete"
+    echo "iNiR: install complete"
   fi
 else
   echo ""

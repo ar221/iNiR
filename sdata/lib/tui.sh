@@ -1,5 +1,5 @@
 #!/bin/bash
-# TUI functions for ii-niri setup
+# TUI functions for iNiR setup
 # Professional design with gum fallback
 # This script is meant to be sourced.
 
@@ -8,7 +8,7 @@
 ###############################################################################
 # Theme Configuration
 ###############################################################################
-# Primary palette (matches ii-niri accent colors)
+# Primary palette (matches iNiR accent colors)
 TUI_ACCENT="212"        # Magenta/Pink - primary accent
 TUI_ACCENT_DIM="99"     # Purple - secondary accent
 TUI_SUCCESS="82"        # Green

@@ -3,7 +3,7 @@
 
 MIGRATION_ID="007-brightness-keybinds"
 MIGRATION_TITLE="Brightness Hardware Keys"
-MIGRATION_DESCRIPTION="Adds XF86MonBrightnessUp/Down keybinds that use ii-niri IPC.
+MIGRATION_DESCRIPTION="Adds XF86MonBrightnessUp/Down keybinds that use iNiR IPC.
   Shows on-screen display when changing brightness."
 MIGRATION_TARGET_FILE="~/.config/niri/config.kdl"
 MIGRATION_REQUIRED=false

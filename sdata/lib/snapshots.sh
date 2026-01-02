@@ -1,4 +1,4 @@
-# Snapshot system for ii-niri
+# Snapshot system for iNiR
 # Time-machine style backups before updates
 # This script is meant to be sourced.
 

@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-preview_dir="$HOME/.cache/ii-niri/window-previews"
+preview_dir="$HOME/.cache/inir/window-previews"
 mkdir -p "$preview_dir"
 
 niri_bin="/usr/bin/niri"

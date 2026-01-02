@@ -100,7 +100,7 @@ ContentPage {
     SettingsCardSection {
         expanded: false
         icon: "deployed_code"
-        title: "ii on Niri"
+        title: "iNiR"
 
         SettingsGroup {
             RowLayout {
@@ -151,11 +151,11 @@ ContentPage {
                 ColumnLayout {
                     Layout.alignment: Qt.AlignVCenter
                     StyledText {
-                        text: "ii on Niri"
+                        text: "iNiR"
                         font.pixelSize: Appearance.font.pixelSize.title
                     }
                     StyledText {
-                        text: "[https://github.com/snowarch/quickshell-ii-niri](https://github.com/snowarch/quickshell-ii-niri)"
+                        text: "[https://github.com/snowarch/inir](https://github.com/snowarch/inir)"
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.m3colors.m3primary
                         textFormat: Text.MarkdownText
@@ -172,12 +172,12 @@ ContentPage {
                 RippleButtonWithIcon {
                     materialIcon: "auto_stories"
                     mainText: Translation.tr("Documentation")
-                    onClicked: Qt.openUrlExternally("https://github.com/snowarch/quickshell-ii-niri/tree/main/docs")
+                    onClicked: Qt.openUrlExternally("https://github.com/snowarch/inir/tree/main/docs")
                 }
                 RippleButtonWithIcon {
                     materialIcon: "bug_report"
                     mainText: Translation.tr("Issues")
-                    onClicked: Qt.openUrlExternally("https://github.com/snowarch/quickshell-ii-niri/issues")
+                    onClicked: Qt.openUrlExternally("https://github.com/snowarch/inir/issues")
                 }
             }
         }

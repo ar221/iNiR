@@ -1,4 +1,4 @@
-pkgname=ii-niri-audio
+pkgname=inir-audio
 pkgver=1.0
 pkgrel=1
 pkgdesc='illogical-impulse on Niri - Audio Dependencies'

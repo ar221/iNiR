@@ -13,14 +13,14 @@ import qs.modules.common.functions
  * 
  * Strategy:
  * - Capture previews ONLY when TaskView opens
- * - Cache in ~/.cache/ii-niri/window-previews/
+ * - Cache in ~/.cache/inir/window-previews/
  * - Only capture windows that don't have a recent preview
  * - Clean up on window close
  */
 Singleton {
     id: root
 
-    readonly property string previewDir: FileUtils.trimFileProtocol(Directories.genericCache) + "/ii-niri/window-previews"
+    readonly property string previewDir: FileUtils.trimFileProtocol(Directories.genericCache) + "/inir/window-previews"
     
     // Map of windowId -> { path, timestamp }
     property var previewCache: ({})

@@ -1,4 +1,4 @@
-# Robust update system for ii-niri
+# Robust update system for iNiR
 # Handles: manifest tracking, orphan cleanup, verification, rollback
 # This script is meant to be sourced.
 

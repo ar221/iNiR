@@ -1,4 +1,4 @@
-pkgname=ii-niri-core
+pkgname=inir-core
 pkgver=1.0
 pkgrel=1
 pkgdesc='illogical-impulse on Niri - Core Dependencies'

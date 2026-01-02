@@ -1,5 +1,5 @@
 #!/bin/bash
-# Versioning system for ii-niri
+# Versioning system for iNiR
 # Tracks installed version, compares with remote, manages updates
 # This script is meant to be sourced.
 
@@ -11,11 +11,11 @@
 VERSION_FILE_LOCAL="${XDG_CONFIG_HOME}/illogical-impulse/version.json"
 VERSION_FILE_REPO="${REPO_ROOT}/VERSION"
 CHANGELOG_FILE="${REPO_ROOT}/CHANGELOG.md"
-GITHUB_REPO="snowarch/ii-niri"
+GITHUB_REPO="snowarch/inir"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}"
 
 # Cache for remote version checks (avoid hammering GitHub)
-VERSION_CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/ii-niri/version-cache.json"
+VERSION_CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/inir/version-cache.json"
 VERSION_CACHE_TTL=3600  # 1 hour in seconds
 
 #####################################################################################
@@ -266,7 +266,7 @@ show_version_status() {
     local repo_commit=$(get_repo_commit)
     
     echo ""
-    echo -e "${STY_CYAN}${STY_BOLD}ii-niri Version Status${STY_RST}"
+    echo -e "${STY_CYAN}${STY_BOLD}iNiR Version Status${STY_RST}"
     echo ""
     echo -e "  ${STY_BOLD}Installed:${STY_RST}  $installed (${installed_commit})"
     echo -e "  ${STY_BOLD}Repository:${STY_RST} $repo_version (${repo_commit})"
@@ -308,7 +308,7 @@ show_changelog() {
         return 1
     fi
     
-    echo -e "${STY_CYAN}${STY_BOLD}ii-niri Changelog${STY_RST}"
+    echo -e "${STY_CYAN}${STY_BOLD}iNiR Changelog${STY_RST}"
     echo ""
     head -n "$lines" "$CHANGELOG_FILE"
     

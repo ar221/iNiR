@@ -1,4 +1,4 @@
-# Package installation functions for ii-niri
+# Package installation functions for iNiR
 # This is NOT a script for execution, but for loading functions
 
 # shellcheck shell=bash

@@ -1,6 +1,6 @@
 # QML/Quickshell Performance Optimization Guide
 
-Best practices for optimizing ii-niri based on Qt6 QML documentation and KDAB recommendations.
+Best practices for optimizing iNiR based on Qt6 QML documentation and KDAB recommendations.
 
 ## Quick Reference
 

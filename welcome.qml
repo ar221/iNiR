@@ -31,7 +31,7 @@ ApplicationWindow {
         ]);
         Qt.quit();
     }
-    title: Translation.tr("ii on Niri - Welcome")
+    title: Translation.tr("iNiR - Welcome")
 
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme();
@@ -74,7 +74,7 @@ ApplicationWindow {
                     leftMargin: 12
                 }
                 color: Appearance.colors.colOnLayer0
-                text: Translation.tr("Welcome to ii on Niri")
+                text: Translation.tr("Welcome to iNiR")
                 font {
                     family: Appearance.font.family.title
                     pixelSize: Appearance.font.pixelSize.title
@@ -351,7 +351,7 @@ ApplicationWindow {
                             nerdIcon: "󰊤"
                             mainText: "GitHub"
                             onClicked: {
-                                Qt.openUrlExternally("https://github.com/snowarch/quickshell-ii-niri");
+                                Qt.openUrlExternally("https://github.com/snowarch/inir");
                             }
                         }
                     }
