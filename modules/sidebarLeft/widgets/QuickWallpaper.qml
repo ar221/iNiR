@@ -254,7 +254,7 @@ Item {
                                 anchors.fill: parent
                                 radius: parent.radius
                                 color: wallpaperDelegate.isHovered && !wallpaperDelegate.isCurrentWallpaper
-                                    ? ColorUtils.transparentize("#000000", 0.7)
+                                    ? ColorUtils.transparentize("black", 0.7)
                                     : "transparent"
                                 Behavior on color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
                             }

@@ -101,7 +101,7 @@ RippleButton {
                 width: durText.implicitWidth + 6
                 height: 14
                 radius: 3
-                color: "#CC000000"
+                color: ColorUtils.transparentize("black", 0.2)
                 visible: root.showDuration && (root.track?.duration ?? 0) > 0
 
                 StyledText {
