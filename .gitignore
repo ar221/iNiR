@@ -4,9 +4,13 @@
 *.swp
 *~
 
-# Kiro (personal dev environment)
+# AI/Dev agents (personal)
 .kiro/
+.opencode/
 AGENTS.md
+
+# WIP documentation (not for distribution)
+docs/*_IMPLEMENTATION.md
 
 # Python
 __pycache__/
