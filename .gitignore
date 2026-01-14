@@ -70,3 +70,4 @@ debug_*.py
 .DS_Store
 Thumbs.db
 *.desktop.bak
+.orchids/
