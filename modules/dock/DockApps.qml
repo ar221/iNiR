@@ -226,9 +226,6 @@ Item {
         function onIgnoredAppRegexesChanged() {
             root.rebuildDockItems()
         }
-        function onSeparatePinnedFromRunningChanged() {
-            root.rebuildDockItems()
-        }
     }
     
     Component.onCompleted: rebuildDockItems()
