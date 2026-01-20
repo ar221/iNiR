@@ -14,7 +14,18 @@ Singleton {
 	
 	property list<MprisPlayer> players: Mpris.players.values.filter(player => isRealPlayer(player));
 	property MprisPlayer trackedPlayer: null;
-	property MprisPlayer activePlayer: trackedPlayer ?? players[0] ?? null;
+	
+	// Prioritize playing players over paused ones
+	// If trackedPlayer is playing, use it; otherwise find any playing player; fallback to trackedPlayer or first
+	property MprisPlayer activePlayer: {
+		// If tracked player is actively playing, use it
+		if (trackedPlayer?.isPlaying) return trackedPlayer;
+		// Otherwise, find any player that IS playing
+		const playingPlayer = players.find(p => p.isPlaying);
+		if (playingPlayer) return playingPlayer;
+		// Fallback to tracked or first player (even if paused)
+		return trackedPlayer ?? players[0] ?? null;
+	}
 
 	readonly property bool isYtMusicActive: {
 		if (YtMusic.currentVideoId) return true;
