@@ -298,6 +298,27 @@ check_quickshell_loads() {
     return 0
 }
 
+check_matugen_colors() {
+    local colors_file="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/material_colors.scss"
+    local darkly_file="${HOME}/.local/share/color-schemes/Darkly.colors"
+    
+    if [[ ! -f "$colors_file" ]]; then
+        doctor_fail "Material colors not generated"
+        echo -e "    ${STY_FAINT}Run: matugen image /path/to/wallpaper.png${STY_RST}"
+        echo -e "    ${STY_FAINT}Or: Set wallpaper via ii settings${STY_RST}"
+        return 1
+    fi
+    
+    if [[ ! -f "$darkly_file" ]]; then
+        doctor_fail "Darkly Qt colors not generated"
+        echo -e "    ${STY_FAINT}Run: bash ~/.config/quickshell/ii/scripts/colors/apply-gtk-theme.sh${STY_RST}"
+        return 1
+    fi
+    
+    doctor_pass "Theme colors generated"
+    return 0
+}
+
 ###############################################################################
 # Main
 ###############################################################################
@@ -307,7 +328,7 @@ run_doctor_with_fixes() {
     doctor_failed=0
     doctor_fixed=0
     
-    tui_step 1 10 "Checking dependencies"
+    tui_step 1 11 "Checking dependencies"
     check_dependencies
 
     if [[ ${#doctor_missing_deps[@]} -gt 0 ]]; then
@@ -328,31 +349,35 @@ run_doctor_with_fixes() {
         esac
     fi
     
-    tui_step 2 10 "Checking critical files"
+    tui_step 2 11 "Checking critical files"
     check_critical_files
     
-    tui_step 3 10 "Checking script permissions"
+    tui_step 3 11 "Checking script permissions"
     check_script_permissions
     
-    tui_step 4 10 "Checking user config"
+    tui_step 4 11 "Checking user config"
     check_user_config
     
-    tui_step 5 10 "Checking state directories"
+    tui_step 5 11 "Checking state directories"
     check_state_directories
     
-    tui_step 6 10 "Checking version tracking"
+    tui_step 6 11 "Checking version tracking"
     check_version_tracking
     
-    tui_step 7 10 "Checking file manifest"
+    tui_step 7 11 "Checking file manifest"
     check_manifest
     
-    tui_step 8 10 "Checking Niri compositor"
+    tui_step 8 11 "Checking Niri compositor"
     check_niri_running
     
-    tui_step 9 10 "Checking Python packages"
+    tui_step 9 11 "Checking Python packages"
     check_python_packages
     
-    tui_step 10 10 "Checking Quickshell"
+    tui_step 10 11 "Checking Quickshell"
+    check_quickshell_loads
+    
+    tui_step 11 11 "Checking theme colors"
+    check_matugen_colors
     check_quickshell_loads
     
     echo ""
