@@ -278,14 +278,14 @@ ContentPage {
                 SettingsSwitch {
                     buttonIcon: "side_navigation"
                     text: Translation.tr("Left sidebar button")
-                    checked: Config.options.bar.modules.leftSidebarButton
-                    onCheckedChanged: Config.options.bar.modules.leftSidebarButton = checked
+                    checked: Config.options?.bar?.modules?.leftSidebarButton ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.leftSidebarButton", checked)
                 }
                 SettingsSwitch {
                     buttonIcon: "call_to_action"
                     text: Translation.tr("Right sidebar button")
-                    checked: Config.options.bar.modules.rightSidebarButton
-                    onCheckedChanged: Config.options.bar.modules.rightSidebarButton = checked
+                    checked: Config.options?.bar?.modules?.rightSidebarButton ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.rightSidebarButton", checked)
                 }
             }
 
@@ -294,15 +294,76 @@ ContentPage {
                 SettingsSwitch {
                     buttonIcon: "window"
                     text: Translation.tr("Active window title")
-                    checked: Config.options.bar.modules.activeWindow
-                    onCheckedChanged: Config.options.bar.modules.activeWindow = checked
+                    checked: Config.options?.bar?.modules?.activeWindow ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.activeWindow", checked)
                 }
                 SettingsSwitch {
                     buttonIcon: "shelf_auto_hide"
                     text: Translation.tr("System tray")
-                    checked: Config.options.bar.modules.sysTray
-                    onCheckedChanged: Config.options.bar.modules.sysTray = checked
+                    checked: Config.options?.bar?.modules?.sysTray ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.sysTray", checked)
                 }
+            }
+
+            ConfigRow {
+                uniform: true
+                SettingsSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("Resources")
+                    checked: Config.options?.bar?.modules?.resources ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.resources", checked)
+                }
+                SettingsSwitch {
+                    buttonIcon: "music_note"
+                    text: Translation.tr("Media")
+                    checked: Config.options?.bar?.modules?.media ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.media", checked)
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                SettingsSwitch {
+                    buttonIcon: "workspaces"
+                    text: Translation.tr("Workspaces")
+                    checked: Config.options?.bar?.modules?.workspaces ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.workspaces", checked)
+                }
+                SettingsSwitch {
+                    buttonIcon: "schedule"
+                    text: Translation.tr("Clock")
+                    checked: Config.options?.bar?.modules?.clock ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.clock", checked)
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                SettingsSwitch {
+                    buttonIcon: "build"
+                    text: Translation.tr("Utility buttons")
+                    checked: Config.options?.bar?.modules?.utilButtons ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.utilButtons", checked)
+                }
+                SettingsSwitch {
+                    buttonIcon: "battery_full"
+                    text: Translation.tr("Battery")
+                    checked: Config.options?.bar?.modules?.battery ?? true
+                    onCheckedChanged: Config.setNestedValue("bar.modules.battery", checked)
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                SettingsSwitch {
+                    buttonIcon: "cloud"
+                    text: Translation.tr("Weather")
+                    checked: Config.options?.bar?.modules?.weather ?? false
+                    onCheckedChanged: Config.setNestedValue("bar.modules.weather", checked)
+                    enabled: Config.options?.bar?.weather?.enable ?? false
+                    opacity: enabled ? 1 : 0.5
+                }
+                Item { Layout.fillWidth: true }
             }
 
             SettingsDivider {}

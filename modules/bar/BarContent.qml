@@ -48,7 +48,12 @@ Item { // Bar content region
 
     // Background shadow
     Loader {
-        active: !root.inirEverywhere && !Appearance.auroraEverywhere && !Appearance.gameModeMinimal && Config.options.bar.showBackground && (Config.options.bar.cornerStyle === 1 || Config.options.bar.cornerStyle === 3) && Config.options.bar.floatStyleShadow
+        active: !root.inirEverywhere
+            && !Appearance.auroraEverywhere
+            && !Appearance.gameModeMinimal
+            && (Config.options?.bar?.showBackground ?? true)
+            && ((Config.options?.bar?.cornerStyle ?? 0) === 1 || (Config.options?.bar?.cornerStyle ?? 0) === 3)
+            && (Config.options?.bar?.floatStyleShadow ?? true)
         anchors.fill: barBackground
         sourceComponent: StyledRectangularShadow {
             anchors.fill: undefined // The loader's anchors act on this, and this should not have any anchor
@@ -60,7 +65,7 @@ Item { // Bar content region
         id: barBackground
         readonly property bool auroraEverywhere: Appearance.auroraEverywhere
         readonly property bool gameModeMinimal: Appearance.gameModeMinimal
-        readonly property int cornerStyle: Config.options.bar.cornerStyle
+        readonly property int cornerStyle: Config.options?.bar?.cornerStyle ?? 0
         // Float (1) and Card (3) are floating; Aurora makes everything floating except Hug and Rect
         readonly property bool floatingStyle: (cornerStyle === 1 || cornerStyle === 3) || (auroraEverywhere && cornerStyle !== 0 && cornerStyle !== 2)
         
@@ -73,7 +78,7 @@ Item { // Bar content region
 
         readonly property QtObject blendedColors: root.blendedColors
         
-        visible: Config.options.bar.showBackground && !gameModeMinimal
+        visible: (Config.options?.bar?.showBackground ?? true) && !gameModeMinimal
         
         // Color logic per global style and corner style
         color: {
@@ -205,7 +210,7 @@ Item { // Bar content region
             spacing: 10
 
             LeftSidebarButton { // Left sidebar button
-                visible: Config.options.bar.modules.leftSidebarButton
+                visible: Config.options?.bar?.modules?.leftSidebarButton ?? true
                 Layout.alignment: Qt.AlignVCenter
                 colBackground: barLeftSideMouseArea.hovered 
                     ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover) 
@@ -213,7 +218,7 @@ Item { // Bar content region
             }
 
             ActiveWindow {
-                visible: Config.options.bar.modules.activeWindow && root.useShortenedForm === 0
+                visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
@@ -234,14 +239,21 @@ Item { // Bar content region
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
 
-            Resources {
-                alwaysShowAllResources: root.useShortenedForm === 2
+            Loader {
+                active: Config.options?.bar?.modules?.resources ?? true
+                visible: active
                 Layout.fillWidth: root.useShortenedForm === 2
+                sourceComponent: Resources {
+                    alwaysShowAllResources: root.useShortenedForm === 2
+                }
             }
 
-            Media {
-                visible: root.useShortenedForm < 2
+            Loader {
+                active: (Config.options?.bar?.modules?.media ?? true) && root.useShortenedForm < 2
+                visible: active
                 Layout.fillWidth: true
+                sourceComponent: Media {
+                }
             }
         }
 
@@ -256,6 +268,7 @@ Item { // Bar content region
 
             Workspaces {
                 id: workspacesWidget
+                visible: Config.options?.bar?.modules?.workspaces ?? true
                 Layout.fillHeight: true
                 MouseArea {
                     // Right-click to toggle overview
@@ -295,18 +308,19 @@ Item { // Bar content region
                 anchors.fill: parent
 
                 ClockWidget {
-                    showDate: (Config.options.bar.verbose && root.useShortenedForm < 2)
+                    visible: Config.options?.bar?.modules?.clock ?? true
+                    showDate: ((Config.options?.bar?.verbose ?? true) && root.useShortenedForm < 2)
                     Layout.alignment: Qt.AlignVCenter
                     Layout.fillWidth: true
                 }
 
                 UtilButtons {
-                    visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
+                    visible: (Config.options?.bar?.modules?.utilButtons ?? true) && ((Config.options?.bar?.verbose ?? true) && root.useShortenedForm === 0)
                     Layout.alignment: Qt.AlignVCenter
                 }
 
                 BatteryIndicator {
-                    visible: (root.useShortenedForm < 2 && Battery.available)
+                    visible: (Config.options?.bar?.modules?.battery ?? true) && (root.useShortenedForm < 2 && Battery.available)
                     Layout.alignment: Qt.AlignVCenter
                 }
             }
@@ -356,7 +370,7 @@ Item { // Bar content region
 
             RippleButton { // Right sidebar button
                 id: rightSidebarButton
-                visible: Config.options.bar.modules.rightSidebarButton
+                visible: Config.options?.bar?.modules?.rightSidebarButton ?? true
 
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 Layout.fillWidth: false
@@ -365,14 +379,16 @@ Item { // Bar content region
                 implicitHeight: indicatorsRowLayout.implicitHeight + 5 * 2
 
                 buttonRadius: Appearance.rounding.full
-                colBackground: barRightSideMouseArea.hovered 
-                    ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover) 
+
+                colBackground: barRightSideMouseArea.hovered
+                    ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
                     : "transparent"
                 colBackgroundHover: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover
                 colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active
                 colBackgroundToggled: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer
                 colBackgroundToggledHover: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover
                 colRippleToggled: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive
+
                 toggled: GlobalStates.sidebarRightOpen
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
@@ -450,10 +466,10 @@ Item { // Bar content region
             }
 
             SysTray {
-                visible: Config.options.bar.modules.sysTray && root.useShortenedForm === 0
+                visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: false
                 Layout.fillHeight: true
-                invertSide: Config?.options.bar.bottom
+                invertSide: Config.options?.bar?.bottom ?? false
             }
 
             // Timer indicator
@@ -469,7 +485,7 @@ Item { // Bar content region
             // Weather
             Loader {
                 Layout.leftMargin: 4
-                active: Config.options.bar.modules.weather && Config.options.bar.weather.enable
+                active: (Config.options?.bar?.modules?.weather ?? true) && (Config.options?.bar?.weather?.enable ?? false)
 
                 sourceComponent: BarGroup {
                     WeatherBar {}

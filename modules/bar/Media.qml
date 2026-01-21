@@ -14,7 +14,7 @@ import Quickshell.Wayland
 
 Item {
     id: root
-    property bool borderless: Config.options.bar.borderless
+    property bool borderless: Config.options?.bar?.borderless ?? false
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || Translation.tr("No media")
     readonly property string popupMode: Config.options?.media?.popupMode ?? "dock"
@@ -51,8 +51,8 @@ Item {
             anchor {
                 window: root.QsWindow.window
                 item: root
-                edges: Config.options.bar.bottom ? Edges.Top : Edges.Bottom
-                gravity: Config.options.bar.bottom ? Edges.Top : Edges.Bottom
+                edges: (Config.options?.bar?.bottom ?? false) ? Edges.Top : Edges.Bottom
+                gravity: (Config.options?.bar?.bottom ?? false) ? Edges.Top : Edges.Bottom
             }
             implicitWidth: popupContent.width + 16
             implicitHeight: popupContent.height + 16
@@ -219,7 +219,7 @@ Item {
         }
 
         StyledText {
-            visible: Config.options.bar.verbose
+            visible: Config.options?.bar?.verbose ?? true
             width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true

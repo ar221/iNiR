@@ -11,7 +11,7 @@ import Quickshell.Services.UPower
 
 Item {
     id: root
-    property bool borderless: Config.options.bar.borderless
+    property bool borderless: Config.options?.bar?.borderless ?? false
     implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
     implicitHeight: rowLayout.implicitHeight
 
@@ -29,8 +29,8 @@ Item {
         anchors.centerIn: parent
 
         Loader {
-            active: Config.options.bar.utilButtons.showScreenSnip
-            visible: Config.options.bar.utilButtons.showScreenSnip
+            active: Config.options?.bar?.utilButtons?.showScreenSnip ?? true
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "region", "screenshot"])
@@ -45,8 +45,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showScreenRecord
-            visible: Config.options.bar.utilButtons.showScreenRecord
+            active: Config.options?.bar?.utilButtons?.showScreenRecord ?? false
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: Quickshell.execDetached([Directories.recordScriptPath, "--fullscreen", "--sound"])
@@ -61,8 +61,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showColorPicker
-            visible: Config.options.bar.utilButtons.showColorPicker
+            active: Config.options?.bar?.utilButtons?.showColorPicker ?? false
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: Quickshell.execDetached(["/usr/bin/hyprpicker", "-a"])
@@ -77,8 +77,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showNotepad
-            visible: Config.options.bar.utilButtons.showNotepad
+            active: Config.options?.bar?.utilButtons?.showNotepad ?? true
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: {
@@ -98,8 +98,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showKeyboardToggle
-            visible: Config.options.bar.utilButtons.showKeyboardToggle
+            active: Config.options?.bar?.utilButtons?.showKeyboardToggle ?? true
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
@@ -115,7 +115,7 @@ Item {
 
         Loader {
             readonly property bool micInUse: Privacy.micActive || (Audio?.micBeingAccessed ?? false)
-            active: Config.options.bar.utilButtons.showMicToggle || micInUse
+            active: (Config.options?.bar?.utilButtons?.showMicToggle ?? false) || micInUse
             visible: active
             sourceComponent: CircleUtilButton {
                 id: micButton
@@ -178,8 +178,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showDarkModeToggle
-            visible: Config.options.bar.utilButtons.showDarkModeToggle
+            active: Config.options?.bar?.utilButtons?.showDarkModeToggle ?? true
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: event => {
@@ -200,8 +200,8 @@ Item {
         }
 
         Loader {
-            active: Config.options.bar.utilButtons.showPerformanceProfileToggle
-            visible: Config.options.bar.utilButtons.showPerformanceProfileToggle
+            active: Config.options?.bar?.utilButtons?.showPerformanceProfileToggle ?? false
+            visible: active
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: event => {
