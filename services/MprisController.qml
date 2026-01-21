@@ -65,14 +65,20 @@ Singleton {
 	function isRealPlayer(player) {
 		if (!Config.options?.media?.filterDuplicatePlayers) return true;
 		const name = player.dbusName ?? "";
-		// Filter browser players when plasma-browser-integration is present
-		if (hasPlasmaIntegration && name.startsWith('org.mpris.MediaPlayer2.firefox')) return false;
-		if (hasPlasmaIntegration && name.startsWith('org.mpris.MediaPlayer2.chromium')) return false;
-		if (hasPlasmaIntegration && name.startsWith('org.mpris.MediaPlayer2.chrome')) return false;
-		// Filter playerctld (just a proxy)
+		// Filter playerctld (just a proxy, not the actual player)
 		if (name.startsWith('org.mpris.MediaPlayer2.playerctld')) return false;
-		// Filter plasma-browser-integration itself when we already have browser players
-		if (name.includes('plasma-browser-integration')) return false;
+		
+		// Handle plasma-browser-integration (KDE Plasma users)
+		// When plasma-browser-integration is present, it acts as a proxy for browser media.
+		// We should use EITHER the browser player OR plasma-browser-integration, not both.
+		// Prefer plasma-browser-integration as it has better metadata.
+		if (hasPlasmaIntegration) {
+			// Filter raw browser players - plasma-browser-integration will handle them
+			if (name.startsWith('org.mpris.MediaPlayer2.firefox')) return false;
+			if (name.startsWith('org.mpris.MediaPlayer2.chromium')) return false;
+			if (name.startsWith('org.mpris.MediaPlayer2.chrome')) return false;
+			// Keep plasma-browser-integration - it's the actual player proxy we want
+		}
 		// Filter duplicate MPD instances
 		if (name.endsWith('.mpd') && !name.endsWith('MediaPlayer2.mpd')) return false;
 		// NOTE: Do NOT filter YtMusic's mpv player here!
