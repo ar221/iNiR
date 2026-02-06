@@ -4,22 +4,33 @@ import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 /**
  * Compact iNiR shell update indicator for the bar.
  * Shows when a new version is available in the git repo.
- * Hover to see update details popup.
+ * Follows TimerIndicator pattern for global style support.
  */
 MouseArea {
     id: root
 
     visible: ShellUpdates.showUpdate
-    implicitWidth: visible ? updateRow.implicitWidth + 12 : 0
+    implicitWidth: visible ? pill.width : 0
     implicitHeight: Appearance.sizes.barHeight
 
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+    readonly property color accentColor: Appearance.inirEverywhere ? (Appearance.inir?.colAccent ?? Appearance.m3colors.m3primary)
+        : Appearance.auroraEverywhere ? (Appearance.aurora?.colAccent ?? Appearance.m3colors.m3primary)
+        : Appearance.m3colors.m3primary
+
+    readonly property color textColor: {
+        if (Appearance.inirEverywhere) return Appearance.inir?.colText ?? Appearance.colors.colOnLayer1
+        if (Appearance.auroraEverywhere) return Appearance.aurora?.colText ?? Appearance.colors.colOnLayer1
+        return Appearance.colors.colOnLayer1
+    }
 
     onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
@@ -29,30 +40,48 @@ MouseArea {
         }
     }
 
+    // Background pill (follows TimerIndicator pattern)
     Rectangle {
-        id: bg
+        id: pill
         anchors.centerIn: parent
-        width: updateRow.implicitWidth + 10
-        height: parent.height - 8
-        radius: Appearance.rounding.small
-        color: root.containsMouse
-            ? Appearance.colors.colPrimaryContainer
-            : Appearance.m3colors.m3primaryContainer
-        opacity: root.containsMouse ? 1.0 : 0.7
+        width: contentRow.implicitWidth + 12
+        height: contentRow.implicitHeight + 8
+        radius: height / 2
+        scale: root.pressed ? 0.95 : 1.0
+        color: {
+            if (root.pressed) {
+                if (Appearance.inirEverywhere) return Appearance.inir.colLayer2Active
+                if (Appearance.auroraEverywhere) return Appearance.aurora.colSubSurfaceActive
+                return Appearance.colors.colLayer1Active
+            }
+            if (root.containsMouse) {
+                if (Appearance.inirEverywhere) return Appearance.inir.colLayer1Hover
+                if (Appearance.auroraEverywhere) return Appearance.aurora.colSubSurface
+                return Appearance.colors.colLayer1Hover
+            }
+            if (Appearance.inirEverywhere) return ColorUtils.transparentize(Appearance.inir?.colAccent ?? Appearance.m3colors.m3primary, 0.85)
+            if (Appearance.auroraEverywhere) return ColorUtils.transparentize(Appearance.aurora?.colAccent ?? Appearance.m3colors.m3primary, 0.85)
+            return Appearance.colors.colPrimaryContainer
+        }
 
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on color {
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
+        Behavior on scale {
+            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+        }
     }
 
     RowLayout {
-        id: updateRow
-        anchors.centerIn: parent
+        id: contentRow
+        anchors.centerIn: pill
         spacing: 4
 
         MaterialSymbol {
             text: "system_update_alt"
             iconSize: Appearance.font.pixelSize.normal
-            color: Appearance.m3colors.m3onPrimaryContainer
+            color: root.accentColor
+            Layout.alignment: Qt.AlignVCenter
         }
 
         StyledText {
@@ -61,7 +90,8 @@ MouseArea {
                 : "!"
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.weight: Font.DemiBold
-            color: Appearance.m3colors.m3onPrimaryContainer
+            color: root.textColor
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 
@@ -79,8 +109,8 @@ MouseArea {
 
                 MaterialSymbol {
                     text: "system_update_alt"
-                    iconSize: 20
-                    color: Appearance.m3colors.m3primary
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: root.accentColor
                 }
 
                 StyledText {
@@ -103,7 +133,7 @@ MouseArea {
                     }
                     Item { Layout.fillWidth: true }
                     StyledText {
-                        text: ShellUpdates.localCommit || "—"
+                        text: ShellUpdates.localCommit || "\u2014"
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.family: Appearance.font.family.monospace
                         color: Appearance.colors.colOnSurfaceVariant
@@ -118,11 +148,11 @@ MouseArea {
                     }
                     Item { Layout.fillWidth: true }
                     StyledText {
-                        text: ShellUpdates.remoteCommit || "—"
+                        text: ShellUpdates.remoteCommit || "\u2014"
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.family: Appearance.font.family.monospace
                         font.weight: Font.DemiBold
-                        color: Appearance.m3colors.m3primary
+                        color: root.accentColor
                     }
                 }
 
@@ -139,7 +169,7 @@ MouseArea {
                         font.weight: Font.Bold
                         color: ShellUpdates.commitsBehind > 10
                             ? Appearance.m3colors.m3error
-                            : Appearance.m3colors.m3primary
+                            : root.accentColor
                     }
                 }
             }

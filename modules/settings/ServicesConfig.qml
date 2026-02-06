@@ -367,7 +367,7 @@ ContentPage {
                 Layout.fillWidth: true
                 Layout.preferredHeight: statusCol.implicitHeight + 16
                 radius: Appearance.rounding.small
-                color: Appearance.colors.colLayer1
+                color: Appearance.colors.colSurfaceContainerLow
                 visible: Config.options?.shellUpdates?.enabled ?? true
 
                 ColumnLayout {
@@ -380,7 +380,7 @@ ContentPage {
                         spacing: 6
                         MaterialSymbol {
                             text: ShellUpdates.hasUpdate ? "update" : ShellUpdates.isChecking ? "sync" : "check_circle"
-                            iconSize: 16
+                            iconSize: Appearance.font.pixelSize.normal
                             color: ShellUpdates.hasUpdate ? Appearance.m3colors.m3primary
                                 : ShellUpdates.isChecking ? Appearance.colors.colSubtext
                                 : Appearance.m3colors.m3tertiary
@@ -394,7 +394,7 @@ ContentPage {
                                 return Translation.tr("Not available (no git repo)")
                             }
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colOnLayer1
+                            color: Appearance.colors.colOnSurface
                         }
                     }
 
@@ -434,53 +434,49 @@ ContentPage {
                 spacing: 6
                 visible: Config.options?.shellUpdates?.enabled ?? true
 
-                // Check now button
-                Rectangle {
+                RippleButton {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 32
-                    radius: Appearance.rounding.small
-                    color: checkMouse.containsMouse ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1
+                    implicitHeight: 32
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.colors.colSurfaceContainerLow
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colRipple: Appearance.colors.colLayer1Active
                     opacity: ShellUpdates.isChecking ? 0.5 : 1.0
+                    onClicked: ShellUpdates.check()
 
-                    RowLayout {
+                    contentItem: RowLayout {
                         anchors.centerIn: parent
                         spacing: 6
                         MaterialSymbol {
                             text: "refresh"
-                            iconSize: 16
-                            color: Appearance.colors.colOnLayer1
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnSurface
                         }
                         StyledText {
                             text: ShellUpdates.isChecking ? Translation.tr("Checking...") : Translation.tr("Check Now")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colOnLayer1
+                            color: Appearance.colors.colOnSurface
                         }
-                    }
-
-                    MouseArea {
-                        id: checkMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: ShellUpdates.check()
                     }
                 }
 
-                // Update now button (only when update available)
-                Rectangle {
+                RippleButton {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 32
-                    radius: Appearance.rounding.small
+                    implicitHeight: 32
                     visible: ShellUpdates.hasUpdate
-                    color: applyMouse.containsMouse ? Qt.darker(Appearance.m3colors.m3primary, 1.1) : Appearance.m3colors.m3primary
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.m3colors.m3primary
+                    colBackgroundHover: Appearance.colors.colPrimaryHover
+                    colRipple: Appearance.colors.colPrimaryActive
                     opacity: ShellUpdates.isUpdating ? 0.5 : 1.0
+                    onClicked: { if (!ShellUpdates.isUpdating) ShellUpdates.performUpdate() }
 
-                    RowLayout {
+                    contentItem: RowLayout {
                         anchors.centerIn: parent
                         spacing: 6
                         MaterialSymbol {
                             text: ShellUpdates.isUpdating ? "hourglass_top" : "upgrade"
-                            iconSize: 16
+                            iconSize: Appearance.font.pixelSize.normal
                             color: Appearance.m3colors.m3onPrimary
                         }
                         StyledText {
@@ -490,73 +486,49 @@ ContentPage {
                             color: Appearance.m3colors.m3onPrimary
                         }
                     }
-
-                    MouseArea {
-                        id: applyMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: ShellUpdates.isUpdating ? Qt.BusyCursor : Qt.PointingHandCursor
-                        onClicked: {
-                            if (!ShellUpdates.isUpdating) ShellUpdates.performUpdate()
-                        }
-                    }
                 }
 
-                // Dismiss button (only when update available and not dismissed)
-                Rectangle {
-                    Layout.preferredWidth: 32
-                    Layout.preferredHeight: 32
-                    radius: Appearance.rounding.small
+                RippleButton {
+                    implicitWidth: 32
+                    implicitHeight: 32
                     visible: ShellUpdates.hasUpdate && !ShellUpdates.isDismissed
-                    color: dismissSettingsMouse.containsMouse ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.colors.colSurfaceContainerLow
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colRipple: Appearance.colors.colLayer1Active
+                    onClicked: ShellUpdates.dismiss()
 
-                    MaterialSymbol {
+                    contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: "notifications_off"
-                        iconSize: 16
+                        iconSize: Appearance.font.pixelSize.normal
                         color: Appearance.colors.colSubtext
-                    }
-
-                    MouseArea {
-                        id: dismissSettingsMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: ShellUpdates.dismiss()
                     }
 
                     StyledToolTip {
                         text: Translation.tr("Dismiss this update (hide bar indicator)")
-                        visible: dismissSettingsMouse.containsMouse
                     }
                 }
 
-                // Undismiss button (only when dismissed)
-                Rectangle {
-                    Layout.preferredWidth: 32
-                    Layout.preferredHeight: 32
-                    radius: Appearance.rounding.small
+                RippleButton {
+                    implicitWidth: 32
+                    implicitHeight: 32
                     visible: ShellUpdates.isDismissed
-                    color: undismissMouse.containsMouse ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.colors.colSurfaceContainerLow
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colRipple: Appearance.colors.colLayer1Active
+                    onClicked: ShellUpdates.undismiss()
 
-                    MaterialSymbol {
+                    contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: "notifications_active"
-                        iconSize: 16
+                        iconSize: Appearance.font.pixelSize.normal
                         color: Appearance.m3colors.m3primary
-                    }
-
-                    MouseArea {
-                        id: undismissMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: ShellUpdates.undismiss()
                     }
 
                     StyledToolTip {
                         text: Translation.tr("Show bar indicator again")
-                        visible: undismissMouse.containsMouse
                     }
                 }
             }
