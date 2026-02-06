@@ -114,13 +114,14 @@
       "wallpaperPath": "",
       "hideWallpaper": false
     },
+    "enableAnimation": true,
     "effects": {
       "blurRadius": 22,
       "blurStatic": 0,
       "dim": 30,
       "dynamicDim": 20,
       "enableBlur": true,
-      "videoBlurStrength": 70
+      "thumbnailBlurStrength": 70
     },
     "hideWhenFullscreen": true,
     "parallax": {
