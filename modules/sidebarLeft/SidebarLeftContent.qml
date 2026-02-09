@@ -181,7 +181,7 @@ Item {
                             Ai.ensureInitialized()
                         }
                     }
-                    interactive: !(currentItem?.editMode ?? false) && !(currentItem?.dragPending ?? false)
+                    interactive: !(currentItem?.item?.editMode ?? false) && !(currentItem?.item?.dragPending ?? false)
 
                     clip: true
                     layer.enabled: root.contentReady
