@@ -588,6 +588,7 @@ Singleton {
                 property list<string> pinnedApps: [ // IDs of pinned entries
                     "org.kde.dolphin", "kitty",]
                 property list<string> ignoredAppRegexes: []
+                property list<string> screenList: [] // List of screen names to show dock on (e.g. ["DP-2"]). Empty = all screens
                 // Smart indicator settings
                 property bool smartIndicator: true // Show which window is focused
                 property bool showAllWindowDots: true // Show dots for all windows (even inactive apps)
