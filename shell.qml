@@ -97,27 +97,28 @@ ShellRoot {
     }
 
     // IPC for settings - overlay mode or separate window based on config
+    // Note: waffle family ALWAYS uses its own window (waffleSettings.qml), never the Material overlay
     IpcHandler {
         target: "settings"
         function open(): void {
-            if (Config.options?.settingsUi?.overlayMode ?? false) {
-                // Layer shell overlay mode — toggle inline panel
+            const isWaffle = Config.options?.panelFamily === "waffle"
+                && Config.options?.waffles?.settings?.useMaterialStyle !== true
+
+            if (isWaffle) {
+                // Waffle always opens its own Win11-style settings window
+                Quickshell.execDetached(["/usr/bin/qs", "-n", "-p",
+                    Quickshell.shellPath("waffleSettings.qml")])
+            } else if (Config.options?.settingsUi?.overlayMode ?? false) {
+                // ii overlay mode — toggle inline panel
                 GlobalStates.settingsOverlayOpen = !GlobalStates.settingsOverlayOpen
             } else {
-                // Window mode (default) — launch separate process
-                const settingsPath = (Config.options?.panelFamily === "waffle" && Config.options?.waffles?.settings?.useMaterialStyle !== true)
-                    ? Quickshell.shellPath("waffleSettings.qml")
-                    : Quickshell.shellPath("settings.qml")
-                // -n = no daemon (standalone window), -p = path to QML file
-                Quickshell.execDetached(["/usr/bin/qs", "-n", "-p", settingsPath])
+                // ii window mode (default) — launch separate process
+                Quickshell.execDetached(["/usr/bin/qs", "-n", "-p",
+                    Quickshell.shellPath("settings.qml")])
             }
         }
         function toggle(): void {
-            if (Config.options?.settingsUi?.overlayMode ?? false) {
-                GlobalStates.settingsOverlayOpen = !GlobalStates.settingsOverlayOpen
-            } else {
-                open()
-            }
+            open()
         }
     }
 
