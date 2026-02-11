@@ -149,6 +149,7 @@ Singleton {
     
     Component.onCompleted: {
         _checkAvailability.running = true
+        _checkMpvMpris.running = true
         _detectDefaultBrowserProc.running = true
         _detectBrowsersProc.running = true
         _loadData()
@@ -1151,10 +1152,28 @@ print("")
         }
     }
 
+    // Check if mpv-mpris plugin exists (optional — IPC fallback works without it)
+    readonly property bool _hasMpvMpris: _mpvMprisExists
+    property bool _mpvMprisExists: false
+
+    Process {
+        id: _checkMpvMpris
+        command: ["/bin/sh", "-c", "test -f /usr/lib/mpv-mpris/mpris.so"]
+        onExited: (code) => { root._mpvMprisExists = (code === 0) }
+    }
+
     Process {
         id: _checkAvailability
         // Need yt-dlp, mpv and socat (for IPC fallback when MPRIS is absent)
-        command: ["/bin/bash", "-c", "command -v yt-dlp >/dev/null && command -v mpv >/dev/null && command -v socat >/dev/null"]
+        command: ["/bin/bash", "-c", "missing=''; command -v yt-dlp >/dev/null || missing=\"$missing yt-dlp\"; command -v mpv >/dev/null || missing=\"$missing mpv\"; command -v socat >/dev/null || missing=\"$missing socat\"; [ -z \"$missing\" ] && exit 0 || { echo \"$missing\"; exit 1; }"]
+        stdout: SplitParser {
+            onRead: line => {
+                if (line.trim()) {
+                    root.googleError = "Missing: " + line.trim() + ". Install with: sudo pacman -S" + line.trim()
+                    console.log("[YtMusic] Missing dependencies:" + line.trim())
+                }
+            }
+        }
         onExited: (code) => {
             root.available = (code === 0)
             console.log("[YtMusic] Dependencies check:", root.available ? "OK" : "FAILED")
@@ -1316,7 +1335,7 @@ print("")
         command: ["/usr/bin/mpv",
             "--no-video",
             "--input-ipc-server=" + root.ipcSocket,
-            "--script=/usr/lib/mpv-mpris/mpris.so",
+            ...(root._hasMpvMpris ? ["--script=/usr/lib/mpv-mpris/mpris.so"] : []),
             "--force-media-title=" + root.currentTitle + (root.currentArtist ? " - " + root.currentArtist : ""),
             "--metadata-codepage=utf-8",
             "--volume=100",
