@@ -63,6 +63,7 @@ tmp/
 session-*.md
 session-ses_*.md
 docs-site/
+src/
 
 # Credentials and cookies (NEVER commit)
 yt-cookies.txt
