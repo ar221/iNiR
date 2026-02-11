@@ -254,7 +254,7 @@ Variants {
                     cache: true
                     smooth: true
                     mipmap: true
-                    source: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
+                    source: (bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo) ? "" : bgRoot.wallpaperPath
                     fillMode: bgRoot.fillMode === "fit" ? Image.PreserveAspectFit
                             : bgRoot.fillMode === "tile" ? Image.Tile
                             : bgRoot.fillMode === "center" ? Image.Pad
@@ -350,7 +350,6 @@ Variants {
                         && !blurLoader.active
                         && !bgRoot.backdropActive
                         && !bgRoot.wallpaperIsGif
-                        && !bgRoot.wallpaperIsVideo
                 anchors.fill: wallpaperContainer
                 sourceComponent: Item {
                     anchors.fill: parent
