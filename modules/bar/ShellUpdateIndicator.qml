@@ -9,7 +9,6 @@ import qs.modules.common.functions
 /**
  * Compact iNiR shell update indicator for the bar.
  * Shows when a new version is available in the git repo.
- * Redesigned with better visual hierarchy and animated feedback.
  */
 MouseArea {
     id: root
@@ -26,17 +25,11 @@ MouseArea {
         : Appearance.auroraEverywhere ? (Appearance.aurora?.colAccent ?? Appearance.m3colors.m3primary)
         : Appearance.m3colors.m3primary
 
-    readonly property color textColor: {
-        if (Appearance.inirEverywhere) return Appearance.inir?.colText ?? Appearance.colors.colOnLayer1
-        if (Appearance.auroraEverywhere) return Appearance.aurora?.colText ?? Appearance.colors.colOnLayer1
-        return Appearance.colors.colOnLayer1
-    }
-
     onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
             ShellUpdates.dismiss()
         } else {
-            ShellUpdates.performUpdate()
+            ShellUpdates.openOverlay()
         }
     }
 
@@ -87,7 +80,6 @@ MouseArea {
             color: root.accentColor
             Layout.alignment: Qt.AlignVCenter
 
-            // Gentle pulse when hovered
             SequentialAnimation on opacity {
                 loops: Animation.Infinite
                 running: root.containsMouse
@@ -107,202 +99,181 @@ MouseArea {
         }
     }
 
-    // Hover popup
+    // Hover popup — follows BatteryPopup / ResourcesPopup pattern
     StyledPopup {
         id: updatePopup
         hoverTarget: root
 
         ColumnLayout {
-            spacing: 8
+            spacing: 6
 
-            // Header row with icon and title
-            RowLayout {
-                spacing: 8
-                Layout.fillWidth: true
+            // Header row — icon + title
+            Row {
+                spacing: 5
 
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: Appearance.rounding.small
-                    color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "upgrade"
-                        iconSize: Appearance.font.pixelSize.huge
-                        color: Appearance.m3colors.m3primary
-                    }
+                MaterialSymbol {
+                    anchors.verticalCenter: parent.verticalCenter
+                    fill: 0
+                    font.weight: Font.Medium
+                    text: "deployed_code_update"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnSurfaceVariant
                 }
 
-                ColumnLayout {
-                    spacing: 0
-                    Layout.fillWidth: true
-
-                    StyledText {
-                        text: Translation.tr("iNiR Update")
-                        font {
-                            weight: Font.DemiBold
-                            pixelSize: Appearance.font.pixelSize.normal
-                        }
-                        color: Appearance.colors.colOnLayer1
+                StyledText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Translation.tr("iNiR Update")
+                    font {
+                        weight: Font.Medium
+                        pixelSize: Appearance.font.pixelSize.normal
                     }
-
-                    StyledText {
-                        text: ShellUpdates.commitsBehind > 0
-                            ? Translation.tr("%1 commit(s) behind").arg(ShellUpdates.commitsBehind)
-                            : Translation.tr("Update available")
-                        font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: ShellUpdates.commitsBehind > 10
-                            ? Appearance.m3colors.m3error
-                            : Appearance.colors.colSubtext
-                    }
+                    color: Appearance.colors.colOnSurfaceVariant
                 }
             }
 
-            // Version comparison card
-            Rectangle {
+            // Commits behind
+            RowLayout {
+                spacing: 5
                 Layout.fillWidth: true
-                Layout.preferredHeight: versionCol.implicitHeight + 16
-                radius: Appearance.rounding.small
-                color: Appearance.colors.colLayer2
-                border.width: 1
-                border.color: Appearance.colors.colLayer0Border
 
-                ColumnLayout {
-                    id: versionCol
-                    anchors {
-                        fill: parent
-                        margins: 8
+                MaterialSymbol {
+                    text: "download"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    text: Translation.tr("Behind:")
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    text: ShellUpdates.commitsBehind > 0
+                        ? (ShellUpdates.commitsBehind + " " + Translation.tr("commit(s)"))
+                        : Translation.tr("Update available")
+                    color: ShellUpdates.commitsBehind > 10
+                        ? (Appearance.m3colors?.m3error ?? Appearance.colors.colOnSurfaceVariant)
+                        : Appearance.colors.colOnSurfaceVariant
+                    font.weight: Font.Medium
+                }
+            }
+
+            // Version row
+            RowLayout {
+                visible: ShellUpdates.localVersion.length > 0 && ShellUpdates.remoteVersion.length > 0 && ShellUpdates.remoteVersion !== ShellUpdates.localVersion
+                spacing: 5
+                Layout.fillWidth: true
+
+                MaterialSymbol {
+                    text: "tag"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    text: Translation.tr("Version:")
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    text: "v" + ShellUpdates.localVersion + "  →  v" + ShellUpdates.remoteVersion
+                    font {
+                        family: Appearance.font.family.monospace
+                        weight: Font.Medium
                     }
-                    spacing: 6
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+            }
 
-                    // Current → Available
-                    RowLayout {
-                        spacing: 6
-                        Layout.fillWidth: true
+            // Commit comparison row
+            RowLayout {
+                spacing: 5
+                Layout.fillWidth: true
 
-                        Rectangle {
-                            width: currentLabel.implicitWidth + 12
-                            height: currentLabel.implicitHeight + 4
-                            radius: height / 2
-                            color: Appearance.colors.colSurfaceContainerLow
-
-                            StyledText {
-                                id: currentLabel
-                                anchors.centerIn: parent
-                                text: ShellUpdates.localCommit || "—"
-                                font {
-                                    pixelSize: Appearance.font.pixelSize.smallest
-                                    family: Appearance.font.family.monospace
-                                    weight: Font.Medium
-                                }
-                                color: Appearance.colors.colSubtext
-                            }
-                        }
-
-                        MaterialSymbol {
-                            text: "arrow_forward"
-                            iconSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.m3colors.m3primary
-                            visible: ShellUpdates.remoteCommit.length > 0
-                        }
-
-                        Rectangle {
-                            visible: ShellUpdates.remoteCommit.length > 0
-                            width: remoteLabel.implicitWidth + 12
-                            height: remoteLabel.implicitHeight + 4
-                            radius: height / 2
-                            color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
-
-                            StyledText {
-                                id: remoteLabel
-                                anchors.centerIn: parent
-                                text: ShellUpdates.remoteCommit || "—"
-                                font {
-                                    pixelSize: Appearance.font.pixelSize.smallest
-                                    family: Appearance.font.family.monospace
-                                    weight: Font.DemiBold
-                                }
-                                color: Appearance.m3colors.m3primary
-                            }
-                        }
+                MaterialSymbol {
+                    text: "commit"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    text: Translation.tr("Commit:")
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    text: (ShellUpdates.localCommit || "\u2014") +
+                        (ShellUpdates.remoteCommit.length > 0 ? ("  →  " + ShellUpdates.remoteCommit) : "")
+                    font {
+                        family: Appearance.font.family.monospace
+                        weight: Font.Medium
                     }
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+            }
 
-                    // Branch
-                    RowLayout {
-                        visible: ShellUpdates.currentBranch.length > 0
-                        spacing: 4
+            // Branch row
+            RowLayout {
+                visible: ShellUpdates.currentBranch.length > 0
+                spacing: 5
+                Layout.fillWidth: true
 
-                        MaterialSymbol {
-                            text: "account_tree"
-                            iconSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colSubtext
-                        }
-                        StyledText {
-                            text: ShellUpdates.currentBranch
-                            font {
-                                pixelSize: Appearance.font.pixelSize.smallest
-                                family: Appearance.font.family.monospace
-                            }
-                            color: Appearance.colors.colSubtext
-                        }
-                    }
-
-                    // Latest commit message
-                    RowLayout {
-                        visible: ShellUpdates.latestMessage.length > 0
-                        spacing: 4
-                        Layout.fillWidth: true
-                        Layout.maximumWidth: 280
-
-                        MaterialSymbol {
-                            text: "notes"
-                            iconSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colSubtext
-                        }
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: ShellUpdates.latestMessage
-                            font {
-                                pixelSize: Appearance.font.pixelSize.smallest
-                                family: Appearance.font.family.monospace
-                            }
-                            color: Appearance.colors.colSubtext
-                            elide: Text.ElideRight
-                            maximumLineCount: 2
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        }
-                    }
+                MaterialSymbol {
+                    text: "account_tree"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    text: Translation.tr("Branch:")
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    text: ShellUpdates.currentBranch
+                    font.family: Appearance.font.family.monospace
+                    color: Appearance.colors.colOnSurfaceVariant
                 }
             }
 
             // Error display
             RowLayout {
-                spacing: 4
+                spacing: 5
                 visible: ShellUpdates.lastError.length > 0
                 Layout.fillWidth: true
                 Layout.maximumWidth: 280
 
                 MaterialSymbol {
                     text: "error"
-                    color: Appearance.m3colors.m3error
-                    iconSize: Appearance.font.pixelSize.smaller
+                    color: Appearance.m3colors?.m3error ?? Appearance.colors.colOnSurfaceVariant
+                    iconSize: Appearance.font.pixelSize.large
                 }
                 StyledText {
                     Layout.fillWidth: true
                     text: ShellUpdates.lastError
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.m3colors.m3error
+                    color: Appearance.m3colors?.m3error ?? Appearance.colors.colOnSurfaceVariant
                     wrapMode: Text.WordWrap
                 }
             }
 
+            // Separator
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                Layout.topMargin: 2
+                Layout.bottomMargin: 2
+                color: Appearance.inirEverywhere ? (Appearance.inir?.colBorder ?? Appearance.colors.colLayer0Border)
+                    : Appearance.colors.colLayer0Border
+                opacity: 0.5
+            }
+
             // Hint
             StyledText {
-                text: Translation.tr("Click to update · Right-click to dismiss")
+                text: Translation.tr("Click for details · Right-click to dismiss")
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colSubtext
-                opacity: 0.7
+                color: Appearance.colors.colOnSurfaceVariant
+                opacity: 0.6
             }
         }
     }

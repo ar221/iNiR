@@ -109,7 +109,7 @@ Singleton {
                 "iiBar", "iiBackground", "iiCheatsheet", "iiControlPanel", "iiDock", "iiLock", "iiMediaControls",
                 "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard", "iiOverlay",
                 "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", "iiSessionScreen",
-                "iiSidebarLeft", "iiSidebarRight", "iiVerticalBar", "iiWallpaperSelector", "iiAltSwitcher", "iiClipboard"
+                "iiSidebarLeft", "iiSidebarRight", "iiVerticalBar", "iiWallpaperSelector", "iiAltSwitcher", "iiClipboard", "iiShellUpdate"
             ]
             property string panelFamily: "ii" // "ii" or "waffle"
             property bool familyTransitionAnimation: true // Show animated overlay when switching families
@@ -1070,6 +1070,7 @@ Singleton {
             property JsonObject shellUpdates: JsonObject {
                 property bool enabled: true
                 property int checkIntervalMinutes: 360
+                property string dismissedCommit: ""
             }
             property JsonObject welcomeWizard: JsonObject {
                 property bool completed: false

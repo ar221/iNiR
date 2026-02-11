@@ -638,6 +638,31 @@ ContentPage {
                 RippleButton {
                     Layout.fillWidth: true
                     implicitHeight: 36
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.colors.colSurfaceContainerLow
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colRipple: Appearance.colors.colLayer1Active
+                    onClicked: ShellUpdates.openOverlay()
+
+                    contentItem: RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        MaterialSymbol {
+                            text: "open_in_new"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnSurface
+                        }
+                        StyledText {
+                            text: Translation.tr("Open Details")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colOnSurface
+                        }
+                    }
+                }
+
+                RippleButton {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
                     visible: ShellUpdates.hasUpdate
                     buttonRadius: Appearance.rounding.small
                     colBackground: Appearance.m3colors.m3primary

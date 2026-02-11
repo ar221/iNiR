@@ -905,6 +905,7 @@
     "iiVerticalBar",
     "iiWallpaperSelector",
     "iiAltSwitcher",
-    "iiClipboard"
+    "iiClipboard",
+    "iiShellUpdate"
   ]
 }
