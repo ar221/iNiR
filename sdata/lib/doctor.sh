@@ -41,16 +41,22 @@ check_dependencies() {
         "wpctl:WirePlumber"
         "jq:jq"
         "rsync:rsync"
+        "curl:curl"
+        "git:git"
+        "python3:python3"
         "matugen:matugen"
         "wlsunset:wlsunset"
         "dunstify:dunst"
         "fish:fish"
         "magick:ImageMagick"
         "swaylock:swaylock"
+        "swayidle:swayidle"
         "grim:grim"
         "mpv:mpv"
         "cliphist:cliphist"
         "wl-copy:wl-clipboard"
+        "wl-paste:wl-clipboard"
+        "fuzzel:fuzzel"
     )
     
     # Optional but recommended
@@ -67,6 +73,10 @@ check_dependencies() {
         "tesseract:tesseract"
         "blueman-manager:Blueman"
         "kwriteconfig6:KConfig"
+        "checkupdates:pacman-contrib"
+        "ddcutil:ddcutil"
+        "trans:translate-shell"
+        "xdg-settings:xdg-utils"
     )
     
     # Check required commands

@@ -20,21 +20,28 @@ Essential packages for Niri + ii to function.
 | `wget` | Downloads |
 | `ripgrep` | Fast search |
 | `jq` | JSON parsing |
+| `python` | Python interpreter (scripts) |
 | `xdg-user-dirs` | User directories |
+| `xdg-utils` | xdg-settings, xdg-open |
 | `rsync` | File sync |
 | `git` | Version control |
-| `wl-clipboard` | Wayland clipboard |
+| `wl-clipboard` | Wayland clipboard (wl-copy, wl-paste) |
 | `libnotify` | Notifications |
+| `pacman-contrib` | checkupdates for update notifications |
+| `wlsunset` | Night light / blue light filter |
+| `dunst` | Notification daemon |
 | `xdg-desktop-portal` | XDG portal base |
 | `xdg-desktop-portal-gtk` | GTK portal |
 | `xdg-desktop-portal-gnome` | GNOME portal (screenshare) |
 | `polkit` | Privilege elevation |
-| `mate-polkit` | Polkit agent |
 | `networkmanager` | Network management |
 | `gnome-keyring` | Secrets storage |
 | `dolphin` | File manager |
-| `foot` | Terminal |
+| `kitty` | Terminal (default) |
+| `foot` | Terminal (fallback) |
+| `fish` | Fish shell (required for scripts) |
 | `gum` | TUI for setup script |
+| `xwayland-satellite` | X11 compatibility |
 
 ---
 
@@ -131,6 +138,7 @@ Input simulation, hardware control, and idle management.
 | `ddcutil` | DDC/CI for monitors |
 | `geoclue` | Geolocation |
 | `swayidle` | Idle management (screen off, lock, suspend) |
+| `swaylock` | Screen locker |
 
 ---
 

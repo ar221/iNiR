@@ -16,7 +16,9 @@ depends=(
   wget
   ripgrep
   jq
+  python
   xdg-user-dirs
+  xdg-utils
   rsync
   git
   wl-clipboard
