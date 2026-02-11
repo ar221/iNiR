@@ -542,6 +542,10 @@ Singleton {
                     property bool enable: false
                     property bool useUSCS: false // Instead of metric (SI) units
                     property int fetchInterval: 10 // minutes
+                    property string city: "" // Manual city name (e.g. "Buenos Aires"). Empty = auto-detect
+                    property bool enableGPS: false // Use geoclue GPS if available
+                    property real manualLat: 0 // Manual latitude (e.g. -34.6037)
+                    property real manualLon: 0 // Manual longitude (e.g. -58.3816)
                 }
                 property JsonObject indicators: JsonObject {
                     property JsonObject notifications: JsonObject {

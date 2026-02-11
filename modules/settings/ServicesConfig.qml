@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs.services
 import qs.modules.common
@@ -720,7 +721,7 @@ ContentPage {
         SettingsGroup {
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Location is detected automatically. Weather data provided by wttr.in.")
+                text: Translation.tr("Set a city name or coordinates for precise location. Leave empty to auto-detect from IP. Data provided by wttr.in.")
                 color: Appearance.colors.colOnSurfaceVariant
                 font.pixelSize: Appearance.font.pixelSize.small
                 wrapMode: Text.WordWrap
@@ -741,15 +742,127 @@ ContentPage {
                 enabled: Config.options?.bar?.weather?.enable ?? false
             }
 
+            // Manual location
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                enabled: Config.options?.bar?.weather?.enable ?? false
+
+                StyledText {
+                    text: Translation.tr("City (leave empty to auto-detect)")
+                    color: Appearance.colors.colOnSurfaceVariant
+                    font.pixelSize: Appearance.font.pixelSize.small
+                }
+
+                TextField {
+                    id: weatherCityInput
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("e.g. Buenos Aires, London, Tokyo")
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: Appearance.m3colors.m3onSurface
+                    placeholderTextColor: Appearance.colors.colSubtext
+                    text: Config.options?.bar?.weather?.city ?? ""
+                    background: Rectangle {
+                        color: Appearance.colors.colLayer1
+                        radius: Appearance.rounding.small
+                        border.width: weatherCityInput.activeFocus ? 2 : 1
+                        border.color: weatherCityInput.activeFocus ? Appearance.m3colors.m3primary : Appearance.colors.colLayer0Border
+                    }
+                    onTextEdited: Config.setNestedValue("bar.weather.city", text)
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                enabled: Config.options?.bar?.weather?.enable ?? false
+
+                StyledText {
+                    text: Translation.tr("Manual coordinates (optional, overrides city)")
+                    color: Appearance.colors.colOnSurfaceVariant
+                    font.pixelSize: Appearance.font.pixelSize.small
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    TextField {
+                        id: weatherLatInput
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("Latitude (e.g. -34.6037)")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.m3colors.m3onSurface
+                        placeholderTextColor: Appearance.colors.colSubtext
+                        text: {
+                            const v = Config.options?.bar?.weather?.manualLat ?? 0;
+                            return v !== 0 ? String(v) : "";
+                        }
+                        background: Rectangle {
+                            color: Appearance.colors.colLayer1
+                            radius: Appearance.rounding.small
+                            border.width: weatherLatInput.activeFocus ? 2 : 1
+                            border.color: weatherLatInput.activeFocus ? Appearance.m3colors.m3primary : Appearance.colors.colLayer0Border
+                        }
+                        onTextEdited: {
+                            const num = parseFloat(text);
+                            Config.setNestedValue("bar.weather.manualLat", isNaN(num) ? 0 : num);
+                        }
+                    }
+
+                    TextField {
+                        id: weatherLonInput
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("Longitude (e.g. -58.3816)")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.m3colors.m3onSurface
+                        placeholderTextColor: Appearance.colors.colSubtext
+                        text: {
+                            const v = Config.options?.bar?.weather?.manualLon ?? 0;
+                            return v !== 0 ? String(v) : "";
+                        }
+                        background: Rectangle {
+                            color: Appearance.colors.colLayer1
+                            radius: Appearance.rounding.small
+                            border.width: weatherLonInput.activeFocus ? 2 : 1
+                            border.color: weatherLonInput.activeFocus ? Appearance.m3colors.m3primary : Appearance.colors.colLayer0Border
+                        }
+                        onTextEdited: {
+                            const num = parseFloat(text);
+                            Config.setNestedValue("bar.weather.manualLon", isNaN(num) ? 0 : num);
+                        }
+                    }
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "my_location"
+                text: Translation.tr("Use GPS location (requires geoclue)")
+                checked: Config.options?.bar?.weather?.enableGPS ?? false
+                onCheckedChanged: Config.setNestedValue("bar.weather.enableGPS", checked)
+                enabled: Config.options?.bar?.weather?.enable ?? false
+                StyledToolTip {
+                    text: Translation.tr("Uses GPS when no manual location is set")
+                }
+            }
+
+            // Current detected location display
+            StyledText {
+                Layout.fillWidth: true
+                visible: (Config.options?.bar?.weather?.enable ?? false) && Weather.location.valid
+                text: Translation.tr("Current location:") + " " + (Weather.location.name || (Weather.location.lat + ", " + Weather.location.lon))
+                color: Appearance.colors.colOnSurfaceVariant
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.italic: true
+                wrapMode: Text.WordWrap
+            }
+
             SettingsSwitch {
                 buttonIcon: "thermometer"
                 text: Translation.tr("Use Fahrenheit (°F)")
                 checked: Config.options?.bar?.weather?.useUSCS ?? false
                 onCheckedChanged: Config.setNestedValue("bar.weather.useUSCS", checked)
                 enabled: Config.options?.bar?.weather?.enable ?? false
-                StyledToolTip {
-                    text: Translation.tr("May take a moment to update")
-                }
             }
 
             ConfigSpinBox {

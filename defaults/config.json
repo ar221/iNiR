@@ -265,6 +265,8 @@
       "enable": true,
       "enableGPS": false,
       "fetchInterval": 10,
+      "manualLat": 0,
+      "manualLon": 0,
       "useUSCS": false
     },
     "workspaces": {
