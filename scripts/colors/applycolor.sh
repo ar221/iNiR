@@ -100,6 +100,9 @@ apply_terminal_configs() {
     local enable_ghostty=$(jq -r '.appearance.wallpaperTheming.terminals.ghostty // true' "$CONFIG_FILE")
     local enable_konsole=$(jq -r '.appearance.wallpaperTheming.terminals.konsole // true' "$CONFIG_FILE")
     local enable_starship=$(jq -r '.appearance.wallpaperTheming.terminals.starship // true' "$CONFIG_FILE")
+    local enable_btop=$(jq -r '.appearance.wallpaperTheming.terminals.btop // true' "$CONFIG_FILE")
+    local enable_lazygit=$(jq -r '.appearance.wallpaperTheming.terminals.lazygit // true' "$CONFIG_FILE")
+    local enable_yazi=$(jq -r '.appearance.wallpaperTheming.terminals.yazi // true' "$CONFIG_FILE")
 
     # Only add terminals that are both enabled AND installed
     [[ "$enable_kitty" == "true" ]] && command -v kitty &>/dev/null && enabled_terminals+=(kitty)
@@ -109,9 +112,12 @@ apply_terminal_configs() {
     [[ "$enable_ghostty" == "true" ]] && command -v ghostty &>/dev/null && enabled_terminals+=(ghostty)
     [[ "$enable_konsole" == "true" ]] && command -v konsole &>/dev/null && enabled_terminals+=(konsole)
     [[ "$enable_starship" == "true" ]] && command -v starship &>/dev/null && enabled_terminals+=(starship)
+    [[ "$enable_btop" == "true" ]] && command -v btop &>/dev/null && enabled_terminals+=(btop)
+    [[ "$enable_lazygit" == "true" ]] && command -v lazygit &>/dev/null && enabled_terminals+=(lazygit)
+    [[ "$enable_yazi" == "true" ]] && command -v yazi &>/dev/null && enabled_terminals+=(yazi)
   else
-    # Default: only generate for installed terminals + starship
-    for term in kitty alacritty foot wezterm ghostty konsole starship; do
+    # Default: only generate for installed terminals + tools
+    for term in kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi; do
       command -v "$term" &>/dev/null && enabled_terminals+=("$term")
     done
   fi

@@ -902,6 +902,44 @@ ContentPage {
                 }
             }
 
+            ConfigRow {
+                uniform: true
+                visible: Config.options?.appearance?.wallpaperTheming?.enableTerminal ?? true
+
+                ConfigSwitch {
+                    buttonIcon: "monitoring"
+                    text: "btop" + (terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["btop"] ?? false) ? " ⌀" : "")
+                    checked: Config.options?.appearance?.wallpaperTheming?.terminals?.btop ?? true
+                    onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.terminals.btop", checked)
+                    opacity: terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["btop"] ?? false) ? 0.5 : 1
+                    StyledToolTip {
+                        text: Translation.tr("btop++ system monitor theme")
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "account_tree"
+                    text: "lazygit" + (terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["lazygit"] ?? false) ? " ⌀" : "")
+                    checked: Config.options?.appearance?.wallpaperTheming?.terminals?.lazygit ?? true
+                    onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.terminals.lazygit", checked)
+                    opacity: terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["lazygit"] ?? false) ? 0.5 : 1
+                    StyledToolTip {
+                        text: Translation.tr("lazygit terminal git UI theme")
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "folder_open"
+                    text: "yazi" + (terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["yazi"] ?? false) ? " ⌀" : "")
+                    checked: Config.options?.appearance?.wallpaperTheming?.terminals?.yazi ?? true
+                    onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.terminals.yazi", checked)
+                    opacity: terminalColorsSection.detectionDone && !(terminalColorsSection.installedTerminals["yazi"] ?? false) ? 0.5 : 1
+                    StyledToolTip {
+                        text: Translation.tr("yazi file manager flavor")
+                    }
+                }
+            }
+
             // Auto-detect button
             RippleButton {
                 Layout.alignment: Qt.AlignRight
@@ -939,7 +977,7 @@ ContentPage {
                     command: [
                         "/usr/bin/bash",
                         "-c",
-                        "for term in kitty alacritty foot wezterm ghostty konsole starship; do " +
+                        "for term in kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi; do " +
                         "if command -v $term &>/dev/null; then echo \"$term:true\"; " +
                         "else echo \"$term:false\"; fi; done"
                     ]

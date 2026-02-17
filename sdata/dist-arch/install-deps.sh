@@ -268,7 +268,7 @@ if $INSTALL_FONTS; then
     adw-gtk-theme         # Official repo version if available, else AUR
     capitaine-cursors
     whitesur-icon-theme   # Try non-git version first
-    darkly
+    darkly-bin
   )
 fi
 
