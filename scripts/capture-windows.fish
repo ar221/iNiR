@@ -91,7 +91,8 @@ end
 wait
 
 # Cleanup ALL new clipboard entries from screenshots
-sleep 0.2
+# Use longer delay to ensure cliphist has registered all screenshot entries
+sleep 0.5
 
 set -l max_cleanup 100
 set -l cleanup_count 0
@@ -106,6 +107,23 @@ while test $cleanup_count -lt $max_cleanup
     if test -n "$entry_id"; and test "$entry_id" -gt "$before_id"
         echo $entry | $cliphist_bin delete 2>/dev/null
         set cleanup_count (math $cleanup_count + 1)
+    else
+        break
+    end
+end
+
+# Second cleanup pass — catch any entries that arrived after first pass
+sleep 0.3
+set -l cleanup_count2 0
+while test $cleanup_count2 -lt 50
+    set -l entry ($cliphist_bin list 2>/dev/null | $head_bin -1)
+    if test -z "$entry"
+        break
+    end
+    set -l entry_id (string split \t $entry)[1]
+    if test -n "$entry_id"; and test "$entry_id" -gt "$before_id"
+        echo $entry | $cliphist_bin delete 2>/dev/null
+        set cleanup_count2 (math $cleanup_count2 + 1)
     else
         break
     end

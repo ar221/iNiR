@@ -169,6 +169,7 @@ def fix_alacritty_import_order(config_path):
         return False, "Permission denied"
 
     import_line = 'import = ["~/.config/alacritty/colors.toml"]'
+    bare_import_pat = r"^import\s*=\s*\[.*?colors\.toml.*?\]"
     general_import_pat = r"import\s*=\s*\[.*?colors\.toml.*?\]"
 
     has_hardcoded_colors = bool(
@@ -667,21 +668,30 @@ bright_white = '{colors.get("term15", "#EBDBB2")}'
                 # Add at top of file
                 new_content = 'palette = "ii"\n\n' + content
                 Path(starship_conf).write_text(new_content)
+                content = new_content
                 print(f"✓ Generated Starship palette and set as active")
             else:
                 print(f"✓ Generated Starship palette (using different palette, change to 'palette = \"ii\"' to use)")
         
-        # Add source directive for palette file if not present
-        palette_source = f'"$HOME/.config/starship/ii-palette.toml"'
-        if palette_source not in content and 'ii-palette.toml' not in content:
-            # Prepend the source at the very top
-            source_line = f'# Import ii Material You palette\n# source = {palette_source}\n\n'
-            # Note: Starship doesn't support source/include, so we need to append the palette directly
-            # We'll append the palette content to starship.toml if palettes.ii section doesn't exist
-            if '[palettes.ii]' not in content:
-                with open(starship_conf, 'a') as f:
-                    f.write('\n' + config)
-                print(f"  → Appended ii palette to starship.toml")
+        # Update or append the [palettes.ii] section in starship.toml
+        # Starship doesn't support source/include, so palette must be inline
+        if '[palettes.ii]' in content:
+            # Replace existing palette section with updated colors
+            # Find start of [palettes.ii] and end (next section header or EOF)
+            pattern = r'\[palettes\.ii\].*?(?=\n\[|\Z)'
+            # Extract just the palette block from the generated config
+            palette_block = config.strip().split('\n')
+            # Skip comment lines at the top, keep from [palettes.ii] onward
+            palette_start = next(i for i, line in enumerate(palette_block) if line.startswith('[palettes.ii]'))
+            palette_content = '\n'.join(palette_block[palette_start:])
+            new_content = re.sub(pattern, palette_content, content, flags=re.DOTALL)
+            if new_content != content:
+                Path(starship_conf).write_text(new_content)
+                print(f"  → Updated ii palette in starship.toml")
+        else:
+            with open(starship_conf, 'a') as f:
+                f.write('\n' + config)
+            print(f"  → Appended ii palette to starship.toml")
     else:
         print(f"✓ Generated Starship palette (starship.toml not found - create it and add 'palette = \"ii\"')")
 

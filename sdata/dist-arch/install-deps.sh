@@ -17,11 +17,46 @@ fi
 if [[ -n "${ONLY_MISSING_DEPS:-}" ]]; then
   echo -e "${STY_CYAN}[$0]: Installing missing dependencies only...${STY_RST}"
 
+  # doctor reports command IDs; map them to Arch package names.
+  declare -A cmd_to_pkg=(
+    [qs]="quickshell"
+    [niri]="niri"
+    [nmcli]="networkmanager"
+    [wpctl]="wireplumber"
+    [jq]="jq"
+    [rsync]="rsync"
+    [curl]="curl"
+    [git]="git"
+    [python3]="python"
+    [matugen]="matugen"
+    [wlsunset]="wlsunset"
+    [dunstify]="dunst"
+    [fish]="fish"
+    [magick]="imagemagick"
+    [swaylock]="swaylock"
+    [swayidle]="swayidle"
+    [grim]="grim"
+    [mpv]="mpv"
+    [cliphist]="cliphist"
+    [wl-copy]="wl-clipboard"
+    [wl-paste]="wl-clipboard"
+    [fuzzel]="fuzzel"
+    # Package-level checks from doctor (no direct command binary)
+    [syntax-highlighting]="syntax-highlighting"
+    [kirigami]="kirigami"
+    [kdialog]="kdialog"
+  )
+
   local installflags="--needed"
   $ask || installflags="$installflags --noconfirm"
 
   local missing_pkgs=()
-  read -r -a missing_pkgs <<<"$ONLY_MISSING_DEPS"
+  local missing_cmds=()
+  read -r -a missing_cmds <<<"$ONLY_MISSING_DEPS"
+  for cmd in "${missing_cmds[@]}"; do
+    local pkg="${cmd_to_pkg[$cmd]:-$cmd}"
+    [[ " ${missing_pkgs[*]} " == *" ${pkg} "* ]] || missing_pkgs+=("$pkg")
+  done
 
   if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
     case $SKIP_SYSUPDATE in
@@ -133,6 +168,11 @@ echo -e "${STY_CYAN}[$0]: Installing official repo packages...${STY_RST}"
 OFFICIAL_PACKAGES=(
   # Quickshell (CRITICAL) - NOW IN EXTRA REPO!
   quickshell
+
+  # Critical QML/KDE runtime modules (required for shell startup)
+  syntax-highlighting
+  kirigami
+  kdialog
   
   # Already in PKGBUILDs but ensure they're installed
   niri

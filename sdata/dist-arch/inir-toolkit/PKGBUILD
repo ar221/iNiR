@@ -33,6 +33,9 @@ depends=(
   # Bluetooth
   blueman
 
+  # Fingerprint auth for lock screen (fprintd-list)
+  fprintd
+
   # KDE integration
   kconfig  # provides kwriteconfig6
 

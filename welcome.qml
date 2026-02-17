@@ -62,7 +62,7 @@ Scope {
             source: Config.options?.background?.wallpaperPath ?? ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
-            layer.enabled: true
+            layer.enabled: Appearance.effectsEnabled
             layer.effect: FastBlur { radius: 64 }
             transform: Scale {
                 origin.x: bgWallpaper.width / 2
@@ -119,7 +119,7 @@ Scope {
             // Shadow (hide in aurora)
             StyledRectangularShadow {
                 target: cardBg
-                visible: !Appearance.auroraEverywhere
+                visible: Appearance.angelEverywhere || !Appearance.auroraEverywhere
             }
 
             // Card background - style-aware
@@ -174,7 +174,7 @@ Scope {
                 }
 
                 // Clip content to rounded corners
-                layer.enabled: true
+                layer.enabled: Appearance.effectsEnabled
                 layer.effect: OpacityMask {
                     maskSource: Rectangle {
                         width: cardBg.width
@@ -722,7 +722,7 @@ Scope {
                                     sourceSize.width: wallpaperGroup.itemWidth * 2
                                     sourceSize.height: wallpaperGroup.itemHeight * 2
 
-                                    layer.enabled: true
+                                    layer.enabled: Appearance.effectsEnabled
                                     layer.effect: OpacityMask {
                                         maskSource: Rectangle {
                                             width: wpThumb.width

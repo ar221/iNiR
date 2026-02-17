@@ -594,7 +594,7 @@ fi
 #####################################################################################
 # Set default wallpaper and generate initial theme (first run only)
 #####################################################################################
-DEFAULT_WALLPAPER="${USER_WALLPAPERS_DIR}/Angel1.png"
+DEFAULT_WALLPAPER="${USER_WALLPAPERS_DIR}/G5uBmitWkAAyk8s.jpg"
 if [[ "${INSTALL_FIRSTRUN}" == true && -f "${DEFAULT_WALLPAPER}" ]]; then
   if ! ${quiet:-false}; then
     echo -e "${STY_CYAN}Setting default wallpaper...${STY_RST}"

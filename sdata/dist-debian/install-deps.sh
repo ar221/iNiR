@@ -40,6 +40,82 @@ ARCH=$(dpkg --print-architecture)
 echo -e "${STY_CYAN}[$0]: Architecture: ${ARCH}${STY_RST}"
 
 #####################################################################################
+# Optional: install only a specific list of missing deps
+#####################################################################################
+if [[ -n "${ONLY_MISSING_DEPS:-}" ]]; then
+  echo -e "${STY_CYAN}[$0]: Installing missing dependencies only...${STY_RST}"
+
+  installflags=""
+  $ask || installflags="-y"
+
+  # Map command IDs (from doctor) to Debian/Ubuntu package names.
+  declare -A cmd_to_pkg=(
+    [qs]="quickshell"
+    [niri]="niri"
+    [nmcli]="network-manager"
+    [wpctl]="wireplumber"
+    [jq]="jq"
+    [rsync]="rsync"
+    [curl]="curl"
+    [git]="git"
+    [python3]="python3"
+    [matugen]="matugen"
+    [wlsunset]="wlsunset"
+    [dunstify]="dunst"
+    [fish]="fish"
+    [magick]="imagemagick"
+    [swaylock]="swaylock"
+    [swayidle]="swayidle"
+    [grim]="grim"
+    [mpv]="mpv"
+    [cliphist]="cliphist"
+    [wl-copy]="wl-clipboard"
+    [wl-paste]="wl-clipboard"
+    [fuzzel]="fuzzel"
+  )
+
+  local missing_cmds=()
+  local requested_pkgs=()
+  local installable_pkgs=()
+  read -r -a missing_cmds <<<"$ONLY_MISSING_DEPS"
+
+  for cmd in "${missing_cmds[@]}"; do
+    local pkg="${cmd_to_pkg[$cmd]:-$cmd}"
+    [[ " ${requested_pkgs[*]} " == *" ${pkg} "* ]] || requested_pkgs+=("$pkg")
+  done
+
+  for pkg in "${requested_pkgs[@]}"; do
+    if apt-cache show "$pkg" &>/dev/null 2>&1; then
+      installable_pkgs+=("$pkg")
+    else
+      echo -e "${STY_YELLOW}[$0]: Package not available in current repos: $pkg${STY_RST}"
+    fi
+  done
+
+  if [[ ${#installable_pkgs[@]} -gt 0 ]]; then
+    case ${SKIP_SYSUPDATE:-false} in
+      true)
+        echo -e "${STY_CYAN}[$0]: Skipping system update${STY_RST}"
+        ;;
+      *)
+        v sudo apt update
+        ;;
+    esac
+
+    if ! sudo apt install $installflags "${installable_pkgs[@]}" 2>/dev/null; then
+      echo -e "${STY_YELLOW}[$0]: Batch install failed, trying individually...${STY_RST}"
+      for pkg in "${installable_pkgs[@]}"; do
+        sudo apt install $installflags "$pkg" 2>/dev/null || \
+          echo -e "${STY_YELLOW}[$0]: Could not install $pkg${STY_RST}"
+      done
+    fi
+  fi
+
+  unset ONLY_MISSING_DEPS
+  return 0
+fi
+
+#####################################################################################
 # Version warnings
 #####################################################################################
 if $IS_UBUNTU; then
@@ -339,6 +415,7 @@ DEBIAN_AUDIO_PKGS=(
   easyeffects
   mpv
   yt-dlp
+  socat
 )
 
 # Toolkit packages
@@ -359,6 +436,7 @@ DEBIAN_TOOLKIT_PKGS=(
   slurp
   imagemagick
   blueman
+  fprintd
   tesseract-ocr
   tesseract-ocr-eng
   tesseract-ocr-spa
@@ -976,14 +1054,10 @@ fi
 echo -e "${STY_CYAN}[$0]: Installing Quickshell...${STY_RST}"
 
 if ! command -v qs &>/dev/null; then
-  # Try distro repositories first (PikaOS/derivatives may ship quickshell)
-  for pkg in quickshell quickshell-git; do
-    if apt_pkg_available "$pkg"; then
-      if sudo apt install $installflags "$pkg" 2>/dev/null; then
-        break
-      fi
-    fi
-  done
+  # Try distro repositories first (intentional: prefer stable quickshell package)
+  if apt_pkg_available quickshell; then
+    sudo apt install $installflags quickshell 2>/dev/null || true
+  fi
 
   if ! command -v qs &>/dev/null; then
     echo -e "${STY_YELLOW}[$0]: Quickshell must be compiled from source.${STY_RST}"

@@ -24,6 +24,71 @@ FEDORA_VERSION=$(rpm -E %fedora)
 echo -e "${STY_CYAN}[$0]: Detected Fedora ${FEDORA_VERSION}${STY_RST}"
 
 #####################################################################################
+# Optional: install only a specific list of missing deps
+#####################################################################################
+if [[ -n "${ONLY_MISSING_DEPS:-}" ]]; then
+  echo -e "${STY_CYAN}[$0]: Installing missing dependencies only...${STY_RST}"
+
+  declare -A cmd_to_pkg=(
+    [qs]="quickshell"
+    [niri]="niri"
+    [nmcli]="NetworkManager"
+    [wpctl]="wireplumber"
+    [jq]="jq"
+    [rsync]="rsync"
+    [curl]="curl"
+    [git]="git"
+    [python3]="python3"
+    [matugen]="matugen"
+    [wlsunset]="wlsunset"
+    [dunstify]="dunst"
+    [fish]="fish"
+    [magick]="ImageMagick"
+    [swaylock]="swaylock"
+    [swayidle]="swayidle"
+    [grim]="grim"
+    [mpv]="mpv"
+    [cliphist]="cliphist"
+    [wl-copy]="wl-clipboard"
+    [wl-paste]="wl-clipboard"
+    [fuzzel]="fuzzel"
+  )
+
+  local installflags=""
+  $ask || installflags="-y --skip-unavailable"
+
+  local missing_cmds=()
+  local missing_pkgs=()
+  read -r -a missing_cmds <<<"$ONLY_MISSING_DEPS"
+  for cmd in "${missing_cmds[@]}"; do
+    local pkg="${cmd_to_pkg[$cmd]:-$cmd}"
+    [[ " ${missing_pkgs[*]} " == *" ${pkg} "* ]] || missing_pkgs+=("$pkg")
+  done
+
+  if [[ ${#missing_pkgs[@]} -gt 0 ]]; then
+    case ${SKIP_SYSUPDATE:-false} in
+      true) echo -e "${STY_CYAN}[$0]: Skipping system update${STY_RST}" ;;
+      *) v sudo dnf upgrade -y --refresh ;;
+    esac
+
+    # quickshell and niri come from COPR on Fedora; ensure repos are enabled
+    if [[ " ${missing_pkgs[*]} " == *" quickshell " ]]; then
+      dnf copr list --enabled 2>/dev/null | grep -q "errornointernet/quickshell" || \
+        v sudo dnf copr enable -y errornointernet/quickshell
+    fi
+    if [[ " ${missing_pkgs[*]} " == *" niri " ]]; then
+      dnf copr list --enabled 2>/dev/null | grep -q "yalter/niri" || \
+        v sudo dnf copr enable -y yalter/niri
+    fi
+
+    v sudo dnf install $installflags "${missing_pkgs[@]}"
+  fi
+
+  unset ONLY_MISSING_DEPS
+  return 0
+fi
+
+#####################################################################################
 # System update (optional)
 #####################################################################################
 case ${SKIP_SYSUPDATE:-false} in
@@ -193,6 +258,7 @@ FEDORA_AUDIO_PKGS=(
   easyeffects
   mpv
   yt-dlp
+  socat
 )
 
 # Toolkit packages
@@ -212,6 +278,7 @@ FEDORA_TOOLKIT_PKGS=(
   ImageMagick
   libqalculate
   blueman
+  fprintd
   kf6-kconfig
   tesseract
   tesseract-langpack-eng
