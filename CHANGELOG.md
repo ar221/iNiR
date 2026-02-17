@@ -5,6 +5,36 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.2] - 2026-02-17
+
+### Added
+- **Terminal theming for btop, lazygit, yazi**: Auto-generate Material You color themes for btop++ (system monitor), lazygit (git TUI), and yazi (file manager) — colors sync with wallpaper theme just like terminals
+- **btop theme**: Full color mapping for graphs, boxes, meters, process list; auto-sets `color_theme = "ii-auto"` in btop.conf
+- **lazygit theme**: Merges `gui.theme` section into config.yml safely (borders, selection, commit colors, staged/unstaged indicators)
+- **yazi flavor**: Generates `ii-auto.yazi` flavor with modern `[mgr]`/`[mode]` format — manager, status bar, input, which-key, filetype colors all themed
+- **UI toggles**: Settings → Terminal Colors now shows btop, lazygit, yazi toggles with auto-detect (10 tools total)
+- **Waffle per-monitor wallpaper management**: Full UI in Waffle settings for per-monitor wallpaper selection
+- **Waffle Win11-style wallpaper UI**: Hero section with monitor frame preview + thumbnail grid + overlay action buttons
+- **Angel global style**: New 5th global style (neo-brutalism glass) across all shell surfaces
+
+### Changed
+- **Arch install: darkly → darkly-bin**: Pre-built binary package replaces source build — saves ~5 minutes on fresh install, same functionality
+- **Waffle settings sidebar collapsed mode**: Centered icons (20px), tooltips on hover, accent-colored header icon
+- **Waffle widgets panel**: Dynamic weather icon (day/night), thicker progress bars (6px), card-style quick action buttons in Grid layout
+- **Waffle notifications**: GroupExpandButton with chevron icon and accent-colored text (Win11-like)
+- **Material QuickConfig**: Wallpaper grid max height reduced 400→280px for less visual bulk
+- **Terminal color detection**: Auto-detect now scans all 10 tools (was 7)
+
+### Fixed
+- **Config safety audit (34 fixes)**: 19 unsafe writes in GeneralConfig.qml → `setNestedValue()`; 15 unsafe reads in SidebarLeft → optional chaining + defaults
+- **Waffle config safety**: WModulesPage unsafe write, OSDValue unsafe read
+- **BarPopup warning**: `Keys.onPressed` on non-Item PopupWindow → `Shortcut` component
+- **ActionCenterContent binding loop**: opacity binding loop → `visible` property
+- **WSettingsRow missing animation**: Added `highlightAnim` SequentialAnimation for search focus
+- **QuickConfig "Use current folder"**: Safe config access with optional chaining
+- **Fresh install defaults**: pinnedApps, polkit, GTK-first defaults for non-KDE users
+- **Install deps**: dolphin→nautilus, added missing dependencies
+
 ## [2.10.1] - 2026-02-13
 
 ### Added
