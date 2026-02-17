@@ -225,34 +225,38 @@ for gtkver in gtk-3.0 gtk-4.0; do
   fi
 done
 
-# KDE settings (for Dolphin and Qt apps)
+# KDE settings (for Qt apps like Dolphin, Kate, etc.)
 # These are controlled by iNiR for theming - always overwrite
 if [[ -f "defaults/kde/kdeglobals" ]]; then
   install_file "defaults/kde/kdeglobals" "${XDG_CONFIG_HOME}/kdeglobals"
 elif [[ -f "dots/.config/kdeglobals" ]]; then
   install_file "dots/.config/kdeglobals" "${XDG_CONFIG_HOME}/kdeglobals"
 fi
-if [[ -f "defaults/kde/dolphinrc" ]]; then
-  install_file "defaults/kde/dolphinrc" "${XDG_CONFIG_HOME}/dolphinrc"
-elif [[ -f "dots/.config/dolphinrc" ]]; then
-  install_file "dots/.config/dolphinrc" "${XDG_CONFIG_HOME}/dolphinrc"
-fi
 
-# Dolphin panel layout state
-# Dolphin stores panel visibility in dolphinstaterc which overrides dolphinrc.
-# Policy:
-# - Fresh install: apply our clean layout so users don't get all panels enabled.
-# - Update: preserve user's custom layout by default.
-# - User can force reset via --reset-dolphin-layout.
-DOLPHIN_STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/dolphinstaterc"
-if [[ "${INSTALL_FIRSTRUN}" == true || "${RESET_DOLPHIN_LAYOUT}" == true ]]; then
-  if [[ -f "defaults/kde/dolphinstaterc" ]]; then
-    mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}"
-    install_file "defaults/kde/dolphinstaterc" "${DOLPHIN_STATE_FILE}"
-    log_success "Dolphin panel layout state reset"
-  elif [[ -f "${DOLPHIN_STATE_FILE}" ]]; then
-    rm -f "${DOLPHIN_STATE_FILE}"
-    log_success "Dolphin panel layout state cleaned"
+# Dolphin config — only if dolphin is installed (nautilus is now the default file manager)
+if command -v dolphin &>/dev/null; then
+  if [[ -f "defaults/kde/dolphinrc" ]]; then
+    install_file "defaults/kde/dolphinrc" "${XDG_CONFIG_HOME}/dolphinrc"
+  elif [[ -f "dots/.config/dolphinrc" ]]; then
+    install_file "dots/.config/dolphinrc" "${XDG_CONFIG_HOME}/dolphinrc"
+  fi
+
+  # Dolphin panel layout state
+  # Dolphin stores panel visibility in dolphinstaterc which overrides dolphinrc.
+  # Policy:
+  # - Fresh install: apply our clean layout so users don't get all panels enabled.
+  # - Update: preserve user's custom layout by default.
+  # - User can force reset via --reset-dolphin-layout.
+  DOLPHIN_STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/dolphinstaterc"
+  if [[ "${INSTALL_FIRSTRUN}" == true || "${RESET_DOLPHIN_LAYOUT}" == true ]]; then
+    if [[ -f "defaults/kde/dolphinstaterc" ]]; then
+      mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}"
+      install_file "defaults/kde/dolphinstaterc" "${DOLPHIN_STATE_FILE}"
+      log_success "Dolphin panel layout state reset"
+    elif [[ -f "${DOLPHIN_STATE_FILE}" ]]; then
+      rm -f "${DOLPHIN_STATE_FILE}"
+      log_success "Dolphin panel layout state cleaned"
+    fi
   fi
 fi
 
@@ -490,7 +494,7 @@ set_mime_default_if_missing() {
 
 # Detect available text editor (in order of preference)
 TEXT_EDITOR=""
-for editor in org.kde.kate.desktop org.gnome.gedit.desktop code.desktop vim.desktop; do
+for editor in org.gnome.TextEditor.desktop org.gnome.gedit.desktop org.kde.kate.desktop code.desktop vim.desktop; do
     if [[ -f "/usr/share/applications/${editor}" ]] || [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/applications/${editor}" ]]; then
         TEXT_EDITOR="$editor"
         break
@@ -521,7 +525,7 @@ fi
 
 # Detect and set image viewer
 IMAGE_VIEWER=""
-for viewer in org.kde.gwenview.desktop org.gnome.eog.desktop org.gnome.Loupe.desktop feh.desktop; do
+for viewer in org.gnome.Loupe.desktop org.gnome.eog.desktop org.kde.gwenview.desktop feh.desktop; do
     if [[ -f "/usr/share/applications/${viewer}" ]] || [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/applications/${viewer}" ]]; then
         IMAGE_VIEWER="$viewer"
         break
@@ -537,7 +541,7 @@ fi
 
 # Detect and set PDF viewer
 PDF_VIEWER=""
-for viewer in org.kde.okular.desktop org.gnome.Evince.desktop zathura.desktop; do
+for viewer in org.gnome.Evince.desktop org.kde.okular.desktop zathura.desktop; do
     if [[ -f "/usr/share/applications/${viewer}" ]] || [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/applications/${viewer}" ]]; then
         PDF_VIEWER="$viewer"
         break

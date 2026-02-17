@@ -190,6 +190,9 @@ OFFICIAL_PACKAGES=(
   # File manager
   nautilus
   
+  # Polkit agent (needed for auth dialogs — gnome agent works universally)
+  polkit-gnome
+  
   # Icon themes - fallbacks from official repos (always available)
   hicolor-icon-theme
   adwaita-icon-theme
