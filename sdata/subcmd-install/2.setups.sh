@@ -251,11 +251,5 @@ function setup_sddm_theme(){
   fi
 }
 
-if command -v sddm &>/dev/null || [[ "${INSTALL_FIRSTRUN}" == true ]]; then
-  showfun setup_sddm_theme
-  v setup_sddm_theme
-fi
-
-# Python packages (in venv)
-showfun install-python-packages
-v install-python-packages
+# NOTE: install-python-packages is called in 3.files.sh after requirements.txt
+# is deployed to the target. No need to call it here.

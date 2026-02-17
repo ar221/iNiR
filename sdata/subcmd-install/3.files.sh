@@ -241,6 +241,24 @@ if [[ -d "dots/.config/matugen" ]]; then
   log_success "Matugen config installed"
 fi
 
+# ii-sddm-theme (login screen matching ii lockscreen aesthetic)
+# This MUST run AFTER matugen config is deployed above, because the installer
+# appends a template entry to ~/.config/matugen/config.toml
+if command -v sddm &>/dev/null; then
+  function setup_sddm_theme(){
+    echo -e "${STY_BLUE}Setting up ii-sddm-theme login screen...${STY_RST}"
+    local sddm_script="${REPO_ROOT}/scripts/sddm/install-ii-sddm-theme.sh"
+    if [[ -f "$sddm_script" ]]; then
+      chmod +x "$sddm_script"
+      bash "$sddm_script" || log_warning "ii-sddm-theme setup had issues (non-fatal)"
+    else
+      log_warning "ii-sddm-theme install script not found, skipping"
+    fi
+  }
+  showfun setup_sddm_theme
+  v setup_sddm_theme
+fi
+
 # Fuzzel (launcher)
 if [[ -d "dots/.config/fuzzel" ]]; then
   install_dir__sync "dots/.config/fuzzel" "${XDG_CONFIG_HOME}/fuzzel"
