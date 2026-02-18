@@ -3,6 +3,8 @@
 
 # shellcheck shell=bash
 
+_FILES_STAGE_START=$SECONDS
+
 if ! ${quiet:-false}; then
   printf "${STY_CYAN}[$0]: 3. Copying config files${STY_RST}\n"
 fi
@@ -848,6 +850,54 @@ fi
 
 if ! command -v matugen >/dev/null; then
   WARNINGS+=("Matugen not found - theming may not work")
+fi
+
+#####################################################################################
+# File verification
+#####################################################################################
+if ! ${quiet:-false}; then
+  _FILES_ELAPSED=$(( SECONDS - _FILES_STAGE_START ))
+  echo ""
+  tui_section_start "File verification"
+  echo -e "  ${STY_FAINT}Stage completed in ${_FILES_ELAPSED}s${STY_RST}"
+  echo ""
+
+  # Critical QML files
+  _VERIFY_ERRORS=0
+  for _crit_file in "shell.qml" "GlobalStates.qml" "modules/common/Config.qml" \
+                    "modules/common/Appearance.qml" "services/Niri.qml"; do
+    if [[ -f "${II_TARGET:-${XDG_CONFIG_HOME}/quickshell/ii}/${_crit_file}" ]]; then
+      tui_verify_ok "${_crit_file}"
+    else
+      tui_verify_fail "${_crit_file}" "MISSING"
+      ((_VERIFY_ERRORS++))
+    fi
+  done
+
+  # Config files
+  echo ""
+  for _cfg_path \
+    in "${XDG_CONFIG_HOME}/niri/config.kdl:Niri config" \
+       "${XDG_CONFIG_HOME}/illogical-impulse/config.json:iNiR config" \
+       "${XDG_CONFIG_HOME}/matugen:Matugen config" \
+       "${XDG_CONFIG_HOME}/fuzzel:Fuzzel config" \
+       "${XDG_STATE_HOME}/quickshell/user/generated/colors.json:Theme colors"; do
+    _cfg_file="${_cfg_path%%:*}"
+    _cfg_label="${_cfg_path##*:}"
+    if [[ -e "$_cfg_file" ]]; then
+      tui_verify_ok "$_cfg_label"
+    else
+      tui_verify_skip "$_cfg_label" "not found (may be ok)"
+    fi
+  done
+
+  echo ""
+  if [[ $_VERIFY_ERRORS -gt 0 ]]; then
+    tui_warn "$_VERIFY_ERRORS critical file(s) missing — run './setup doctor' to diagnose"
+  else
+    tui_success "All critical QML files verified"
+  fi
+  tui_section_end
 fi
 
 #####################################################################################

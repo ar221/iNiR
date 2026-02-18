@@ -90,37 +90,20 @@ apply_terminal_configs() {
     return
   fi
 
-  # Get enabled terminals from config, but only if actually installed
-  local enabled_terminals=()
-  if [ -f "$CONFIG_FILE" ]; then
-    local enable_kitty=$(jq -r '.appearance.wallpaperTheming.terminals.kitty // true' "$CONFIG_FILE")
-    local enable_alacritty=$(jq -r '.appearance.wallpaperTheming.terminals.alacritty // true' "$CONFIG_FILE")
-    local enable_foot=$(jq -r '.appearance.wallpaperTheming.terminals.foot // true' "$CONFIG_FILE")
-    local enable_wezterm=$(jq -r '.appearance.wallpaperTheming.terminals.wezterm // true' "$CONFIG_FILE")
-    local enable_ghostty=$(jq -r '.appearance.wallpaperTheming.terminals.ghostty // true' "$CONFIG_FILE")
-    local enable_konsole=$(jq -r '.appearance.wallpaperTheming.terminals.konsole // true' "$CONFIG_FILE")
-    local enable_starship=$(jq -r '.appearance.wallpaperTheming.terminals.starship // true' "$CONFIG_FILE")
-    local enable_btop=$(jq -r '.appearance.wallpaperTheming.terminals.btop // true' "$CONFIG_FILE")
-    local enable_lazygit=$(jq -r '.appearance.wallpaperTheming.terminals.lazygit // true' "$CONFIG_FILE")
-    local enable_yazi=$(jq -r '.appearance.wallpaperTheming.terminals.yazi // true' "$CONFIG_FILE")
+  # Single source of truth for all supported targets.
+  # Mirrors TERMINAL_REGISTRY in generate_terminal_configs.py.
+  # To add a new target: add it here + add generate_X_config() and registry entry in the Python script.
+  local all_supported=(kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi)
 
-    # Only add terminals that are both enabled AND installed
-    [[ "$enable_kitty" == "true" ]] && command -v kitty &>/dev/null && enabled_terminals+=(kitty)
-    [[ "$enable_alacritty" == "true" ]] && command -v alacritty &>/dev/null && enabled_terminals+=(alacritty)
-    [[ "$enable_foot" == "true" ]] && command -v foot &>/dev/null && enabled_terminals+=(foot)
-    [[ "$enable_wezterm" == "true" ]] && command -v wezterm &>/dev/null && enabled_terminals+=(wezterm)
-    [[ "$enable_ghostty" == "true" ]] && command -v ghostty &>/dev/null && enabled_terminals+=(ghostty)
-    [[ "$enable_konsole" == "true" ]] && command -v konsole &>/dev/null && enabled_terminals+=(konsole)
-    [[ "$enable_starship" == "true" ]] && command -v starship &>/dev/null && enabled_terminals+=(starship)
-    [[ "$enable_btop" == "true" ]] && command -v btop &>/dev/null && enabled_terminals+=(btop)
-    [[ "$enable_lazygit" == "true" ]] && command -v lazygit &>/dev/null && enabled_terminals+=(lazygit)
-    [[ "$enable_yazi" == "true" ]] && command -v yazi &>/dev/null && enabled_terminals+=(yazi)
-  else
-    # Default: only generate for installed terminals + tools
-    for term in kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi; do
-      command -v "$term" &>/dev/null && enabled_terminals+=("$term")
-    done
-  fi
+  # Build enabled list: config-enabled (default true) AND installed
+  local enabled_terminals=()
+  for term in "${all_supported[@]}"; do
+    local term_enabled="true"
+    if [ -f "$CONFIG_FILE" ]; then
+      term_enabled=$(jq -r ".appearance.wallpaperTheming.terminals.${term} // true" "$CONFIG_FILE" 2>/dev/null || echo "true")
+    fi
+    [[ "$term_enabled" == "true" ]] && command -v "$term" &>/dev/null && enabled_terminals+=("$term")
+  done
 
   if [ ${#enabled_terminals[@]} -eq 0 ]; then
     echo "[terminal-colors] No enabled terminals found installed. Skipping." >> "$log_file" 2>/dev/null

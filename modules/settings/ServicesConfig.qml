@@ -642,7 +642,19 @@ ContentPage {
                     colBackground: Appearance.colors.colSurfaceContainerLow
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     colRipple: Appearance.colors.colLayer1Active
-                    onClicked: ShellUpdates.openOverlay()
+                    onClicked: {
+                        if (Config.options?.settingsUi?.overlayMode ?? false) {
+                            // Overlay mode: settings runs inside the main shell process — direct call works
+                            ShellUpdates.openOverlay()
+                        } else {
+                            // Separate window mode (default): settings.qml is a separate qs process.
+                            // Singletons are isolated per-process, so we must use IPC to reach
+                            // the main shell's ShellUpdates.openOverlay() instead.
+                            const configName = FileUtils.trimFileProtocol(Quickshell.shellPath("."))
+                                .replace(/\/+$/, "").split("/").pop()
+                            Quickshell.execDetached(["qs", "-c", configName, "ipc", "call", "shellUpdate", "open"])
+                        }
+                    }
 
                     contentItem: RowLayout {
                         anchors.centerIn: parent
