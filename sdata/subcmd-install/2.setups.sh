@@ -238,17 +238,6 @@ else
   v disable_super_daemon_if_present
 fi
 
-# SilentSDDM theme (login screen for users without another DE)
-function setup_sddm_theme(){
-  echo -e "${STY_BLUE}Setting up SilentSDDM login theme...${STY_RST}"
-  local sddm_script="${REPO_ROOT}/scripts/sddm/install-silent-sddm.sh"
-  if [[ -f "$sddm_script" ]]; then
-    chmod +x "$sddm_script"
-    bash "$sddm_script" || log_warning "SilentSDDM setup had issues (non-fatal)"
-  else
-    log_warning "SilentSDDM install script not found, skipping"
-  fi
-}
-
+# NOTE: SDDM theme setup is in 3.files.sh AFTER matugen config is deployed.
 # NOTE: install-python-packages is called in 3.files.sh after requirements.txt
 # is deployed to the target. No need to call it here.

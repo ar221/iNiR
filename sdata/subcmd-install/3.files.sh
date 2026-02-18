@@ -222,18 +222,18 @@ if [[ -d "dots/.config/matugen" ]]; then
   log_success "Matugen config installed"
 fi
 
-# ii-sddm-theme (login screen matching ii lockscreen aesthetic)
+# ii-pixel-sddm theme (login screen matching ii lockscreen aesthetic)
 # This MUST run AFTER matugen config is deployed above, because the installer
-# appends a template entry to ~/.config/matugen/config.toml
+# appends a sync hook to ~/.config/matugen/config.toml
 if command -v sddm &>/dev/null; then
   function setup_sddm_theme(){
-    tui_info "Setting up ii-sddm-theme login screen..."
-    local sddm_script="${REPO_ROOT}/scripts/sddm/install-ii-sddm-theme.sh"
+    tui_info "Setting up ii-pixel-sddm login theme..."
+    local sddm_script="${REPO_ROOT}/scripts/sddm/install-pixel-sddm.sh"
     if [[ -f "$sddm_script" ]]; then
       chmod +x "$sddm_script"
-      bash "$sddm_script" || log_warning "ii-sddm-theme setup had issues (non-fatal)"
+      bash "$sddm_script" || log_warning "ii-pixel-sddm setup had issues (non-fatal)"
     else
-      log_warning "ii-sddm-theme install script not found, skipping"
+      log_warning "ii-pixel-sddm install script not found, skipping"
     fi
   }
   showfun setup_sddm_theme
