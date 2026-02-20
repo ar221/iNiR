@@ -374,8 +374,8 @@ MouseArea {
             LockIconButton { icon: "keyboard"; tooltip: "Virtual keyboard"; toggled: root.keyboardOpen
                 onClicked: root.keyboardOpen = !root.keyboardOpen }
             LockIconButton { icon: "dark_mode";          tooltip: "Sleep";      enabled: sddm.canSuspend;  onClicked: sddm.suspend() }
-            LockIconButton { icon: "restart_alt";        tooltip: "Restart";    enabled: sddm.canReboot;   onClicked: sddm.reboot() }
             LockIconButton { icon: "power_settings_new"; tooltip: "Shut down";  enabled: sddm.canPowerOff; onClicked: sddm.powerOff() }
+            LockIconButton { icon: "restart_alt";        tooltip: "Restart";    enabled: sddm.canReboot;   onClicked: sddm.reboot() }
         }
 
         // Bottom-left: session selector only (keyboard moved to bottom-right for symmetry)
