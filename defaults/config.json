@@ -10,7 +10,6 @@
     "blurAmount": 0.4,
     "compactStyle": false,
     "enableAnimation": false,
-    "enableBlurGlass": false,
     "monochromeIcons": false,
     "panelAlignment": "right",
     "scrimDim": 0,
@@ -155,7 +154,6 @@
   "apps": {
     "bluetooth": "blueman-manager",
     "discord": "discord",
-    "manageUser": "kcmshell6 kcm_users",
     "network": "nm-connection-editor",
     "networkEthernet": "nm-connection-editor",
     "taskManager": "missioncenter",
@@ -839,8 +837,7 @@
     "showItemId": false,
     "invertPinnedItems": true,
     "pinnedItems": [],
-    "filterPassive": true,
-    "extraProblematicApps": []
+    "filterPassive": true
   },
   "shellUpdates": {
     "enabled": true,
@@ -858,9 +855,7 @@
     "skipped": false
   },
   "waffles": {
-    "settings": {
-      "useMaterialStyle": false
-    },
+    "settings": {},
     "tweaks": {
       "smootherMenuAnimations": true,
       "switchHandlePositionFix": true
