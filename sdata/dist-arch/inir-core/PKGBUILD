@@ -55,7 +55,4 @@ depends=(
   xwayland-satellite
   
 )
-optdepends=(
-  'dunst: Notification daemon (conflicts with quickshell notifications — auto-disabled)'
-  'mission-center: System monitor (optional)'
-)
+

@@ -184,9 +184,7 @@ Fonts, theming, and utilities.
 | `ttf-twemoji` | Twitter emoji | No (has fallback) |
 | `adw-gtk-theme-git` | Adwaita GTK theme | Yes |
 | `capitaine-cursors` | Capitaine cursor theme | Yes |
-| `hyprpicker` | Color picker | Yes |
 | `xwayland-satellite` | Xwayland helper for legacy apps | Yes |
-| `songrec` | Music recognition | No |
 
 > **Note:** Optional fonts will be downloaded directly from GitHub if AUR packages are unavailable (e.g., due to regional restrictions). The UI will use system fallback fonts if installation fails completely.
 

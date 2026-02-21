@@ -52,6 +52,9 @@ check_dependencies() {
         "wl-copy:wl-clipboard"
         "wl-paste:wl-clipboard"
         "fuzzel:fuzzel"
+        "hyprpicker:hyprpicker"
+        "songrec:SongRec"
+        "trans:translate-shell"
     )
     
     # Optional but recommended
@@ -70,7 +73,6 @@ check_dependencies() {
         "kwriteconfig6:KConfig"
         "checkupdates:pacman-contrib"
         "ddcutil:ddcutil"
-        "trans:translate-shell"
         "xdg-settings:xdg-utils"
         "mpv:mpv"
         "swaylock:swaylock"

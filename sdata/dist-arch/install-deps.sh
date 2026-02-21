@@ -41,6 +41,9 @@ if [[ -n "${ONLY_MISSING_DEPS:-}" ]]; then
     [wl-copy]="wl-clipboard"
     [wl-paste]="wl-clipboard"
     [fuzzel]="fuzzel"
+    [hyprpicker]="hyprpicker"
+    [songrec]="songrec"
+    [trans]="translate-shell"
     # Package-level checks from doctor (no direct command binary)
     [syntax-highlighting]="syntax-highlighting"
     [kirigami]="kirigami"
