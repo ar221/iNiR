@@ -10,11 +10,58 @@ THEME_SRC="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/dot
 THEME_DIR="/usr/share/sddm/themes/${THEME_NAME}"
 SYNC_SCRIPT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/scripts/sddm/sync-pixel-sddm.py"
 SDDM_CONF="/etc/sddm.conf.d/inir-theme.conf"
+AUTO_APPLY_MODE="${INIR_SDDM_AUTO_APPLY:-ask}" # ask|yes|no
 
 log_info() { echo -e "\033[0;36m[sddm] $*\033[0m"; }
 log_ok()   { echo -e "\033[0;32m[sddm] ✓ $*\033[0m"; }
 log_warn() { echo -e "\033[0;33m[sddm] ⚠ $*\033[0m"; }
 log_err()  { echo -e "\033[0;31m[sddm] ✗ $*\033[0m"; }
+
+get_current_sddm_theme() {
+    local from_dropin=""
+    if [[ -f "$SDDM_CONF" ]]; then
+        from_dropin=$(awk -F= '/^[[:space:]]*Current[[:space:]]*=/{gsub(/[[:space:]]/,"",$2); print $2; exit}' "$SDDM_CONF" 2>/dev/null || true)
+    fi
+    if [[ -n "$from_dropin" ]]; then
+        echo "$from_dropin"
+        return 0
+    fi
+
+    # Fallback to main sddm.conf if present
+    if [[ -f "/etc/sddm.conf" ]]; then
+        awk -F= '/^[[:space:]]*Current[[:space:]]*=/{gsub(/[[:space:]]/,"",$2); print $2; exit}' /etc/sddm.conf 2>/dev/null || true
+        return 0
+    fi
+    echo ""
+}
+
+should_apply_theme() {
+    local current_theme
+    current_theme="$(get_current_sddm_theme)"
+
+    if [[ "$AUTO_APPLY_MODE" == "yes" ]]; then
+        return 0
+    fi
+    if [[ "$AUTO_APPLY_MODE" == "no" ]]; then
+        log_info "Skipping SDDM Current theme switch by policy (INIR_SDDM_AUTO_APPLY=no)"
+        return 1
+    fi
+
+    if [[ -z "$current_theme" || "$current_theme" == "$THEME_NAME" ]]; then
+        return 0
+    fi
+
+    echo ""
+    log_warn "Detected current SDDM theme: ${current_theme}"
+    read -r -p "[sddm] Apply ${THEME_NAME} as SDDM Current theme? [y/N] " reply
+    case "$reply" in
+        [Yy]|[Yy][Ee][Ss]) return 0 ;;
+        *)
+            log_info "Keeping current SDDM theme: ${current_theme}"
+            return 1
+            ;;
+    esac
+}
 
 # Check SDDM is installed
 if ! command -v sddm &>/dev/null; then
@@ -43,10 +90,10 @@ log_ok "Theme directory owned by ${USER} — sync requires no sudo"
 if [[ ! -f "${THEME_DIR}/assets/background.png" ]]; then
     log_info "No background.png yet — creating placeholder..."
     # Copy default wallpaper from iNiR assets as initial background
-    local_repo="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-    default_wall="${local_repo}/assets/images/default_wallpaper.png"
+    repo_root="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+    default_wall="${repo_root}/assets/images/default_wallpaper.png"
     if [[ -f "$default_wall" ]]; then
-        sudo cp "$default_wall" "${THEME_DIR}/assets/background.png"
+        cp "$default_wall" "${THEME_DIR}/assets/background.png"
         log_ok "Default wallpaper set as background"
     else
         # Create a minimal 1x1 black PNG as placeholder
@@ -60,19 +107,23 @@ def make_png():
     iend = chunk(b'IEND', b'')
     return sig + ihdr + idat + iend
 import sys; sys.stdout.buffer.write(make_png())
-" | sudo tee "${THEME_DIR}/assets/background.png" > /dev/null
+" > "${THEME_DIR}/assets/background.png"
         log_warn "Placeholder background created — run sync-pixel-sddm.py to set wallpaper"
     fi
 fi
 
-# Configure SDDM to use this theme
-log_info "Configuring SDDM to use ${THEME_NAME}..."
-sudo mkdir -p /etc/sddm.conf.d
-sudo tee "${SDDM_CONF}" > /dev/null << SDDM_EOF
+# Configure SDDM to use this theme (intelligent: optional if user has another theme)
+if should_apply_theme; then
+    log_info "Configuring SDDM to use ${THEME_NAME}..."
+    sudo mkdir -p /etc/sddm.conf.d
+    sudo tee "${SDDM_CONF}" > /dev/null << SDDM_EOF
 [Theme]
 Current=${THEME_NAME}
 SDDM_EOF
-log_ok "SDDM configured (${SDDM_CONF})"
+    log_ok "SDDM configured (${SDDM_CONF})"
+else
+    log_info "Installed ${THEME_NAME}, but did not change SDDM Current theme"
+fi
 
 # Run initial color sync now that files are in place
 log_info "Running initial color sync..."
@@ -89,25 +140,16 @@ cp "$SYNC_SCRIPT" "$SYNC_DST"
 chmod +x "$SYNC_DST"
 log_ok "Sync script installed to ${SYNC_DST}"
 
-# Integrate with matugen post-hook (append to matugen config if not already there)
+# NOTE: We no longer mutate user matugen config here. The shipped config template
+# already includes a safe ii-pixel sync post_hook. Keep installer idempotent.
+
+# Cleanup stale sudo-based hook variants from very old setups if present
 MATUGEN_CONFIG="${XDG_CONFIG_HOME:-${HOME}/.config}/matugen/config.toml"
 if [[ -f "$MATUGEN_CONFIG" ]]; then
-    if ! grep -q "sync-pixel-sddm" "$MATUGEN_CONFIG" 2>/dev/null; then
-        log_info "Adding sync hook to matugen config..."
-        cat >> "$MATUGEN_CONFIG" << 'MATUGEN_EOF'
-
-[templates.ii-pixel-sddm-sync]
-input_path = '/dev/null'
-output_path = '/dev/null'
-post_hook = 'python3 ~/.local/bin/sync-pixel-sddm.py &'
-MATUGEN_EOF
-        log_ok "Matugen sync hook added"
-    else
-        log_info "Matugen sync hook already present"
+    if grep -qE "post_hook\s*=\s*'.*sudo.*sync-pixel-sddm\.py" "$MATUGEN_CONFIG" 2>/dev/null; then
+        log_warn "Detected legacy sudo SDDM matugen hook in user config"
+        log_warn "Please remove old ii-pixel-sddm hook block from: $MATUGEN_CONFIG"
     fi
-else
-    log_warn "Matugen config not found — add sync hook manually:"
-    log_warn "  python3 ~/.local/bin/sync-pixel-sddm.py"
 fi
 
 # Enable SDDM service

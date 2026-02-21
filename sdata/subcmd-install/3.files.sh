@@ -223,15 +223,19 @@ if [[ -d "dots/.config/matugen" ]]; then
 fi
 
 # ii-pixel-sddm theme (login screen matching ii lockscreen aesthetic)
-# This MUST run AFTER matugen config is deployed above, because the installer
-# appends a sync hook to ~/.config/matugen/config.toml
+# This MUST run AFTER matugen config is deployed above, because the distributed
+# matugen config includes the SDDM sync post_hook template.
 if command -v sddm &>/dev/null; then
   function setup_sddm_theme(){
     tui_info "Setting up ii-pixel-sddm login theme..."
     local sddm_script="${REPO_ROOT}/scripts/sddm/install-pixel-sddm.sh"
     if [[ -f "$sddm_script" ]]; then
       chmod +x "$sddm_script"
-      bash "$sddm_script" || log_warning "ii-pixel-sddm setup had issues (non-fatal)"
+      local _sddm_auto_apply="ask"
+      if [[ "${ask:-true}" != "true" ]]; then
+        _sddm_auto_apply="no"
+      fi
+      INIR_SDDM_AUTO_APPLY="${_sddm_auto_apply}" bash "$sddm_script" || log_warning "ii-pixel-sddm setup had issues (non-fatal)"
     else
       log_warning "ii-pixel-sddm install script not found, skipping"
     fi
@@ -865,7 +869,7 @@ if ! ${quiet:-false}; then
   # Critical QML files
   _VERIFY_ERRORS=0
   for _crit_file in "shell.qml" "GlobalStates.qml" "modules/common/Config.qml" \
-                    "modules/common/Appearance.qml" "services/Niri.qml"; do
+                    "modules/common/Appearance.qml" "services/NiriService.qml"; do
     if [[ -f "${II_TARGET:-${XDG_CONFIG_HOME}/quickshell/ii}/${_crit_file}" ]]; then
       tui_verify_ok "${_crit_file}"
     else

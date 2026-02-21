@@ -52,6 +52,7 @@ MouseArea {
     readonly property color colBackground:       config.backgroundColor       || "#1e1e2e"
     readonly property color colError:            config.errorColor            || "#f38ba8"
     readonly property real  blurRadius:          isNaN(Number(config.blurRadius)) ? 64 : Number(config.blurRadius)
+    readonly property bool materialShapeChars:   String(config.materialShapeChars || "false").toLowerCase() === "true"
 
     function symFont(): string {
         return materialSymbolsFont.status === FontLoader.Ready ? materialSymbolsFont.name : ""
@@ -62,7 +63,8 @@ MouseArea {
         return p.startsWith("file://") ? p : "file://" + p
     }
 
-    // Avatar paths — try in order: SDDM provided → AccountsService → ~/.face
+    // Avatar paths — try in order: synced local asset -> SDDM provided -> AccountsService -> ~/.face
+    readonly property string _avatarPath0: Qt.resolvedUrl("assets/user-face.png")
     readonly property string _avatarPath1: root.currentUserIcon
     readonly property string _avatarPath2: "/var/lib/AccountsService/icons/" + root.currentUserLogin
     readonly property string _avatarPath3: "/home/" + root.currentUserLogin + "/.face"
@@ -229,35 +231,43 @@ MouseArea {
                     color: Qt.rgba(root.colSurface.r, root.colSurface.g, root.colSurface.b, 0.95); clip: true
                     // Avatar fallback chain: SDDM icon → AccountsService → ~/.face → initial letter
                     Image {
+                        id: avatarImg0
+                        anchors.fill: parent; fillMode: Image.PreserveAspectCrop
+                        asynchronous: true; cache: true; smooth: true; mipmap: true
+                        sourceSize.width: 200; sourceSize.height: 200
+                        source: root.makeFileUrl(root._avatarPath0)
+                        visible: status === Image.Ready
+                    }
+                    Image {
                         id: avatarImg1
                         anchors.fill: parent; fillMode: Image.PreserveAspectCrop
                         asynchronous: true; cache: true; smooth: true; mipmap: true
                         sourceSize.width: 200; sourceSize.height: 200
-                        source: root.makeFileUrl(root._avatarPath1)
-                        visible: status === Image.Ready
+                        source: avatarImg0.status !== Image.Ready ? root.makeFileUrl(root._avatarPath1) : ""
+                        visible: status === Image.Ready && avatarImg0.status !== Image.Ready
                     }
                     Image {
                         id: avatarImg2
                         anchors.fill: parent; fillMode: Image.PreserveAspectCrop
                         asynchronous: true; cache: true; smooth: true; mipmap: true
                         sourceSize.width: 200; sourceSize.height: 200
-                        source: avatarImg1.status !== Image.Ready ? root.makeFileUrl(root._avatarPath2) : ""
-                        visible: status === Image.Ready && avatarImg1.status !== Image.Ready
+                        source: avatarImg0.status !== Image.Ready && avatarImg1.status !== Image.Ready ? root.makeFileUrl(root._avatarPath2) : ""
+                        visible: status === Image.Ready && avatarImg0.status !== Image.Ready && avatarImg1.status !== Image.Ready
                     }
                     Image {
                         id: avatarImg3
                         anchors.fill: parent; fillMode: Image.PreserveAspectCrop
                         asynchronous: true; cache: true; smooth: true; mipmap: true
                         sourceSize.width: 200; sourceSize.height: 200
-                        source: avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready
+                        source: avatarImg0.status !== Image.Ready && avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready
                             ? root.makeFileUrl(root._avatarPath3) : ""
-                        visible: status === Image.Ready && avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready
+                        visible: status === Image.Ready && avatarImg0.status !== Image.Ready && avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready
                     }
                     Text {
                         anchors.centerIn: parent
                         text: (root.currentUserName || root.currentUserLogin || "?").charAt(0).toUpperCase()
                         font.pixelSize: 40; font.weight: Font.Medium; color: root.colOnSurface
-                        visible: avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready && avatarImg3.status !== Image.Ready
+                        visible: avatarImg0.status !== Image.Ready && avatarImg1.status !== Image.Ready && avatarImg2.status !== Image.Ready && avatarImg3.status !== Image.Ready
                     }
                 }
             }
@@ -317,13 +327,14 @@ MouseArea {
                             anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
                             dotCount: passwordBox.text.length
                             dotColor: root.colOnSurface; animColor: root.colPrimary
-                            visible: passwordBox.text.length > 0
+                            visible: root.materialShapeChars && passwordBox.text.length > 0
                         }
 
                         TextInput {
                             id: passwordBox
                             anchors.fill: parent; verticalAlignment: Text.AlignVCenter
-                            echoMode: TextInput.Password; color: "transparent"
+                            echoMode: TextInput.Password
+                            color: root.materialShapeChars ? "transparent" : root.colOnSurface
                             inputMethodHints: Qt.ImhSensitiveData
                             enabled: !root.loginInProgress; focus: true
                             onTextChanged: root.loginFailed = false

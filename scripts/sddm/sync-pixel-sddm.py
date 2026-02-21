@@ -92,6 +92,19 @@ def read_wallpaper():
         return None
 
 
+def read_material_shape_chars():
+    """Mirror lockscreen password behavior flag into SDDM theme config."""
+    if not os.path.isfile(CONFIG_JSON):
+        return "false"
+    try:
+        with open(CONFIG_JSON) as f:
+            config = json.load(f)
+        val = (config.get("lock", {}) or {}).get("materialShapeChars", False)
+        return "true" if bool(val) else "false"
+    except Exception:
+        return "false"
+
+
 def update_theme_conf(colors):
     """Update ii-pixel theme.conf [General] section with new colors."""
     if not os.path.isfile(THEME_CONF):
@@ -102,6 +115,7 @@ def update_theme_conf(colors):
         lines = f.read().split("\n")
 
     remaining = dict(colors)
+    remaining["materialShapeChars"] = read_material_shape_chars()
     new_lines = []
     for line in lines:
         stripped = line.strip()
@@ -128,6 +142,44 @@ def update_theme_conf(colors):
         return False
     except OSError as e:
         print(f"[sddm-pixel] Error writing theme.conf: {e}")
+        return False
+
+
+def update_avatar():
+    """Copy user avatar to a world-readable theme asset for SDDM.
+
+    This avoids permission issues when reading ~/.face from the sddm user.
+    Source order matches lockscreen intent:
+      1) ~/.face
+      2) ~/.face.icon
+      3) /var/lib/AccountsService/icons/<user>
+    """
+    if not os.path.isdir(ASSETS_DIR):
+        try:
+            os.makedirs(ASSETS_DIR, exist_ok=True)
+        except Exception:
+            return False
+
+    username = _sudo_user or os.environ.get("USER", "")
+    candidates = [
+        os.path.join(_real_home, ".face"),
+        os.path.join(_real_home, ".face.icon"),
+    ]
+    if username:
+        candidates.append(f"/var/lib/AccountsService/icons/{username}")
+
+    src = next((p for p in candidates if p and os.path.isfile(p)), None)
+    if not src:
+        return False
+
+    dst = os.path.join(ASSETS_DIR, "user-face.png")
+    try:
+        shutil.copy2(src, dst)
+        os.chmod(dst, 0o644)
+        print(f"[sddm-pixel] Avatar updated: {os.path.basename(src)}")
+        return True
+    except Exception as e:
+        print(f"[sddm-pixel] Avatar sync failed: {e}")
         return False
 
 
@@ -217,6 +269,8 @@ def main():
         update_background(wallpaper)
     else:
         print("[sddm-pixel] No wallpaper path found, keeping existing background")
+
+    update_avatar()
 
 
 if __name__ == "__main__":

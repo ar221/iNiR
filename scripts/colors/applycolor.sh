@@ -238,7 +238,8 @@ else
   apply_gtk_kde &
 fi
 
-# Apply ii-sddm-theme theming (auto-syncs via matugen post_hook)
-# The matugen template for iisddmtheme handles color generation.
-# generate_settings.py + sddm-theme-apply.sh are triggered by matugen's post_hook.
-# No manual sync needed here — matugen does it automatically on wallpaper change.
+# Sync ii-pixel SDDM theme colors (if installed)
+SDDM_SYNC_SCRIPT="$SCRIPT_DIR/../sddm/sync-pixel-sddm.py"
+if [[ -d "/usr/share/sddm/themes/ii-pixel" && -f "$SDDM_SYNC_SCRIPT" ]]; then
+  python3 "$SDDM_SYNC_SCRIPT" &
+fi
