@@ -54,11 +54,13 @@ Item {
                         }
                         NumberAnimation {
                             target: shape; property: "scale"
-                            to: 1; duration: 200; easing.type: Easing.OutBack
+                            to: 1; duration: 200; easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.34, 1.56, 0.64, 1.0, 1, 1]
                         }
                         NumberAnimation {
                             target: shape; property: "implicitSize"
-                            to: 18; duration: 200; easing.type: Easing.OutBack
+                            to: 18; duration: 200; easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.34, 1.56, 0.64, 1.0, 1, 1]
                         }
                         ColorAnimation {
                             target: shape; property: "shapeColor"
