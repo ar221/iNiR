@@ -29,7 +29,7 @@ Essential packages for Niri + ii to function.
 | `libnotify` | Notifications |
 | `pacman-contrib` | checkupdates for update notifications |
 | `wlsunset` | Night light / blue light filter |
-| `dunst` | Notification daemon |
+| `dolphin` | File manager (KDE, optional — nautilus is default) |
 | `xdg-desktop-portal` | XDG portal base |
 | `xdg-desktop-portal-gtk` | GTK portal |
 | `xdg-desktop-portal-gnome` | GNOME portal (screenshare) |
@@ -76,8 +76,8 @@ Qt6 stack and Quickshell runtime.
 | `kdialog` | KDE dialogs |
 | `syntax-highlighting` | Code highlighting |
 | `qt6ct` | Qt6 config tool |
-| `kde-gtk-config` | GTK theme sync |
-| `breeze` | Breeze theme |
+| `breeze-icons` | Breeze icon theme (lightweight) |
+| `plasma-integration` | KDE platform theme (reads kdeglobals for Qt colors) |
 
 ### From AUR
 
@@ -170,7 +170,6 @@ Fonts, theming, and utilities.
 | `translate-shell` | Translation CLI |
 | `kvantum` | Qt theming |
 | `matugen` | Material You colors |
-| `plasma-integration` | KDE platform theme plugin (reads kdeglobals for Qt app colors) |
 
 ### From AUR
 
@@ -201,7 +200,6 @@ Not installed by default, but useful. The shell handles their absence gracefully
 |---------|---------|---------|
 | `warp-cli` | Cloudflare WARP VPN toggle | Quick toggles panel |
 | `ollama` | Local LLM for AI chat | Sidebar AI assistant |
-| `mpvpaper` | Video wallpapers | Wallpaper selector |
 | `cava` | Audio visualizer | Bar widget (optional) |
 | `easyeffects` | Audio effects | Quick toggles panel |
 | `yt-dlp` | YouTube video/audio extraction | YTMusic sidebar |
