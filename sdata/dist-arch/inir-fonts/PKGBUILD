@@ -6,6 +6,7 @@ arch=(any)
 license=(MIT)
 depends=(
   fontconfig
+  noto-fonts-emoji
   ttf-dejavu
   ttf-liberation
   ttf-roboto
@@ -15,19 +16,19 @@ depends=(
   fuzzel
   glib2
   
-  # Color picker and utilities
-  translate-shell
-  
   # Qt theming
   kvantum
-  # Color picker
-  hyprpicker
-  
-  # Music recognition
-  songrec
+  plasma-integration
+)
+
+optdepends=(
+  'songrec: Music recognition (Shazam-like)'
+  'hyprpicker: Color picker (Hyprland tool — may not work on Niri)'
+  'translate-shell: Translation widget'
 )
 
 # AUR dependencies (installed separately)
+# darkly-bin (Qt style for Material You colors)
 # matugen (now in official repos)
 # otf-space-grotesk
 # ttf-jetbrains-mono-nerd

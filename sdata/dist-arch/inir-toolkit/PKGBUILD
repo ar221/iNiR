@@ -44,4 +44,5 @@ depends=(
 optdepends=(
   'hyprpicker: Color picker (Hyprland tool)'
   'translate-shell: Translation widget'
+  'fprintd: Fingerprint auth for lock screen (optional hardware)'
 )

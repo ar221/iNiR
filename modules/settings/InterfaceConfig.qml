@@ -1302,7 +1302,7 @@ ContentPage {
                         Layout.fillWidth: true
                         spacing: 6
 
-                        TextField {
+                        MaterialTextField {
                             id: subInput
                             Layout.fillWidth: true
                             placeholderText: Translation.tr("Add subreddit...")
@@ -1376,7 +1376,7 @@ ContentPage {
                             color: Appearance.colors.colOnLayer1
                         }
 
-                        TextField {
+                        MaterialTextField {
                             Layout.fillWidth: true
                             placeholderText: "https://hianime.to/search?keyword=%s"
                             text: Config.options.sidebar?.animeSchedule?.watchSite ?? ""
@@ -1430,7 +1430,7 @@ ContentPage {
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnSecondaryContainer
                     }
-                    TextField {
+                    MaterialTextField {
                         id: wallhavenApiInput
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Optional - for NSFW content")
@@ -1797,7 +1797,7 @@ ContentPage {
                                     color: Appearance.colors.colPrimary
                                 }
 
-                                TextInput {
+                                MaterialTextField {
                                     Layout.preferredWidth: 60
                                     text: launchItem.itemData.icon ?? ""
                                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -1818,7 +1818,7 @@ ContentPage {
 
                                 Rectangle { width: 1; Layout.fillHeight: true; Layout.topMargin: 8; Layout.bottomMargin: 8; color: Appearance.colors.colOutlineVariant }
 
-                                TextInput {
+                                MaterialTextField {
                                     Layout.preferredWidth: 70
                                     text: launchItem.itemData.name ?? ""
                                     font.pixelSize: Appearance.font.pixelSize.small
@@ -1839,7 +1839,7 @@ ContentPage {
 
                                 Rectangle { width: 1; Layout.fillHeight: true; Layout.topMargin: 8; Layout.bottomMargin: 8; color: Appearance.colors.colOutlineVariant }
 
-                                TextInput {
+                                MaterialTextField {
                                     Layout.fillWidth: true
                                     text: launchItem.itemData.cmd ?? ""
                                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -1993,14 +1993,15 @@ ContentPage {
                 }
 
                 // Coin input with autocomplete
-                Item {
+                ConfigRow {
                     Layout.fillWidth: true
                     implicitHeight: coinInput.implicitHeight
 
-                    TextField {
+                    MaterialTextField {
                         id: coinInput
                         width: parent.width
                         placeholderText: Translation.tr("Type to search coins...")
+                        text: ""
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.m3colors.m3onSurface
                         placeholderTextColor: Appearance.colors.colSubtext
@@ -2804,6 +2805,47 @@ ContentPage {
                 onCheckedChanged: Config.setNestedValue("settingsUi.overlayMode", checked)
                 StyledToolTip {
                     text: Translation.tr("When enabled, Settings opens as a floating overlay inside the shell instead of a separate window. This lets you preview changes instantly.\nRequires a shell restart to take effect.")
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Overlay appearance")
+                visible: Config.options?.settingsUi?.overlayMode ?? false
+
+                ConfigSpinBox {
+                    icon: "water"
+                    text: Translation.tr("Background dim (%)")
+                    value: Config.options?.settingsUi?.overlayAppearance?.scrimDim ?? 35
+                    from: 0
+                    to: 80
+                    stepSize: 5
+                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.scrimDim", value)
+                    StyledToolTip {
+                        text: Translation.tr("How dark the backdrop behind the Settings panel should be (0 = transparent, 80 = very dark)")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Panel background opacity (%)")
+                    value: Math.round((Config.options?.settingsUi?.overlayAppearance?.backgroundOpacity ?? 1.0) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.backgroundOpacity", value / 100)
+                    StyledToolTip {
+                        text: Translation.tr("Opacity of the Settings panel background. Lower values let the shell show through.")
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "blur_on"
+                    text: Translation.tr("Enhanced blur (aurora/angel only)")
+                    checked: Config.options?.settingsUi?.overlayAppearance?.enableBlur ?? false
+                    onCheckedChanged: Config.setNestedValue("settingsUi.overlayAppearance.enableBlur", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Apply extra glass blur behind the Settings panel. Only visible with aurora or angel global style.")
+                    }
                 }
             }
 
