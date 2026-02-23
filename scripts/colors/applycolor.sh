@@ -250,11 +250,12 @@ apply_code_editors() {
           # Check if theme section exists
           if ! jq -e '.theme' "$zed_settings" 2>/dev/null; then
             # Add theme section if it doesn't exist
-            jq '. + {theme: {mode: "system", light: "iNiR Light", dark: "iNiR Dark"}}' "$zed_settings" > "$zed_settings.tmp" && mv "$zed_settings.tmp" "$zed_settings"
-            echo "[code-editors] Zed settings.json updated with iNiR themes" >> "$log_file" 2>/dev/null
+            echo '{"theme": {"mode": "system", "light": "iNiR Light", "dark": "iNiR Dark"}}' > "$zed_settings.tmp" && mv "$zed_settings.tmp" "$zed_settings"
+            echo "[code-editors] Zed settings.json created with iNiR themes" >> "$log_file" 2>/dev/null
           else
             # Update existing theme section
-            jq '.theme.light = "iNiR Light" | .theme.dark = "iNiR Dark"' "$zed_settings" > "$zed_settings.tmp" && mv "$zed_settings.tmp" "$zed_settings"
+            # Use sed instead of jq because JSON has comments that jq can't parse
+            sed -i 's/"mode": "light"/"mode": "system"/' "$zed_settings" > "$zed_settings.tmp" && mv "$zed_settings.tmp" "$zed_settings"
             echo "[code-editors] Zed settings.json updated with iNiR themes" >> "$log_file" 2>/dev/null
           fi
         else

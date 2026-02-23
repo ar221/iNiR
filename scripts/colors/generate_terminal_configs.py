@@ -1367,17 +1367,17 @@ def generate_zed_config(colors, scss_path, output_path):
             "info": hex_with_alpha(primary, "ff"),
             "info.background": hex_with_alpha(primary, "1a"),
             "info.border": hex_with_alpha(adjust_lightness(primary, 0.6), "ff"),
-            "modified": hex_with_alpha(adjust_lightness(primary, 0.8), "ff"),
+            "color": hex_with_alpha(primary, "66"),
             "modified.background": hex_with_alpha(adjust_lightness(primary, 0.8), "1a"),
             "modified.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(primary, 0.8), 0.6), "ff"
+                adjust_lightness(primary, "ff"
             ),
             "predictive": hex_with_alpha(adjust_lightness(secondary, 0.8), "ff"),
             "predictive.background": hex_with_alpha(
                 adjust_lightness(secondary, 0.8), "1a"
             ),
             "predictive.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(secondary, 0.8), 0.6), "ff"
+                adjust_lightness(secondary, "ff"
             ),
             "renamed": hex_with_alpha(primary, "ff"),
             "renamed.background": hex_with_alpha(primary, "1a"),
@@ -1392,9 +1392,7 @@ def generate_zed_config(colors, scss_path, output_path):
             "unreachable.border": hex_with_alpha(outline, "ff"),
             "warning": hex_with_alpha(adjust_lightness(tertiary, 0.9), "ff"),
             "warning.background": hex_with_alpha(adjust_lightness(tertiary, 0.9), "1a"),
-            "warning.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(tertiary, 0.9), 0.6), "ff"
-            ),
+            "warning.border": hex_with_alpha(adjust_lightness(tertiary, 0.9), "ff"),
         }
 
         # Terminal colors
@@ -1482,7 +1480,7 @@ def generate_zed_config(colors, scss_path, output_path):
                 "font_weight": None,
             },
             "boolean": {
-                "color": hex_with_alpha(adjust_lightness(tertiary, 0.8), "ff"),
+                "color": hex_with_alpha(tertiary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
@@ -1641,29 +1639,22 @@ def generate_zed_config(colors, scss_path, output_path):
                 "font_weight": None,
             },
             "string.escape": {
-                "color": hex_with_alpha(
-                    adjust_lightness(on_surface_variant, 0.8), "ff"
-                ),
+                "color": hex_with_alpha(on_surface_variant, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
             "string.regex": {
-                "color": hex_with_alpha(adjust_lightness(tertiary, 0.8), "ff"),
+                "color": hex_with_alpha(tertiary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
             "string.special": {
-                "color": hex_with_alpha(adjust_lightness(tertiary, 0.8), "ff"),
+                "color": hex_with_alpha(tertiary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
             "string.special.symbol": {
-                "color": hex_with_alpha(adjust_lightness(tertiary, 0.8), "ff"),
-                "font_style": None,
-                "font_weight": None,
-            },
-            "tag": {
-                "color": hex_with_alpha(primary, "ff"),
+                "color": hex_with_alpha(tertiary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
@@ -1673,12 +1664,12 @@ def generate_zed_config(colors, scss_path, output_path):
                 "font_weight": None,
             },
             "title": {
-                "color": hex_with_alpha(adjust_lightness(primary, 0.85), "ff"),
+                "color": hex_with_alpha(primary, "ff"),
                 "font_style": None,
                 "font_weight": 400,
             },
-            "type": {
-                "color": hex_with_alpha(secondary, "ff"),
+            "variable.special": {
+                "color": hex_with_alpha(tertiary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
@@ -1757,10 +1748,10 @@ def generate_zed_config(colors, scss_path, output_path):
             "toolbar.background": hex_with_alpha(adjust_lightness(surface_low, 1.2), "ff"),
             "tab_bar.background": hex_with_alpha(adjust_lightness(surface_low, 1.2), "ff"),
             "tab.inactive_background": hex_with_alpha(adjust_lightness(surface_low, 1.2), "ff"),
-            "tab.active_background": hex_with_alpha(adjust_lightness(adjust_lightness(surface, 1.1), "ff"),
+            "tab.active_background": hex_with_alpha(adjust_lightness(adjust_lightness(surface, 1.5), "ff"),
             "search.match_background": hex_with_alpha(primary, "66"),
             "search.active_match_background": hex_with_alpha(tertiary, "66"),
-            "panel.background": hex_with_alpha(adjust_lightness(surface_low, 1.2), "ff"),
+            "tab.active_background": hex_with_alpha(surface, "ff"),
             "panel.focused_border": None,
             "pane.focused_border": None,
             "scrollbar.thumb.background": hex_with_alpha(on_surface_variant, "4c"),
@@ -1784,12 +1775,10 @@ def generate_zed_config(colors, scss_path, output_path):
             "editor.active_wrap_guide": hex_with_alpha(on_surface_variant, "1a"),
             "editor.document_highlight.read_background": hex_with_alpha(primary, "1a"),
             "editor.document_highlight.write_background": hex_with_alpha(adjust_lightness(surface_std, 0.8), "66"),
-            "terminal.background": hex_with_alpha(adjust_lightness(surface, 1.5), "ff"),
+            "terminal.background": hex_with_alpha(surface, "ff"),
             "terminal.foreground": hex_with_alpha(on_surface, "ff"),
             "terminal.bright_foreground": hex_with_alpha(on_surface, "ff"),
-            "terminal.dim_foreground": hex_with_alpha(
-                adjust_lightness(on_surface, 0.6), "ff"
-            ),
+            "terminal.foreground": hex_with_alpha(on_surface, "ff"),
             "link_text.hover": hex_with_alpha(primary, "ff"),
             "version_control.added": hex_with_alpha(tertiary, "ff"),
             "version_control.modified": hex_with_alpha(
@@ -1833,12 +1822,12 @@ def generate_zed_config(colors, scss_path, output_path):
             "modified": hex_with_alpha(adjust_lightness(primary, 0.8), "ff"),
             "modified.background": hex_with_alpha(adjust_lightness(primary, 0.8), "1a"),
             "modified.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(primary, 0.8), 0.6), "ff"
+                adjust_lightness(primary, "ff"
             ),
             "predictive": hex_with_alpha(adjust_lightness(secondary, 0.8), "ff"),
             "predictive.background": hex_with_alpha(adjust_lightness(secondary, 0.8), "1a"),
             "predictive.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(secondary, 0.8), 0.6), "ff"
+                adjust_lightness(secondary, "ff"
             ),
             "renamed": hex_with_alpha(primary, "ff"),
             "renamed.background": hex_with_alpha(primary, "1a"),
@@ -1854,7 +1843,7 @@ def generate_zed_config(colors, scss_path, output_path):
             "warning": hex_with_alpha(adjust_lightness(tertiary, 0.9), "ff"),
             "warning.background": hex_with_alpha(adjust_lightness(tertiary, 0.9), "1a"),
             "warning.border": hex_with_alpha(
-                adjust_lightness(adjust_lightness(tertiary, 0.9), 0.6), "ff"
+                adjust_lightness(tertiary, "ff"
             }
 
         # Terminal colors (same as dark theme)
@@ -1989,7 +1978,7 @@ def generate_zed_config(colors, scss_path, output_path):
                 "font_weight": None,
             },
             "hint": {
-                "color": hex_with_alpha(adjust_lightness(primary, 0.7), "ff"),
+            "color": hex_with_alpha(primary, "ff"),
                 "font_style": None,
                 "font_weight": None,
             },
