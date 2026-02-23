@@ -302,9 +302,9 @@ if args.termscheme is not None:
             term_colors[color] = material_colors.get("onSurface", "#e0e0e0")
             continue
         
-        # Bright background (term8): Slightly brighter than term0
+        # Bright background (term8): Noticeably brighter than term0
         if color == "term8":
-            term_colors[color] = get_interpolated_surface(min(1.0, user_bg_brightness + 0.15))
+            term_colors[color] = get_interpolated_surface(min(1.0, user_bg_brightness + 0.30))
             continue
             
         if color == "term7":
@@ -337,6 +337,14 @@ if args.termscheme is not None:
             "scheme-monochrome",
         ]:
             harmonized = boost_chroma_tone(harmonized, 0.55, 1)
+
+        # Enforce minimum chroma for chromatic colors (term1-6, term9-14)
+        # so they remain visually distinct even with desaturated wallpapers
+        if color not in ("term0", "term7", "term8", "term15"):
+            h = Hct.from_int(harmonized)
+            min_chroma = 35
+            if h.chroma < min_chroma:
+                harmonized = Hct.from_hct(h.hue, min_chroma, h.tone).to_int()
 
         term_colors[color] = argb_to_hex(harmonized)
 

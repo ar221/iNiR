@@ -142,28 +142,27 @@ color15 {colors.get("term15", "#EBDBB2")}
     else:
         print(f"✓ Generated Kitty config (already integrated)")
 
-    # Live reload kitty colors via remote control socket
+    # Live reload kitty colors via remote control sockets
+    import glob as glob_mod
     import subprocess
 
-    socket_path = "/tmp/kitty-socket"
-    if os.path.exists(socket_path):
-        try:
-            subprocess.run(
-                [
-                    "kitten",
-                    "@",
-                    "--to",
-                    f"unix:{socket_path}",
-                    "set-colors",
-                    "--all",
-                    output_path,
-                ],
-                capture_output=True,
-                timeout=2,
-            )
-            print(f"  → Live-reloaded Kitty colors via socket")
-        except Exception:
-            pass
+    kitty_sockets = glob_mod.glob("/tmp/kitty-*")
+    if kitty_sockets:
+        reloaded = 0
+        for socket_path in kitty_sockets:
+            try:
+                subprocess.run(
+                    ["kitten", "@", "--to", f"unix:{socket_path}", "set-colors", "--all", output_path],
+                    capture_output=True,
+                    timeout=2,
+                )
+                reloaded += 1
+            except Exception:
+                pass
+        if reloaded:
+            print(f"  → Live-reloaded Kitty colors on {reloaded} instance(s)")
+    else:
+        print(f"  [kitty] No sockets found at /tmp/kitty-* (enable listen_on in kitty.conf for live reload)")
 
 
 def fix_alacritty_import_order(config_path):
@@ -1078,6 +1077,134 @@ rules = [
         print(f"\u2713 Generated yazi flavor and created theme.toml")
 
 
+def hex_to_ansi_rgb(hex_color):
+    """Convert #RRGGBB to 38;2;R;G;B ANSI truecolor sequence"""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"38;2;{r};{g};{b}"
+
+
+def generate_eza_config(colors, output_path):
+    """Generate EZA_COLORS fish config from material colors.
+
+    Writes a fish conf.d snippet that sets EZA_COLORS so eza output
+    matches the current wallpaper theme.
+    """
+    # Map material colors to eza categories using truecolor
+    primary = hex_to_ansi_rgb(colors.get("primary", "#458588"))
+    fg = hex_to_ansi_rgb(colors.get("term7", "#A89984"))
+    fg_bright = hex_to_ansi_rgb(colors.get("term15", "#EBDBB2"))
+    gray = hex_to_ansi_rgb(colors.get("term8", "#928374"))
+    red = hex_to_ansi_rgb(colors.get("term1", "#CC241D"))
+    red_br = hex_to_ansi_rgb(colors.get("term9", "#FB4934"))
+    green = hex_to_ansi_rgb(colors.get("term2", "#98971A"))
+    green_br = hex_to_ansi_rgb(colors.get("term10", "#B8BB26"))
+    yellow = hex_to_ansi_rgb(colors.get("term3", "#D79921"))
+    yellow_br = hex_to_ansi_rgb(colors.get("term11", "#FABD2F"))
+    blue = hex_to_ansi_rgb(colors.get("term4", "#458588"))
+    blue_br = hex_to_ansi_rgb(colors.get("term12", "#83A598"))
+    magenta = hex_to_ansi_rgb(colors.get("term5", "#B16286"))
+    magenta_br = hex_to_ansi_rgb(colors.get("term13", "#D3869B"))
+    cyan = hex_to_ansi_rgb(colors.get("term6", "#689D6A"))
+    cyan_br = hex_to_ansi_rgb(colors.get("term14", "#8EC07C"))
+
+    # Build EZA_COLORS string
+    # See man eza_colors(5) for all codes
+    pairs = [
+        # File types
+        f"di={primary};1",        # directories - primary bold
+        f"fi={fg}",               # regular files
+        f"ex={green};1",          # executables - green bold
+        f"ln={cyan}",             # symlinks
+        f"or={red};3",            # broken symlinks - red italic
+        f"pi={yellow}",           # pipes
+        f"so={magenta}",          # sockets
+        f"bd={yellow};1",         # block devices
+        f"cd={yellow}",           # char devices
+        f"sp={magenta}",          # special files
+        f"mp={primary};4",        # mount points - primary underline
+        # Permissions
+        f"ur={green}",            # user read
+        f"uw={yellow}",           # user write
+        f"ux={red}",              # user exec
+        f"ue={red}",              # user exec (other kinds)
+        f"gr={green}",            # group read
+        f"gw={yellow}",           # group write
+        f"gx={red}",              # group exec
+        f"tr={green}",            # other read
+        f"tw={yellow}",           # other write
+        f"tx={red}",              # other exec
+        # Users / groups
+        f"uu={yellow}",           # user is you
+        f"un={red}",              # user is someone else
+        f"uR={red_br};1",         # user is root
+        f"gu={yellow}",           # your group
+        f"gn={red}",              # other group
+        f"gR={red_br};1",         # root group
+        # Size
+        f"sn={green}",            # size number
+        f"sb={green}",            # size unit
+        # Date
+        f"da={gray}",             # date
+        # Git
+        f"ga={green};1",          # git new
+        f"gm={yellow};1",         # git modified
+        f"gd={red};1",            # git deleted
+        f"gv={cyan};1",           # git renamed
+        f"gt={magenta}",          # git modified metadata
+        f"gi={gray}",             # git ignored
+        f"gc={red_br};1",         # git conflicted
+        f"Gm={green};1",          # main branch
+        f"Go={cyan}",             # other branch
+        f"Gc={green}",            # clean branch
+        f"Gd={yellow}",           # dirty branch
+        # UI elements
+        f"xx={gray}",             # punctuation
+        f"hd={fg_bright};4",      # header row - bright underline
+        f"lp={cyan}",             # symlink path
+        f"cc={red}",              # escaped char
+        # File categories
+        f"im={magenta}",          # images
+        f"vi={magenta_br}",       # video
+        f"mu={cyan}",             # lossy music
+        f"lo={cyan_br}",          # lossless music
+        f"cr={yellow};1",         # crypto files
+        f"do={blue}",             # documents
+        f"co={red}",              # compressed
+        f"tm={gray}",             # temp files
+        f"cm={gray}",             # compilation artifacts
+        f"bu={yellow}",           # build files
+        f"sc={green}",            # source code
+    ]
+
+    eza_colors_str = ":".join(pairs)
+
+    fish_config = f"""# Auto-generated by ii wallpaper theming system
+# Do not edit manually - changes will be overwritten
+# Uses universal variable so all running fish sessions update immediately
+
+if not set -q EZA_COLORS; or test "$EZA_COLORS" != '{eza_colors_str}'
+    set -Ux EZA_COLORS '{eza_colors_str}'
+end
+"""
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        f.write(fish_config)
+
+    # Immediately propagate to all running fish sessions via universal variable
+    import subprocess
+    try:
+        subprocess.run(
+            ["fish", "-c", f"set -Ux EZA_COLORS '{eza_colors_str}'"],
+            capture_output=True,
+            timeout=3,
+        )
+        print(f"✓ Generated eza colors (propagated to all fish sessions)")
+    except Exception:
+        print(f"✓ Generated eza colors (will apply on next shell start)")
+
+
 def generate_fuzzel_config(colors, output_path):
     """Generate Fuzzel launcher theme from material colors"""
     bg = colors.get("background", colors.get("term0", "#282828"))
@@ -1174,6 +1301,7 @@ def main():
             "btop",
             "lazygit",
             "yazi",
+            "eza",
             "all",
         ],
         default=["all"],
@@ -1209,6 +1337,7 @@ def main():
             "btop",
             "lazygit",
             "yazi",
+            "eza",
         ]
     )
 
@@ -1246,6 +1375,9 @@ def main():
         generate_yazi_config(
             colors, f"{home}/.config/yazi/flavors/ii-auto.yazi/flavor.toml"
         )
+
+    if "eza" in terminals:
+        generate_eza_config(colors, f"{home}/.config/fish/conf.d/eza-colors.fish")
 
     if args.zed:
         generate_zed_config(

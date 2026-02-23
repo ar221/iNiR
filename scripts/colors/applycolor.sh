@@ -93,7 +93,7 @@ apply_terminal_configs() {
   # Single source of truth for all supported targets.
   # Mirrors TERMINAL_REGISTRY in generate_terminal_configs.py.
   # To add a new target: add it here + add generate_X_config() and registry entry in the Python script.
-  local all_supported=(kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi)
+  local all_supported=(kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi eza)
 
   # Build enabled list: config-enabled (default true) AND installed
   local enabled_terminals=()
@@ -259,6 +259,27 @@ apply_gtk_kde() {
   "$SCRIPT_DIR/apply-gtk-theme.sh"
 }
 
+apply_papirus_folders() {
+  local icon_script="$XDG_CONFIG_HOME/matugen/papirus-folders/change-icons.sh"
+  local color_file="$XDG_CONFIG_HOME/matugen/papirus-folders/folder-color.txt"
+
+  # Extract primary color directly from SCSS (more reliable than matugen template timing)
+  local scss_file="$STATE_DIR/user/generated/material_colors.scss"
+  if [ -f "$scss_file" ]; then
+    local primary
+    primary=$(grep '^\$primary:' "$scss_file" | sed 's/.*: *\(#[A-Fa-f0-9]\{6\}\).*/\1/')
+    if [ -n "$primary" ]; then
+      echo "$primary" > "$color_file"
+    fi
+  fi
+
+  if [ -x "$icon_script" ] && [ -f "$color_file" ]; then
+    bash "$icon_script" && echo "[papirus] Folder icon colors updated" || echo "[papirus] Folder icon change failed"
+  else
+    echo "[papirus] Script not found or not executable: $icon_script"
+  fi
+}
+
 # Check if terminal theming is enabled in config
 CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 if [ -f "$CONFIG_FILE" ]; then
@@ -281,9 +302,11 @@ if [ -f "$CONFIG_FILE" ]; then
   enable_qt_apps=$(jq -r '.appearance.wallpaperTheming.enableQtApps // true' "$CONFIG_FILE")
   if [ "$enable_apps_shell" != "false" ] || [ "$enable_qt_apps" != "false" ]; then
     apply_gtk_kde &
+    apply_papirus_folders &
   fi
 else
   apply_gtk_kde &
+  apply_papirus_folders &
 fi
 
 
