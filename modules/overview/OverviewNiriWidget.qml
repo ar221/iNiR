@@ -619,9 +619,14 @@ Item {
                                                                          || (NiriService.activeWindow
                                                                              && NiriService.activeWindow.id === windowData.id))
 
+                    // Window item radius adapts to angel theme editor rounding values
+                    readonly property real windowRadius: Appearance.angelEverywhere 
+                        ? Appearance.angel.roundingSmall 
+                        : Appearance.rounding.small
+
                     Rectangle {
                         anchors.fill: parent
-                        radius: Appearance.rounding.small
+                        radius: windowItem.windowRadius
                         color: "transparent"
                         border.width: windowItem.isFocused ? 2 : 0
                         border.color: windowItem.isFocused ? Appearance.colors.colLayer2Active : "transparent"
@@ -631,7 +636,7 @@ Item {
                             anchors.fill: parent
                             // When focused, inset slightly so hover/press highlight doesn't cover the focus border
                             anchors.margins: windowItem.isFocused ? 2 : 0
-                            radius: Appearance.rounding.small
+                            radius: windowItem.windowRadius
                             color: windowItem.pressed
                                    ? ColorUtils.transparentize(Appearance.colors.colLayer2Active, 0.45)
                                    : windowItem.hovered
@@ -824,7 +829,8 @@ Item {
                     RippleButton {
                         implicitWidth: contentItem.implicitWidth + 24
                         height: 32
-                        buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                        buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
                         buttonText: Translation.tr("Focus")
                         colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
                             : Appearance.auroraEverywhere ? Appearance.colors.colLayer3Hover
@@ -840,7 +846,8 @@ Item {
                     RippleButton {
                         implicitWidth: contentItem.implicitWidth + 24
                         height: 32
-                        buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                        buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
                         buttonText: Translation.tr("Close")
                         colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
                             : Appearance.auroraEverywhere ? Appearance.colors.colLayer3Hover
@@ -872,8 +879,10 @@ Item {
                 property bool workspaceAtRight: colIndex === root.overviewColumns - 1
                 property bool workspaceAtTop: rowIndex === 0
                 property bool workspaceAtBottom: rowIndex === root.overviewRows - 1
-                property real largeWorkspaceRadius: Appearance.rounding.large
-                property real smallWorkspaceRadius: Appearance.rounding.verysmall
+                property real largeWorkspaceRadius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                    : Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.large
+                property real smallWorkspaceRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                    : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.verysmall
                 topLeftRadius: (workspaceAtLeft && workspaceAtTop) ? largeWorkspaceRadius : smallWorkspaceRadius
                 topRightRadius: (workspaceAtRight && workspaceAtTop) ? largeWorkspaceRadius : smallWorkspaceRadius
                 bottomLeftRadius: (workspaceAtLeft && workspaceAtBottom) ? largeWorkspaceRadius : smallWorkspaceRadius
