@@ -262,7 +262,8 @@ Item {
                 property real yWithinWorkspaceWidget: Math.max((windowData?.at[1] - (monitor?.y ?? 0) - monitorData?.reserved[1]) * root.scale, 0)
 
                 // Radius
-                property real minRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                property real minRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                    : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
                 property bool workspaceAtLeft: workspaceColIndex === 0
                 property bool workspaceAtRight: workspaceColIndex === Config.options.overview.columns - 1
                 property bool workspaceAtTop: workspaceRowIndex === 0

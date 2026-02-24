@@ -406,11 +406,14 @@ Item { // Wrapper
         clip: true
         implicitWidth: columnLayout.implicitWidth
         implicitHeight: columnLayout.implicitHeight
-        radius: searchBar.height / 2 + searchBar.verticalPadding
+        radius: Appearance.angelEverywhere 
+            ? Appearance.angel.roundingNormal 
+            : (searchBar.height / 2 + searchBar.verticalPadding)
         fallbackColor: Appearance.colors.colBackgroundSurfaceContainer
         inirColor: Appearance.inir.colLayer1
         auroraTransparency: Appearance.aurora.popupTransparentize
-        border.width: auroraEverywhere || inirEverywhere ? 1 : 0
+        border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+            : (auroraEverywhere || inirEverywhere ? 1 : 0)
         border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
             : inirEverywhere ? Appearance.inir.colBorder : Appearance.colors.colLayer0Border
 
