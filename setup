@@ -62,10 +62,10 @@ quiet=false
 show_help() {
     echo ""
     tui_title "iNiR setup"
-    
+
     tui_key_value "Usage:" "./setup [command] [options]"
     echo ""
-    
+
     tui_subtitle "Commands"
     tui_list_item "(none)      Interactive menu"
     tui_list_item "install     Full installation (deps + config + files)"
@@ -101,17 +101,17 @@ show_version_info() {
     local installed_commit=$(get_installed_commit)
     local repo_ver=$(get_repo_version)
     local repo_commit=$(get_repo_commit)
-    
+
     echo ""
     tui_status_line "Installed:" "$installed_ver ($installed_commit)" "ok"
     tui_status_line "Available:" "$repo_ver ($repo_commit)" ""
-    
+
     # Check for pending migrations
     local pending=$(count_pending_migrations 2>/dev/null || echo "0")
     if [[ "$pending" -gt 0 ]]; then
         tui_status_line "Migrations:" "$pending pending" "warn"
     fi
-    
+
     # Check for updates
     if [[ "$installed_commit" != "$repo_commit" ]]; then
         echo ""
@@ -125,19 +125,19 @@ show_version_info() {
 tui_menu() {
     clear
     tui_banner
-    
+
     # Detect current state
     local is_installed=false
     [[ -f "${XDG_CONFIG_HOME}/illogical-impulse/installed_true" ]] && is_installed=true
-    
+
     if $is_installed; then
         show_version_info
         echo ""
         tui_divider
     fi
-    
+
     echo ""
-    
+
     # Menu options based on state
     local choice
     if $is_installed; then
@@ -170,32 +170,32 @@ show_status() {
     local installed_commit=$(get_installed_commit)
     local repo_ver=$(get_repo_version)
     local repo_commit=$(get_repo_commit)
-    
+
     tui_title "Status"
-    
+
     tui_table_header "Property" "Value" 14 36
     tui_table_row "Version" "$installed_ver" 14 36
     tui_table_row "Commit" "$installed_commit" 14 36
     tui_table_row "Repo Version" "$repo_ver" 14 36
     tui_table_row "Repo Commit" "$repo_commit" 14 36
     tui_table_footer 14 36
-    
+
     tui_title "Health Checks"
-    
+
     # Check shell status
     if pgrep -f "qs.*-c.*ii" &>/dev/null; then
         tui_check_ok "Shell is running"
     else
         tui_check_warn "Shell is not running"
     fi
-    
+
     # Check Niri
     if [[ -n "$NIRI_SOCKET" ]]; then
         tui_check_ok "Niri compositor detected"
     else
         tui_check_warn "Not running in Niri session"
     fi
-    
+
     # Pending migrations
     local pending=$(count_pending_migrations 2>/dev/null || echo "0")
     if [[ "$pending" -gt 0 ]]; then
@@ -204,7 +204,7 @@ show_status() {
     else
         tui_check_ok "No pending migrations"
     fi
-    
+
     # Snapshots
     local snapshot_count=$(list_snapshots 2>/dev/null | wc -l)
     if [[ "$snapshot_count" -gt 0 ]]; then
@@ -220,25 +220,25 @@ show_status() {
 ###############################################################################
 run_install() {
     detect_distro
-    
+
     # Greeting & system info
     source ./sdata/subcmd-install/0.greeting.sh
-    
+
     # Check conflicts
     check_conflicts
-    
+
     # 1. Dependencies
     if [[ "${SKIP_DEPS}" != "true" ]]; then
         tui_step 1 3 "Installing dependencies"
         source ./sdata/subcmd-install/1.deps-router.sh
     fi
-    
+
     # 2. System setup (groups, services)
     if [[ "${SKIP_SETUPS}" != "true" ]]; then
         tui_step 2 3 "System configuration"
         source ./sdata/subcmd-install/2.setups.sh
     fi
-    
+
     # 3. Config files
     if [[ "${SKIP_FILES}" != "true" ]]; then
         tui_step 3 3 "Installing config files"
@@ -483,7 +483,7 @@ run_update() {
     echo ""
     tui_title "Checking for updates..."
     echo ""
-    
+
     # After a git pull, the setup script re-execs itself so that updated library
     # code (doctor, migrations, etc.) is loaded fresh. _II_POST_PULL signals that
     # we already pulled and should skip straight to the sync phase.
@@ -492,20 +492,20 @@ run_update() {
         tui_success "Libraries reloaded after pull"
     elif check_remote_updates; then
         show_pending_commits
-        
+
         if $ask; then
             if ! tui_confirm "Pull and apply these updates?"; then
                 echo "Cancelled."
                 return 0
             fi
         fi
-        
+
         # Create snapshot BEFORE pulling
         tui_info "Creating snapshot..."
         local remote_commit=$(get_remote_commit)
         local snapshot_id=$(create_snapshot "update" "Before update to ${remote_commit}" "$remote_commit")
         tui_success "Snapshot: $snapshot_id"
-        
+
         # Pull changes
         tui_info "Pulling changes..."
         if ! git -C "$REPO_ROOT" pull --ff-only origin 2>/dev/null; then
@@ -529,12 +529,12 @@ run_update() {
         local installed_commit=$(get_installed_commit)
         local repo_ver=$(get_repo_version)
         local repo_commit=$(get_repo_commit)
-        
+
         if [[ "$installed_ver" == "0.0.0" ]] && [[ -f "${XDG_CONFIG_HOME}/illogical-impulse/installed_true" ]]; then
             tui_info "Detected existing installation without version tracking"
         elif [[ "$installed_commit" == "$repo_commit" ]]; then
             tui_success "Already up to date ($installed_ver)"
-            
+
             local pending=$(count_pending_migrations)
             if [[ "$pending" -gt 0 ]]; then
                 echo ""
@@ -551,17 +551,17 @@ run_update() {
             tui_success "Snapshot: $snapshot_id"
         fi
     fi
-    
+
     # Sync files
     local repo_ver=$(get_repo_version)
     local repo_commit=$(get_repo_commit)
-    
+
     echo ""
     tui_info "Syncing iNiR..."
-    
+
     II_SOURCE="${REPO_ROOT}"
     II_TARGET="${XDG_CONFIG_HOME}/quickshell/ii"
-    
+
     # Check if source and target are the same (dev setup)
     local src_real=$(realpath "$II_SOURCE" 2>/dev/null || echo "$II_SOURCE")
     local tgt_real=$(realpath "$II_TARGET" 2>/dev/null || echo "$II_TARGET")
@@ -621,13 +621,13 @@ run_update() {
             tui_dim "    $PRESERVED_MODS_DIR"
         fi
     fi
-    
+
     # Generate manifest
     generate_manifest "$II_SOURCE" "${II_TARGET}/.ii-manifest"
-    
+
     # Fix permissions
     find "$II_TARGET/scripts" \( -name "*.sh" -o -name "*.fish" -o -name "*.py" \) -exec chmod +x {} \; 2>/dev/null || true
-    
+
     # Update version
     set_installed_version "$repo_ver" "$repo_commit" "update"
 
@@ -669,7 +669,7 @@ MATUGEN_SDDM_EOF
         fi
     fi
 
-    # Update Vesktop themes (themes live outside the quickshell/ii tree)
+    # Update Vesktop themes (themes live outside quickshell/ii tree)
     if [[ -d "${REPO_ROOT}/dots/.config/vesktop/themes" ]]; then
         echo ""
         tui_info "Updating Vesktop themes..."
@@ -695,7 +695,7 @@ MATUGEN_SDDM_EOF
 
         tui_success "Vesktop themes updated"
     fi
-    
+
     # Migrations
     local pending=$(count_pending_migrations)
     if [[ "$pending" -gt 0 ]]; then
@@ -710,7 +710,7 @@ MATUGEN_SDDM_EOF
             fi
         fi
     fi
-    
+
     # Restart shell (only if we have access to the session)
     echo ""
     if [[ -n "$NIRI_SOCKET" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
@@ -760,20 +760,20 @@ MATUGEN_SDDM_EOF
     else
         tui_success "All required commands available"
     fi
-    
+
     # Update Python venv packages
     echo ""
     tui_title "Python packages"
     echo ""
     local venv_dir="${XDG_STATE_HOME}/quickshell/.venv"
     local req_file="${REPO_ROOT}/sdata/uv/requirements.txt"
-    
+
     if [[ -f "$req_file" ]] && command -v uv &>/dev/null; then
         if [[ ! -d "$venv_dir/bin" ]]; then
             tui_info "Creating Python venv..."
             uv venv --prompt ii-venv "$venv_dir" -p 3.12 2>/dev/null || uv venv --prompt ii-venv "$venv_dir" 2>/dev/null
         fi
-        
+
         if [[ -d "$venv_dir/bin" ]]; then
             tui_info "Updating Python packages..."
             source "$venv_dir/bin/activate"
@@ -784,7 +784,7 @@ MATUGEN_SDDM_EOF
     else
         tui_success "Python packages (skipped - uv not available)"
     fi
-    
+
     echo ""
     tui_subtitle "Tip: Run './setup rollback' if something breaks"
 }

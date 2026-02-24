@@ -5,12 +5,16 @@ Supports: Kitty, Alacritty, Foot, WezTerm, Ghostty, Konsole
 Auto-integrates into existing terminal configs
 """
 
-import sys
+import argparse
+import json
 import os
 import re
-import argparse
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from zed.theme_generator import generate_zed_config
 
 
 def parse_scss_colors(scss_path):
@@ -145,7 +149,15 @@ color15 {colors.get("term15", "#EBDBB2")}
     if os.path.exists(socket_path):
         try:
             subprocess.run(
-                ["kitten", "@", "--to", f"unix:{socket_path}", "set-colors", "--all", output_path],
+                [
+                    "kitten",
+                    "@",
+                    "--to",
+                    f"unix:{socket_path}",
+                    "set-colors",
+                    "--all",
+                    output_path,
+                ],
                 capture_output=True,
                 timeout=2,
             )
@@ -178,7 +190,9 @@ def fix_alacritty_import_order(config_path):
 
     # Check if [general] with import is already at the top (correct state)
     lines = content.split("\n")
-    top_lines = [l.strip() for l in lines[:10] if l.strip() and not l.strip().startswith("#")]
+    top_lines = [
+        l.strip() for l in lines[:10] if l.strip() and not l.strip().startswith("#")
+    ]
 
     # Correct state: [general] is first real line, import is second, no hardcoded colors
     correct = (
@@ -241,8 +255,12 @@ def fix_alacritty_import_order(config_path):
                 in_colors_section = True
                 added_colors_comment = True
                 new_lines.append("")
-                new_lines.append("# Color definitions commented out by iNiR wallpaper theming")
-                new_lines.append("# Colors are managed via the import in [general] above")
+                new_lines.append(
+                    "# Color definitions commented out by iNiR wallpaper theming"
+                )
+                new_lines.append(
+                    "# Colors are managed via the import in [general] above"
+                )
                 new_lines.append("#")
             new_lines.append("# " + line)
             continue
@@ -390,7 +408,12 @@ urls={colors.get("term4", "#458588")[1:]}
     foot_path = Path(foot_conf)
     if foot_path.exists():
         old_content = foot_path.read_text()
-        new_content = re.sub(r"^include\s*=\s*~/.config/foot/colors\.ini\s*\n?", "", old_content, flags=re.MULTILINE)
+        new_content = re.sub(
+            r"^include\s*=\s*~/.config/foot/colors\.ini\s*\n?",
+            "",
+            old_content,
+            flags=re.MULTILINE,
+        )
         if new_content != old_content:
             foot_path.write_text(new_content)
 
@@ -403,17 +426,17 @@ def generate_wezterm_config(colors, output_path):
 return {{
   foreground = '{colors.get("term7", "#A89984")}',
   background = '{colors.get("term0", "#282828")}',
-  
+
   cursor_bg = '{colors.get("term7", "#A89984")}',
   cursor_fg = '{colors.get("term0", "#282828")}',
   cursor_border = '{colors.get("term7", "#A89984")}',
-  
+
   selection_fg = '{colors.get("term0", "#282828")}',
   selection_bg = '{colors.get("term7", "#A89984")}',
-  
+
   scrollbar_thumb = '{colors.get("term8", "#928374")}',
   split = '{colors.get("term8", "#928374")}',
-  
+
   ansi = {{
     '{colors.get("term0", "#282828")}',  -- black
     '{colors.get("term1", "#CC241D")}',  -- red
@@ -424,7 +447,7 @@ return {{
     '{colors.get("term6", "#689D6A")}',  -- cyan
     '{colors.get("term7", "#A89984")}',  -- white
   }},
-  
+
   brights = {{
     '{colors.get("term8", "#928374")}',  -- bright black
     '{colors.get("term9", "#FB4934")}',  -- bright red
@@ -435,7 +458,7 @@ return {{
     '{colors.get("term14", "#8EC07C")}', -- bright cyan
     '{colors.get("term15", "#EBDBB2")}', -- bright white
   }},
-  
+
   tab_bar = {{
     background = '{colors.get("term0", "#282828")}',
     active_tab = {{
@@ -663,46 +686,54 @@ bright_white = '{colors.get("term15", "#EBDBB2")}'
     # Auto-integrate into starship.toml
     home = os.path.expanduser("~")
     starship_conf = f"{home}/.config/starship.toml"
-    
+
     # Check if starship.toml exists
     if os.path.exists(starship_conf):
         content = Path(starship_conf).read_text()
-        
+
         # Check if palette_name is already set to ii
         if 'palette = "ii"' in content:
             print(f"✓ Generated Starship palette (already using ii palette)")
         else:
             # Add palette directive if not present
-            if 'palette =' not in content:
+            if "palette =" not in content:
                 # Add at top of file
                 new_content = 'palette = "ii"\n\n' + content
                 Path(starship_conf).write_text(new_content)
                 content = new_content
                 print(f"✓ Generated Starship palette and set as active")
             else:
-                print(f"✓ Generated Starship palette (using different palette, change to 'palette = \"ii\"' to use)")
-        
+                print(
+                    f"✓ Generated Starship palette (using different palette, change to 'palette = \"ii\"' to use)"
+                )
+
         # Update or append the [palettes.ii] section in starship.toml
         # Starship doesn't support source/include, so palette must be inline
-        if '[palettes.ii]' in content:
+        if "[palettes.ii]" in content:
             # Replace existing palette section with updated colors
             # Find start of [palettes.ii] and end (next section header or EOF)
-            pattern = r'\[palettes\.ii\].*?(?=\n\[|\Z)'
+            pattern = r"\[palettes\.ii\].*?(?=\n\[|\Z)"
             # Extract just the palette block from the generated config
-            palette_block = config.strip().split('\n')
+            palette_block = config.strip().split("\n")
             # Skip comment lines at the top, keep from [palettes.ii] onward
-            palette_start = next(i for i, line in enumerate(palette_block) if line.startswith('[palettes.ii]'))
-            palette_content = '\n'.join(palette_block[palette_start:])
+            palette_start = next(
+                i
+                for i, line in enumerate(palette_block)
+                if line.startswith("[palettes.ii]")
+            )
+            palette_content = "\n".join(palette_block[palette_start:])
             new_content = re.sub(pattern, palette_content, content, flags=re.DOTALL)
             if new_content != content:
                 Path(starship_conf).write_text(new_content)
                 print(f"  → Updated ii palette in starship.toml")
         else:
-            with open(starship_conf, 'a') as f:
-                f.write('\n' + config)
+            with open(starship_conf, "a") as f:
+                f.write("\n" + config)
             print(f"  → Appended ii palette to starship.toml")
     else:
-        print(f"✓ Generated Starship palette (starship.toml not found - create it and add 'palette = \"ii\"')")
+        print(
+            f"✓ Generated Starship palette (starship.toml not found - create it and add 'palette = \"ii\"')"
+        )
 
 
 def generate_btop_config(colors, output_path):
@@ -796,8 +827,10 @@ theme[process_end]="{primary}"
     if btop_path.exists():
         content = btop_path.read_text()
         new_line = 'color_theme = "ii-auto"'
-        if re.search(r'^color_theme\s*=', content, re.MULTILINE):
-            new_content = re.sub(r'^color_theme\s*=.*$', new_line, content, flags=re.MULTILINE)
+        if re.search(r"^color_theme\s*=", content, re.MULTILINE):
+            new_content = re.sub(
+                r"^color_theme\s*=.*$", new_line, content, flags=re.MULTILINE
+            )
             if new_content != content:
                 btop_path.write_text(new_content)
                 print(f"\u2713 Generated btop theme and updated btop.conf")
@@ -815,7 +848,7 @@ theme[process_end]="{primary}"
 
 def generate_lazygit_config(colors, output_path):
     """Generate lazygit theme config.
-    
+
     Writes a standalone theme YAML that can be merged into config.yml.
     If config.yml exists, merges the gui.theme section carefully.
     """
@@ -870,19 +903,21 @@ def generate_lazygit_config(colors, output_path):
     if config_file.exists():
         content = config_file.read_text()
         # Check if gui.theme section exists
-        if re.search(r'^\s*theme:', content, re.MULTILINE):
+        if re.search(r"^\s*theme:", content, re.MULTILINE):
             # Replace existing theme block
             # Find "    theme:" and everything indented under it until next key at same/less indent
-            pattern = r'(    theme:\n(?:      .*\n)*(?:        .*\n)*)'
+            pattern = r"(    theme:\n(?:      .*\n)*(?:        .*\n)*)"
             new_content = re.sub(pattern, theme_yaml + "\n", content, count=1)
             if new_content != content:
                 config_file.write_text(new_content)
                 print(f"\u2713 Generated lazygit theme and updated config.yml")
             else:
                 print(f"\u2713 Generated lazygit theme (config.yml unchanged)")
-        elif re.search(r'^gui:', content, re.MULTILINE):
+        elif re.search(r"^gui:", content, re.MULTILINE):
             # gui: exists but no theme: — insert theme after gui:
-            new_content = re.sub(r'^(gui:.*)', r'\1\n' + theme_yaml, content, count=1, flags=re.MULTILINE)
+            new_content = re.sub(
+                r"^(gui:.*)", r"\1\n" + theme_yaml, content, count=1, flags=re.MULTILINE
+            )
             config_file.write_text(new_content)
             print(f"\u2713 Generated lazygit theme and added to gui section")
         else:
@@ -898,7 +933,7 @@ def generate_lazygit_config(colors, output_path):
 
 def generate_yazi_config(colors, output_path):
     """Generate yazi flavor for ii theming.
-    
+
     Creates a flavor directory at ~/.config/yazi/flavors/ii-auto.yazi/
     with a flavor.toml that uses the material colors.
     """
@@ -1012,19 +1047,25 @@ rules = [
     home = os.path.expanduser("~")
     theme_toml = f"{home}/.config/yazi/theme.toml"
     theme_path = Path(theme_toml)
-    
+
     flavor_line = 'use = "ii-auto"'
     if theme_path.exists():
         content = theme_path.read_text()
-        if '[flavor]' in content:
+        if "[flavor]" in content:
             if re.search(r'^use\s*=\s*"ii-auto"', content, re.MULTILINE):
                 print(f"\u2713 Generated yazi flavor (already using ii-auto)")
-            elif re.search(r'^use\s*=', content, re.MULTILINE):
-                new_content = re.sub(r'^(use\s*=).*$', f'use = "ii-auto"', content, count=1, flags=re.MULTILINE)
+            elif re.search(r"^use\s*=", content, re.MULTILINE):
+                new_content = re.sub(
+                    r"^(use\s*=).*$",
+                    f'use = "ii-auto"',
+                    content,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
                 theme_path.write_text(new_content)
                 print(f"\u2713 Generated yazi flavor and updated theme.toml")
             else:
-                new_content = content.replace('[flavor]', f'[flavor]\n{flavor_line}')
+                new_content = content.replace("[flavor]", f"[flavor]\n{flavor_line}")
                 theme_path.write_text(new_content)
                 print(f"\u2713 Generated yazi flavor and added use directive")
         else:
@@ -1046,8 +1087,11 @@ def generate_fuzzel_config(colors, output_path):
     primary = colors.get("primary", "#458588")
 
     # Strip '#' and add 'ff' alpha
-    def hex_alpha(c): return c[1:] + "ff" if c.startswith("#") else c + "ff"
-    def hex_alpha_dim(c): return c[1:] + "dd" if c.startswith("#") else c + "dd"
+    def hex_alpha(c):
+        return c[1:] + "ff" if c.startswith("#") else c + "ff"
+
+    def hex_alpha_dim(c):
+        return c[1:] + "dd" if c.startswith("#") else c + "dd"
 
     config = f"""[colors]
 background={hex_alpha(bg)}
@@ -1079,7 +1123,9 @@ def generate_pywalfox_config(colors, output_path):
 
     # Read wallpaper path if available
     wallpaper = ""
-    wp_path = os.path.expanduser("~/.local/state/quickshell/user/generated/wallpaper/path.txt")
+    wp_path = os.path.expanduser(
+        "~/.local/state/quickshell/user/generated/wallpaper/path.txt"
+    )
     if os.path.exists(wp_path):
         with open(wp_path) as f:
             wallpaper = f.read().strip()
@@ -1117,9 +1163,26 @@ def main():
         "--terminals",
         type=str,
         nargs="+",
-        choices=["kitty", "alacritty", "foot", "wezterm", "ghostty", "konsole", "starship", "btop", "lazygit", "yazi", "all"],
+        choices=[
+            "kitty",
+            "alacritty",
+            "foot",
+            "wezterm",
+            "ghostty",
+            "konsole",
+            "starship",
+            "btop",
+            "lazygit",
+            "yazi",
+            "all",
+        ],
         default=["all"],
         help="Which terminals/tools to generate configs for",
+    )
+    parser.add_argument(
+        "--zed",
+        action="store_true",
+        help="Generate Zed editor theme",
     )
 
     args = parser.parse_args()
@@ -1135,7 +1198,18 @@ def main():
     terminals = (
         args.terminals
         if "all" not in args.terminals
-        else ["kitty", "alacritty", "foot", "wezterm", "ghostty", "konsole", "starship", "btop", "lazygit", "yazi"]
+        else [
+            "kitty",
+            "alacritty",
+            "foot",
+            "wezterm",
+            "ghostty",
+            "konsole",
+            "starship",
+            "btop",
+            "lazygit",
+            "yazi",
+        ]
     )
 
     # Generate configs for requested terminals
@@ -1169,8 +1243,14 @@ def main():
         generate_lazygit_config(colors, f"{home}/.config/lazygit/ii-theme.yml")
 
     if "yazi" in terminals:
-        generate_yazi_config(colors, f"{home}/.config/yazi/flavors/ii-auto.yazi/flavor.toml")
+        generate_yazi_config(
+            colors, f"{home}/.config/yazi/flavors/ii-auto.yazi/flavor.toml"
+        )
 
+    if args.zed:
+        generate_zed_config(
+            colors, args.scss, f"{home}/.config/zed/themes/ii-theme.json"
+        )
 
 
 if __name__ == "__main__":
