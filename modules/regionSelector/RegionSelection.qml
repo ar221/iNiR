@@ -37,6 +37,7 @@ PanelWindow {
     property string imageSearchEngineBaseUrl: Config.options?.search?.imageSearch?.imageSearchEngineBaseUrl ?? "https://lens.google.com/uploadbyurl?url="
     property string fileUploadApiEndpoint: Config.options?.search?.imageSearch?.fileUploadApiEndpoint ?? "https://0x0.st"
     property string fileUploadApiFallback: Config.options?.search?.imageSearch?.fileUploadApiFallback ?? "https://litterbox.catbox.moe/resources/internals/api.php"
+    property string fileUploadApiFallback2: Config.options?.search?.imageSearch?.fileUploadApiFallback2 ?? "https://catbox.moe/user/api.php"
 
     // Tri-style color support
     property color overlayColor: Appearance.angelEverywhere ? "#55000000"
@@ -341,9 +342,10 @@ PanelWindow {
         const uploadAndGetUrl = (filePath) => {
             const escaped = StringUtils.shellSingleQuoteEscape(filePath)
             const primary = `/usr/bin/curl -sf --max-time 10 -F file=@'${escaped}' ${root.fileUploadApiEndpoint}`
-            const fallback = `/usr/bin/curl -s --max-time 15 -F reqtype=fileupload -F time=1h -F "fileToUpload=@'${escaped}'" ${root.fileUploadApiFallback}`
-            // Try primary, fallback if fails OR returns empty/non-URL response
-            return `url=$(${primary} 2>/dev/null); if [[ -z "$url" || "$url" != http* ]]; then url=$(${fallback}); fi; echo "$url"`
+            const fallback1 = `/usr/bin/curl -s --max-time 15 -F reqtype=fileupload -F time=1h -F "fileToUpload=@'${escaped}'" ${root.fileUploadApiFallback}`
+            const fallback2 = `/usr/bin/curl -s --max-time 15 -F reqtype=fileupload -F "fileToUpload=@'${escaped}'" ${root.fileUploadApiFallback2}`
+            // Try primary, then fallback1, then fallback2 if all fail or return empty/non-URL response
+            return `url=$(${primary} 2>/dev/null); if [[ -z "$url" || "$url" != http* ]]; then url=$(${fallback1}); fi; if [[ -z "$url" || "$url" != http* ]]; then url=$(${fallback2}); fi; echo "$url"`
         }
         const annotationCommand = `${(Config.options?.regionSelector?.annotation?.useSatty ?? false) ? "satty" : "swappy"} -f -`;
         switch (root.action) {

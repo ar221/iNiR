@@ -14,6 +14,7 @@ Singleton {
     property string distroId: "unknown"
     property string distroIcon: "linux-symbolic"
     property string username: "user"
+    property string displayName: ""
     property string homeUrl: ""
     property string documentationUrl: ""
     property string supportUrl: ""
@@ -92,6 +93,19 @@ Singleton {
         stdout: SplitParser {
             onRead: data => {
                 root.username = data.trim()
+                getDisplayName.running = true
+            }
+        }
+    }
+
+    Process {
+        id: getDisplayName
+        running: false
+        command: ["/usr/bin/bash", "-c", `getent passwd "$USER" | cut -d: -f5 | cut -d, -f1`]
+        stdout: SplitParser {
+            onRead: data => {
+                const name = data.trim()
+                root.displayName = name.length > 0 ? name : root.username
             }
         }
     }
