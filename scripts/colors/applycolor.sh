@@ -93,7 +93,7 @@ apply_terminal_configs() {
   # Single source of truth for all supported targets.
   # Mirrors TERMINAL_REGISTRY in generate_terminal_configs.py.
   # To add a new target: add it here + add generate_X_config() and registry entry in the Python script.
-  local all_supported=(kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi eza)
+  local all_supported=(kitty alacritty foot wezterm ghostty konsole starship btop lazygit yazi eza zathura)
 
   # Build enabled list: config-enabled (default true) AND installed
   local enabled_terminals=()
