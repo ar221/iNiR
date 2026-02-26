@@ -35,6 +35,7 @@ Singleton {
         target: "ai"
 
         function ensureInitialized(): void { root.ensureInitialized() }
+        function reloadExtraModels(): string { return root.loadExtraModels() }
         function diagnose(): string {
             const policy = (Config.options?.policies?.ai ?? 0)
             const model = root.models?.[root.currentModelId]
@@ -438,16 +439,28 @@ Singleton {
     }
     property ApiStrategy currentApiStrategy: apiStrategies[models[currentModelId]?.api_format || "openai"]
 
+    function loadExtraModels(): string {
+        const policy = (Config.options?.policies?.ai ?? 0)
+        const extras = Config.options?.ai?.extraModels ?? []
+        let added = []
+        extras.forEach(model => {
+            if (policy === 2 && !(model?.endpoint ?? "").includes("localhost")) return
+            const safeModelName = root.safeModelName(model["model"]);
+            root.addModel(safeModelName, model)
+            added.push(safeModelName)
+        });
+        root.modelList = Object.keys(root.models);
+        return JSON.stringify({ added: added, totalModels: root.modelList.length })
+    }
+
     Connections {
         target: Config
         function onReadyChanged() {
             if (!Config.ready) return;
-            const policy = (Config.options?.policies?.ai ?? 0)
-            ;(Config.options?.ai?.extraModels ?? []).forEach(model => {
-                if (policy === 2 && !(model?.endpoint ?? "").includes("localhost")) return
-                const safeModelName = root.safeModelName(model["model"]);
-                root.addModel(safeModelName, model)
-            });
+            root.loadExtraModels();
+        }
+        function onConfigChanged() {
+            root.loadExtraModels();
         }
     }
 
