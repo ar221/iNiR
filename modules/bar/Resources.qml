@@ -29,8 +29,19 @@ MouseArea {
 
         Resource {
             iconName: "thermostat"
-            percentage: ResourceUsage.tempPercentage
-            shown: (Config.options?.bar?.resources?.alwaysShowTemp ?? true) || 
+            percentage: Math.min(ResourceUsage.cpuTemp / 100, 1.0)
+            shown: (Config.options?.bar?.resources?.alwaysShowTemp ?? true) ||
+                (MprisController.activePlayer?.trackTitle == null) ||
+                root.alwaysShowAllResources
+            Layout.leftMargin: shown ? 6 : 0
+            cautionThreshold: Config.options?.bar?.resources?.tempCautionThreshold ?? 65
+            warningThreshold: Config.options?.bar?.resources?.tempWarningThreshold ?? 80
+        }
+
+        Resource {
+            iconName: "developer_board"
+            percentage: Math.min(ResourceUsage.gpuTemp / 100, 1.0)
+            shown: (Config.options?.bar?.resources?.alwaysShowTemp ?? true) ||
                 (MprisController.activePlayer?.trackTitle == null) ||
                 root.alwaysShowAllResources
             Layout.leftMargin: shown ? 6 : 0
