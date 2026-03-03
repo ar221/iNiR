@@ -179,19 +179,19 @@ Singleton {
             cpu_found=""
             gpu_found=""
 
+            # Pass 1: prefer dedicated CPU/GPU sensors (accurate die temps)
             for hwmon in /sys/class/hwmon/hwmon*; do
                 name=$(cat $hwmon/name 2>/dev/null)
 
-                # Find best temp input (prefer temp1, but check others)
                 temp_input=""
                 for t in $hwmon/temp*_input; do
                     [ -f "$t" ] && temp_input="$t" && break
                 done
                 [ -z "$temp_input" ] && continue
 
-                # CPU sensors - extended list for various hardware
+                # Dedicated CPU sensors (actual die/Tctl temperature)
                 case "$name" in
-                    coretemp|k10temp|zenpower|cpu_thermal|fam15h_power|acpitz|thinkpad|dell_smm|hp_wmi|asus_ec|it87|nct6775|w83627ehf|lm75|lm78|lm85|via_cputemp|pch_*)
+                    coretemp|k10temp|zenpower|cpu_thermal|fam15h_power|via_cputemp)
                         [ -z "$cpu_found" ] && echo "cpu:$temp_input" && cpu_found=1
                         ;;
                 esac
@@ -203,6 +203,23 @@ Singleton {
                         ;;
                 esac
             done
+
+            # Pass 2: fallback to generic/board sensors if no dedicated CPU sensor found
+            if [ -z "$cpu_found" ]; then
+                for hwmon in /sys/class/hwmon/hwmon*; do
+                    name=$(cat $hwmon/name 2>/dev/null)
+                    temp_input=""
+                    for t in $hwmon/temp*_input; do
+                        [ -f "$t" ] && temp_input="$t" && break
+                    done
+                    [ -z "$temp_input" ] && continue
+                    case "$name" in
+                        acpitz|thinkpad|dell_smm|hp_wmi|asus_ec|it87|nct6775|w83627ehf|lm75|lm78|lm85|pch_*)
+                            echo "cpu:$temp_input" && cpu_found=1 && break
+                            ;;
+                    esac
+                done
+            fi
 
             # Fallback to thermal_zone if hwmon didn't find sensors
             for tz in /sys/class/thermal/thermal_zone*; do
