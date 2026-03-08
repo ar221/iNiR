@@ -17,8 +17,8 @@ Item {
     property string pluginName: ""
     property string pluginIcon: "language"
 
-    // Userscript JS source code — injected via runJavaScript after page load
-    // Pre-read by scan-plugins.py so no file I/O needed from QML
+    // Userscript JS source code — pre-read by scan-plugins.py
+    // Injected via runJavaScript after each successful page load.
     property var userscriptSources: []
 
     // External profile — created by SidebarLeftContent with storageName
@@ -214,10 +214,14 @@ Item {
                 }
             }
 
-            // Deferred URL load — waits for profile disk backend to initialize
+            // Deferred URL load — waits for profile disk backend to initialize.
+            // The WebEngineProfile starts off-the-record (storageName set via
+            // QML binding evaluates AFTER C++ constructor). The "Switching to
+            // disk-based behavior" transition takes time — localStorage is
+            // unavailable until then. 800ms gives the profile enough time.
             Timer {
                 id: deferredLoadTimer
-                interval: 150
+                interval: 800
                 running: true
                 onTriggered: webView.url = root.pluginUrl
             }
@@ -235,24 +239,47 @@ Item {
     }
 
     // ─── Userscript injection ───────────────────────────────────────
-    // Injects pre-loaded JS source code into the WebEngineView after
-    // every successful page load. Re-injects on every navigation
-    // (important for non-SPA sites). For SPAs like YouTube Music,
-    // the scripts use MutationObserver/setInterval so they keep
-    // running even without re-injection.
+    // Uses WebEngine.script() factory to create WebEngineScript values
+    // at DocumentCreation/MainWorld. This gives full access to
+    // localStorage, document.cookie, etc.
+    //
+    // Quickshell's runJavaScript() runs in an isolated world where
+    // localStorage is undefined. The only way to get MainWorld access
+    // is via UserScripts (Chromium's content script system).
 
-    function _injectUserscripts(): void {
+    property bool _userscriptsInstalled: false
+
+    function _installUserscripts(): void {
+        if (root._userscriptsInstalled) return
         const sources = root.userscriptSources ?? []
         if (sources.length === 0) return
 
+        root._userscriptsInstalled = true
+
         for (let i = 0; i < sources.length; i++) {
             const code = sources[i]
-            if (code && code.length > 0) {
-                webView.runJavaScript(code)
-                console.log("[Plugins]", root.pluginId, "injected userscript", i, "(" + code.length + " bytes)")
-            }
+            if (!code || code.length === 0) continue
+
+            // WebEngine singleton has the factory: WebEngine.script()
+            let script = WebEngine.script()
+            script.name = root.pluginId + "_us_" + i
+            script.sourceCode = code
+            script.injectionPoint = 1  // DocumentReady (DOMContentLoaded)
+            script.worldId = 0         // MainWorld
+            script.runOnSubframes = false
+            webView.userScripts.insert(script)
+            console.log("[Plugins]", root.pluginId, "installed userscript", i,
+                "(" + code.length + " bytes) [DocumentCreation/MainWorld]")
         }
     }
+
+    function _injectUserscripts(): void {
+        root._installUserscripts()
+    }
+
+    // Install userscripts at creation time — BEFORE the deferred URL
+    // load timer fires, so they're active for the first page load.
+    Component.onCompleted: root._installUserscripts()
 
     // Loading overlay
     Rectangle {

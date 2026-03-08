@@ -67,23 +67,35 @@ Item {
     property var _webViewCache: ({})
     property int _webViewCount: 0  // for reactivity
 
-    // Persistent cache: pluginId → WebEngineProfile
+    // Persistent cache: pluginId → { instance(), destroy() }
+    // Stores WebEngineProfilePrototype (Qt ≥ 6.9) or WebEngineProfile (fallback).
     // Created BEFORE the WebAppView so storageName is set from the start.
-    // This avoids the off-the-record → disk-based transition that breaks cookies.
     property var _profileCache: ({})
 
     function _getOrCreateProfile(id: string): QtObject {
-        if (root._profileCache[id]) return root._profileCache[id]
-        // storageName MUST be in the QML declaration — if set imperatively
-        // after construction, the C++ constructor starts off-the-record and
-        // cookies get corrupted during the transition.
+        const cached = root._profileCache[id]
+        if (cached) return cached.instance ? cached.instance() : cached
         const escaped = id.replace(/"/g, '\\"')
-        const profile = Qt.createQmlObject(
-            'import QtWebEngine; WebEngineProfile { storageName: "' + escaped + '"; offTheRecord: false; httpCacheType: WebEngineProfile.DiskHttpCache; persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies }',
-            root, "pluginProfile_" + id
-        )
-        root._profileCache[id] = profile
-        return profile
+        // Qt 6.9+ WebEngineProfilePrototype: storageName is set BEFORE the
+        // internal C++ profile construction (via QQmlParserStatus). This
+        // avoids the off-the-record → disk-based transition that broke
+        // localStorage in injected scripts.
+        try {
+            const proto = Qt.createQmlObject(
+                'import QtWebEngine; WebEngineProfilePrototype { storageName: "' + escaped + '"; httpCacheType: WebEngineProfile.DiskHttpCache; persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies }',
+                root, "pluginProfileProto_" + id
+            )
+            root._profileCache[id] = proto
+            return proto.instance()
+        } catch(e) {
+            // Qt < 6.9 fallback — WebEngineProfile with storageName in declaration
+            const profile = Qt.createQmlObject(
+                'import QtWebEngine; WebEngineProfile { storageName: "' + escaped + '"; offTheRecord: false; httpCacheType: WebEngineProfile.DiskHttpCache; persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies }',
+                root, "pluginProfile_" + id
+            )
+            root._profileCache[id] = profile
+            return profile
+        }
     }
 
     // ─── WebApp management functions ─────────────────────────────────
@@ -148,10 +160,10 @@ Item {
             delete root._webViewCache[id]
             root._webViewCount--
         }
-        // Also destroy cached profile
-        const profile = root._profileCache[id]
-        if (profile) {
-            profile.destroy()
+        // Also destroy cached profile prototype (cleans up the instance too)
+        const cached = root._profileCache[id]
+        if (cached) {
+            cached.destroy()
             delete root._profileCache[id]
         }
         if (root._activeWebAppId === id) {
