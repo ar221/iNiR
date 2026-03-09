@@ -5,6 +5,62 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-03-08
+
+### Added
+- **Wallpaper Coverflow selector**: Browse wallpapers with 3D perspective cards, folder navigation, skew view with momentum physics, and hero crossfade transitions. Full aurora/inir/angel style support.
+- **Wallpaper transitions**: Multi-type transitions between wallpapers — crossfade, slide, zoom, and blur-fade — with configurable duration and per-type settings.
+- **Bar Taskbar**: Dock apps integrated directly into the horizontal and vertical bar as a taskbar with live window previews, pin/unpin, and window management actions.
+- **Fluid Ripple shader**: New pixel-art inspired ripple effect for interactive elements with configurable visual parameters (PR #55).
+- **NVENC recording support**: Screen recorder auto-detects Nvidia GPUs and uses hardware NVENC encoding, with VAAPI fallback for AMD/Intel and software fallback chain.
+- **GPU resource monitoring**: GPU usage indicator added to bar/vertical bar resource monitors. Configurable indicators (CPU, RAM, GPU, temperature) via settings.
+- **Primary monitor selection**: Choose which monitor is primary for bar, dock, and panel targeting in Display settings.
+- **Bar scroll customization**: Configure left/right scroll actions on the bar, including workspace scroll direction inversion (PR #53).
+- **Overview center launcher**: Option to center the app launcher in the overview dashboard with refined glass surfaces.
+- **AwwwBackend service**: External wallpaper rendering via the awww daemon with automatic sync from iNiR's wallpaper config and seamless internal fallback.
+- **OpenCode theme generator**: Material You color integration for OpenCode editor via matugen pipeline.
+- **Oh-my-posh theme generator**: Material You prompt theme with wallpaper-synced colors.
+- **YT Music OAuth**: OAuth setup flow and song rating support for YouTube Music integration.
+- **Wallpaper upscale notification toggle**: Hide the "wallpaper was upscaled" notification in background settings.
+- **Screen recording settings**: Exposed wf-recorder configuration (codec, format, audio) in settings UI.
+
+### Changed
+- **CompactMediaPlayer redesign**: Cleaner blur, centered controls, unified glass surfaces in compact sidebar mode.
+- **Settings theming**: Complete aurora/inir/angel style support across all settings pages — cards, overlays, material presets, and section backgrounds.
+- **StyledComboBox rewrite**: Full shell theming with proper aurora/inir/angel style dispatch, replacing the stock Qt combo box.
+- **Dock performance**: Optimized rebuild logic and reduced binding churn for smoother animations with many windows.
+- **MprisController debounce**: Rapid signal bursts from media players are now debounced to prevent UI stutter.
+- **Network service debounce**: WiFi scan results debounced to reduce unnecessary UI rebuilds.
+- **GTK theming improvements**: GTK3 CSS support, improved GTK4 token mapping, and hardened switchwall color pipeline.
+- **btop theme generator**: Rewritten to use Material You design tokens directly.
+- **Clipboard panel**: Dark glass background for aurora/angel styles, reset count on wipe.
+- **Dark glass unification**: Consistent glass surfaces across compact sidebar controls and quick action cards.
+
+### Fixed
+- **Audio volume slider**: Restored `setSinkVolume` with ramp curve to prevent illegal volume increment on slider click.
+- **Wallpaper Skew view focus**: Fixed focus-on-reopen bug where the coverflow panel showed wrong image after external wallpaper change.
+- **FloatingImage overlay**: Simplified implementation with proper Config access (optional chaining + setNestedValue) and zero-dimension fallback.
+- **MaterialSymbol axes**: Clamped `fill` (0–1) and `opsz` (20–48) values to prevent Qt rendering warnings.
+- **Booru context menu**: Opens at button edge outside sidebar bounds; fixed Niri grab-loss dismiss.
+- **Clipboard self-trigger**: Dock previews no longer contaminate clipboard history; fixed stale `_selfCopy` flag.
+- **Booru wallpaper downloads**: Save to `~/Pictures/Wallpapers` instead of unintended directory.
+- **Animation guards**: Added `animationsEnabled` checks to Behaviors across multiple widgets to respect reduced-motion preference.
+- **Bar GPU icon**: Fixed `memory_alt` icon name; clamped media player width to prevent overflow.
+- **Close animations & keyboard focus**: Improved panel close transitions and focus handling (PR #63).
+- **Fish autosuggestion contrast**: Fixed low-contrast autosuggestion colors in fish shell (PR #69).
+- **Chrome variant theming**: Corrected Material You color mapping for Chrome theme generation (PR #70).
+- **Settings overlay background**: Solid background for material/cards/inir styles instead of transparent.
+- **Compact sidebar warnings**: Suppressed spurious Connections warnings in compact mode.
+- **Screen recording UI**: Simplified layout and fixed style issues in recording settings.
+- **Various setup fixes**: Extracted WebEngine build helper, fixed wayland-protocols makedep, SDDM local variable bug, and CRASH_HANDLER build flag.
+
+### Community
+- PR #53 by @hakimshifat — Bar scroll customization
+- PR #55 — Pixel Fluid Ripple shader
+- PR #63 — Close animations, keyboard focus, YtMusic OAuth
+- PR #69, #70 — Fish autosuggestion contrast, Chrome variant theming
+- PR #74 by @orcusforyou — Lock screen fixes
+
 ## [2.12.0] - 2026-02-28
 
 ### Added
