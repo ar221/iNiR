@@ -1616,15 +1616,16 @@ ContentPage {
                     }
                 }
 
-                SettingsSwitch {
-                    buttonIcon: "extension"
-                    text: Translation.tr("Web Apps")
-                    checked: Config.options?.sidebar?.plugins?.enable ?? false
-                    onCheckedChanged: Config.setNestedValue("sidebar.plugins.enable", checked)
-                    StyledToolTip {
-                        text: Translation.tr("Embed web apps like Discord, YouTube Music and more in the sidebar (requires quickshell-webengine)")
-                    }
-                }
+                // DISABLED: webapps — requires quickshell-webengine rebuild
+                // SettingsSwitch {
+                //     buttonIcon: "extension"
+                //     text: Translation.tr("Web Apps")
+                //     checked: Config.options?.sidebar?.plugins?.enable ?? false
+                //     onCheckedChanged: Config.setNestedValue("sidebar.plugins.enable", checked)
+                //     StyledToolTip {
+                //         text: Translation.tr("Embed web apps like Discord, YouTube Music and more in the sidebar (requires quickshell-webengine)")
+                //     }
+                // }
             }
 
             ContentSubsection {

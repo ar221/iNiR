@@ -469,25 +469,25 @@ elif [[ -f "dots/.config/illogical-impulse/config.json" ]]; then
   install_file__auto_backup "dots/.config/illogical-impulse/config.json" "${XDG_CONFIG_HOME}/illogical-impulse/config.json"
 fi
 
-# WebApp plugins (defaults — only copy if user doesn't already have plugins)
-if [[ -d "defaults/plugins" ]]; then
-  PLUGINS_DIR="${XDG_CONFIG_HOME}/illogical-impulse/plugins"
-  v mkdir -p "$PLUGINS_DIR"
-  for plugin_dir in defaults/plugins/*/; do
-    plugin_name=$(basename "$plugin_dir")
-    dest="${PLUGINS_DIR}/${plugin_name}"
-    if [[ ! -d "$dest" ]]; then
-      log_info "Installing default plugin: $plugin_name"
-      v cp -r "$plugin_dir" "$dest"
-    else
-      # Update userscripts only (don't overwrite user's manifest/icon)
-      if [[ -d "${plugin_dir}scripts" ]]; then
-        v mkdir -p "${dest}/scripts"
-        v cp -r "${plugin_dir}scripts/"* "${dest}/scripts/" 2>/dev/null || true
-      fi
-    fi
-  done
-fi
+# DISABLED: WebApp plugins — requires quickshell-webengine rebuild, re-enable when ready
+# if [[ -d "defaults/plugins" ]]; then
+#   PLUGINS_DIR="${XDG_CONFIG_HOME}/illogical-impulse/plugins"
+#   v mkdir -p "$PLUGINS_DIR"
+#   for plugin_dir in defaults/plugins/*/; do
+#     plugin_name=$(basename "$plugin_dir")
+#     dest="${PLUGINS_DIR}/${plugin_name}"
+#     if [[ ! -d "$dest" ]]; then
+#       log_info "Installing default plugin: $plugin_name"
+#       v cp -r "$plugin_dir" "$dest"
+#     else
+#       # Update userscripts only (don't overwrite user's manifest/icon)
+#       if [[ -d "${plugin_dir}scripts" ]]; then
+#         v mkdir -p "${dest}/scripts"
+#         v cp -r "${plugin_dir}scripts/"* "${dest}/scripts/" 2>/dev/null || true
+#       fi
+#     fi
+#   done
+# fi
 
 #####################################################################################
 # Apply required migrations automatically
