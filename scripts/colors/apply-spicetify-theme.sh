@@ -8,7 +8,7 @@
 # - Subsequent runs (watch running): just update color.ini, watch handles live reload
 # - No Spotify restarts on wallpaper change when watch mode is active
 #
-# Reads:  ~/.local/state/quickshell/user/generated/colors.json
+# Reads: ~/.local/state/quickshell/user/generated/colors.json
 # Writes: ~/.config/spicetify/Themes/Sleek/color.ini
 
 set -euo pipefail
@@ -25,6 +25,9 @@ WATCH_LOCK="$STATE_DIR/user/generated/spicetify_watch.lock"
 THEME_NAME="Sleek"
 SCHEME_NAME="matugen"
 SLEEK_CSS_URL="https://raw.githubusercontent.com/spicetify/spicetify-themes/master/Sleek/user.css"
+
+# Global associative array for colors
+declare -A COLORS
 
 # ─── Setup directories and logging ─────────────────────────────────────────────
 
@@ -106,7 +109,7 @@ read_colors() {
 
 generate_color_ini() {
   local color_file="$1"
-  local -A COLORS
+  
   read_colors || return 1
 
   cat > "$color_file" << EOF
