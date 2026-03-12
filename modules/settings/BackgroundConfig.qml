@@ -2499,16 +2499,18 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    buttonIcon: "analytics"
-                    text: Translation.tr("Stats Pills")
-                    checked: Config.options.background.widgets.systemMonitor.showStats ?? true
+                    buttonIcon: "lan"
+                    text: Translation.tr("Network")
+                    checked: Config.options.background.widgets.systemMonitor.showNetwork ?? true
                     onCheckedChanged: {
-                        Config.options.background.widgets.systemMonitor.showStats = checked;
+                        Config.options.background.widgets.systemMonitor.showNetwork = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Disk, swap, and temperature indicator pills")
+                        text: Translation.tr("Network connection type, name, and IP address")
                     }
                 }
+
+                // System info is now integrated into the Profile section
 
                 SettingsSwitch {
                     buttonIcon: "spa"

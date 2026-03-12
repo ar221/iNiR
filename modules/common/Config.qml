@@ -494,8 +494,12 @@ Singleton {
                         // Quick launch section
                         property bool showQuickLaunch: true
                         property string quickLaunchApps: "" // JSON array: [{"icon":"...", "label":"...", "cmd":"..."}]
-                        // Stats row
-                        property bool showStats: true
+                        // Network section
+                        property bool showNetwork: true
+                        // System info pills
+                        property bool showSystemInfo: true
+                        // Stats row (legacy, kept for compat)
+                        property bool showStats: false
                         // Footer
                         property bool showFooter: true
                         property string footerText: "Touch Grass"

@@ -214,23 +214,24 @@ AbstractBackgroundWidget {
             configEntry: root.monitorConfig
         }
 
-        // ── Quick launch + Stats ──
-        RowLayout {
+        // ── Quick launch ──
+        QuickLaunchSection {
             Layout.fillWidth: true
-            visible: (root.monitorConfig.showQuickLaunch ?? true) || (root.monitorConfig.showStats ?? true)
-            spacing: 12
+            visible: root.monitorConfig.showQuickLaunch ?? true
+            configEntry: root.monitorConfig
+        }
 
-            QuickLaunchSection {
-                visible: root.monitorConfig.showQuickLaunch ?? true
-                configEntry: root.monitorConfig
-            }
+        // ── Separator ──
+        SectionSeparator {
+            visible: (root.monitorConfig.showQuickLaunch ?? true)
+                && (root.monitorConfig.showNetwork ?? true)
+        }
 
-            Item { Layout.fillWidth: true }
-
-            StatsRow {
-                visible: root.monitorConfig.showStats ?? true
-                configEntry: root.monitorConfig
-            }
+        // ── Network ──
+        NetworkSection {
+            Layout.fillWidth: true
+            visible: root.monitorConfig.showNetwork ?? true
+            configEntry: root.monitorConfig
         }
 
         // ── Footer ──
