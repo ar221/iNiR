@@ -2397,7 +2397,7 @@ ContentPage {
                         Config.options.background.widgets.systemMonitor.showProfile = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Avatar, greeting, and uptime display")
+                        text: Translation.tr("Avatar, greeting, uptime, distro info, kernel, WM, and package count")
                     }
                 }
 
@@ -2409,7 +2409,7 @@ ContentPage {
                         Config.options.background.widgets.systemMonitor.showCalendar = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Mini calendar with month navigation and digital clock")
+                        text: Translation.tr("Digital clock, day name, date, month grid with highlighted today")
                     }
                 }
 
@@ -2482,7 +2482,7 @@ ContentPage {
                         Config.options.background.widgets.systemMonitor.showMedia = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Now playing with album art and playback controls")
+                        text: Translation.tr("Album art with cava visualizer, playback controls, and MPRIS player switcher")
                     }
                 }
 
@@ -2506,21 +2506,7 @@ ContentPage {
                         Config.options.background.widgets.systemMonitor.showNetwork = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Network connection type, name, and IP address")
-                    }
-                }
-
-                // System info is now integrated into the Profile section
-
-                SettingsSwitch {
-                    buttonIcon: "spa"
-                    text: Translation.tr("Footer")
-                    checked: Config.options.background.widgets.systemMonitor.showFooter ?? true
-                    onCheckedChanged: {
-                        Config.options.background.widgets.systemMonitor.showFooter = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Fun reminder text at the bottom")
+                        text: Translation.tr("Connection type, name, IP address, and real-time upload/download speed")
                     }
                 }
             }

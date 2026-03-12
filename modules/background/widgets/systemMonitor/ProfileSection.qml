@@ -60,91 +60,84 @@ ColumnLayout {
         onTriggered: pkgProc.running = true
     }
 
-    // ── Top row: Avatar + Greeting + Uptime ──
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 14
+    // ── Avatar centered above text ──
+    Rectangle {
+        id: avatarContainer
+        Layout.alignment: Qt.AlignHCenter
+        Layout.preferredWidth: 72
+        Layout.preferredHeight: 72
+        radius: 36
+        color: Appearance.colors.colPrimaryContainer
+        clip: true
 
-        // Avatar
-        Rectangle {
-            id: avatarContainer
-            Layout.preferredWidth: 52
-            Layout.preferredHeight: 52
-            radius: 26
-            color: Appearance.colors.colPrimaryContainer
-            clip: true
-
-            Image {
-                id: avatarImage
-                anchors.fill: parent
-                source: root.configEntry.avatarPath ?? ""
-                fillMode: Image.PreserveAspectCrop
-                visible: false
-                asynchronous: true
-            }
-
-            GE.OpacityMask {
-                anchors.fill: parent
-                source: avatarImage
-                maskSource: Rectangle {
-                    width: avatarContainer.width
-                    height: avatarContainer.height
-                    radius: avatarContainer.radius
-                }
-                visible: avatarImage.status === Image.Ready
-            }
-
-            MaterialSymbol {
-                anchors.centerIn: parent
-                text: "person"
-                iconSize: 28
-                color: Appearance.colors.colOnPrimaryContainer
-                visible: avatarImage.status !== Image.Ready
-            }
+        Image {
+            id: avatarImage
+            anchors.fill: parent
+            source: root.configEntry.avatarPath ?? ""
+            fillMode: Image.PreserveAspectCrop
+            visible: false
+            asynchronous: true
         }
 
-        // Greeting + uptime
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 2
-
-            StyledText {
-                property string greeting: {
-                    const h = new Date().getHours()
-                    if (h < 6) return "Good night"
-                    if (h < 12) return "Good morning"
-                    if (h < 18) return "Good afternoon"
-                    return "Good evening"
-                }
-                text: greeting + ", " + (root.configEntry.greetingName ?? "User")
-                font.pixelSize: Appearance.font.pixelSize.larger
-                font.family: Appearance.font.family.title
-                font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
+        GE.OpacityMask {
+            anchors.fill: parent
+            source: avatarImage
+            maskSource: Rectangle {
+                width: avatarContainer.width
+                height: avatarContainer.height
+                radius: avatarContainer.radius
             }
+            visible: avatarImage.status === Image.Ready
+        }
 
-            RowLayout {
-                spacing: 6
-                MaterialSymbol {
-                    text: "schedule"
-                    iconSize: 14
-                    color: Appearance.colors.colSubtext
-                }
-                StyledText {
-                    text: "Uptime: " + DateTime.uptime
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colSubtext
-                }
-            }
+        MaterialSymbol {
+            anchors.centerIn: parent
+            text: "person"
+            iconSize: 36
+            color: Appearance.colors.colOnPrimaryContainer
+            visible: avatarImage.status !== Image.Ready
+        }
+    }
+
+    // ── Greeting centered ──
+    StyledText {
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignHCenter
+        property string greeting: {
+            const h = new Date().getHours()
+            if (h < 6) return "Good night"
+            if (h < 12) return "Good morning"
+            if (h < 18) return "Good afternoon"
+            return "Good evening"
+        }
+        text: greeting + ", " + (root.configEntry.greetingName ?? "User")
+        font.pixelSize: Appearance.font.pixelSize.larger
+        font.family: Appearance.font.family.title
+        font.weight: Font.DemiBold
+        color: Appearance.colors.colOnLayer0
+    }
+
+    // ── Uptime centered ──
+    RowLayout {
+        Layout.alignment: Qt.AlignHCenter
+        spacing: 6
+        MaterialSymbol {
+            text: "schedule"
+            iconSize: 14
+            color: Appearance.colors.colSubtext
+        }
+        StyledText {
+            text: "Uptime: " + DateTime.uptime
+            font.pixelSize: Appearance.font.pixelSize.small
+            color: Appearance.colors.colSubtext
         }
     }
 
     // ── System info row: distro, kernel, wm, packages ──
     RowLayout {
-        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
         spacing: 10
 
-        // CachyOS logo + distro name
         RowLayout {
             spacing: 6
             Image {
@@ -162,10 +155,8 @@ ColumnLayout {
             }
         }
 
-        // Separator dot
         Rectangle { width: 3; height: 3; radius: 1.5; color: Appearance.colors.colSubtext }
 
-        // Kernel
         RowLayout {
             spacing: 4
             Image {
@@ -185,12 +176,10 @@ ColumnLayout {
         }
     }
 
-    // ── Second info row: WM + packages ──
     RowLayout {
-        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
         spacing: 10
 
-        // WM
         RowLayout {
             spacing: 4
             MaterialSymbol {
@@ -207,7 +196,6 @@ ColumnLayout {
 
         Rectangle { width: 3; height: 3; radius: 1.5; color: Appearance.colors.colSubtext }
 
-        // Packages
         RowLayout {
             spacing: 4
             MaterialSymbol {

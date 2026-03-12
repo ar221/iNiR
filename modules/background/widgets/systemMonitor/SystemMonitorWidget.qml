@@ -121,7 +121,7 @@ AbstractBackgroundWidget {
         id: cardContent
         anchors.fill: parent
         anchors.margins: 20
-        spacing: 14
+        spacing: 12
 
         // ── Profile ──
         ProfileSection {
@@ -136,21 +136,11 @@ AbstractBackgroundWidget {
                 && (root.monitorConfig.showCalendar ?? true)
         }
 
-        // ── Calendar + Clock side by side ──
-        RowLayout {
+        // ── Calendar (includes clock + day name) ──
+        CalendarSection {
             Layout.fillWidth: true
             visible: root.monitorConfig.showCalendar ?? true
-            spacing: 12
-
-            CalendarSection {
-                Layout.fillWidth: true
-                configEntry: root.monitorConfig
-            }
-
-            ClockSection {
-                Layout.alignment: Qt.AlignTop
-                configEntry: root.monitorConfig
-            }
+            configEntry: root.monitorConfig
         }
 
         // ── Calendar Events ──
@@ -234,12 +224,7 @@ AbstractBackgroundWidget {
             configEntry: root.monitorConfig
         }
 
-        // ── Footer ──
-        FooterSection {
-            Layout.fillWidth: true
-            visible: root.monitorConfig.showFooter ?? true
-            configEntry: root.monitorConfig
-        }
+        // Footer removed — was getting cut off and not adding value
     }
 
     // Reusable separator component

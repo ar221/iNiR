@@ -16,7 +16,7 @@ ColumnLayout {
     readonly property bool hasPlayer: player !== null && player !== undefined
     readonly property var allPlayers: MprisController.displayPlayers ?? []
     readonly property bool multiplePlayers: allPlayers.length > 1
-    readonly property bool isPlaying: player?.playbackState === MprisPlaybackState.Playing
+    readonly property bool isPlaying: MprisController.isPlaying
 
     visible: hasPlayer
     spacing: 10
@@ -54,7 +54,6 @@ ColumnLayout {
             colBackground: "transparent"
             colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
             onClicked: {
-                // Cycle to previous player
                 const players = root.allPlayers
                 const currentIdx = players.indexOf(root.player)
                 const prevIdx = (currentIdx - 1 + players.length) % players.length
@@ -74,7 +73,6 @@ ColumnLayout {
             colBackground: "transparent"
             colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
             onClicked: {
-                // Cycle to next player
                 const players = root.allPlayers
                 const currentIdx = players.indexOf(root.player)
                 const nextIdx = (currentIdx + 1) % players.length
@@ -104,7 +102,6 @@ ColumnLayout {
             color: Appearance.colors.colSurfaceContainer
             clip: true
 
-            // Album art background
             Image {
                 id: albumArt
                 anchors.fill: parent
@@ -144,7 +141,7 @@ ColumnLayout {
                 }
             }
 
-            // Gradient overlay for readability (over album art)
+            // Gradient overlay for readability
             Rectangle {
                 anchors.fill: parent
                 visible: albumArt.status === Image.Ready
@@ -172,7 +169,6 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 12
 
-        // Track text
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 2
@@ -189,16 +185,15 @@ ColumnLayout {
 
             StyledText {
                 Layout.fillWidth: true
-                text: root.player?.trackArtist ?? "Unknown Artist"
+                text: root.player?.trackArtist ?? ""
                 font.pixelSize: Appearance.font.pixelSize.small
                 color: Appearance.colors.colSubtext
                 elide: Text.ElideRight
                 maximumLineCount: 1
-                visible: text !== "" && text !== "Unknown Artist"
+                visible: text !== ""
             }
         }
 
-        // Playback controls
         RowLayout {
             spacing: 2
 
@@ -207,7 +202,7 @@ ColumnLayout {
                 buttonRadius: 16
                 colBackground: "transparent"
                 colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
-                onClicked: root.player?.previous()
+                onClicked: MprisController.previous()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_previous"
@@ -221,7 +216,7 @@ ColumnLayout {
                 buttonRadius: 20
                 colBackground: Appearance.colors.colPrimary
                 colBackgroundHover: ColorUtils.lighten(Appearance.colors.colPrimary, 0.1)
-                onClicked: root.player?.togglePlayPause()
+                onClicked: MprisController.togglePlaying()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: root.isPlaying ? "pause" : "play_arrow"
@@ -235,7 +230,7 @@ ColumnLayout {
                 buttonRadius: 16
                 colBackground: "transparent"
                 colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
-                onClicked: root.player?.next()
+                onClicked: MprisController.next()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_next"

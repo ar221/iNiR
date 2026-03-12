@@ -19,6 +19,7 @@ import qs.modules.background.widgets
 import qs.modules.background.widgets.clock
 import qs.modules.background.widgets.mediaControls
 import qs.modules.background.widgets.weather
+import qs.modules.background.widgets.systemMonitor
 
 Variants {
     id: root
@@ -604,6 +605,17 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.mediaControls?.enable ?? true
                     sourceComponent: MediaControlsWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
+                        scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
+                        wallpaperScale: bgRoot.effectiveWallpaperScale
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.systemMonitor?.enable ?? false
+                    sourceComponent: SystemMonitorWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
