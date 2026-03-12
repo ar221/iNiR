@@ -38,8 +38,10 @@ MouseArea { // Notification group area
     property var dragIndexDiff: Math.abs(parentDragIndex - index)
     property real xOffset: dragIndexDiff == 0 ? parentDragDistance : 0
 
-    // Animation tokens — use fast timing for dismiss in all modes
-    readonly property QtObject _dismissAnim: Appearance.animation.elementMoveFast
+    // Animation tokens — popup uses fast (200ms), sidebar uses standard (500ms)
+    readonly property QtObject _dismissAnim: root.popup
+        ? Appearance.animation.elementMoveFast
+        : Appearance.animation.elementMove
     readonly property QtObject _contentAnim: Appearance.animation.elementMoveFast
 
     function destroyWithAnimation(left = false) {
@@ -149,10 +151,14 @@ MouseArea { // Notification group area
         // For popup: glass blur for aurora/angel, solid for others
         // For sidebar: transparent to show parent's blur
         color: Appearance.angelEverywhere ? (popup ? "transparent" : Appearance.angel.colGlassCard)
-            : Appearance.inirEverywhere ? (popup ? Appearance.inir.colLayer2 : Appearance.inir.colLayer1)
+            : Appearance.inirEverywhere ? (popup ? Appearance.inir.colLayer2
+                : root.containsMouse ? Appearance.inir.colLayer2 : Appearance.inir.colLayer1)
             : Appearance.auroraEverywhere ? "transparent"
             : (popup ? ColorUtils.applyAlpha(Appearance.colors.colLayer2, 1 - Appearance.backgroundTransparency)
-                     : Appearance.colors.colLayer2)
+                     : root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2)
+        Behavior on color {
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
 
         radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
             : Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
@@ -239,12 +245,33 @@ MouseArea { // Notification group area
             targetRadius: background.radius
         }
 
+        // Left accent strip
+        Rectangle {
+            id: accentStrip
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.margins: 6
+            width: 3
+            radius: 1.5
+            color: root.notificationGroup?.hasCritical
+                ? Appearance.colors.colPrimaryContainer
+                : Appearance.m3colors.m3primary
+            opacity: root.containsMouse ? 0.9 : 0.45
+            Behavior on opacity {
+                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            }
+        }
+
         RowLayout { // Left column for icon, right column for content
             id: row
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: root.padding
+            anchors.leftMargin: root.padding + 6
+            anchors.rightMargin: root.padding
+            anchors.topMargin: root.padding
+            anchors.bottomMargin: root.padding
             spacing: 10
 
             NotificationAppIcon { // Icons
@@ -292,6 +319,7 @@ MouseArea { // Notification group area
                             font.pixelSize: topRow.showAppName ?
                                 topRow.fontSize :
                                 Appearance.font.pixelSize.small
+                            font.weight: topRow.showAppName ? Font.Normal : Font.Medium
                             color: topRow.showAppName ?
                                 Appearance.colors.colSubtext :
                                 Appearance.colors.colOnLayer2

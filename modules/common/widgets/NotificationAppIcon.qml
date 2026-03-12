@@ -20,14 +20,16 @@ MaterialShape { // App icon
     property real appIconSize: implicitSize * appIconScale
     property real smallAppIconSize: implicitSize * smallAppIconScale
 
-    implicitSize: 38 * scale
+    implicitSize: 42 * scale
     property list<var> urgentShapes: [
         MaterialShape.Shape.VerySunny,
         MaterialShape.Shape.SoftBurst,
     ]
     shape: isUrgent ? urgentShapes[Math.floor(Math.random() * urgentShapes.length)] : MaterialShape.Shape.Circle
 
-    color: isUrgent ? Appearance.colors.colPrimaryContainer : "transparent"
+    color: isUrgent ? Appearance.colors.colPrimaryContainer
+        : (root.image == "") ? ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.4)
+        : "transparent"
     Loader {
         id: materialSymbolLoader
         // Only show MaterialSymbol when there's no appIcon AND no image
@@ -41,7 +43,7 @@ MaterialShape { // App icon
                     "priority_high" : guessedIcon
             }
             anchors.fill: parent
-            color: isUrgent ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
+            color: isUrgent ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer2
             iconSize: root.materialIconSize
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
