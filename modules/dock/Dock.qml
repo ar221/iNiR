@@ -114,10 +114,10 @@ Scope {
                     anchors.leftMargin: root.position === "right" ? hideOffsetV : 0
                     anchors.rightMargin: root.isLeft ? hideOffsetV : 0
 
-                    Behavior on anchors.topMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.bottomMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.rightMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+                    Behavior on anchors.topMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.bottomMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.leftMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.rightMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                     Item {
                         id: dockHoverRegion
@@ -164,7 +164,7 @@ Scope {
 
                                     ColorQuantizer {
                                         id: dockWallpaperQuantizer
-                                        source: dockVisualBackground.wallpaperUrl
+                                        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? dockVisualBackground.wallpaperUrl : ""
                                         depth: 0
                                         rescaleSize: 10
                                     }
@@ -218,9 +218,11 @@ Scope {
                                     source: dockVisualBackground.wallpaperUrl
                                     fillMode: Image.PreserveAspectCrop
                                     cache: true
+                                    sourceSize.width: dockRoot.screen?.width ?? 1920
+                                    sourceSize.height: dockRoot.screen?.height ?? 1080
                                     asynchronous: true
 
-                                    layer.enabled: Appearance.effectsEnabled && !dockVisualBackground.gameModeMinimal
+                                    layer.enabled: Appearance.effectsEnabled && dockVisualBackground.auroraEverywhere && !dockVisualBackground.inirEverywhere && !dockVisualBackground.gameModeMinimal
                                     layer.effect: MultiEffect {
                                         source: dockBlurredWallpaper
                                         anchors.fill: source
@@ -228,7 +230,7 @@ Scope {
                                             ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                                             : (Appearance.effectsEnabled ? 0.2 : 0)
                                         blurEnabled: Appearance.effectsEnabled
-                                        blurMax: 100
+                                        blurMax: 64
                                         blur: Appearance.effectsEnabled
                                             ? (Appearance.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                                             : 0

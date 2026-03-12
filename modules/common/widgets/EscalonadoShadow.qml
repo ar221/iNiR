@@ -86,15 +86,17 @@ Item {
             source: Wallpapers.effectiveWallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screenWidth
+            sourceSize.height: root.screenHeight
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && Appearance.angel.shadowGlass
             layer.effect: MultiEffect {
                 source: escalonadoBlur
                 anchors.fill: source
                 saturation: Appearance.angel.blurSaturation * Appearance.angel.colorStrength * 0.7
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.angel.shadowGlassBlur
             }
         }

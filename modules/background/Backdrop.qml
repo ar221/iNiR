@@ -114,10 +114,12 @@ Variants {
         // Color quantizer for aurora-style adaptive colors
         ColorQuantizer {
             id: backdropColorQuantizer
-            source: backdropWindow.colorSourcePath 
-                ? (backdropWindow.colorSourcePath.startsWith("file://") 
-                    ? backdropWindow.colorSourcePath 
-                    : "file://" + backdropWindow.colorSourcePath)
+            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere)
+                ? (backdropWindow.colorSourcePath
+                    ? (backdropWindow.colorSourcePath.startsWith("file://")
+                        ? backdropWindow.colorSourcePath
+                        : "file://" + backdropWindow.colorSourcePath)
+                    : "")
                 : ""
             depth: 0
             rescaleSize: 10
@@ -141,12 +143,15 @@ Variants {
                         ? backdropWindow.effectiveWallpaperPath
                         : "file://" + backdropWindow.effectiveWallpaperPath)
                     : ""
-                enableTransitions: Config.options?.background?.transition?.enable ?? true
-                transitionType: Config.options?.background?.transition?.type ?? "crossfade"
-                transitionDirection: Config.options?.background?.transition?.direction ?? "right"
-                transitionBaseDuration: Config.options?.background?.transition?.duration ?? 800
+                asynchronous: true
+                cache: false
+                smooth: true
+                mipmap: true
                 visible: !backdropWindow.useAuroraStyle && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
-            }
+                // Constrain decoded size to monitor resolution — no need for native
+                // resolution since backdrop is always screen-sized with blur.
+                sourceSize.width: backdropWindow.screen?.width ?? 1920
+                sourceSize.height: backdropWindow.screen?.height ?? 1080
 
             MultiEffect {
                 anchors.fill: parent
@@ -171,7 +176,7 @@ Variants {
                         : "file://" + backdropWindow.wallpaperPathRaw)
                     : ""
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: !backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif
@@ -253,10 +258,13 @@ Variants {
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.wallpaperIsGif ? gifWallpaper.source : wallpaper.source
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: backdropWindow.useAuroraStyle && status === Image.Ready && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
+                // Constrain decoded size — aurora is heavily blurred, screen res is enough.
+                sourceSize.width: backdropWindow.screen?.width ?? 1920
+                sourceSize.height: backdropWindow.screen?.height ?? 1080
 
                 layer.enabled: Appearance.effectsEnabled
                 layer.effect: MultiEffect {
@@ -278,7 +286,7 @@ Variants {
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.wallpaperIsGif ? gifWallpaper.source : ""
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif

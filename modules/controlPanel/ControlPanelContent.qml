@@ -30,7 +30,7 @@ Item {
     
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root.useWallpaperBackdrop ? root.wallpaperUrl : ""
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? root.wallpaperUrl : ""
         depth: 0
         rescaleSize: 10
     }
@@ -88,9 +88,11 @@ Item {
             source: root.useWallpaperBackdrop ? root.wallpaperUrl : ""
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screenWidth
+            sourceSize.height: root.screenHeight
             asynchronous: true
 
-            layer.enabled: root.useWallpaperBackdrop && Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -98,7 +100,7 @@ Item {
                     ? Appearance.angel.blurSaturation
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled ? 1 : 0
             }
 

@@ -77,7 +77,7 @@ Item { // Bar content region
 
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root.wallpaperUrl
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? root.wallpaperUrl : ""
         depth: 0 // 2^0 = 1 color
         rescaleSize: 10
     }
@@ -151,9 +151,11 @@ Item { // Bar content region
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.width
+            sourceSize.height: root.height
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled && !root.gameModeMinimal
+            layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere && !root.gameModeMinimal
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -161,7 +163,7 @@ Item { // Bar content region
                     ? Appearance.angel.blurSaturation
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled ? 1 : 0
             }
 
@@ -428,7 +430,7 @@ Item { // Bar content region
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 onPressed: {
@@ -447,7 +449,7 @@ Item { // Bar content region
                         Layout.fillWidth: true
                         Layout.bottomMargin: reveal ? indicatorsColumnLayout.realSpacing : 0
                         Behavior on Layout.bottomMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "volume_off"
@@ -461,7 +463,7 @@ Item { // Bar content region
                         Layout.fillWidth: true
                         Layout.bottomMargin: reveal ? indicatorsColumnLayout.realSpacing : 0
                         Behavior on Layout.topMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "mic_off"
@@ -486,7 +488,7 @@ Item { // Bar content region
                         implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
                         implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
                         Behavior on Layout.bottomMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Bar.NotificationUnreadCount {
                             id: notificationUnreadCount

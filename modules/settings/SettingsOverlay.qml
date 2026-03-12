@@ -578,7 +578,7 @@ Scope {
 
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 MouseArea {
@@ -625,11 +625,11 @@ Scope {
 
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                 }
                 Behavior on scale {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                 }
 
                 // Shadow - hidden in aurora/angel (angel uses StyledRectangularShadow)
@@ -791,11 +791,11 @@ Scope {
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                             Behavior on border.color {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
 
                             RowLayout {
@@ -813,7 +813,7 @@ Scope {
 
                                     Behavior on color {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                        animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
                                 }
 
@@ -901,7 +901,7 @@ Scope {
 
                                     Behavior on opacity {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
 
                                     StyledText {
@@ -923,7 +923,7 @@ Scope {
                                     opacity: visible ? 1 : 0
                                     Behavior on opacity {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
                                     onClicked: {
                                         overlaySearchField.text = "";
@@ -1058,11 +1058,11 @@ Scope {
 
                                                     Behavior on height {
                                                         enabled: Appearance.animationsEnabled
-                                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                                     }
                                                     Behavior on opacity {
                                                         enabled: Appearance.animationsEnabled
-                                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                                     }
                                                 }
 
@@ -1084,7 +1084,7 @@ Scope {
 
                                                         Behavior on color {
                                                             enabled: Appearance.animationsEnabled
-                                                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                                         }
                                                     }
 
@@ -1103,7 +1103,7 @@ Scope {
 
                                                         Behavior on color {
                                                             enabled: Appearance.animationsEnabled
-                                                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                                         }
                                                     }
                                                 }
@@ -1235,7 +1235,7 @@ Scope {
 
                                         Behavior on opacity {
                                             enabled: Appearance.animationsEnabled
-                                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                         }
                                     }
                                 }

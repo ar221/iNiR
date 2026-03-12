@@ -225,11 +225,13 @@ Item {
             source: Wallpapers.effectiveWallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Quickshell.screens[0]?.width ?? 1920
+            sourceSize.height: Quickshell.screens[0]?.height ?? 1080
             smooth: true
             mipmap: true
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere && !Appearance.inirEverywhere
             layer.effect: MultiEffect {
                 source: auroraWallpaper
                 anchors.fill: source
@@ -237,7 +239,7 @@ Item {
                     ? Appearance.angel.blurSaturation
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled ? 1 : 0
             }
         }
@@ -528,7 +530,7 @@ Item {
                                     : Appearance.colors.colOnLayer1
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
-                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                 }
                             }
                         }

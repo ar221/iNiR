@@ -107,7 +107,7 @@ Item {
 
         ColorQuantizer {
             id: sidebarRightWallpaperQuantizer
-            source: sidebarRightBackground.wallpaperUrl
+            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? sidebarRightBackground.wallpaperUrl : ""
             depth: 0
             rescaleSize: 10
         }
@@ -150,9 +150,11 @@ Item {
             source: sidebarRightBackground.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screenWidth ?? 1920
+            sourceSize.height: root.screenHeight ?? 1080
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && sidebarRightBackground.auroraEverywhere && !sidebarRightBackground.inirEverywhere
             layer.effect: MultiEffect {
                 source: sidebarRightBlurredWallpaper
                 anchors.fill: source
@@ -160,7 +162,7 @@ Item {
                     ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled
                     ? (sidebarRightBackground.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                     : 0

@@ -51,14 +51,16 @@ Rectangle {
         source: Wallpapers.effectiveWallpaperUrl
         fillMode: Image.PreserveAspectCrop
         cache: true
+        sourceSize.width: Quickshell.screens[0]?.width ?? 1920
+        sourceSize.height: Quickshell.screens[0]?.height ?? 1080
         asynchronous: true
-        layer.enabled: Appearance.effectsEnabled
+        layer.enabled: Appearance.effectsEnabled && Appearance.angelEverywhere
         layer.effect: MultiEffect {
             source: taskbarBlurWallpaper
             anchors.fill: source
             saturation: Appearance.angel.blurSaturation * Appearance.angel.colorStrength
             blurEnabled: Appearance.effectsEnabled
-            blurMax: 100
+            blurMax: 64
             blur: Appearance.effectsEnabled ? Appearance.angel.blurIntensity : 0
         }
     }
@@ -74,7 +76,7 @@ Rectangle {
     }
 
     Behavior on opacity {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
     }
 
     RowLayout {

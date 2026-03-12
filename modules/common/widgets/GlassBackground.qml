@@ -52,14 +52,20 @@ Rectangle {
         y: -root.screenY
         width: root.screenWidth
         height: root.screenHeight
-        // Avoid showing a stale cached pixmap while the new source is still loading.
         visible: root.auroraEverywhere && !root.inirEverywhere && status === Image.Ready
-        source: root.wallpaperUrl
+        source: (root.auroraEverywhere && !root.inirEverywhere) ? root.wallpaperUrl : ""
         fillMode: Image.PreserveAspectCrop
+        // All GlassBackground instances share the same wallpaper URL and sourceSize,
+        // so Qt's QPixmapCache serves a single decoded pixmap to all of them.
+        // The old wallpaper is evicted naturally when the source URL changes.
         cache: true
         asynchronous: true
+        // Constrain decoded size: this Image is always heavily blurred so full
+        // native resolution is wasted.  Screen dimensions are more than enough.
+        sourceSize.width: root.screenWidth
+        sourceSize.height: root.screenHeight
 
-        layer.enabled: Appearance.effectsEnabled
+        layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere
         layer.effect: MultiEffect {
             source: blurredWallpaper
             anchors.fill: source
@@ -67,7 +73,7 @@ Rectangle {
                 ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                 : (Appearance.effectsEnabled ? 0.2 : 0)
             blurEnabled: Appearance.effectsEnabled
-            blurMax: 100
+            blurMax: 64
             blur: Appearance.effectsEnabled
                 ? (root.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                 : 0

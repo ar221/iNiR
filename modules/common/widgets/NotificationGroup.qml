@@ -208,9 +208,11 @@ MouseArea { // Notification group area
             source: Wallpapers.effectiveWallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: 480
+            sourceSize.height: 270
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere && !Appearance.inirEverywhere
             layer.effect: MultiEffect {
                 source: notifBlurredWallpaper
                 anchors.fill: source
@@ -218,7 +220,7 @@ MouseArea { // Notification group area
                     ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled
                     ? (Appearance.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                     : 0
@@ -266,7 +268,7 @@ MouseArea { // Notification group area
                 Behavior on spacing {
                     // Sidebar: smooth spacing transition; Popup: instant
                     enabled: !root.popup && Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 Item { // App name (or summary when there's only 1 notif) and time
@@ -331,7 +333,7 @@ MouseArea { // Notification group area
 
                     Behavior on spacing {
                         enabled: !root.popup && Appearance.animationsEnabled
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                     }
 
                     // Custom removeDisplaced: smooth gap-filling when a notification is dismissed.

@@ -82,7 +82,9 @@ Item { // Bar content region
     readonly property bool _useGlobalQuantizer: root.wallpaperUrl === Wallpapers.effectiveWallpaperUrl
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root._useGlobalQuantizer ? "" : root.wallpaperUrl
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere)
+            ? (root._useGlobalQuantizer ? "" : root.wallpaperUrl)
+            : ""
         depth: 0 // 2^0 = 1 color
         rescaleSize: 10
     }
@@ -269,9 +271,11 @@ Item { // Bar content region
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screen?.width ?? 1920
+            sourceSize.height: root.screen?.height ?? 1080
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && barBackground.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -279,7 +283,7 @@ Item { // Bar content region
                     ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled
                     ? (root.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                     : 0
@@ -546,7 +550,7 @@ Item { // Bar content region
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 onPressed: {
@@ -564,7 +568,7 @@ Item { // Bar content region
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "volume_off"
@@ -577,7 +581,7 @@ Item { // Bar content region
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "mic_off"
@@ -597,7 +601,7 @@ Item { // Bar content region
                         implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
                         implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         NotificationUnreadCount {
                             id: notificationUnreadCount

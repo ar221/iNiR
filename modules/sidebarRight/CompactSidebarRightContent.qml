@@ -535,7 +535,7 @@ Item {
 
         ColorQuantizer {
             id: bgQuant
-            source: bg.wallpaperUrl
+            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? bg.wallpaperUrl : ""
             depth: 0
             rescaleSize: 10
         }
@@ -603,7 +603,9 @@ Item {
             source: bg.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true; asynchronous: true
-            layer.enabled: Appearance.effectsEnabled
+            sourceSize.width: root.screenWidth ?? 1920
+            sourceSize.height: root.screenHeight ?? 1080
+            layer.enabled: Appearance.effectsEnabled && bg.auroraEverywhere && !bg.inirEverywhere
             layer.effect: MultiEffect {
                 source: bgBlurWallpaper
                 anchors.fill: source
@@ -611,7 +613,7 @@ Item {
                     ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled
                     ? (bg.angelEverywhere ? Appearance.angel.blurIntensity : 1) : 0
             }

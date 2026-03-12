@@ -573,7 +573,7 @@ MouseArea {
                 transform: Translate { x: passwordContainer.shakeOffset; y: passwordContainer.staggerY }
                 
                 Behavior on border.color {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
                 
                 layer.enabled: Appearance.effectsEnabled
@@ -682,7 +682,7 @@ MouseArea {
                                 : Appearance.colors.colPrimary
                         
                         Behavior on color {
-                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         
                         MaterialSymbol {
@@ -1102,7 +1102,7 @@ MouseArea {
         }
         
         Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
         
         layer.enabled: Appearance.effectsEnabled

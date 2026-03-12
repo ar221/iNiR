@@ -113,10 +113,10 @@ Scope {
                             rightMargin: ((Config.options?.interactions?.deadPixelWorkaround?.enable ?? false) && barRoot.anchors.right) * -1
                         }
                         Behavior on anchors.topMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Behavior on anchors.bottomMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         states: State {
@@ -261,9 +261,11 @@ Scope {
                                             source: barContent.wallpaperUrl
                                             fillMode: Image.PreserveAspectCrop
                                             cache: true
+                                            sourceSize.width: barRoot.screen?.width ?? 1920
+                                            sourceSize.height: barRoot.screen?.height ?? 1080
                                             asynchronous: true
                                             
-                                            layer.enabled: Appearance.effectsEnabled
+                                            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere
                                             layer.effect: MultiEffect {
                                                 source: blurImg
                                                 anchors.fill: source
@@ -271,7 +273,7 @@ Scope {
                                                     ? Appearance.angel.blurSaturation
                                                     : (Appearance.effectsEnabled ? 0.2 : 0)
                                                 blurEnabled: Appearance.effectsEnabled
-                                                blurMax: 100
+                                                blurMax: 64
                                                 blur: Appearance.effectsEnabled ? 1 : 0
                                             }
                                             
