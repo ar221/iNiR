@@ -2302,6 +2302,230 @@ ContentPage {
     }
 
     SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "monitor_heart"
+        title: Translation.tr("Widget: System Monitor")
+
+        SettingsGroup {
+            // Enable + Placement
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.systemMonitor.enable
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.enable = checked;
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.systemMonitor.placementStrategy
+                    onSelected: newValue => {
+                        Config.options.background.widgets.systemMonitor.placementStrategy = newValue;
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            // Appearance
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.systemMonitor.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.background.widgets.systemMonitor.cardOpacity = value / 100;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Transparency of the card background")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.systemMonitor.cardWidth ?? 380
+                    from: 300
+                    to: 600
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.options.background.widgets.systemMonitor.cardWidth = value;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Width of the widget card. Can also be resized by dragging the bottom-right corner")
+                    }
+                }
+            }
+
+            // Sections visibility
+            ContentSubsection {
+                title: Translation.tr("Sections")
+
+                SettingsSwitch {
+                    buttonIcon: "person"
+                    text: Translation.tr("Profile")
+                    checked: Config.options.background.widgets.systemMonitor.showProfile ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showProfile = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Avatar, greeting, and uptime display")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "calendar_month"
+                    text: Translation.tr("Calendar & Clock")
+                    checked: Config.options.background.widgets.systemMonitor.showCalendar ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showCalendar = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Mini calendar with month navigation and digital clock")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "event"
+                    text: Translation.tr("Calendar Events")
+                    checked: Config.options.background.widgets.systemMonitor.showEvents ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showEvents = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Today's events from Google Calendar (requires gcalcli)")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "cloud"
+                    text: Translation.tr("Weather")
+                    checked: Config.options.background.widgets.systemMonitor.showWeather ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showWeather = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Temperature, conditions, and weather details")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("System Rings")
+                    checked: Config.options.background.widgets.systemMonitor.showSystem ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showSystem = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("CPU, RAM, and GPU usage rings")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("Storage")
+                    checked: Config.options.background.widgets.systemMonitor.showStorage ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showStorage = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Disk usage bars for NVMe and HDD")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("GPU Ring")
+                    checked: Config.options.background.widgets.systemMonitor.showGpu ?? true
+                    enabled: Config.options.background.widgets.systemMonitor.showSystem ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showGpu = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Show GPU usage ring alongside CPU and RAM")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "music_note"
+                    text: Translation.tr("Media Player")
+                    checked: Config.options.background.widgets.systemMonitor.showMedia ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showMedia = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Now playing with album art and playback controls")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "rocket_launch"
+                    text: Translation.tr("Quick Launch")
+                    checked: Config.options.background.widgets.systemMonitor.showQuickLaunch ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showQuickLaunch = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Quick application launcher icons")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "analytics"
+                    text: Translation.tr("Stats Pills")
+                    checked: Config.options.background.widgets.systemMonitor.showStats ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showStats = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Disk, swap, and temperature indicator pills")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "spa"
+                    text: Translation.tr("Footer")
+                    checked: Config.options.background.widgets.systemMonitor.showFooter ?? true
+                    onCheckedChanged: {
+                        Config.options.background.widgets.systemMonitor.showFooter = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Fun reminder text at the bottom")
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
         expanded: false
         icon: "notifications"
         title: Translation.tr("Notifications")

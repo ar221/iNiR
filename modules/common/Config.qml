@@ -109,7 +109,7 @@ Singleton {
                 "iiBar", "iiBackground", "iiBackdrop", "iiCheatsheet", "iiControlPanel", "iiDock", "iiLock", "iiMediaControls",
                 "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard", "iiOverlay",
                 "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", "iiSessionScreen",
-                "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard", "iiShellUpdate"
+                "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar", "iiWallpaperSelector", "iiClipboard", "iiShellUpdate"
             ]
             property string panelFamily: "ii" // "ii" or "waffle"
             property bool familyTransitionAnimation: true // Show animated overlay when switching families
@@ -293,25 +293,6 @@ Singleton {
                     property bool enableQtApps: true
                     property bool enableTerminal: true
                     property bool enableVesktop: true
-                    property bool enableZed: true
-                    property bool enableVSCode: true
-                    property bool enableChrome: true
-                    property JsonObject vscodeEditors: JsonObject {
-                        property bool code: true           // Official VSCode
-                        property bool codium: true         // VSCodium (FOSS)
-                        property bool codeOss: true        // Code - OSS
-                        property bool codeInsiders: true   // Code - Insiders
-                        property bool cursor: true         // Cursor AI
-                        property bool windsurf: true       // Windsurf AI
-                        property bool windsurfNext: true   // Windsurf - Next
-                        property bool qoder: true          // Qoder
-                        property bool antigravity: true    // Antigravity
-                        property bool positron: true       // Positron
-                        property bool voidEditor: true     // Void
-                        property bool melty: true          // Melty
-                        property bool pearai: true         // PearAI
-                        property bool aide: true           // Aide
-                    }
                     property bool useBackdropForColors: false
                     property JsonObject terminals: JsonObject {
                         property bool kitty: true
@@ -485,6 +466,40 @@ Singleton {
                         property real x: 240
                         property real y: 240
                     }
+
+                    property JsonObject systemMonitor: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 100
+                        property real y: 600
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 380
+                        // Profile section
+                        property string avatarPath: ""
+                        property string greetingName: "Ayaz"
+                        property bool showProfile: true
+                        // Calendar + Clock section
+                        property bool showCalendar: true
+                        // Calendar events (Google Calendar)
+                        property bool showEvents: true
+                        // Weather section
+                        property bool showWeather: true
+                        // Storage section
+                        property bool showStorage: true
+                        // System section
+                        property bool showSystem: true
+                        property bool showGpu: true
+                        // Media section
+                        property bool showMedia: true
+                        // Quick launch section
+                        property bool showQuickLaunch: true
+                        property string quickLaunchApps: "" // JSON array: [{"icon":"...", "label":"...", "cmd":"..."}]
+                        // Stats row
+                        property bool showStats: true
+                        // Footer
+                        property bool showFooter: true
+                        property string footerText: "Touch Grass"
+                    }
                 }
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
@@ -498,19 +513,6 @@ Singleton {
                     property int videoBlurStrength: 50
                     property int dim: 0 // 0-100 percentage (base overlay)
                     property int dynamicDim: 0 // Extra dim when there are windows on the current workspace (0-100)
-                    property JsonObject ripple: JsonObject {
-                        property bool enable: false
-                        property bool charging: true
-                        property bool overview: true
-                        property bool reload: true
-                        property bool lock: true
-                        property bool session: true
-                        property bool hotcorners: true
-                        property int rippleDuration: 3000
-                        property real sparkleIntensity: 1.0 // 0.0 = no sparkles, 2.0 = intense
-                        property real glowIntensity: 1.0    // 0.0 = no glow, 2.0 = strong
-                        property real ringWidth: 0.15       // 0.05 = thin ring, 0.5 = wide ring
-                    }
                 }
                 property JsonObject backdrop: JsonObject {
                     property bool enable: true
@@ -548,22 +550,6 @@ Singleton {
                     property bool generateColors: true // regenerate theme colors on each change
                     property string folder: "" // empty = use current wallpaper folder
                 }
-                property JsonObject backend: JsonObject {
-                    property string provider: "internal"
-                    property JsonObject awww: JsonObject {
-                        property int transitionFps: 60
-                        property int simpleStep: 5
-                        property int spatialStep: 30
-                    }
-                }
-                property JsonObject transition: JsonObject {
-                    property bool enable: true
-                    property string type: "crossfade" // "crossfade" | "slide" | "zoom" | "blurFade"
-                    property string direction: "right"
-                    property int duration: 800 // ms
-                    property list<var> bezier: [0.54, 0.0, 0.34, 0.99]
-                }
-                property bool hideUpscaleNotification: false
             }
 
             property JsonObject bar: JsonObject {
@@ -584,8 +570,6 @@ Singleton {
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
                 property bool showScrollHints: true // Show brightness/volume scroll hints on hover
-                property string leftScrollAction: "brightness" // "brightness", "volume", "workspace", "none"
-                property string rightScrollAction: "volume" // "brightness", "volume", "workspace", "none"
                 property JsonObject blurBackground: JsonObject {
                     property bool enabled: false
                     property real overlayOpacity: 0.3
@@ -609,7 +593,6 @@ Singleton {
                     property bool rightSidebarButton: true
                     property bool sysTray: true
                     property bool weather: true
-                    property bool taskbar: false
                 }
                 property JsonObject modulesPlacement: JsonObject {
                     property string resources: "start"
@@ -632,21 +615,11 @@ Singleton {
                     property list<string> rightOrder: ["rightSidebarButton", "sysTray", "weather"]
                 }
                 property JsonObject resources: JsonObject {
-                    property bool showMemoryIndicator: true
-                    property bool showSwapIndicator: true
-                    property bool showTempIndicator: true
-                    property bool showCpuIndicator: true
-                    property bool showGpuIndicator: true
                     property bool alwaysShowSwap: true
-                    property bool alwaysShowTemp: true
                     property bool alwaysShowCpu: true
-                    property bool alwaysShowGpu: true
-                    property int tempCautionThreshold: 65
-                    property int tempWarningThreshold: 80
                     property int memoryWarningThreshold: 95
                     property int swapWarningThreshold: 85
                     property int cpuWarningThreshold: 90
-                    property int gpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property JsonObject utilButtons: JsonObject {
@@ -670,7 +643,6 @@ Singleton {
                 }
                 property JsonObject workspaces: JsonObject {
                     property string scrollBehavior: "workspace" // "workspace" or "column"
-                    property bool invertScroll: false // Invert scroll direction
                     property bool monochromeIcons: true
                     property bool dynamicCount: true // Auto-detect workspace count (Niri)
                     property int shown: 10 // Only used when dynamicCount is false
@@ -721,12 +693,7 @@ Singleton {
                 property string code: "0;P;d;1;0l;10;0o;2;1b;0"
             }
 
-            property JsonObject display: JsonObject {
-                property string primaryMonitor: ""
-            }
-
             property JsonObject dock: JsonObject {
-                property string style: "panel" // "panel" | "pill"
                 property bool cardStyle: false
                 property bool enable: false
                 property bool monochromeIcons: true
@@ -752,7 +719,6 @@ Singleton {
                 // Window preview on hover
                 property bool hoverPreview: true // Show window preview popup on hover
                 property int hoverPreviewDelay: 400 // Delay before showing preview (ms)
-                property bool keepPreviewOnClick: false // Keep preview open when clicking a window thumbnail
                 // Drag & drop reordering
                 property bool enableDragReorder: true // Allow drag to reorder pinned apps
             }
@@ -876,7 +842,6 @@ Singleton {
                 property int scrimDim: 35
                 property int topMargin: 0
                 property int bottomMargin: 0
-                property bool centerLauncher: false
                 property bool respectBar: true
                 property real maxPanelWidthRatio: 1.0
                 property int workspaceSpacing: 5
@@ -892,14 +857,6 @@ Singleton {
                 property bool keepOverviewOpenOnWindowClick: true
                 property bool closeAfterWindowMove: true
                 property bool showPreviews: false // Show window thumbnails in overview
-                property JsonObject dashboard: JsonObject {
-                    property bool enable: false
-                    property bool showToggles: true
-                    property bool showMedia: true
-                    property bool showVolume: true
-                    property bool showWeather: true
-                    property bool showSystem: true
-                }
             }
 
             // Settings for the custom Alt-Tab switcher in ii
@@ -984,16 +941,12 @@ Singleton {
                 }
                 property JsonObject imageSearch: JsonObject {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
-                    property string fileUploadApiEndpoint: "https://0x0.st"
-                    property string fileUploadApiFallback: "https://litterbox.catbox.moe/resources/internals/api.php"
-                    property string fileUploadApiFallback2: "https://catbox.moe/user/api.php"
                     property bool useCircleSelection: false
                 }
             }
 
             property JsonObject sidebar: JsonObject {
                 property bool cardStyle: false
-                property string layout: "default" // "default" | "compact"
                 property bool keepRightSidebarLoaded: true
                 property bool keepLeftSidebarLoaded: true
                 property bool openFolderOnDownload: false // Open file manager after wallpaper download
@@ -1038,11 +991,6 @@ Singleton {
                 // Tools tab - Niri debug options and quick actions
                 property JsonObject tools: JsonObject {
                     property bool enable: false
-                }
-                // Web Apps / Plugins tab - embedded webapps in sidebar
-                property JsonObject plugins: JsonObject {
-                    property bool enable: false
-                    property string lastActivePlugin: ""
                 }
                 // YT Music tab - Search and play YouTube music via yt-dlp
                 property JsonObject ytmusic: JsonObject {
@@ -1176,8 +1124,6 @@ Singleton {
                 // Right sidebar widget toggles
                 property JsonObject right: JsonObject {
                     property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "timer"]
-                    // Controls section order for compact layout (drag to reorder)
-                    property list<string> controlsSectionOrder: ["sliders", "toggles", "devices", "media", "quickActions"]
                 }
             }
 
@@ -1208,28 +1154,10 @@ Singleton {
                 property bool useSystemFileDialog: false
                 property string selectionTarget: "main"
                 property string targetMonitor: ""
-                property string style: "grid" // "grid" | "coverflow"
-                property string coverflowView: "gallery" // "gallery" | "skew"
             }
 
             property JsonObject screenRecord: JsonObject {
                 property string savePath: "" // Empty = use XDG Videos or ~/Videos
-                property string qualityPreset: "balanced"
-                property string videoCodec: "libx264"
-                property string audioCodec: "aac"
-                property string accelerationMode: "auto"
-                property string hardwareDevice: "/dev/dri/renderD128"
-                property int fps: 60
-                property int videoBitrateKbps: 12000
-                property int audioBitrateKbps: 192
-                property string audioSource: ""
-                property string audioBackend: ""
-                property int audioSampleRate: 48000
-                property string pixelFormat: "yuv420p"
-                property string preset: "veryfast"
-                property int crf: 21
-                property string vaapiFilter: "scale_vaapi=format=nv12:out_range=full"
-                property bool enableFallback: true
             }
 
             property JsonObject windows: JsonObject {
