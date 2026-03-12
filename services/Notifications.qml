@@ -224,6 +224,47 @@ Singleton {
     property var appNameList: _cachedAppNameList
     property var popupAppNameList: _cachedPopupAppNameList
 
+    // KDE Connect forwards phone notifications with appIcon "kdeconnect" for all apps.
+    // Map the phone app name (from summary) to a system icon name.
+    readonly property var _kdeConnectIconMap: ({
+        "discord": "discord",
+        "whatsapp": "whatsapp",
+        "telegram": "telegram",
+        "signal": "signal-desktop",
+        "instagram": "instagram",
+        "youtube": "youtube",
+        "youtube revanced": "youtube",
+        "youtube music": "youtube-music",
+        "gmail": "gmail",
+        "chrome": "google-chrome",
+        "firefox": "firefox",
+        "slack": "slack",
+        "spotify": "spotify",
+        "reddit": "reddit",
+        "facebook": "facebook",
+        "facebook messenger": "fbmessenger",
+        "messenger": "fbmessenger",
+        "steam": "steam",
+        "twitch": "twitch",
+        "linkedin": "linkedin",
+        "snapchat": "snapchat",
+        "twitter": "twitter",
+        "phone": "call-start",
+        "messages": "message",
+        "google messages": "message",
+    })
+
+    function _resolveKdeConnectIcon(summary) {
+        if (!summary) return "kdeconnect"
+        const name = summary.trim().toLowerCase()
+        // Try exact match
+        if (_kdeConnectIconMap[name]) return _kdeConnectIconMap[name]
+        // Try first word (e.g. "Discord" from "Discord Chat")
+        const firstWord = name.split(/\s+/)[0]
+        if (_kdeConnectIconMap[firstWord]) return _kdeConnectIconMap[firstWord]
+        return "kdeconnect"
+    }
+
     // Rate limiting sencillo para evitar spam de notificaciones
     property double _lastIngressSec: 0
     property int _ingressCountThisSec: 0
@@ -311,11 +352,16 @@ Singleton {
             }
 
             notification.tracked = true
-            const newNotifObject = notifComponent.createObject(root, {
+            // Resolve phone app icon for KDE Connect notifications
+            const createProps = {
                 "notificationId": notification.id + root.idOffset,
                 "notification": notification,
                 "time": Date.now(),
-            });
+            }
+            if (notification.appName === "KDE Connect") {
+                createProps.appIcon = root._resolveKdeConnectIcon(notification.summary)
+            }
+            const newNotifObject = notifComponent.createObject(root, createProps);
 			root.list = [...root.list, newNotifObject];
 
             // Sonido de notificación opcional
