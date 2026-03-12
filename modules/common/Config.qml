@@ -495,8 +495,8 @@ Singleton {
                 property JsonObject effects: JsonObject {
                     property bool enableBlur: false
                     property int blurRadius: 32
-                    property int blurStatic: 0 // 0-100, blur mínimo incluso sin ventanas
-                    property int videoBlurStrength: 50
+                    property int thumbnailBlurStrength: 50
+                    property bool enableAnimatedBlur: false // Enable blur for animated wallpapers (video/gif) - has performance impact
                     property int dim: 0 // 0-100 percentage (base overlay)
                     property int dynamicDim: 0 // Extra dim when there are windows on the current workspace (0-100)
                     property JsonObject ripple: JsonObject {
@@ -522,9 +522,9 @@ Singleton {
                     property bool enableAnimation: false // Enable animated wallpapers (video/gif) in backdrop (disabled by default for performance)
                     property bool enableAnimatedBlur: false // Enable blur for animated wallpapers (video/gif) - has performance impact
                     property int blurRadius: 32
-                    property int dim: 35 // 0-100
-                    property real saturation: 1.0
-                    property real contrast: 1.0
+                    property int dim: 35
+                    property real saturation: 0
+                    property real contrast: 0
                     property bool vignetteEnabled: false
                     property real vignetteIntensity: 0.5
                     property real vignetteRadius: 0.7
@@ -1327,7 +1327,6 @@ Singleton {
                     property JsonObject effects: JsonObject {
                         property bool enableBlur: false
                         property int blurRadius: 32
-                        property int blurStatic: 0
                         property int dim: 0
                         property int dynamicDim: 0
                         property bool enableAnimatedBlur: false // Enable blur for animated wallpapers (video/gif) - has performance impact
@@ -1343,8 +1342,8 @@ Singleton {
                         property bool enableAnimatedBlur: false // Enable blur for animated wallpapers (video/gif) - has performance impact
                         property int blurRadius: 32
                         property int dim: 35
-                        property real saturation: 1.0
-                        property real contrast: 1.0
+                        property real saturation: 0
+                        property real contrast: 0
                         property bool vignetteEnabled: false
                         property real vignetteIntensity: 0.5
                         property real vignetteRadius: 0.7
