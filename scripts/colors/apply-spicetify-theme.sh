@@ -65,7 +65,16 @@ is_process_running() {
 }
 
 is_watch_active() {
-  [[ -f "$WATCH_LOCK" ]] || pgrep -f "spicetify watch" >/dev/null 2>&1
+  # First check if the process is genuinely running
+  if pgrep -f "spicetify watch" >/dev/null 2>&1; then
+    return 0
+  fi
+  # Process is not running — clean up any stale lock file
+  if [[ -f "$WATCH_LOCK" ]]; then
+    log "Stale watch lock detected (watch not running) — removing lock"
+    release_watch_lock
+  fi
+  return 1
 }
 
 acquire_watch_lock() {
