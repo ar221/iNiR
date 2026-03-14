@@ -135,6 +135,11 @@ apply_terminal_configs() {
 
     # Reload running terminals so colors update in real-time
     reload_terminal_colors "${enabled_terminals[@]}" >> "$log_file" 2>&1 &
+
+    # Newsboat Material You colors (reads colors.json, writes 256-color config)
+    if command -v newsboat-colors &>/dev/null; then
+      newsboat-colors >> "$log_file" 2>&1
+    fi
   else
     echo "[terminal-colors] ERROR: Python not found ($python_cmd). Cannot generate terminal configs." >> "$log_file" 2>/dev/null
   fi

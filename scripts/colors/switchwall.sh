@@ -650,7 +650,7 @@ switch() {
     fi
 
     # Use user's matugen config (installed to ~/.config/matugen/ during setup)
-    matugen --config "$MATUGEN_DIR/config.toml" "${matugen_args[@]}"
+    matugen --config "$MATUGEN_DIR/config.toml" --source-color-index 0 "${matugen_args[@]}"
     if [[ -n "${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-}" ]]; then
         _ii_venv="$(eval echo "$ILLOGICAL_IMPULSE_VIRTUAL_ENV")"
     else
