@@ -24,9 +24,6 @@ Singleton {
     }
 
     property bool _initialized: false
-    // Guard against re-entrant discardNotification calls (server dismiss → onNotificationChanged → discard again)
-    property var _discardingIds: new Set()
-
     component Notif: QtObject {
         id: wrapper
         required property int notificationId // Could just be `id` but it conflicts with the default prop in QtObject
@@ -44,6 +41,8 @@ Singleton {
         property string summary: notification?.summary ?? ""
         property double time
         property string urgency: notification?.urgency.toString() ?? "normal"
+        property bool hasInlineReply: notification?.hasInlineReply ?? false
+        property string inlineReplyPlaceholder: notification?.inlineReplyPlaceholder ?? ""
         property Timer timer
 
         onNotificationChanged: {
@@ -54,10 +53,6 @@ Singleton {
     }
 
     function notifToJSON(notif) {
-        if (!notif) {
-            console.warn("[Notifications] notifToJSON called with null notification")
-            return null
-        }
         return {
             "notificationId": notif.notificationId,
             "actions": notif.actions,
@@ -71,8 +66,7 @@ Singleton {
         }
     }
     function notifToString(notif) {
-        const json = notifToJSON(notif)
-        return json ? JSON.stringify(json, null, 2) : "{}"
+        return JSON.stringify(notifToJSON(notif), null, 2);
     }
 
     component NotifTimer: Timer {
@@ -155,11 +149,7 @@ Singleton {
     }
 
     function stringifyList(list) {
-        return JSON.stringify(
-            list.map((notif) => notifToJSON(notif)).filter(json => json !== null), 
-            null, 
-            2
-        )
+        return JSON.stringify(list.map((notif) => notifToJSON(notif)), null, 2);
     }
 
     onListChanged: {
@@ -215,7 +205,13 @@ Singleton {
     }
 
     function _appNameListForGroups(groups) {
-        return Object.keys(groups).sort((a, b) => groups[b].time - groups[a].time)
+        return Object.keys(groups).sort((a, b) => {
+            // Critical notifications pin to top
+            const aCrit = groups[a].hasCritical ? 1 : 0
+            const bCrit = groups[b].hasCritical ? 1 : 0
+            if (bCrit !== aCrit) return bCrit - aCrit
+            return groups[b].time - groups[a].time
+        })
     }
 
     // Public API - use cached values
@@ -336,6 +332,7 @@ Singleton {
         bodyMarkupSupported: true
         bodySupported: true
         imageSupported: true
+        inlineReplySupported: true
         keepOnReload: false
         persistenceSupported: true
 
@@ -373,8 +370,9 @@ Singleton {
                 Audio.playSystemSound(soundName);
             }
 
-            // Popup
-            if (!root.popupInhibited) {
+            // Popup — focus mode can override DND for critical/allowlisted apps
+            const focusBypass = root.silent && FocusMode.active && FocusMode.shouldAllowPopup(notification)
+            if (!root.popupInhibited || focusBypass) {
                 newNotifObject.popup = true;
 
                 const timeout = _timeoutForNotification(notification);
@@ -412,46 +410,21 @@ Singleton {
     }
 
     function discardNotification(id) {
-        // Guard against re-entrant calls (server dismiss → onNotificationChanged → discard again)
-        if (root._discardingIds.has(id)) return;
-        root._discardingIds.add(id);
-
-        root._log("[Notifications] Discarding notification with ID: " + id);
+        console.log("[Notifications] Discarding notification with ID: " + id);
         const index = root.list.findIndex((notif) => notif.notificationId === id);
+        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
         if (index !== -1) {
-            const notif = root.list[index];
-            // Cancel and destroy the timer to prevent orphaned timer fires
-            if (notif.timer) {
-                notif.timer.stop();
-                notif.timer.destroy();
-                notif.timer = null;
-            }
             root.list.splice(index, 1);
             notifFileView.setText(stringifyList(root.list));
-            triggerListChange();
-            // Destroy the Notif QML object to prevent memory leak
-            notif.destroy();
+            triggerListChange()
         }
-        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
         if (notifServerIndex !== -1) {
             notifServer.trackedNotifications.values[notifServerIndex].dismiss()
         }
         root.discard(id); // Emit signal
-
-        // Remove from re-entrancy guard after dismiss chain completes
-        Qt.callLater(() => root._discardingIds.delete(id));
     }
 
     function discardAllNotifications() {
-        // Cancel and destroy all active timers before clearing the list
-        for (const notif of root.list) {
-            if (notif.timer) {
-                notif.timer.stop();
-                notif.timer.destroy();
-                notif.timer = null;
-            }
-            notif.destroy();
-        }
         root.list = []
         triggerListChange()
         notifFileView.setText(stringifyList(root.list));
@@ -465,8 +438,6 @@ Singleton {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         if (index !== -1 && root.list[index] != null && root.list[index].timer != null) {
             root.list[index].timer.stop();
-            root.list[index].timer.destroy();
-            root.list[index].timer = null;
         }
     }
 
@@ -494,6 +465,11 @@ Singleton {
                t === "ver" || t === "abrir" || t === "mostrar" || t === "ir" ||
                t.includes("view") || t.includes("open") || t.includes("show") ||
                t.includes("abrir") || t.includes("ver") || t.includes("mostrar");
+    }
+
+    // Public: focus or launch an app by its notification metadata (for history items)
+    function focusOrLaunchApp(appIcon, appName): void {
+        _focusOrLaunchFromNotifServerNotif({ appName: appName, appIcon: appIcon, summary: "" })
     }
 
     function _focusOrLaunchFromNotifServerNotif(notifServerNotif): void {
@@ -541,6 +517,27 @@ Singleton {
             const cmd = "/usr/bin/gtk-launch \"" + appIcon + "\" || \"" + appIcon + "\"";
             Quickshell.execDetached(["/usr/bin/bash", "-lc", cmd]);
         }
+    }
+
+    // Track whether a reply field is active (for keyboard focus in popup)
+    property bool replyActive: false
+
+    function sendInlineReply(id, text): void {
+        const notifServerIndex = notifServer.trackedNotifications.values.findIndex(
+            (notif) => notif.id + root.idOffset === id
+        )
+        if (notifServerIndex !== -1) {
+            const notif = notifServer.trackedNotifications.values[notifServerIndex]
+            notif.sendInlineReply(text)
+            console.log("[Notifications] Sent inline reply for notification ID: " + id)
+            // Check if notification is resident (should stay after reply)
+            if (!notif.resident) {
+                root.discardNotification(id)
+            }
+        } else {
+            console.warn("[Notifications] Cannot send inline reply — notification not tracked: " + id)
+        }
+        root.replyActive = false
     }
 
     function attemptInvokeAction(id, notifIdentifier) {

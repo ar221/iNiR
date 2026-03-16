@@ -1,5 +1,4 @@
 module qs.services
-singleton AwwwBackend 1.0 AwwwBackend.qml
 singleton Ai 1.0 Ai.qml
 singleton AnimeService 1.0 AnimeService.qml
 singleton AppSearch 1.0 AppSearch.qml
@@ -17,8 +16,8 @@ DankSocket 1.0 DankSocket.qml
 singleton DateTime 1.0 DateTime.qml
 singleton EasyEffects 1.0 EasyEffects.qml
 singleton Emojis 1.0 Emojis.qml
-singleton Events 1.0 Events.qml
 singleton FirstRunExperience 1.0 FirstRunExperience.qml
+singleton FocusMode 1.0 FocusMode.qml
 singleton FontSyncService 1.0 FontSyncService.qml
 singleton GameMode 1.0 GameMode.qml
 HyprlandData 1.0 HyprlandData.qml
@@ -38,6 +37,7 @@ singleton NiriKeybinds 1.0 NiriKeybinds.qml
 singleton NiriService 1.0 NiriService.qml
 singleton Notepad 1.0 Notepad.qml
 singleton Notifications 1.0 Notifications.qml
+singleton PluginRegistry 1.0 PluginRegistry.qml
 singleton PolkitService 1.0 PolkitService.qml
 PolkitServiceImpl 1.0 PolkitServiceImpl.qml
 singleton PowerProfilePersistence 1.0 PowerProfilePersistence.qml

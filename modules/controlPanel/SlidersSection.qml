@@ -58,7 +58,7 @@ Rectangle {
             sourceComponent: MiniSlider {
                 icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                 value: Audio.sink?.audio?.volume ?? 0
-                onMoved: (val) => Audio.setSinkVolume(val)
+                onMoved: (val) => { if (Audio.sink?.audio) Audio.sink.audio.volume = val }
                 onIconClicked: Audio.sink?.audio?.toggleMute()
             }
         }

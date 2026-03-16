@@ -61,7 +61,6 @@ Singleton {
     function copy(entry) {
         root._log("[Cliphist] copy()", String(entry).slice(0, 120))
         root._selfCopy = true
-        selfCopyResetTimer.restart()
         if (root.cliphistBinary.includes("cliphist"))
             Quickshell.execDetached(["/usr/bin/bash", "-c", `printf '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode | /usr/bin/wl-copy`]);
         else {
@@ -139,7 +138,6 @@ Singleton {
             // Skip refresh if clipboard text matches what we just copied ourselves
             if (root._selfCopy) {
                 root._selfCopy = false;
-                selfCopyResetTimer.stop();
                 return;
             }
             // Skip refresh while window previews are being captured
@@ -151,18 +149,6 @@ Singleton {
 
     property bool _selfCopy: false
     property bool suppressRefresh: false
-
-    // Safety: reset _selfCopy if onClipboardTextChanged never fires (e.g. pipeline failed)
-    Timer {
-        id: selfCopyResetTimer
-        interval: 2000
-        onTriggered: {
-            if (root._selfCopy) {
-                root._log("[Cliphist] _selfCopy reset by timeout (pipeline may have failed)")
-                root._selfCopy = false
-            }
-        }
-    }
 
     Timer {
         id: delayedUpdateTimer

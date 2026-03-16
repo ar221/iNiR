@@ -14,7 +14,7 @@ import Quickshell.Wayland
 
 WindowDialog {
     id: root
-    backgroundHeight: 450
+    backgroundHeight: 600
 
     WindowDialogTitle {
         text: Translation.tr("Bluetooth devices")

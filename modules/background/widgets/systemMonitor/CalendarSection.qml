@@ -14,120 +14,103 @@ ColumnLayout {
     readonly property date today: DateTime.clock.date
     readonly property int currentMonth: calendarView.focusedMonth
 
-    spacing: 8
+    spacing: 12
 
-    // ── Big time + day display ──
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 12
-
-        // Large digital clock
-        StyledText {
-            text: DateTime.time
-            font.pixelSize: 48
-            font.family: Appearance.font.family.numbers
-            font.weight: Font.Bold
-            color: Appearance.colors.colPrimary
-        }
-
-        // Day name + full date (right side)
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 0
-
-            StyledText {
-                text: {
-                    const d = new Date()
-                    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-                    return days[d.getDay()]
-                }
-                font.pixelSize: Appearance.font.pixelSize.larger
-                font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
-            }
-
-            RowLayout {
-                spacing: 4
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: {
-                        const d = calendarView.focusedDate
-                        return d.toLocaleDateString(root.locale, "MMMM yyyy")
-                    }
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colSubtext
-                }
-
-                RippleButton {
-                    implicitWidth: 20; implicitHeight: 20
-                    buttonRadius: 10
-                    colBackground: "transparent"
-                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
-                    onClicked: calendarView.scrollMonthsAndSnap(-1)
-                    contentItem: MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "chevron_left"
-                        iconSize: 14
-                        color: Appearance.colors.colSubtext
-                    }
-                }
-
-                RippleButton {
-                    implicitWidth: 20; implicitHeight: 20
-                    buttonRadius: 10
-                    colBackground: "transparent"
-                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
-                    onClicked: calendarView.scrollMonthsAndSnap(1)
-                    contentItem: MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "chevron_right"
-                        iconSize: 14
-                        color: Appearance.colors.colSubtext
-                    }
-                }
-            }
-        }
+    // ── Clock ──
+    StyledText {
+        Layout.alignment: Qt.AlignHCenter
+        text: DateTime.time
+        font.pixelSize: 52
+        font.family: Appearance.font.family.numbers
+        font.weight: Font.Bold
+        color: Appearance.colors.colPrimary
     }
 
-    // ── Day-of-week headers (with month nav arrows on the right) ──
+    // ── Day + date ──
+    StyledText {
+        Layout.alignment: Qt.AlignHCenter
+        text: {
+            const d = new Date()
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            const months = ["January", "February", "March", "April", "May", "June",
+                            "July", "August", "September", "October", "November", "December"]
+            return days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate()
+        }
+        font.pixelSize: Appearance.font.pixelSize.normal
+        font.weight: Font.Medium
+        color: Appearance.colors.colSubtext
+    }
+
+    // ── Month header with navigation ──
     RowLayout {
         Layout.fillWidth: true
         spacing: 0
 
+        StyledText {
+            Layout.fillWidth: true
+            text: {
+                const d = calendarView.focusedDate
+                return d.toLocaleDateString(root.locale, "MMMM yyyy")
+            }
+            font.pixelSize: Appearance.font.pixelSize.normal
+            font.weight: Font.DemiBold
+            color: Appearance.colors.colOnLayer0
+        }
+
+        RippleButton {
+            implicitWidth: 28; implicitHeight: 28
+            buttonRadius: 14
+            colBackground: "transparent"
+            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            onClicked: calendarView.scrollMonthsAndSnap(-1)
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                text: "chevron_left"
+                iconSize: 16
+                color: Appearance.colors.colSubtext
+            }
+        }
+
+        RippleButton {
+            implicitWidth: 28; implicitHeight: 28
+            buttonRadius: 14
+            colBackground: "transparent"
+            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            onClicked: calendarView.scrollMonthsAndSnap(1)
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                text: "chevron_right"
+                iconSize: 16
+                color: Appearance.colors.colSubtext
+            }
+        }
+    }
+
+    // ── Day-of-week headers ──
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 2
+
         Repeater {
             model: {
                 const fdow = root.locale?.firstDayOfWeek ?? 1
-                const todayDow = new Date().getDay() // 0=Sun
                 const items = []
                 for (let i = 0; i < 7; i++) {
                     const dayIdx = (fdow + i) % 7
                     const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-                    items.push({ name: dayNames[dayIdx], isToday: dayIdx === todayDow })
+                    items.push(dayNames[dayIdx])
                 }
                 return items
             }
 
-            Item {
-                required property var modelData
+            StyledText {
+                required property string modelData
                 Layout.fillWidth: true
-                implicitHeight: 28
-
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 26
-                    height: 26
-                    radius: 13
-                    color: modelData.isToday ? Appearance.colors.colPrimary : "transparent"
-                }
-
-                StyledText {
-                    anchors.centerIn: parent
-                    text: modelData.name
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    font.weight: modelData.isToday ? Font.Bold : Font.Medium
-                    color: modelData.isToday ? Appearance.colors.colOnPrimary : Appearance.colors.colSubtext
-                }
+                horizontalAlignment: Text.AlignHCenter
+                text: modelData
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.Medium
+                color: Appearance.colors.colSubtext
             }
         }
     }

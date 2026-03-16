@@ -84,12 +84,9 @@ Item {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         enabled: CompositorService.isHyprland
         onWheel: (event) => {
-            let deltaY = event.angleDelta.y
+            const deltaY = event.angleDelta.y
             if (deltaY === 0)
                 return
-
-            if (Config.options?.bar?.workspaces?.invertScroll ?? false)
-                deltaY = -deltaY
 
             // Requerir varios pasos de rueda antes de cambiar de workspace
             root.wheelStepCounter += 1
@@ -123,11 +120,10 @@ Item {
              : Appearance.inirEverywhere ? Appearance.inir.colLayer1
              : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface
              : Appearance.colors.colBackgroundSurfaceContainer
-        border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
+        border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                    : Appearance.inirEverywhere ? 1 : 0
         border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-                    : Appearance.inirEverywhere ? Appearance.inir.colBorder
-                    : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.68)
+                    : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
 
         Column { // Workspaces
             id: workspaceColumnLayout
@@ -175,13 +171,8 @@ Item {
                             topRightRadius: (workspaceAtRight && workspaceAtTop) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius
                             bottomLeftRadius: (workspaceAtLeft && workspaceAtBottom) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius
                             bottomRightRadius: (workspaceAtRight && workspaceAtBottom) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius
-                            border.width: hoveredWhileDragging ? 2 : 1
-                            border.color: hoveredWhileDragging
-                                ? hoveredBorderColor
-                                : (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.64)
-                                    : Appearance.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.45)
-                                    : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.74))
+                            border.width: 2
+                            border.color: hoveredWhileDragging ? hoveredBorderColor : "transparent"
 
                             StyledText {
                                 anchors.centerIn: parent
@@ -271,8 +262,7 @@ Item {
                 property real yWithinWorkspaceWidget: Math.max((windowData?.at[1] - (monitor?.y ?? 0) - monitorData?.reserved[1]) * root.scale, 0)
 
                 // Radius
-                property real minRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                    : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                property real minRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
                 property bool workspaceAtLeft: workspaceColIndex === 0
                 property bool workspaceAtRight: workspaceColIndex === Config.options.overview.columns - 1
                 property bool workspaceAtTop: workspaceRowIndex === 0

@@ -471,11 +471,10 @@ MouseArea {
                 }
             }
 
-            // Display name
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 8
-                text: SystemInfo.displayName || SystemInfo.username
+                text: SystemInfo.username
                 font.pixelSize: 24 * Looks.fontScale
                 font.weight: Looks.font.weight.regular
                 font.family: Looks.font.family.ui

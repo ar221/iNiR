@@ -27,7 +27,7 @@ Scope {
             if (matchHypr)
                 return matchHypr;
         }
-        return GlobalStates.primaryScreen;
+        return Quickshell.screens[0];
     }
     readonly property bool packageManagerRunning: SessionWarnings.packageManagerRunning
     readonly property bool downloadRunning: SessionWarnings.downloadRunning
@@ -56,25 +56,7 @@ Scope {
 
     Loader {
         id: sessionLoader
-        active: GlobalStates.sessionOpen || _sessionClosing
-
-        property bool _sessionClosing: false
-
-        Connections {
-            target: GlobalStates
-            function onSessionOpenChanged() {
-                if (!GlobalStates.sessionOpen) {
-                    sessionLoader._sessionClosing = true
-                    _sessionCloseTimer.restart()
-                }
-            }
-        }
-
-        Timer {
-            id: _sessionCloseTimer
-            interval: 250
-            onTriggered: sessionLoader._sessionClosing = false
-        }
+        active: GlobalStates.sessionOpen
         onActiveChanged: {
             if (sessionLoader.active) SessionWarnings.refresh();
         }

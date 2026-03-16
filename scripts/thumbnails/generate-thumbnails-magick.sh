@@ -117,8 +117,9 @@ case "$MODE" in
         fi
         for f in "$TARGET"/*; do
             [ -f "$f" ] || continue
-            generate_thumbnail "$f"
+            generate_thumbnail "$f" &
         done
+        wait
         ;;
     *)
         usage

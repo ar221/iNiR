@@ -30,74 +30,7 @@ Singleton {
     
     // Preview validity duration (5 minutes)
     readonly property int previewValidityMs: 300000
-
-    // Debounce: coalesce rapid capture requests (e.g. hovering across multiple dock icons)
-    Timer {
-        id: captureDebounceTimer
-        interval: 100  // 100ms debounce — fast enough to feel instant, slow enough to coalesce
-        repeat: false
-        onTriggered: root._doCapture()
-    }
-    // Cooldown: prevent captures from firing back-to-back after one completes
-    property double _lastCaptureEndTime: 0
-    readonly property int _captureCooldownMs: 2000  // 2 seconds between capture cycles
     
-    // Clipboard save/restore: the script does its own save/restore but there's a race
-    // with async niri screenshot-window IPC. We do a SECOND restore from QML after 
-    // the cliphistRestoreTimer fires, guaranteeing the clipboard is clean.
-    property string _savedClipMime: ""
-    property string _savedClipFile: ""
-
-    Process {
-        id: clipboardSaveProcess
-        property bool saveOk: false
-        // Dynamically set command before running
-        onExited: (exitCode) => {
-            clipboardSaveProcess.saveOk = (exitCode === 0)
-            if (exitCode !== 0) {
-                root._savedClipMime = ""
-                root._savedClipFile = ""
-            }
-        }
-    }
-
-    Process {
-        id: clipboardRestoreProcess
-        onExited: {
-            // Cleanup temp file
-            if (root._savedClipFile.length > 0) {
-                Quickshell.execDetached(["/usr/bin/rm", "-f", root._savedClipFile])
-                root._savedClipFile = ""
-                root._savedClipMime = ""
-            }
-        }
-    }
-
-    function _saveClipboard(): void {
-        const tmpFile = "/tmp/inir-clipboard-qml-" + Date.now() + ".tmp"
-        root._savedClipFile = tmpFile
-        // Detect MIME and save in one shot
-        clipboardSaveProcess.command = ["/usr/bin/bash", "-c",
-            `mime=$(/usr/bin/wl-paste -l 2>/dev/null | head -1); ` +
-            `[ -z "$mime" ] && exit 1; ` +
-            `echo "$mime" > '${tmpFile}.mime'; ` +
-            `/usr/bin/wl-paste --type "$mime" > '${tmpFile}' 2>/dev/null`
-        ]
-        clipboardSaveProcess.running = true
-    }
-
-    function _restoreClipboard(): void {
-        if (root._savedClipFile.length === 0) return
-        const tmpFile = root._savedClipFile
-        clipboardRestoreProcess.command = ["/usr/bin/bash", "-c",
-            `[ -f '${tmpFile}.mime' ] && [ -f '${tmpFile}' ] || exit 1; ` +
-            `mime=$(cat '${tmpFile}.mime'); ` +
-            `/usr/bin/wl-copy --type "$mime" < '${tmpFile}' 2>/dev/null; ` +
-            `rm -f '${tmpFile}' '${tmpFile}.mime' 2>/dev/null`
-        ]
-        clipboardRestoreProcess.running = true
-    }
-
     signal captureComplete()
     signal previewUpdated(int windowId)
 
@@ -169,26 +102,11 @@ Singleton {
     // Track if we've done initial capture this session
     property bool initialCapturesDone: false
     
-    // Called when TaskView/dock preview opens - debounced to coalesce rapid hover events
+    // Called when TaskView opens - capture windows that need it
     function captureForTaskView(): void {
+        if (capturing) return
+
         if (!initialized) initialize()
-
-        // Always emit captureComplete immediately so cached previews show instantly
-        root.captureComplete()
-
-        if (capturing) return
-
-        // Cooldown: don't re-capture if we just finished one
-        if (Date.now() - _lastCaptureEndTime < _captureCooldownMs && initialCapturesDone) {
-            return
-        }
-
-        captureDebounceTimer.restart()
-    }
-
-    // Internal: actual capture logic, called after debounce
-    function _doCapture(): void {
-        if (capturing) return
         
         const windows = NiriService.windows ?? []
         if (windows.length === 0) return
@@ -198,16 +116,17 @@ Singleton {
         
         for (const win of windows) {
             const cached = previewCache[win.id]
-            // Capture if: no preview or preview is stale
+            // Capture if: no preview, preview is stale, or first open this session
             const needsCapture = !cached || 
-                                 (now - cached.timestamp) > previewValidityMs
+                                 (now - cached.timestamp) > previewValidityMs ||
+                                 !initialCapturesDone
             if (needsCapture) {
                 idsToCapture.push(win.id)
             }
         }
         
         if (idsToCapture.length === 0) {
-            root.captureComplete()
+            captureComplete()
             return
         }
         
@@ -215,7 +134,6 @@ Singleton {
         capturing = true
         initialCapturesDone = true
         Cliphist.suppressRefresh = true
-        root._saveClipboard()
         
         // Build command with IDs
         const cmd = ShellExec.supportsFish()
@@ -242,7 +160,6 @@ Singleton {
         console.log("[WindowPreviewService] Force capturing all", windows.length, "windows")
         capturing = true
         Cliphist.suppressRefresh = true
-        root._saveClipboard()
         
         const ids = windows.map(w => w.id)
         captureProcess.idsToCapture = ids
@@ -265,7 +182,6 @@ Singleton {
         
         onExited: (exitCode, exitStatus) => {
             root.capturing = false
-            root._lastCaptureEndTime = Date.now()
 
             if (exitCode !== 0) {
                 console.log("[WindowPreviewService] capture process failed", exitCode, exitStatus)
@@ -305,9 +221,6 @@ Singleton {
         onTriggered: {
             Cliphist.suppressRefresh = false
             Cliphist.refresh()
-            // Restore the real Wayland clipboard — the script's own restore may have
-            // been raced by async niri screenshot-window IPC side-effects.
-            root._restoreClipboard()
         }
     }
 

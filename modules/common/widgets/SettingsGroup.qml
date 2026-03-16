@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import qs.modules.common
 import qs.modules.common.widgets
 
 Rectangle {
@@ -13,7 +12,7 @@ Rectangle {
 
     radius: SettingsMaterialPreset.groupRadius
     color: SettingsMaterialPreset.groupColor
-    border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
+    border.width: 1
     border.color: SettingsMaterialPreset.groupBorderColor
 
     ColumnLayout {

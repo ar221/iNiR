@@ -49,12 +49,13 @@ MouseArea {
         if (!item) return;
         const tooltipTitle = item.tooltipTitle ?? "";
         const title = item.title ?? "";
+        const id = item.id ?? "";
         const tooltipDescription = item.tooltipDescription ?? "";
         
         tooltip.text = tooltipTitle.length > 0 ? tooltipTitle
-                : (title.length > 0 ? title : "");
-        if (tooltip.text.length === 0) return;
+                : (title.length > 0 ? title : id);
         if (tooltipDescription.length > 0) tooltip.text += " • " + tooltipDescription;
+        if (Config.options?.bar?.tray?.showItemId) tooltip.text += "\n[" + id + "]";
     }
 
     // Listen for close signal from parent tray

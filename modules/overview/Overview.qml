@@ -28,26 +28,7 @@ Scope {
                 ? (Hyprland.focusedMonitor?.id == monitor?.id)
                 : (NiriService.currentOutput === root.screen?.name)
             screen: modelData
-
-            Component.onCompleted: visible = GlobalStates.overviewOpen
-
-            Connections {
-                target: GlobalStates
-                function onOverviewOpenChanged() {
-                    if (GlobalStates.overviewOpen) {
-                        _overviewCloseTimer.stop()
-                        root.visible = true
-                    } else {
-                        _overviewCloseTimer.restart()
-                    }
-                }
-            }
-
-            Timer {
-                id: _overviewCloseTimer
-                interval: 250
-                onTriggered: root.visible = false
-            }
+            visible: GlobalStates.overviewOpen
 
             exclusionMode: ExclusionMode.Ignore
 
@@ -98,13 +79,8 @@ Scope {
                     const inOverview = overviewLoader.item && overviewPos &&
                                        overviewPos.x >= 0 && overviewPos.x <= overviewLoader.item.width &&
                                        overviewPos.y >= 0 && overviewPos.y <= overviewLoader.item.height
-
-                    const dashPos = dashboardPanel.visible ? mapToItem(dashboardPanel, mouse.x, mouse.y) : null
-                    const inDashboard = dashboardPanel.visible && dashPos &&
-                                        dashPos.x >= 0 && dashPos.x <= dashboardPanel.width &&
-                                        dashPos.y >= 0 && dashPos.y <= dashboardPanel.height
                     
-                    if (!inSearch && !inOverview && !inDashboard) {
+                    if (!inSearch && !inOverview) {
                         GlobalStates.overviewOpen = false
                     }
                 }
@@ -204,53 +180,27 @@ Scope {
                 scale: GlobalStates.overviewOpen ? 1.0 : 0.97
                 anchors {
                     horizontalCenter: parent.horizontalCenter
-                    top: (Config.options?.overview?.centerLauncher ?? false) ? undefined : parent.top
-                    bottom: (Config.options?.overview?.centerLauncher ?? false) ? undefined : parent.bottom
-                    verticalCenter: (Config.options?.overview?.centerLauncher ?? false) ? parent.verticalCenter : undefined
+                    top: parent.top
+                    bottom: parent.bottom
                     topMargin: {
-                        if (Config.options?.overview?.centerLauncher ?? false)
-                            return 0;
                         const ov = Config?.options?.overview;
                         const base = (ov && ov.topMargin !== undefined) ? ov.topMargin : 0;
                         const respectBar = ov && ov.respectBar !== undefined ? ov.respectBar : true;
-                        let margin = base;
-
-                        if (respectBar && !(Config.options?.bar?.bottom ?? false)) {
+                        if (respectBar && !Config.options.bar.bottom) {
                             const barH = Appearance.sizes.barHeight + Appearance.rounding.screenRounding;
-                            margin += barH;
+                            return barH + base;
                         }
-
-                        const dock = Config.options?.dock;
-                        if (dock?.enable && dock?.position === "top") {
-                            margin += (dock.height ?? 60) + 20;
-                        }
-
-                        return margin;
+                        return base;
                     }
                     bottomMargin: {
-                        if (Config.options?.overview?.centerLauncher ?? false)
-                            return 0;
                         const ov = Config?.options?.overview;
                         const base = (ov && ov.bottomMargin !== undefined) ? ov.bottomMargin : 0;
                         const respectBar = ov && ov.respectBar !== undefined ? ov.respectBar : true;
-                        let margin = base;
-                        
-                        // Respect bar at bottom
-                        if (respectBar && (Config.options?.bar?.bottom ?? false)) {
+                        if (respectBar && Config.options.bar.bottom) {
                             const barH = Appearance.sizes.barHeight + Appearance.rounding.screenRounding;
-                            margin += barH;
+                            return barH + base;
                         }
-                        
-                        // Respect dock at bottom (if enabled)
-                        const dock = Config.options?.dock;
-                        if (dock?.enable && dock?.position === "bottom") {
-                            const dockH = (dock.height ?? 60) + 20; // dock height + breathing space
-                            margin += dockH;
-                        }
-
-                        margin += 8; // keep overview cards from touching panel edges
-                        
-                        return margin;
+                        return base;
                     }
                 }
                 spacing: -8
@@ -314,23 +264,6 @@ Scope {
                     OverviewNiriWidget {
                         panelWindow: root
                         visible: (root.searchingText == "")
-                    }
-                }
-
-                // Dashboard panel below workspace thumbnails
-                OverviewDashboard {
-                    id: dashboardPanel
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    visible: (root.searchingText == "") && (Config.options?.overview?.dashboard?.enable ?? true)
-                    opacity: GlobalStates.overviewOpen ? 1 : 0
-
-                    Behavior on opacity {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation {
-                            duration: Appearance.animation?.elementMoveEnter?.duration ?? 400
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Appearance.animationCurves?.emphasizedDecel ?? [0.05, 0.7, 0.1, 1, 1, 1]
-                        }
                     }
                 }
             }

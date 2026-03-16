@@ -117,8 +117,6 @@ QtObject {
             _downloadRetryCount = 0
             return
         }
-        downloaded = false
-        artExistsChecker.running = false
         artExistsChecker.running = true
     }
     
@@ -137,7 +135,6 @@ QtObject {
             if (root.effectiveArtUrl && !root.downloaded) {
                 coverArtDownloader.targetFile = root.effectiveArtUrl
                 coverArtDownloader.artFilePath = root.artFilePath
-                coverArtDownloader.running = false
                 coverArtDownloader.running = true
             }
         }
@@ -153,7 +150,6 @@ QtObject {
                 root.downloaded = false
                 coverArtDownloader.targetFile = root.effectiveArtUrl
                 coverArtDownloader.artFilePath = root.artFilePath
-                coverArtDownloader.running = false
                 coverArtDownloader.running = true
             }
         }

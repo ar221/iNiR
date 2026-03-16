@@ -4,6 +4,7 @@ import Quickshell.Io
 import qs
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
 
 AbstractWidget {
@@ -45,7 +46,7 @@ AbstractWidget {
         animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
     }
 
-    draggable: placementStrategy === "free" && !GlobalStates.screenLocked
+    draggable: placementStrategy === "free" && !GlobalStates.screenLocked && GlobalStates.widgetEditMode
     function syncFreePositionFromConfig(): void {
         if (!Config.ready) return;
         if (root.placementStrategy !== "free") return;
@@ -53,12 +54,67 @@ AbstractWidget {
         root.y = root.targetY;
     }
 
+    // Grid snap helper
+    readonly property int _gridCellW: Config.options?.background?.widgets?._canvasConfig?.cellWidth ?? 32
+    readonly property int _gridCellH: Config.options?.background?.widgets?._canvasConfig?.cellHeight ?? 32
+    readonly property bool _gridSnapEnabled: Config.options?.background?.widgets?._canvasConfig?.gridSnap ?? true
+
+    function _snapToGrid(val, cellSize) {
+        return Math.round(val / cellSize) * cellSize
+    }
+
     onReleased: {
         if (GlobalStates.screenLocked) return;
-        root.targetX = root.x;
-        root.targetY  = root.y;
-        configEntry.x = root.targetX;
-        configEntry.y = root.targetY ;
+        let newX = root.x
+        let newY = root.y
+        if (_gridSnapEnabled) {
+            newX = _snapToGrid(newX, _gridCellW)
+            newY = _snapToGrid(newY, _gridCellH)
+        }
+        // Clamp to canvas bounds
+        newX = Math.max(0, Math.min(newX, scaledScreenWidth - width))
+        newY = Math.max(0, Math.min(newY, scaledScreenHeight - height))
+        root.targetX = newX
+        root.targetY = newY
+        root.x = newX
+        root.y = newY
+        configEntry.x = newX
+        configEntry.y = newY
+    }
+
+    // Edit mode border overlay
+    Rectangle {
+        anchors.fill: parent
+        visible: GlobalStates.widgetEditMode
+        color: "transparent"
+        border.width: 2
+        border.color: Appearance.m3colors.m3primary
+        radius: Appearance.rounding.normal
+        opacity: GlobalStates.widgetEditMode ? 0.5 : 0
+        z: 999
+
+        Behavior on opacity {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
+
+        // Widget name label
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.margins: -1
+            width: nameLabel.implicitWidth + 8
+            height: nameLabel.implicitHeight + 4
+            radius: 4
+            color: Appearance.m3colors.m3primary
+
+            StyledText {
+                id: nameLabel
+                anchors.centerIn: parent
+                text: root.configEntryName
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.m3colors.m3onPrimary
+            }
+        }
     }
 
     property bool needsColText: false
@@ -125,8 +181,14 @@ AbstractWidget {
                 const parsedContent = JSON.parse(output);
                 root.dominantColor = parsedContent.dominant_color || Appearance.colors.colPrimary;
                 if (root.placementStrategy === "free") return;
-                root.targetX = parsedContent.center_x * root.wallpaperScale - root.width / 2;
-                root.targetY  = parsedContent.center_y * root.wallpaperScale - root.height / 2;
+                let autoX = parsedContent.center_x * root.wallpaperScale - root.width / 2
+                let autoY = parsedContent.center_y * root.wallpaperScale - root.height / 2
+                if (root._gridSnapEnabled) {
+                    autoX = root._snapToGrid(autoX, root._gridCellW)
+                    autoY = root._snapToGrid(autoY, root._gridCellH)
+                }
+                root.targetX = autoX
+                root.targetY = autoY
             }
         }
     }

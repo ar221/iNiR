@@ -62,8 +62,6 @@ Item { // Bar content region
             },
         ]
     }
-    readonly property bool taskbarEnabled: Config.options?.bar?.modules?.taskbar ?? false
-
     property real useShortenedForm: (Appearance.sizes.barHellaShortenScreenWidthThreshold >= screen?.width) ? 2 : (Appearance.sizes.barShortenScreenWidthThreshold >= screen?.width) ? 1 : 0
     readonly property int baseCenterSideModuleWidth: (useShortenedForm == 2) ? Appearance.sizes.barCenterSideModuleWidthHellaShortened : (useShortenedForm == 1) ? Appearance.sizes.barCenterSideModuleWidthShortened : Appearance.sizes.barCenterSideModuleWidth
     // Both center groups share the same width so workspaces stay perfectly centered
@@ -99,47 +97,6 @@ Item { // Bar content region
 
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool angelEverywhere: Appearance.angelEverywhere
-    readonly property string leftAction: Config.options?.bar?.leftScrollAction ?? "brightness"
-    readonly property string rightAction: Config.options?.bar?.rightScrollAction ?? "volume"
-
-    function performScrollAction(action: string, isUp: bool): void {
-        if (action === "brightness") {
-            const step = 0.05;
-            root.brightnessMonitor.setBrightness(root.brightnessMonitor.brightness + (isUp ? step : -step));
-        } else if (action === "volume") {
-            if (isUp) Audio.incrementVolume();
-            else Audio.decrementVolume();
-        } else if (action === "workspace") {
-            let up = isUp;
-            if (Config.options?.bar?.workspaces?.invertScroll ?? false) up = !up;
-
-            if (CompositorService.isNiri) {
-                if (up) NiriService.focusWorkspaceUp();
-                else NiriService.focusWorkspaceDown();
-            } else if (CompositorService.isHyprland) {
-                Hyprland.dispatch(up ? "workspace r-1" : "workspace r+1");
-            }
-        }
-    }
-
-    function closeOSD(action: string): void {
-        if (action === "brightness") GlobalStates.osdBrightnessOpen = false;
-        else if (action === "volume") GlobalStates.osdVolumeOpen = false;
-    }
-
-    function getScrollIcon(action: string): string {
-        if (action === "brightness") return "light_mode";
-        if (action === "volume") return "volume_up";
-        if (action === "workspace") return "workspaces";
-        return "";
-    }
-
-    function getScrollTooltip(action: string): string {
-        if (action === "brightness") return Translation.tr("Scroll to change brightness");
-        if (action === "volume") return Translation.tr("Scroll to change volume");
-        if (action === "workspace") return Translation.tr("Scroll to switch workspaces");
-        return "";
-    }
 
     component VerticalBarSeparator: Rectangle {
         Layout.topMargin: Appearance.sizes.baseBarHeight / 3
@@ -321,9 +278,9 @@ Item { // Bar content region
         implicitWidth: leftSectionRowLayout.implicitWidth
         implicitHeight: Appearance.sizes.baseBarHeight
 
-        onScrollDown: root.performScrollAction(root.leftAction, false)
-        onScrollUp: root.performScrollAction(root.leftAction, true)
-        onMovedAway: root.closeOSD(root.leftAction)
+        onScrollDown: root.brightnessMonitor.setBrightness(root.brightnessMonitor.brightness - 0.05)
+        onScrollUp: root.brightnessMonitor.setBrightness(root.brightnessMonitor.brightness + 0.05)
+        onMovedAway: GlobalStates.osdBrightnessOpen = false
         onPressed: event => {
             if (event.button === Qt.LeftButton)
                 GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
@@ -334,9 +291,9 @@ Item { // Bar content region
         // ScrollHint as overlay - at the inner edge of the margin space
         ScrollHint {
             id: leftScrollHint
-            reveal: barLeftSideMouseArea.hovered && (Config.options?.bar?.showScrollHints ?? true) && root.leftAction !== "none"
-            icon: root.getScrollIcon(root.leftAction)
-            tooltipText: root.getScrollTooltip(root.leftAction)
+            reveal: barLeftSideMouseArea.hovered && (Config.options?.bar?.showScrollHints ?? true)
+            icon: "light_mode"
+            tooltipText: Translation.tr("Scroll to change brightness")
             side: "left"
             x: Appearance.rounding.screenRounding - implicitWidth - Appearance.sizes.spacingSmall
             anchors.verticalCenter: parent.verticalCenter
@@ -359,19 +316,9 @@ Item { // Bar content region
             }
 
             ActiveWindow {
-                visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0 && !root.taskbarEnabled
-                Layout.fillWidth: !root.taskbarEnabled
-                Layout.fillHeight: true
-            }
-
-            Loader {
-                active: root.taskbarEnabled
-                visible: active
+                visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                sourceComponent: BarTaskbar {
-                    parentWindow: root.QsWindow.window
-                }
             }
         }
     }
@@ -399,11 +346,55 @@ Item { // Bar content region
                 }
             }
 
-            Loader {
-                active: (Config.options?.bar?.modules?.media ?? true) && root.useShortenedForm < 2
-                visible: active
-                Layout.fillWidth: true
-                sourceComponent: Media {
+            Revealer {
+                id: mediaRevealer
+                readonly property bool contextual: Config.options?.bar?.modules?.mediaContextual ?? false
+                reveal: mediaLoader.active && (!contextual || MprisController.activePlayer !== null)
+                Layout.fillWidth: reveal
+                Layout.fillHeight: true
+
+                Loader {
+                    id: mediaLoader
+                    active: (Config.options?.bar?.modules?.media ?? true) && root.useShortenedForm < 2
+                    visible: active
+                    width: parent.width
+                    sourceComponent: Media {
+                    }
+                }
+            }
+
+            // Plugin bar widgets (left-center position)
+            Repeater {
+                model: PluginRegistry.barPlugins.filter(p => p.position === "leftCenter" && p.visible)
+
+                Loader {
+                    id: leftPluginLoader
+                    required property var modelData
+                    readonly property var pData: modelData
+                    Layout.fillHeight: true
+                    Layout.fillWidth: pData.type === "qml"
+                    Layout.maximumWidth: 140
+
+                    sourceComponent: pData.type === "qml" ? null : leftPollWidgetComponent
+                    source: pData.type === "qml" ? pData.sourceUrl : ""
+
+                    onLoaded: {
+                        if (item && pData.type === "qml") {
+                            item.pluginApi = PluginRegistry.buildPluginApi(pData.id, pData.pluginDirPath)
+                        }
+                    }
+
+                    Component {
+                        id: leftPollWidgetComponent
+                        PluginBarWidget {
+                            pluginId: leftPluginLoader.pData.id
+                            pluginIcon: leftPluginLoader.pData.icon ?? ""
+                            pluginText: leftPluginLoader.pData.text ?? ""
+                            pluginTooltip: leftPluginLoader.pData.tooltip ?? ""
+                            pluginStatus: leftPluginLoader.pData.status ?? "normal"
+                            pluginValue: leftPluginLoader.pData.value ?? -1
+                        }
+                    }
                 }
             }
         }
@@ -470,6 +461,39 @@ Item { // Bar content region
                     Layout.alignment: Qt.AlignVCenter
                 }
 
+                // Plugin bar widgets (rightCenter position)
+                Repeater {
+                    model: PluginRegistry.barPlugins.filter(p => p.position === "rightCenter" && p.visible)
+
+                    Loader {
+                        id: rightPluginLoader
+                        required property var modelData
+                        readonly property var pData: modelData
+                        Layout.alignment: Qt.AlignVCenter
+
+                        sourceComponent: pData.type === "qml" ? null : rightPollWidgetComponent
+                        source: pData.type === "qml" ? pData.sourceUrl : ""
+
+                        onLoaded: {
+                            if (item && pData.type === "qml") {
+                                item.pluginApi = PluginRegistry.buildPluginApi(pData.id, pData.pluginDirPath)
+                            }
+                        }
+
+                        Component {
+                            id: rightPollWidgetComponent
+                            PluginBarWidget {
+                                pluginId: rightPluginLoader.pData.id
+                                pluginIcon: rightPluginLoader.pData.icon ?? ""
+                                pluginText: rightPluginLoader.pData.text ?? ""
+                                pluginTooltip: rightPluginLoader.pData.tooltip ?? ""
+                                pluginStatus: rightPluginLoader.pData.status ?? "normal"
+                                pluginValue: rightPluginLoader.pData.value ?? -1
+                            }
+                        }
+                    }
+                }
+
                 BatteryIndicator {
                     visible: (Config.options?.bar?.modules?.battery ?? true) && (root.useShortenedForm < 2 && Battery.available)
                     Layout.alignment: Qt.AlignVCenter
@@ -490,9 +514,9 @@ Item { // Bar content region
         implicitWidth: rightSectionRowLayout.implicitWidth
         implicitHeight: Appearance.sizes.baseBarHeight
 
-        onScrollDown: root.performScrollAction(root.rightAction, false)
-        onScrollUp: root.performScrollAction(root.rightAction, true)
-        onMovedAway: root.closeOSD(root.rightAction)
+        onScrollDown: Audio.decrementVolume();
+        onScrollUp: Audio.incrementVolume();
+        onMovedAway: GlobalStates.osdVolumeOpen = false;
         onPressed: event => {
             if (event.button === Qt.LeftButton) {
                 GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
@@ -504,9 +528,9 @@ Item { // Bar content region
         // ScrollHint as overlay - at the inner edge of the margin space
         ScrollHint {
             id: rightScrollHint
-            reveal: barRightSideMouseArea.hovered && (Config.options?.bar?.showScrollHints ?? true) && root.rightAction !== "none"
-            icon: root.getScrollIcon(root.rightAction)
-            tooltipText: root.getScrollTooltip(root.rightAction)
+            reveal: barRightSideMouseArea.hovered && (Config.options?.bar?.showScrollHints ?? true)
+            icon: "volume_up"
+            tooltipText: Translation.tr("Scroll to change volume")
             side: "right"
             x: parent.width - Appearance.rounding.screenRounding + Appearance.sizes.spacingSmall
             anchors.verticalCenter: parent.verticalCenter
@@ -583,6 +607,47 @@ Item { // Bar content region
                             text: "mic_off"
                             iconSize: Appearance.font.pixelSize.larger
                             color: rightSidebarButton.colText
+                        }
+                    }
+                    Revealer {
+                        reveal: (Config.options?.bar?.modules?.micIndicator ?? true) && (Privacy.micActive || (Audio?.micBeingAccessed ?? false)) && !(Audio.source?.audio?.muted ?? false)
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        MaterialSymbol {
+                            text: "mic"
+                            fill: 1
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colError
+                        }
+                    }
+                    Revealer {
+                        reveal: (Config.options?.bar?.modules?.batteryAlert ?? true) && Battery.available && Battery.isLowAndNotCharging
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        MaterialSymbol {
+                            text: "battery_alert"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colError
+                        }
+                    }
+                    // Focus mode indicator
+                    Revealer {
+                        reveal: FocusMode.active
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        MaterialSymbol {
+                            text: FocusMode.icon
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: FocusMode.accentColor
                         }
                     }
                     HyprlandXkbIndicator {

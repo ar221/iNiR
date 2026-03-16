@@ -127,16 +127,6 @@ CARGO_PACKAGES=(
   "uv:Fast Python package manager"
 )
 
-# awww must be installed from git (not on crates.io)
-echo ""
-echo -e "${STY_BLUE}awww (wallpaper daemon):${STY_RST}"
-if command -v awww &>/dev/null; then
-  echo -e "  ${STY_GREEN}✓${STY_RST} awww already installed"
-else
-  echo -e "  ${STY_RED}✗${STY_RST} awww not found"
-  echo "  Install: cargo install --git https://codeberg.org/LGFae/awww.git"
-fi
-
 if $HAS_CARGO; then
   echo "Cargo is available. You can install these with:"
   echo ""
@@ -208,8 +198,6 @@ echo ""
 
 echo -e "${STY_BLUE}Wayland tools (required):${STY_RST}"
 echo "  wl-clipboard, grim, slurp, swaylock, swayidle, wlsunset"
-echo "  awww (wallpaper daemon): https://codeberg.org/LGFae/awww"
-echo "    Install: cargo install --git https://codeberg.org/LGFae/awww.git"
 echo ""
 
 echo -e "${STY_BLUE}Audio (required):${STY_RST}"
@@ -227,7 +215,7 @@ echo "  polkit, networkmanager, gnome-keyring, blueman"
 echo ""
 
 echo -e "${STY_BLUE}Optional but recommended:${STY_RST}"
-echo "  kitty (terminal), nautilus (file manager), fuzzel (launcher)"
+echo "  foot (terminal), nautilus (file manager), fuzzel (launcher)"
 echo "  easyeffects, mpv, yt-dlp, tesseract-ocr"
 echo ""
 

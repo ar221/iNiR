@@ -6,8 +6,6 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    property bool compactMode: false
-    property bool centerMode: true
 
     implicitHeight: contentColumn.implicitHeight
     implicitWidth: contentColumn.implicitWidth
@@ -19,27 +17,16 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // Vertical spacer — center content when there's extra space
-        Item {
-            Layout.fillHeight: root.centerMode
-            Layout.minimumHeight: 0
-            visible: root.centerMode && root.height > contentColumn.implicitHeight
-        }
-
         Item {
             Layout.alignment: Qt.AlignHCenter
-            // Responsive size: adapt to available height, capped at 200
-            readonly property int circleSize: root.compactMode
-                ? Math.min(200, Math.max(120, root.height * 0.32))
-                : 200
-            implicitWidth: circleSize
-            implicitHeight: circleSize
+            implicitWidth: 200
+            implicitHeight: 200
 
             CircularProgress {
                 anchors.fill: parent
                 lineWidth: 8
                 value: TimerService.countdownDuration > 0 ? TimerService.countdownSecondsLeft / TimerService.countdownDuration : 0
-                implicitSize: parent.circleSize
+                implicitSize: 200
                 enableAnimation: true
             }
 
@@ -70,17 +57,11 @@ Item {
                         width: 54
                         height: 54
                         color: minutesInput.activeFocus 
-                            ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.8)
-                             : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-                             : Appearance.colors.colPrimaryContainer)
+                            ? Appearance.colors.colPrimaryContainer 
                             : "transparent"
-                        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-                            : Appearance.rounding.small
+                        radius: Appearance.rounding.small
                         border.width: minutesInput.activeFocus ? 2 : 0
-                        border.color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                            : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-                            : Appearance.colors.colPrimary
+                        border.color: Appearance.colors.colPrimary
 
                         TextInput {
                             id: minutesInput
@@ -89,9 +70,7 @@ Item {
                             text: Math.floor(TimerService.countdownDuration / 60).toString().padStart(2, '0')
                             font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
                             font.family: Appearance.font.family.main
-                            color: Appearance.angelEverywhere ? Appearance.angel.colText
-                                : Appearance.inirEverywhere ? Appearance.inir.colText
-                                : Appearance.m3colors.m3onSurface
+                            color: Appearance.m3colors.m3onSurface
                             horizontalAlignment: Text.AlignHCenter
                             validator: IntValidator { bottom: 0; top: 99 }
                             selectByMouse: true
@@ -121,9 +100,7 @@ Item {
                     StyledText {
                         text: ":"
                         font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
-                        color: Appearance.angelEverywhere ? Appearance.angel.colText
-                            : Appearance.inirEverywhere ? Appearance.inir.colText
-                            : Appearance.m3colors.m3onSurface
+                        color: Appearance.m3colors.m3onSurface
                     }
 
                     // Seconds input
@@ -132,17 +109,11 @@ Item {
                         width: 54
                         height: 54
                         color: secondsInput.activeFocus 
-                            ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.8)
-                             : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-                             : Appearance.colors.colPrimaryContainer)
+                            ? Appearance.colors.colPrimaryContainer 
                             : "transparent"
-                        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-                            : Appearance.rounding.small
+                        radius: Appearance.rounding.small
                         border.width: secondsInput.activeFocus ? 2 : 0
-                        border.color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                            : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-                            : Appearance.colors.colPrimary
+                        border.color: Appearance.colors.colPrimary
 
                         TextInput {
                             id: secondsInput
@@ -151,9 +122,7 @@ Item {
                             text: Math.floor(TimerService.countdownDuration % 60).toString().padStart(2, '0')
                             font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
                             font.family: Appearance.font.family.main
-                            color: Appearance.angelEverywhere ? Appearance.angel.colText
-                                : Appearance.inirEverywhere ? Appearance.inir.colText
-                                : Appearance.m3colors.m3onSurface
+                            color: Appearance.m3colors.m3onSurface
                             horizontalAlignment: Text.AlignHCenter
                             validator: IntValidator { bottom: 0; top: 59 }
                             selectByMouse: true
@@ -192,18 +161,14 @@ Item {
                         return `${minutes}:${seconds}`;
                     }
                     font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
-                    color: Appearance.angelEverywhere ? Appearance.angel.colText
-                        : Appearance.inirEverywhere ? Appearance.inir.colText
-                        : Appearance.m3colors.m3onSurface
+                    color: Appearance.m3colors.m3onSurface
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.editMode ? Translation.tr("Tap to edit") : TimerService.countdownRunning ? Translation.tr("Running") : Translation.tr("Paused")
                     font.pixelSize: Appearance.font.pixelSize.normal
-                    color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary
-                        : Appearance.colors.colSubtext
+                    color: Appearance.colors.colSubtext
                 }
             }
         }
@@ -229,13 +194,10 @@ Item {
                     implicitWidth: 45
                     buttonRadius: Appearance.rounding.small
                     colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2
                         : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
                     colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
                         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
                     colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
                         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active
                     onClicked: TimerService.setCountdownDuration(modelData.seconds)
 
@@ -244,7 +206,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData.label
                         font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer2
+                        color: Appearance.colors.colOnLayer2
                     }
                 }
             }
@@ -252,7 +214,7 @@ Item {
 
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: root.editMode ? 8 : 0
+            Layout.topMargin: root.editMode ? 10 : 0
             spacing: 10
 
             RippleButton {
@@ -314,12 +276,6 @@ Item {
                         : Appearance.colors.colOnErrorContainer
                 }
             }
-        }
-
-        // Bottom spacer — balance vertical centering
-        Item {
-            Layout.fillHeight: root.compactMode
-            Layout.minimumHeight: 0
         }
     }
 }

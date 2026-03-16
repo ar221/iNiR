@@ -22,7 +22,9 @@ AbstractQuickPanel {
     property real spacing: 6
     property real padding: 6
     readonly property real baseCellWidth: {
-        const availableWidth = (scrollView?.availableWidth ?? root.width) - (root.padding * 2) - (root.spacing * (root.columns - 1))
+        // This is the wrong calculation, but it looks correct in reality???
+        // (theoretically spacing should be multiplied by 1 column less)
+        const availableWidth = root.width - (root.padding * 2) - (root.spacing * (root.columns))
         return availableWidth / root.columns
     }
     readonly property real baseCellHeight: 56
@@ -76,7 +78,7 @@ AbstractQuickPanel {
 
             Column {
                 id: usedRows
-                width: scrollView.availableWidth
+                width: parent.width
                 spacing: root.spacing
 
                 Repeater {

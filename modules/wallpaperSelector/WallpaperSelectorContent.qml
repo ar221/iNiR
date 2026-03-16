@@ -27,8 +27,6 @@ MouseArea {
         if (_lockedTarget) return _lockedTarget
         return _capturedMonitor
     }
-    readonly property string currentSelectionTarget: Wallpapers.currentSelectionTarget()
-    readonly property string currentSelectionPath: Wallpapers.currentWallpaperPathForTarget(currentSelectionTarget, selectedMonitor)
 
     Component.onCompleted: {
         // Read target monitor from GlobalStates (set before opening, no timing issues)
@@ -70,6 +68,7 @@ MouseArea {
         function onCountChanged() {
             if (!GlobalStates.wallpaperSelectorOpen) return;
             if (!root._lastThumbnailSizeName || root._lastThumbnailSizeName.length === 0) return;
+            Wallpapers.generateThumbnail(root._lastThumbnailSizeName)
         }
     }
 
@@ -103,7 +102,7 @@ MouseArea {
                     Config.setNestedValue("background.backdrop.wallpaperPath", normalizedPath);
                     // Generate and set thumbnail for video/GIF
                     if (needsThumbnail) {
-                        Wallpapers.ensureThumbnailForPath(normalizedPath, "large");
+                        Wallpapers.generateThumbnail("large"); // Ensure generation is triggered
                         const thumbnailPath = Wallpapers.getExpectedThumbnailPath(normalizedPath, "large");
                         Config.setNestedValue("background.backdrop.thumbnailPath", thumbnailPath);
                     }
@@ -117,7 +116,7 @@ MouseArea {
                     Config.setNestedValue("waffles.background.wallpaperPath", normalizedPath);
                     // Generate and set thumbnail for video/GIF (used as fallback/preview)
                     if (needsThumbnail) {
-                        Wallpapers.ensureThumbnailForPath(normalizedPath, "large");
+                        Wallpapers.generateThumbnail("large");
                         const thumbnailPath = Wallpapers.getExpectedThumbnailPath(normalizedPath, "large");
                         Config.setNestedValue("waffles.background.thumbnailPath", thumbnailPath);
                     }
@@ -127,7 +126,7 @@ MouseArea {
                     Config.setNestedValue("waffles.background.backdrop.wallpaperPath", normalizedPath);
                     // Generate and set thumbnail for video/GIF
                     if (needsThumbnail) {
-                        Wallpapers.ensureThumbnailForPath(normalizedPath, "large");
+                        Wallpapers.generateThumbnail("large");
                         const thumbnailPath = Wallpapers.getExpectedThumbnailPath(normalizedPath, "large");
                         Config.setNestedValue("waffles.background.backdrop.thumbnailPath", thumbnailPath);
                     }
@@ -460,8 +459,8 @@ MouseArea {
                             })
                             width: grid.cellWidth
                             height: grid.cellHeight
-                            colBackground: (index === grid?.currentIndex || containsMouse) ? Appearance.colors.colPrimary : Wallpapers.isCurrentWallpaperPath(filePath, root.currentSelectionTarget, root.selectedMonitor) ? Appearance.colors.colSecondaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
-                            colText: (index === grid.currentIndex || containsMouse) ? Appearance.colors.colOnPrimary : Wallpapers.isCurrentWallpaperPath(filePath, root.currentSelectionTarget, root.selectedMonitor) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
+                            colBackground: (index === grid?.currentIndex || containsMouse) ? Appearance.colors.colPrimary : (filePath === (Config.options?.background?.wallpaperPath ?? "")) ? Appearance.colors.colSecondaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+                            colText: (index === grid.currentIndex || containsMouse) ? Appearance.colors.colOnPrimary : (filePath === (Config.options?.background?.wallpaperPath ?? "")) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
 
                             onEntered: {
                                 grid.currentIndex = index;
@@ -573,19 +572,6 @@ MouseArea {
                                     }
                                 }
                                 event.accepted = false;
-                            }
-                        }
-
-                        IconToolbarButton {
-                            implicitWidth: height
-                            onClicked: {
-                                GlobalStates.wallpaperSelectorOpen = false
-                                Config.setNestedValue("wallpaperSelector.style", "coverflow")
-                                GlobalStates.coverflowSelectorOpen = true
-                            }
-                            text: "view_carousel"
-                            StyledToolTip {
-                                text: Translation.tr("Switch to coverflow view")
                             }
                         }
 

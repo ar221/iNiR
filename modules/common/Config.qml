@@ -467,6 +467,19 @@ Singleton {
                         property real y: 240
                     }
 
+                    property JsonObject audioVisualizer: JsonObject {
+                        property bool enable: false
+                        property string style: "bars" // "bars", "wave"
+                        property int barCount: 50
+                        property real opacity: 0.3
+                        property string position: "bottom" // "top", "bottom"
+                        property string colorSource: "primary" // "primary", "secondary", "tertiary", "primaryContainer"
+                        property bool autoHide: true
+                        property int height: 200
+                        property real barSpacing: 2
+                        property real barRadius: 3
+                    }
+
                     property JsonObject systemMonitor: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
@@ -517,6 +530,10 @@ Singleton {
                     property int videoBlurStrength: 50
                     property int dim: 0 // 0-100 percentage (base overlay)
                     property int dynamicDim: 0 // Extra dim when there are windows on the current workspace (0-100)
+                }
+                property JsonObject transition: JsonObject {
+                    property int duration: 800 // Wallpaper + color transition duration (ms)
+                    property bool animateColors: true // Smooth Material You color interpolation on wallpaper change
                 }
                 property JsonObject backdrop: JsonObject {
                     property bool enable: true
@@ -590,6 +607,7 @@ Singleton {
                     property bool activeWindow: true
                     property bool resources: true
                     property bool media: true
+                    property bool mediaContextual: false
                     property bool workspaces: true
                     property bool clock: true
                     property bool utilButtons: true
@@ -597,6 +615,8 @@ Singleton {
                     property bool rightSidebarButton: true
                     property bool sysTray: true
                     property bool weather: true
+                    property bool micIndicator: true
+                    property bool batteryAlert: true
                 }
                 property JsonObject modulesPlacement: JsonObject {
                     property string resources: "start"

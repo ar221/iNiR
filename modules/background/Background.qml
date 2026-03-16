@@ -327,6 +327,8 @@ Variants {
                     anchors.fill: parent
                     visible: wallpaperContainer.showInternalStaticWallpaper && !blurLoader.active && !bgRoot.backdropActive && !bgRoot.wallpaperIsGif && !bgRoot.wallpaperIsVideo
                     source: (bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo || bgRoot.wallpaperIsGif) ? "" : bgRoot.wallpaperPath
+                    transitionDuration: wallpaperContainer._transitionDur
+                    easingBezierCurve: wallpaperContainer._transitionBezierCurve
                     fillMode: bgRoot.fillMode === "fit" ? Image.PreserveAspectFit
                             : bgRoot.fillMode === "tile" ? Image.Tile
                             : bgRoot.fillMode === "center" ? Image.Pad
@@ -553,7 +555,75 @@ Variants {
             WidgetCanvas {
                 id: widgetCanvas
                 z: 20
-                enabled: !GlobalStates.screenLocked  // Disable all widget input during lock
+                enabled: !GlobalStates.screenLocked
+
+                // Grid overlay — visible only in widget edit mode
+                Canvas {
+                    id: gridOverlay
+                    anchors.fill: parent
+                    visible: GlobalStates.widgetEditMode
+                    opacity: GlobalStates.widgetEditMode ? 0.08 : 0
+                    z: -1
+
+                    Behavior on opacity {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    }
+
+                    readonly property int cellW: Config.options?.background?.widgets?._canvasConfig?.cellWidth ?? 32
+                    readonly property int cellH: Config.options?.background?.widgets?._canvasConfig?.cellHeight ?? 32
+                    readonly property color gridColor: Appearance.m3colors.m3primary
+
+                    onWidthChanged: requestPaint()
+                    onHeightChanged: requestPaint()
+                    onGridColorChanged: requestPaint()
+                    onVisibleChanged: if (visible) requestPaint()
+
+                    onPaint: {
+                        const ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.strokeStyle = Qt.rgba(gridColor.r, gridColor.g, gridColor.b, 1)
+                        ctx.lineWidth = 0.5
+
+                        for (let x = 0; x <= width; x += cellW) {
+                            ctx.beginPath()
+                            ctx.moveTo(x, 0)
+                            ctx.lineTo(x, height)
+                            ctx.stroke()
+                        }
+                        for (let y = 0; y <= height; y += cellH) {
+                            ctx.beginPath()
+                            ctx.moveTo(0, y)
+                            ctx.lineTo(width, y)
+                            ctx.stroke()
+                        }
+                    }
+                }
+
+                // Edit mode label
+                Rectangle {
+                    visible: GlobalStates.widgetEditMode
+                    z: 100
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: 60
+                    width: editLabel.implicitWidth + 24
+                    height: editLabel.implicitHeight + 12
+                    radius: Appearance.rounding.normal
+                    color: Appearance.m3colors.m3primaryContainer
+                    opacity: GlobalStates.widgetEditMode ? 0.9 : 0
+
+                    Behavior on opacity {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    }
+
+                    StyledText {
+                        id: editLabel
+                        anchors.centerIn: parent
+                        text: Translation.tr("Widget Edit Mode") + "  —  " + Translation.tr("Drag to reposition")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.m3colors.m3onPrimaryContainer
+                    }
+                }
                 readonly property bool useParallax: wallpaperContainer.useParallax && !bgRoot.backdropActive
                 anchors {
                     left: useParallax ? wallpaperContainer.left : parent.left
@@ -623,7 +693,22 @@ Variants {
                         wallpaperScale: bgRoot.effectiveWallpaperScale
                     }
                 }
+
+
             }
+        }
+
+        // Desktop audio visualizer — explicit screen-sized positioning
+        Loader {
+            z: 12
+            active: (bgRoot.backgroundWidgetsOptions.audioVisualizer?.enable ?? false)
+                && !Appearance.gameModeMinimal
+            visible: active
+            x: 0
+            y: bgRoot.screen.height - (Config.options?.background?.widgets?.audioVisualizer?.height ?? 200)
+            width: bgRoot.screen.width
+            height: Config.options?.background?.widgets?.audioVisualizer?.height ?? 200
+            sourceComponent: AudioVisualizer { }
         }
     }
 }

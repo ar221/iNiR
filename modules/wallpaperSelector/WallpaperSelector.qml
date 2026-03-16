@@ -15,11 +15,9 @@ Scope {
 
     // Canonical focused screen detection (same pattern as OSD, notifications, brightness)
     readonly property var focusedScreen: CompositorService.isNiri
-        ? (Quickshell.screens.find(s => s.name === NiriService.currentOutput) ?? GlobalStates.primaryScreen)
-        : (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? GlobalStates.primaryScreen)
+        ? (Quickshell.screens.find(s => s.name === NiriService.currentOutput) ?? Quickshell.screens[0])
+        : (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0])
     readonly property string focusedMonitorName: focusedScreen?.name ?? ""
-
-    property bool _pendingCoverflow: false
 
     // Async focused output detection for Niri.
     // NiriService.currentOutput becomes stale after PanelWindow steals compositor focus.
@@ -42,12 +40,7 @@ Scope {
             }
             niriOutputDetector._buffer = ""
             if (!monName) monName = root.focusedMonitorName
-            if (root._pendingCoverflow) {
-                root._pendingCoverflow = false
-                root._toggleCoverflowWithMonitor(monName)
-            } else {
-                root._openWithMonitor(monName)
-            }
+            root._openWithMonitor(monName)
         }
     }
 
@@ -59,33 +52,9 @@ Scope {
         GlobalStates.wallpaperSelectorOpen = true
     }
 
-    function _toggleCoverflowWithMonitor(monName) {
-        Config.setNestedValue("wallpaperSelector.targetMonitor", monName ? monName : "")
-        GlobalStates.wallpaperSelectorOpen = false
-        GlobalStates.coverflowSelectorOpen = !GlobalStates.coverflowSelectorOpen
-    }
-
     Loader {
         id: wallpaperSelectorLoader
-        active: GlobalStates.wallpaperSelectorOpen || _wsClosing
-
-        property bool _wsClosing: false
-
-        Connections {
-            target: GlobalStates
-            function onWallpaperSelectorOpenChanged() {
-                if (!GlobalStates.wallpaperSelectorOpen) {
-                    wallpaperSelectorLoader._wsClosing = true
-                    _wsCloseTimer.restart()
-                }
-            }
-        }
-
-        Timer {
-            id: _wsCloseTimer
-            interval: 200
-            onTriggered: wallpaperSelectorLoader._wsClosing = false
-        }
+        active: GlobalStates.wallpaperSelectorOpen
 
         sourceComponent: PanelWindow {
             id: panelWindow
@@ -106,7 +75,7 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperSelector"
             WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: GlobalStates.wallpaperSelectorOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
             color: "transparent"
 
             anchors {
@@ -142,27 +111,19 @@ Scope {
                 anchors {
                     top: parent.top
                     horizontalCenter: parent.horizontalCenter
-                    topMargin: (Config.options?.bar?.vertical ?? false) ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
+                    topMargin: Config?.options.bar.vertical ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
                 }
                 implicitHeight: Appearance.sizes.wallpaperSelectorHeight
                 implicitWidth: Appearance.sizes.wallpaperSelectorWidth
-                // Subtle scale + fade when opening/closing the wallpaper selector
+                // Subtle scale + fade when opening the wallpaper selector
                 transformOrigin: Item.Top
-                scale: GlobalStates.wallpaperSelectorOpen ? 1.0 : 0.93
+                scale: GlobalStates.wallpaperSelectorOpen ? 1.0 : 0.97
                 opacity: GlobalStates.wallpaperSelectorOpen ? 1.0 : 0.0
                 Behavior on scale {
-                    enabled: Appearance.animationsEnabled
-                    NumberAnimation {
-                        duration: GlobalStates.wallpaperSelectorOpen ? 250 : 180
-                        easing.type: Easing.OutCubic
-                    }
+                    animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
                 }
                 Behavior on opacity {
-                    enabled: Appearance.animationsEnabled
-                    NumberAnimation {
-                        duration: GlobalStates.wallpaperSelectorOpen ? 250 : 180
-                        easing.type: Easing.OutCubic
-                    }
+                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
             }
         }
@@ -172,31 +133,6 @@ Scope {
         if (Config.options?.wallpaperSelector?.useSystemFileDialog ?? false) {
             Wallpapers.openFallbackPicker(Appearance.m3colors.darkmode);
             return;
-        }
-
-        // Route to coverflow if that style is selected
-        const style = Config.options?.wallpaperSelector?.style ?? "grid"
-        if (style === "coverflow") {
-            if (GlobalStates.wallpaperSelectorOpen) {
-                GlobalStates.wallpaperSelectorOpen = false
-            }
-
-            const multiMon = Config.options?.background?.multiMonitor?.enable ?? false
-            const explicitMonitor = Config.options?.wallpaperSelector?.targetMonitor ?? ""
-
-            if (!explicitMonitor && multiMon && CompositorService.isNiri && !niriOutputDetector.running) {
-                root._pendingCoverflow = true
-                niriOutputDetector.exec(["niri", "msg", "-j", "focused-output"])
-                return
-            }
-
-            const monName = explicitMonitor || (multiMon ? root.focusedMonitorName : "")
-            root._toggleCoverflowWithMonitor(monName)
-            return
-        }
-
-        if (GlobalStates.coverflowSelectorOpen) {
-            GlobalStates.coverflowSelectorOpen = false
         }
 
         // If already open, just close
@@ -244,15 +180,6 @@ Scope {
 
         function toggle(): void {
             root.toggleWallpaperSelector();
-        }
-
-        function open(): void {
-            if (!GlobalStates.wallpaperSelectorOpen)
-                root.toggleWallpaperSelector();
-        }
-
-        function close(): void {
-            GlobalStates.wallpaperSelectorOpen = false;
         }
 
         function toggleOnMonitor(monitorName: string): void {

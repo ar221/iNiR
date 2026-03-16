@@ -141,21 +141,8 @@ Singleton {
         }
     }
 
-    // Debounce timer for network status updates
-    Timer {
-        id: _updateDebounce
-        interval: 200
-        repeat: false
-        onTriggered: root._doUpdate()
-    }
-
-    // Status update (debounced — nmcli monitor can emit rapid bursts)
+    // Status update
     function update() {
-        _updateDebounce.restart();
-    }
-
-    // Actual update logic
-    function _doUpdate() {
         updateConnectionType.startCheck();
         wifiStatusProcess.running = true
         updateNetworkName.running = true;

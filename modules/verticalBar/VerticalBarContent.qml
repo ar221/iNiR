@@ -230,42 +230,9 @@ Item { // Bar content region
         anchors.centerIn: parent
         spacing: 4
 
-        // When taskbar is active: clock/date moves up to where resources was
         Bar.BarGroup {
-            id: clockGroupTop
             vertical: true
             padding: 8
-            visible: Config.options?.bar?.modules?.taskbar ?? false
-
-            VerticalClockWidget {
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-            }
-
-            HorizontalBarSeparator {}
-
-            VerticalDateWidget {
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-            }
-
-            HorizontalBarSeparator {
-                visible: Battery.available
-            }
-
-            BatteryIndicator {
-                visible: Battery.available
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-            }
-        }
-
-        Bar.BarGroup {
-            id: resourcesGroup
-            vertical: true
-            padding: 8
-            // Hide resources when taskbar is active to free vertical space
-            visible: !(Config.options?.bar?.modules?.taskbar ?? false)
             Resources {
                 Layout.fillWidth: true
                 Layout.fillHeight: false
@@ -306,40 +273,12 @@ Item { // Bar content region
         }
 
         HorizontalBarSeparator {
-            visible: (Config.options?.bar?.modules?.taskbar ?? false) && (Config.options?.bar?.borderless ?? false)
-        }
-
-        // Taskbar (apps in bar) — vertical mode
-        Bar.BarGroup {
-            id: taskbarGroup
-            vertical: true
-            padding: 4
-            visible: Config.options?.bar?.modules?.taskbar ?? false
-
-            Bar.BarTaskbar {
-                vertical: true
-                parentWindow: root.QsWindow.window
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                maximumHeight: Math.max(80, root.height
-                    - (clockGroupTop.visible ? clockGroupTop.height : 0)
-                    - middleCenterGroup.height
-                    - (clockGroup.visible ? clockGroup.height : 0)
-                    - middleSection.spacing * 6
-                    - 140)
-            }
-        }
-
-        HorizontalBarSeparator {
             visible: Config.options?.bar?.borderless ?? false
         }
 
-        // When taskbar is NOT active: clock/date stays in its original position
         Bar.BarGroup {
-            id: clockGroup
             vertical: true
             padding: 8
-            visible: !(Config.options?.bar?.modules?.taskbar ?? false)
             
             VerticalClockWidget {
                 Layout.fillWidth: true
@@ -469,14 +408,11 @@ Item { // Bar content region
                             color: rightSidebarButton.colText
                         }
                     }
-                    Loader {
-                        active: CompositorService.isHyprland
+                    Bar.HyprlandXkbIndicator {
+                        vertical: true
                         Layout.alignment: Qt.AlignHCenter
                         Layout.bottomMargin: indicatorsColumnLayout.realSpacing
-                        sourceComponent: Bar.HyprlandXkbIndicator {
-                            vertical: true
-                            color: rightSidebarButton.colText
-                        }
+                        color: rightSidebarButton.colText
                     }
                     Revealer {
                         vertical: true

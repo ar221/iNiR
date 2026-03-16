@@ -232,22 +232,17 @@ Scope {
 
     property bool _noUiRebuildPending: false
     
-    // Synchronous version for immediate use in noVisualUi mode
-    function rebuildNoUiSnapshotSync() {
-        const windows = NiriService.windows || []
-        const workspaces = NiriService.workspaces || {}
-        const mruIds = NiriService.mruWindowIds || []
-        root.noUiSnapshot = buildItemsFrom(windows, workspaces, mruIds)
-        root.noUiIndex = 0
-    }
-    
     function rebuildNoUiSnapshot() {
         if (_noUiRebuildPending) return
         _noUiRebuildPending = true
         
         Qt.callLater(function() {
             _noUiRebuildPending = false
-            rebuildNoUiSnapshotSync()
+            const windows = NiriService.windows || []
+            const workspaces = NiriService.workspaces || {}
+            const mruIds = NiriService.mruWindowIds || []
+            root.noUiSnapshot = buildItemsFrom(windows, workspaces, mruIds)
+            root.noUiIndex = 0
         })
     }
 
@@ -337,7 +332,8 @@ Scope {
         color: "transparent"
         WlrLayershell.namespace: "quickshell:altSwitcher"
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: root.panelVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+
         anchors {
             top: true
             bottom: true
@@ -473,14 +469,14 @@ Scope {
 
             StyledRectangularShadow {
                 target: root.compactStyle ? compactBackground : panelBackground
-                visible: !root.listStyle && (Appearance.angelEverywhere || (!Appearance.inirEverywhere && !Appearance.auroraEverywhere))
+                visible: Appearance.angelEverywhere || (!Appearance.inirEverywhere && !Appearance.auroraEverywhere)
             }
 
             MultiEffect {
                 z: 0.5
                 anchors.fill: panelBackground
                 source: panelBackground
-                visible: !root.compactStyle && !root.listStyle && !root.altUseM3Layout && Appearance.effectsEnabled && root.effectiveEnableBlurGlass && root.altBlurAmount > 0 && !root.isHighLoad
+                visible: !root.compactStyle && !root.altUseM3Layout && Appearance.effectsEnabled && root.effectiveEnableBlurGlass && root.altBlurAmount > 0 && !root.isHighLoad
                 blurEnabled: true
                 blur: root.altBlurAmount
                 blurMax: 64
@@ -1245,7 +1241,7 @@ Scope {
 
                 const len = root.noUiSnapshot?.length ?? 0
                 if (!root.quickSwitchDone || len === 0) {
-                    root.rebuildNoUiSnapshotSync()  // Use sync version for immediate response
+                    root.rebuildNoUiSnapshot()
                 }
 
                 const newLen = root.noUiSnapshot?.length ?? 0
@@ -1277,7 +1273,7 @@ Scope {
 
                 const len = root.noUiSnapshot?.length ?? 0
                 if (!root.quickSwitchDone || len === 0) {
-                    root.rebuildNoUiSnapshotSync()  // Use sync version for immediate response
+                    root.rebuildNoUiSnapshot()
                 }
 
                 const newLen = root.noUiSnapshot?.length ?? 0

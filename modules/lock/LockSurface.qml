@@ -169,8 +169,8 @@ MouseArea {
                 Layout.alignment: Qt.AlignHCenter
                 text: Qt.formatTime(new Date(), "hh:mm")
                 font.pixelSize: Math.round(108 * Appearance.fontSizeScale)
-                font.weight: Font.DemiBold
-                font.family: Appearance.font.family.appearance
+                font.weight: Font.Light
+                font.family: Appearance.font.family.title
                 color: Appearance.colors.colOnSurface
                 
                 layer.enabled: Appearance.effectsEnabled
@@ -513,7 +513,7 @@ MouseArea {
                     Text {
                         anchors.centerIn: parent
                         text: SystemInfo.username.charAt(0).toUpperCase()
-                        font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
+                        font.pixelSize: 40
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnPrimary
                         visible: avatarImage.status !== Image.Ready && avatarImageFallback.status !== Image.Ready
@@ -521,11 +521,11 @@ MouseArea {
                 }
             }
             
-            // Display name
+            // Username
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 8
-                text: SystemInfo.displayName || SystemInfo.username
+                text: SystemInfo.username
                 font.pixelSize: Math.round(22 * Appearance.fontSizeScale)
                 font.weight: Font.Medium
                 font.family: Appearance.font.family.main

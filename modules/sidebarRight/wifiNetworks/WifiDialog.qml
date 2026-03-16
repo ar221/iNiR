@@ -10,7 +10,7 @@ import Quickshell
 
 WindowDialog {
     id: root
-    backgroundHeight: 450
+    backgroundHeight: 600
 
     WindowDialogTitle {
         text: Translation.tr("Connect to Wi-Fi")

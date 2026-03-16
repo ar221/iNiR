@@ -1,5 +1,3 @@
-pragma ComponentBehavior: Bound
-
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -11,7 +9,7 @@ import QtQuick.Layouts
 Item {
     id: root
     focus: true
-    implicitHeight: 420
+    implicitHeight: 380
 
     // Calculator state
     property string displayValue: "0"
@@ -47,15 +45,6 @@ Item {
         : Appearance.inirEverywhere ? Appearance.inir.colLayer2
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
         : Appearance.colors.colLayer2
-    readonly property color colOperator: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-        : Appearance.colors.colPrimary
-    readonly property color colOperatorContainer: Appearance.angelEverywhere ? Appearance.colors.colPrimaryContainer
-        : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-        : Appearance.colors.colPrimaryContainer
-    readonly property color colOnOperator: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-        : Appearance.colors.colOnPrimary
     readonly property color colBorder: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
         : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
     readonly property int borderWidth: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
@@ -192,34 +181,7 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 6
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
-
-            MaterialSymbol {
-                text: "calculate"
-                iconSize: 17
-                color: root.colTextSecondary
-            }
-
-            StyledText {
-                text: Translation.tr("Calculator")
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: root.colText
-            }
-
-            Item { Layout.fillWidth: true }
-
-            StyledText {
-                text: Translation.tr("Keyboard")
-                font.pixelSize: Appearance.font.pixelSize.smallest
-                color: root.colTextSecondary
-                opacity: 0.75
-            }
-        }
+        spacing: 8
 
         // Header with mode toggles
         RowLayout {
@@ -270,7 +232,7 @@ Item {
         // Display Area
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 72
+            Layout.preferredHeight: 70
             color: root.colBg
             radius: root.radius
             border.width: root.borderWidth
@@ -278,7 +240,7 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: 12
                 spacing: 2
 
                 StyledText {
@@ -310,7 +272,7 @@ Item {
         // History panel (overlay)
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: showHistory ? 132 : 0
+            Layout.preferredHeight: showHistory ? 120 : 0
             visible: showHistory
             color: root.colBg
             radius: root.radiusSmall
@@ -400,8 +362,8 @@ Item {
             Layout.fillWidth: true
             visible: scientificMode
             columns: 5
-            rowSpacing: 6
-            columnSpacing: 6
+            rowSpacing: 4
+            columnSpacing: 4
 
             CalcButton { label: "√"; onClicked: sciSqrt() }
             CalcButton { label: "x²"; onClicked: sciSquare() }
@@ -418,8 +380,7 @@ Item {
         // Memory buttons row
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 36
-            spacing: 6
+            spacing: 4
 
             CalcButton { label: "MC"; secondary: true; onClicked: memoryClear(); Layout.fillWidth: true }
             CalcButton { label: "MR"; secondary: true; onClicked: memoryRecall(); Layout.fillWidth: true }
@@ -430,11 +391,10 @@ Item {
         // Main Keypad
         GridLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignTop
-            Layout.preferredHeight: (5 * 48) + (4 * 6)
+            Layout.fillHeight: true
             columns: 4
-            rowSpacing: 6
-            columnSpacing: 6
+            rowSpacing: 4
+            columnSpacing: 4
 
             CalcButton { label: "C"; secondary: true; onClicked: clear() }
             CalcButton { label: "+/-"; secondary: true; onClicked: toggleSign() }
@@ -469,19 +429,18 @@ Item {
         property bool secondary: false
 
         Layout.fillWidth: true
-        Layout.preferredHeight: 48
-        Layout.minimumHeight: 42
-        Layout.maximumHeight: 48
+        Layout.fillHeight: true
+        Layout.minimumHeight: 36
 
         buttonText: label
         buttonRadius: root.radiusSmall
 
         colBackground: accent
-            ? (accentSecondary ? root.colOperatorContainer : root.colOperator)
+            ? (accentSecondary ? Appearance.colors.colSecondary : Appearance.colors.colPrimary)
             : secondary ? root.colLayer2 : root.colLayer1
 
         colBackgroundHover: accent
-            ? (accentSecondary ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colPrimaryHover)
+            ? (accentSecondary ? Appearance.colors.colSecondaryHover : Appearance.colors.colPrimaryHover)
             : secondary
                 ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover : Appearance.colors.colLayer2Hover)
                 : (Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover : Appearance.colors.colLayer1Hover)
@@ -492,9 +451,7 @@ Item {
             font.family: label.length === 1 && /[0-9.]/.test(label) ? Appearance.font.family.numbers : Appearance.font.family.main
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            color: parent.accent
-                ? (parent.accentSecondary ? Appearance.colors.colOnPrimaryContainer : root.colOnOperator)
-                : root.colText
+            color: parent.accent ? Appearance.colors.colOnPrimary : root.colText
         }
     }
 }

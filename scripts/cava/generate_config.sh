@@ -35,6 +35,7 @@ cat > "$OUTPUT_FILE" << EOF
 [general]
 framerate = 60
 autosens = 1
+sensitivity = 150
 bars = 50
 
 [input]

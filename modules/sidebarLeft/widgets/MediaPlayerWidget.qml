@@ -545,7 +545,7 @@ Item {
     }
 
     Timer {
-        running: root.effectiveIsPlaying && GlobalStates.sidebarLeftOpen
+        running: root.effectiveIsPlaying
         interval: 1000
         repeat: true
         onTriggered: {

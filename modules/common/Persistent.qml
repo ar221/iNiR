@@ -76,9 +76,6 @@ Singleton {
                     property bool collapsed: false
                     property int tab: 0
                 }
-                property JsonObject compactGroup: JsonObject {
-                    property int tab: 0
-                }
             }
 
             property JsonObject booru: JsonObject {

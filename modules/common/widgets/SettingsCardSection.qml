@@ -71,7 +71,7 @@ Item {
         }
     }
 
-    // Shadow — standard for material/aurora, escalonado for angel
+    // Shadow — standard for material, escalonado for angel
     Loader {
         active: !Appearance.angelEverywhere
         anchors.fill: card
@@ -88,7 +88,7 @@ Item {
         }
     }
 
-    // Subtle left accent bar when expanded
+    // Subtle left accent bar when expanded (non-angel)
     Rectangle {
         id: accentBar
         visible: !Appearance.angelEverywhere
@@ -102,7 +102,7 @@ Item {
         }
         width: 2
         radius: 1
-        color: SettingsMaterialPreset.accentColor
+        color: Appearance.m3colors.m3primary
         opacity: root.expanded ? 0.6 : 0
         z: 1
 
@@ -118,9 +118,7 @@ Item {
         implicitHeight: cardColumn.implicitHeight + SettingsMaterialPreset.cardPadding * 2
         radius: SettingsMaterialPreset.cardRadius
         color: SettingsMaterialPreset.cardColor
-        border.width: Appearance.angelEverywhere ? 0
-                     : (Appearance.inirEverywhere ? 1
-                     : (Appearance.auroraEverywhere ? 1 : 1))
+        border.width: Appearance.angelEverywhere ? 0 : 1
         border.color: Appearance.angelEverywhere ? "transparent" : SettingsMaterialPreset.cardBorderColor
 
         // Angel partial border
@@ -145,7 +143,7 @@ Item {
                 implicitHeight: headerRow.implicitHeight + SettingsMaterialPreset.headerPaddingY * 2
                 radius: SettingsMaterialPreset.headerRadius
                 color: headerMouseArea.containsMouse && root.collapsible
-                    ? SettingsMaterialPreset.headerHoverColor
+                    ? Appearance.colors.colLayer1Hover
                     : "transparent"
 
                 Behavior on color {
@@ -166,8 +164,8 @@ Item {
                         Layout.alignment: Qt.AlignVCenter
 
                         readonly property color _iconColor: root.expanded
-                            ? SettingsMaterialPreset.iconExpandedColor
-                            : SettingsMaterialPreset.iconCollapsedColor
+                            ? Appearance.m3colors.m3primary
+                            : Appearance.colors.colOnSurfaceVariant
 
                         sourceComponent: MaterialSymbol {
                             text: root.icon
@@ -185,8 +183,8 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
                         color: root.expanded
-                            ? SettingsMaterialPreset.titleExpandedColor
-                            : SettingsMaterialPreset.titleCollapsedColor
+                            ? Appearance.colors.colOnSecondaryContainer
+                            : Appearance.colors.colOnSurfaceVariant
                         Layout.fillWidth: true
 
                         Behavior on color {
@@ -198,9 +196,7 @@ Item {
                         visible: root.collapsible
                         text: root.expanded ? "expand_less" : "expand_more"
                         iconSize: Appearance.font.pixelSize.large
-                        color: Appearance.angelEverywhere
-                            ? Appearance.angel.colTextMuted
-                            : Appearance.colors.colSubtext
+                        color: Appearance.colors.colSubtext
                         Behavior on text {
                             enabled: false
                         }

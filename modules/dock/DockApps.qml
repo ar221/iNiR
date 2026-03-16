@@ -25,28 +25,11 @@ Item {
     property bool vertical: false
     property string dockPosition: "bottom"
     property var parentWindow: null
-    readonly property bool pillStyle:   Config.options?.dock?.style === "pill"
-    readonly property bool macosStyle:  Config.options?.dock?.style === "macos"
-
-    // Propagated hovered index for neighbor magnify in macOS style
-    property int macHoveredIndex: -1
-
-    // Deferred reset — avoids the race where buttonHovered=false of the old
-    // item arrives after buttonHovered=true of the new item.
-    Timer {
-        id: macHoverResetTimer
-        interval: 32   // one frame — enough for the new hover to fire first
-        repeat: false
-        onTriggered: root.macHoveredIndex = -1
-    }
 
     property Item lastHoveredButton
     property bool buttonHovered: false
     property bool contextMenuOpen: false
     property bool requestDockShow: dockPreviewPopup.visible || contextMenuOpen || dragActive
-
-    // Track which button has its preview visible (for macOS hover persistence)
-    readonly property Item previewAnchorItem: dockPreviewPopup.visible ? dockPreviewPopup.anchorItem : null
 
     // Signal to close any open context menu before opening a new one
     signal closeAllContextMenus()
@@ -301,35 +284,7 @@ Item {
         return _cachedIgnoredRegexes;
     }
 
-    // ─── Debounce Timer ─────────────────────────────────────────────────
-    // Coalesces rapid toplevel/compositor signals into a single rebuild.
-    Timer {
-        id: rebuildTimer
-        interval: 80
-        repeat: false
-        onTriggered: root._doRebuildDockItems()
-    }
-
     function rebuildDockItems() {
-        rebuildTimer.restart()
-    }
-
-    // Skip model update when structure hasn't changed (same apps, order, toplevels)
-    function _dockItemsEqual(oldItems, newItems): bool {
-        if (oldItems.length !== newItems.length) return false
-        for (let i = 0; i < oldItems.length; i++) {
-            const o = oldItems[i], n = newItems[i]
-            if (o.uniqueId !== n.uniqueId || o.pinned !== n.pinned || o.section !== n.section) return false
-            const oTL = o.toplevels, nTL = n.toplevels
-            if (oTL.length !== nTL.length) return false
-            for (let j = 0; j < oTL.length; j++) {
-                if (oTL[j] !== nTL[j]) return false
-            }
-        }
-        return true
-    }
-
-    function _doRebuildDockItems() {
         const pinnedApps = Config.options?.dock?.pinnedApps ?? [];
         const ignoredRegexes = _getIgnoredRegexes();
         const separatePinnedFromRunning = root.separatePinnedFromRunning;
@@ -480,11 +435,7 @@ Item {
             }
         }
 
-        // Skip update if the model structure is identical — avoids
-        // ScriptModel churn and downstream binding re-evaluations.
-        if (!_dockItemsEqual(dockItems, values)) {
-            dockItems = values
-        }
+        dockItems = values
     }
 
     Connections {
@@ -515,7 +466,7 @@ Item {
 
     StyledListView {
         id: listView
-        spacing: root.macosStyle ? 4 : (root.pillStyle ? 6 : 2)
+        spacing: 2
         orientation: root.vertical ? ListView.Vertical : ListView.Horizontal
         anchors {
             top: root.vertical ? undefined : parent.top
@@ -539,36 +490,23 @@ Item {
             values: root.dockItems
         }
 
-          delegate: DockAppButton {
-              id: dockDelegate
-              required property var modelData
-              required property int index
-              appToplevel: modelData
-              appListRoot: root
-              listIndex:   index
-              vertical: root.vertical
-              dockPosition: root.dockPosition
+        delegate: DockAppButton {
+            id: dockDelegate
+            required property var modelData
+            required property int index
+            appToplevel: modelData
+            appListRoot: root
+            vertical: root.vertical
+            dockPosition: root.dockPosition
 
-              anchors.verticalCenter: !root.vertical ? parent?.verticalCenter : undefined
-              anchors.horizontalCenter: root.vertical ? parent?.horizontalCenter : undefined
+            anchors.verticalCenter: !root.vertical ? parent?.verticalCenter : undefined
+            anchors.horizontalCenter: root.vertical ? parent?.horizontalCenter : undefined
 
-              // Sin insets - el tamaño viene del DockButton
-              topInset: 0
-              bottomInset: 0
-              leftInset: 0
-              rightInset: 0
-
-               // ─── macOS neighbor magnify propagation ──────────────────
-               onButtonHoveredChanged: {
-                   if (root.macosStyle) {
-                       if (buttonHovered) {
-                           macHoverResetTimer.stop()
-                           root.macHoveredIndex = index
-                       } else {
-                           macHoverResetTimer.restart()
-                       }
-                   }
-               }
+            // Sin insets - el tamaño viene del DockButton
+            topInset: 0
+            bottomInset: 0
+            leftInset: 0
+            rightInset: 0
 
             // ─── Drag & Drop Properties ──────────────────────────────
             readonly property bool isBeingDragged: root.dragActive && root.dragIndex === index
@@ -616,9 +554,9 @@ Item {
             // Scale effect when being dragged
             // Merge active-app highlight scale with drag elevation scale
             // (overrides the base DockAppButton scale property)
-              scale: isBeingDragged ? 1.08
-                   : (root.macosStyle ? 1.0
-                       : (dockDelegate.appIsActive ? 1.05 : 1.0))
+            scale: isBeingDragged ? 1.08
+                 : appToplevel.toplevels.find(t => t.activated === true) !== undefined ? 1.05
+                 : 1.0
 
             // Dragged item lifts slightly; others dim just enough to signal drag mode
             opacity: isBeingDragged ? 0.8

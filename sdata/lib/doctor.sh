@@ -52,7 +52,6 @@ check_dependencies() {
         "wl-copy:wl-clipboard"
         "wl-paste:wl-clipboard"
         "fuzzel:fuzzel"
-        "awww:awww"
         "hyprpicker:hyprpicker"
         "songrec:SongRec"
         "trans:translate-shell"
@@ -194,15 +193,7 @@ check_python_packages() {
     local venv="${XDG_STATE_HOME}/quickshell/.venv"
     local req="${XDG_CONFIG_HOME}/quickshell/ii/sdata/uv/requirements.txt"
     
-    # Check for broken venv (e.g. after python update)
-    if [[ -d "$venv/bin" ]]; then
-        if ! "$venv/bin/python" --version &>/dev/null; then
-            doctor_fail "Broken Python venv detected"
-            rm -rf "$venv"
-        fi
-    fi
-
-    # Check if venv exists (or was just removed above)
+    # Check if venv exists
     if [[ ! -d "$venv" ]]; then
         if command -v uv &>/dev/null; then
             uv venv "$venv" -p 3.12 2>/dev/null || uv venv "$venv" 2>/dev/null

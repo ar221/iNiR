@@ -204,7 +204,7 @@ Item {
                         required property int index
                         required property string modelData
                         readonly property string filePath: modelData
-                        readonly property bool isCurrentWallpaper: Wallpapers.isCurrentWallpaperPath(filePath, "main", "")
+                        readonly property bool isCurrentWallpaper: (Config.options?.background?.wallpaperPath ?? "") === filePath
                         readonly property bool isHovered: mouseArea.containsMouse
 
                         width: root.itemWidth

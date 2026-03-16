@@ -28,7 +28,8 @@ MouseArea { // Notification group area
     property bool popup: false
     property real padding: 10
     property bool _expandAnimating: false
-    implicitHeight: background.implicitHeight
+    // Extra bottom space for stack depth cards when collapsed with multiple notifications
+    implicitHeight: background.implicitHeight + ((!expanded && notificationCount > 1) ? (notificationCount > 2 ? 8 : 4) : 0)
 
     property real dragConfirmThreshold: 40 // Drag to discard notification
     property real dismissOvershoot: 20 // Account for gaps and bouncy animations
@@ -141,6 +142,40 @@ MouseArea { // Notification group area
     StyledRectangularShadow {
         target: background
         visible: popup && !Appearance.inirEverywhere
+    }
+
+    // Stack depth cards — "pile of cards" visual for grouped notifications
+    Rectangle {
+        visible: root.notificationCount > 1 && !root.expanded
+        anchors.horizontalCenter: background.horizontalCenter
+        width: background.width - 8
+        height: background.height
+        y: background.y + 4
+        z: -1
+        radius: background.radius
+        color: Appearance.inirEverywhere ? Appearance.inir.colLayer1
+            : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+            : ColorUtils.transparentize(Appearance.colors.colLayer2, 0.5)
+        opacity: root.expanded ? 0 : 0.6
+        Behavior on opacity {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
+    }
+    Rectangle {
+        visible: root.notificationCount > 2 && !root.expanded
+        anchors.horizontalCenter: background.horizontalCenter
+        width: background.width - 16
+        height: background.height
+        y: background.y + 8
+        z: -2
+        radius: background.radius
+        color: Appearance.inirEverywhere ? Appearance.inir.colLayer1
+            : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+            : ColorUtils.transparentize(Appearance.colors.colLayer2, 0.7)
+        opacity: root.expanded ? 0 : 0.35
+        Behavior on opacity {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
     }
 
     Rectangle { // Background of the notification

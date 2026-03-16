@@ -1,10 +1,5 @@
 // Password character indicator — exact visual equivalent of PasswordChars.qml.
 // Uses the same material-shapes.js polygon data and identical animations.
-//
-// CRITICAL: Uses a ListModel (append/remove) instead of an integer Repeater model.
-// An integer model (model: N) destroys and recreates ALL delegates when N changes,
-// causing every existing shape to re-animate (blink). A ListModel preserves existing
-// delegates — only newly appended items run their entrance animation.
 import QtQuick 2.15
 
 Item {
@@ -16,19 +11,6 @@ Item {
     implicitHeight: 22
     clip: true
 
-    // Sync ListModel with dotCount — append on increase, remove on decrease
-    onDotCountChanged: {
-        var diff = dotCount - dotsModel.count
-        if (diff > 0) {
-            for (var i = 0; i < diff; i++)
-                dotsModel.append({ idx: dotsModel.count })
-        } else if (diff < 0) {
-            dotsModel.remove(dotsModel.count + diff, -diff)
-        }
-    }
-
-    ListModel { id: dotsModel }
-
     // Auto-scroll to end when new shapes appear (mirrors PasswordChars contentX logic)
     property real scrollX: Math.max(0, dotsRow.implicitWidth - width)
     Behavior on scrollX { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
@@ -36,13 +18,14 @@ Item {
     Row {
         id: dotsRow
         x: -root.scrollX
-        spacing: 1
+        spacing: 10
         anchors.verticalCenter: parent.verticalCenter
 
         Repeater {
-            model: dotsModel
+            model: root.dotCount
             delegate: Item {
                 id: charItem
+                required property int index
                 // implicitWidth/Height driven by the PasswordCharsShape inside
                 implicitWidth: shape.implicitSize
                 implicitHeight: shape.implicitSize
@@ -55,7 +38,7 @@ Item {
                 PasswordCharsShape {
                     id: shape
                     anchors.centerIn: parent
-                    shapeIndex: index
+                    shapeIndex: charItem.index
                     implicitSize: 0
                     opacity: 0
                     scale: 0.5

@@ -84,7 +84,7 @@ Rectangle {
                 }
                 onMoved: {
                     if (root.node === Audio.sink) {
-                        Audio.setSinkVolume(value)
+                        Audio.sink.audio.volume = value
                     } else if (root.node?.audio) {
                         root.node.audio.volume = value
                     }

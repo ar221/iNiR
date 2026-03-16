@@ -1,13 +1,9 @@
 //@ pragma UseQApplication
-// DISABLED: webapps — requires quickshell-webengine rebuild, re-enable when ready
-//-@ pragma EnableQtWebEngineQuick
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_LOGGING_RULES=quickshell.dbus.properties=false
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 //@ pragma Env QT_SCALE_FACTOR=1
-// DISABLED: webapps — requires quickshell-webengine rebuild
-//-@ pragma Env QTWEBENGINE_CHROMIUM_FLAGS=--disable-features=ThirdPartyCookieBlocking,StorageAccessAPI
 
 import qs.modules.common
 import qs.modules.altSwitcher
@@ -163,7 +159,7 @@ ShellRoot {
             "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard",
             "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners",
             "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar",
-            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiWallpaperSelector", "iiClipboard"
         ],
         "waffle": [
             "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wLock", "wPolkit", "wSessionScreen",
@@ -171,7 +167,7 @@ ShellRoot {
             // Note: wTaskView is experimental and NOT included by default
             // Note: wAltSwitcher is always loaded when waffle is active (not in this list)
             "iiCheatsheet", "iiControlPanel", "iiLock", "iiOnScreenKeyboard", "iiOverlay", "iiOverview", "iiPolkit",
-            "iiRegionSelector", "iiScreenCorners", "iiSessionScreen", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiRegionSelector", "iiScreenCorners", "iiSessionScreen", "iiTilingOverlay", "iiWallpaperSelector", "iiClipboard"
         ]
     })
 

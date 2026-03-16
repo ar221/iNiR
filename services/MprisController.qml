@@ -15,21 +15,8 @@ Singleton {
 	// Raw filtered players - updated imperatively to avoid constant re-evaluation
 	property list<MprisPlayer> players: []
 	
-	// Debounce timer for _rebuildPlayerList to coalesce rapid signal bursts
-	Timer {
-		id: _rebuildDebounce
-		interval: 50
-		repeat: false
-		onTriggered: root._doRebuildPlayerList()
-	}
-
-	// Schedule a debounced rebuild
+	// Rebuild player list - called only on structural changes
 	function _rebuildPlayerList(): void {
-		_rebuildDebounce.restart();
-	}
-
-	// Actual rebuild logic (called by debounce timer)
-	function _doRebuildPlayerList(): void {
 		let newList = [];
 		for (const player of Mpris.players.values) {
 			if (isRealPlayer(player)) {
@@ -161,40 +148,6 @@ Singleton {
 		_mpvInstanceCache = { hasMpvInstance, hasMpvBase };
 	}
 
-	// Check if a URL belongs to a known streaming/media site (not just YouTube)
-	function _isStreamingSite(url): bool {
-		if (!url) return false;
-		const u = url.toLowerCase();
-		// Video platforms
-		if (u.includes("youtube.com") || u.includes("youtu.be")) return true;
-		if (u.includes("music.youtube.com")) return true;
-		if (u.includes("twitch.tv")) return true;
-		if (u.includes("vimeo.com")) return true;
-		if (u.includes("dailymotion.com")) return true;
-		if (u.includes("crunchyroll.com")) return true;
-		if (u.includes("netflix.com")) return true;
-		if (u.includes("disneyplus.com")) return true;
-		if (u.includes("hbomax.com") || u.includes("max.com")) return true;
-		if (u.includes("primevideo.com") || u.includes("amazon.com/gp/video")) return true;
-		if (u.includes("hulu.com")) return true;
-		if (u.includes("peacocktv.com")) return true;
-		if (u.includes("bilibili.com")) return true;
-		if (u.includes("niconico.jp") || u.includes("nicovideo.jp")) return true;
-		// Audio/music platforms
-		if (u.includes("soundcloud.com")) return true;
-		if (u.includes("bandcamp.com")) return true;
-		if (u.includes("deezer.com")) return true;
-		if (u.includes("tidal.com")) return true;
-		if (u.includes("music.apple.com")) return true;
-		if (u.includes("pandora.com")) return true;
-		if (u.includes("mixcloud.com")) return true;
-		// Podcasts
-		if (u.includes("podcasts.google.com")) return true;
-		if (u.includes("open.spotify.com")) return true;
-		if (u.includes("podcasts.apple.com")) return true;
-		return false;
-	}
-
 	function isRealPlayer(player) {
 		if (!Config.options?.media?.filterDuplicatePlayers) return true;
 		const name = player?.dbusName ?? "";
@@ -235,35 +188,31 @@ Singleton {
 		if (name.startsWith('org.mpris.MediaPlayer2.playerctld')) return false;
 		
 		// Handle plasma-browser-integration (KDE Plasma)
-		// Accept browsers playing real media content (YouTube, streaming sites, long-form audio/video)
+		// Don't filter browsers playing YouTube/YT Music content
 		if (hasPlasmaIntegration) {
 			const isBrowser = name.startsWith('org.mpris.MediaPlayer2.firefox') ||
 				name.startsWith('org.mpris.MediaPlayer2.chromium') ||
 				name.startsWith('org.mpris.MediaPlayer2.chrome');
 			if (isBrowser) {
 				const trackUrl = player.metadata?.["xesam:url"] ?? "";
-				const hasProgress = (player.position ?? 0) > 0 || (player.length ?? 0) > 0;
+				const isYouTube = trackUrl.includes("youtube.com") || trackUrl.includes("youtu.be") || trackUrl.includes("music.youtube.com");
+				const ytPathOk = /youtube\.com\/(watch|live|shorts)\b/.test(trackUrl) || trackUrl.includes("youtu.be/");
 				// Ignore hover/previews: if not playing and no progress/length, skip
+				const hasProgress = (player.position ?? 0) > 0 || (player.length ?? 0) > 0;
+				if (!isYouTube) return false;
+				if (!ytPathOk) return false;
 				if (!player.isPlaying && !hasProgress) return false;
-				// Accept known streaming sites
-				if (_isStreamingSite(trackUrl)) return true;
-				// Accept any browser media with sufficient length (> 30s = real content)
-				if ((player.length ?? 0) >= 30) return true;
-				// Accept if actively playing with progress
-				if (player.isPlaying && hasProgress) return true;
-				// Otherwise filter (likely noise)
-				return false;
 			}
 		}
-		// plasma-browser-integration publishes its own name
+		// plasma-browser-integration publishes its own name; block non-YouTube content even if integration not detected
 		if (name === 'org.mpris.MediaPlayer2.plasma-browser-integration') {
 			const trackUrl = player.metadata?.["xesam:url"] ?? "";
+			const isYouTube = trackUrl.includes("youtube.com") || trackUrl.includes("youtu.be") || trackUrl.includes("music.youtube.com");
+			const ytPathOk = /youtube\.com\/(watch|live|shorts)\b/.test(trackUrl) || trackUrl.includes("youtu.be/");
 			const hasProgress = (player.position ?? 0) > 0 || (player.length ?? 0) > 0;
+			if (!isYouTube) return false;
+			if (!ytPathOk) return false;
 			if (!player.isPlaying && !hasProgress) return false;
-			if (_isStreamingSite(trackUrl)) return true;
-			if ((player.length ?? 0) >= 30) return true;
-			if (player.isPlaying && hasProgress) return true;
-			return false;
 		}
 		
 		// Filter duplicate MPD instances

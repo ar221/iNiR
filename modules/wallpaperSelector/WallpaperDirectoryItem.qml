@@ -30,7 +30,6 @@ MouseArea {
         anchors.fill: parent
         radius: Appearance.rounding.normal
         Behavior on color {
-            enabled: Appearance.animationsEnabled
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
@@ -119,7 +118,6 @@ MouseArea {
                 elide: Text.ElideRight
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 Behavior on color {
-                    enabled: Appearance.animationsEnabled
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
                 text: fileModelData.fileName

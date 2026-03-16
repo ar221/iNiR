@@ -349,7 +349,7 @@ DEBIAN_CORE_PKGS=(
   kdialog
   
   # Terminal
-  kitty
+  foot
   
   # Shell (required for scripts)
   fish
@@ -964,31 +964,6 @@ if ! command -v xwayland-satellite &>/dev/null; then
     cd "${REPO_ROOT}"
     rm -rf "$XWSAT_BUILD_DIR"
   fi
-  fi
-fi
-
-#####################################################################################
-# Install awww (wallpaper daemon)
-#####################################################################################
-if ! command -v awww &>/dev/null; then
-  log_info "Installing awww (wallpaper daemon)..."
-
-  # awww needs libxkbcommon and lz4
-  sudo apt install $installflags libxkbcommon-dev liblz4-dev 2>/dev/null || true
-
-  AWWW_BUILD_DIR="/tmp/awww-build-$$"
-  if git clone https://codeberg.org/LGFae/awww.git "$AWWW_BUILD_DIR"; then
-    cd "$AWWW_BUILD_DIR"
-    if cargo build --release; then
-      sudo cp target/release/awww target/release/awww-daemon /usr/local/bin/
-      log_success "awww installed"
-    else
-      log_warning "awww build failed"
-    fi
-    cd "${REPO_ROOT}"
-    rm -rf "$AWWW_BUILD_DIR"
-  else
-    log_warning "Failed to clone awww repository"
   fi
 fi
 

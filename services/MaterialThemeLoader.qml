@@ -18,8 +18,6 @@ Singleton {
     property string filePath: Directories.generatedMaterialThemePath
     property bool ready: false
 
-    readonly property bool defaultApplyExternal: (Quickshell.env("QS_NO_RELOAD_POPUP") ?? "") !== "1"
-
     // Check if auto theme is selected (reads directly from Config to avoid circular dependency with ThemeService)
     readonly property bool isAutoTheme: (Config.options?.appearance?.theme ?? "auto") === "auto"
 
@@ -51,6 +49,15 @@ Singleton {
             return
         }
 
+        // Detect dark↔light mode flip — suppress color transitions to avoid
+        // ugly mid-transition states (e.g. light text on lightening background)
+        const newBgColor = Qt.color(json.background)
+        const newDarkMode = newBgColor.hslLightness < 0.5
+        const darkModeChanging = newDarkMode !== Appearance.m3colors.darkmode
+        if (darkModeChanging) {
+            Appearance._suppressColorTransition = true
+        }
+
         for (const key in json) {
             if (json.hasOwnProperty(key)) {
                 // Convert snake_case to CamelCase
@@ -59,8 +66,13 @@ Singleton {
                 Appearance.m3colors[m3Key] = json[key]
             }
         }
-        
-        Appearance.m3colors.darkmode = (Appearance.m3colors.m3background.hslLightness < 0.5)
+
+        Appearance.m3colors.darkmode = newDarkMode
+
+        // Re-enable transitions after the batch completes
+        if (darkModeChanging) {
+            Qt.callLater(() => { Appearance._suppressColorTransition = false })
+        }
     }
 
     function resetFilePathNextTime() {
@@ -78,39 +90,41 @@ Singleton {
         }
     }
 
+    // Delay before reading the new colors file (race condition workaround)
     Timer {
         id: delayedFileRead
         interval: Config.options?.hacks?.arbitraryRaceConditionDelay ?? 100
         repeat: false
         running: false
         onTriggered: {
-            root.applyColors(themeFileView.text())
+            // Additional delay so color transitions start after the wallpaper
+            // crossfade is already underway — makes them feel synchronized
+            colorSyncDelay.pendingContent = themeFileView.text()
+            colorSyncDelay.start()
         }
     }
 
+    // Stagger color application so the new palette fades in as the new
+    // wallpaper becomes visible, rather than racing ahead of the crossfade
     Timer {
-        id: delayedExternalApply
-        interval: 600
+        id: colorSyncDelay
+        property string pendingContent: ""
+        interval: Config.options?.background?.transition?.colorDelay ?? 200
         repeat: false
         running: false
         onTriggered: {
-            if (!root.isAutoTheme) return;
-            if (!root.defaultApplyExternal) return;
-            Quickshell.execDetached([
-                "/usr/bin/bash",
-                Directories.scriptPath + "/colors/applycolor.sh"
-            ])
+            root.applyColors(pendingContent)
+            pendingContent = ""
         }
     }
 
-    FileView { 
+	FileView { 
         id: themeFileView
         path: Qt.resolvedUrl(root.filePath)
         watchChanges: true
         onFileChanged: {
             this.reload()
             delayedFileRead.start()
-            delayedExternalApply.restart()
         }
         onLoadedChanged: {
             const fileContent = themeFileView.text()
