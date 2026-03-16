@@ -937,6 +937,7 @@ run_update() {
         mkdir -p "$XDG_BIN_HOME"
         cp -f "${REPO_ROOT}/scripts/inir" "$launcher_target"
         chmod +x "$launcher_target"
+        ensure_launcher_path_in_shells "$XDG_BIN_HOME"
         if ! command -v inir &>/dev/null && [[ ":$PATH:" != *":${XDG_BIN_HOME}:"* ]]; then
             tui_warn "Launcher installed to ${launcher_target}, but ${XDG_BIN_HOME} is not in PATH for this shell"
         fi

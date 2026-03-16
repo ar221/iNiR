@@ -247,6 +247,37 @@ function install_dir__skip_existed(){
   fi
 }
 
+function ensure_launcher_path_in_shells(){
+  local launcher_dir="$1"
+  [[ -n "$launcher_dir" ]] || return 0
+
+  local marker="# iNiR launcher PATH"
+  local end_marker="# end iNiR launcher PATH"
+  local sh_block="
+${marker}
+case \":\$PATH:\" in
+  *:\"${launcher_dir}\":*) ;;
+  *) export PATH=\"${launcher_dir}:\$PATH\" ;;
+esac
+${end_marker}
+"
+  local shell_file=""
+
+  for shell_file in "$HOME/.profile" "$HOME/.bashrc" "$HOME/.zshrc"; do
+    touch "$shell_file"
+    sed -i "/${marker}/,/${end_marker}/d" "$shell_file" 2>/dev/null || true
+    printf '%s\n' "$sh_block" >> "$shell_file"
+  done
+
+  local fish_conf_dir="${XDG_CONFIG_HOME}/fish/conf.d"
+  mkdir -p "$fish_conf_dir"
+  cat > "${fish_conf_dir}/inir-path.fish" << EOF
+if not contains -- "${launcher_dir}" \$PATH
+    set -gx PATH "${launcher_dir}" \$PATH
+end
+EOF
+}
+
 function backup_clashing_targets(){
   local source_dir="$1"
   local target_dir="$2"

@@ -158,7 +158,9 @@ case "${SKIP_QUICKSHELL}" in
     if [[ -f "${REPO_ROOT}/scripts/inir" ]]; then
       install_file "${REPO_ROOT}/scripts/inir" "${INIR_LAUNCHER_PATH}"
       chmod +x "${INIR_LAUNCHER_PATH}"
+      ensure_launcher_path_in_shells "${XDG_BIN_HOME}"
       log_success "Launcher installed"
+      log_success "Launcher path configured for interactive shells"
     fi
 
     if [[ -f "${REPO_ROOT}/assets/icons/desktop-symbolic.svg" ]]; then
@@ -206,13 +208,15 @@ case "${SKIP_NIRI}" in
   *)
     NIRI_CONFIG="${XDG_CONFIG_HOME}/niri/config.kdl"
 
-    # First install: copy our default config
-    # Update: preserve user's config; new options are handled via migrations
-    if [[ -f "defaults/niri/config.kdl" ]]; then
-      install_file__auto_backup "defaults/niri/config.kdl" "${XDG_CONFIG_HOME}/niri/config.kdl"
+    # Never replace an existing user config.kdl.
+    # If it exists, keep it and patch only the minimal launcher/theme bits below.
+    if [[ -f "$NIRI_CONFIG" ]]; then
+      log_success "Preserving existing Niri config"
+    elif [[ -f "defaults/niri/config.kdl" ]]; then
+      install_file "defaults/niri/config.kdl" "${XDG_CONFIG_HOME}/niri/config.kdl"
       log_success "Niri config installed (defaults)"
     elif [[ -d "dots/.config/niri" ]]; then
-      install_file__auto_backup "dots/.config/niri/config.kdl" "${XDG_CONFIG_HOME}/niri/config.kdl"
+      install_file "dots/.config/niri/config.kdl" "${XDG_CONFIG_HOME}/niri/config.kdl"
       log_success "Niri config installed (dots)"
     fi
 
