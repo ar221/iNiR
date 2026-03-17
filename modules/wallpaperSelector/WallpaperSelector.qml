@@ -193,6 +193,18 @@ Scope {
         function random(): void {
             Wallpapers.randomFromCurrentFolder();
         }
+
+        function weRandom(): void {
+            Quickshell.execDetached(["we-wall"])
+        }
+
+        function weStop(): void {
+            Quickshell.execDetached(["we-wall", "--stop"])
+        }
+
+        function weSet(id: string): void {
+            Quickshell.execDetached(["we-wall", id])
+        }
     }
     Loader {
         active: CompositorService.isHyprland

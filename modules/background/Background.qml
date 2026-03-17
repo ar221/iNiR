@@ -555,8 +555,9 @@ Variants {
                         action: () => { Quickshell.reload() } }
                 ]
             }
+        }
 
-            WidgetCanvas {
+        WidgetCanvas {
                 id: widgetCanvas
                 z: 20
                 enabled: !GlobalStates.screenLocked
@@ -700,7 +701,6 @@ Variants {
 
 
             }
-        }
 
         // Desktop audio visualizer — explicit screen-sized positioning
         Loader {

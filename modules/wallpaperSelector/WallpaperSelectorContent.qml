@@ -22,6 +22,57 @@ MouseArea {
     property string _capturedMonitor: ""
     readonly property bool multiMonitorActive: Config.options?.background?.multiMonitor?.enable ?? false
 
+    // ─── Wallpaper Engine mode ─────────────────────────────
+    property bool weMode: false
+    property var weWallpapers: []
+    property string weCurrentId: ""
+    property string weFilterText: ""
+
+    readonly property var weFilteredWallpapers: {
+        if (!weFilterText) return weWallpapers
+        const q = weFilterText.toLowerCase()
+        return weWallpapers.filter(w => w.title.toLowerCase().includes(q) || w.tags.toLowerCase().includes(q))
+    }
+
+    Process {
+        id: weListProc
+        property string _buffer: ""
+        stdout: SplitParser {
+            onRead: data => { weListProc._buffer += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0) {
+                try {
+                    root.weWallpapers = JSON.parse(weListProc._buffer)
+                    const active = root.weWallpapers.find(w => w.active)
+                    root.weCurrentId = active ? active.id : ""
+                } catch(e) { root.weWallpapers = [] }
+            }
+            weListProc._buffer = ""
+        }
+    }
+
+    function loadWEWallpapers() {
+        weListProc._buffer = ""
+        weListProc.command = ["we-wall", "--list-json"]
+        weListProc.running = true
+    }
+
+    function applyWEWallpaper(wallpaperId) {
+        Quickshell.execDetached(["we-wall", wallpaperId])
+        GlobalStates.wallpaperSelectorOpen = false
+    }
+
+    function applyRandomWE() {
+        Quickshell.execDetached(["we-wall"])
+        GlobalStates.wallpaperSelectorOpen = false
+    }
+
+    function stopWEWallpaper() {
+        Quickshell.execDetached(["we-wall", "--stop"])
+        root.weCurrentId = ""
+    }
+
     readonly property string selectedMonitor: {
         if (!multiMonitorActive) return ""
         if (_lockedTarget) return _lockedTarget
@@ -181,19 +232,28 @@ MouseArea {
             Wallpapers.navigateForward();
             event.accepted = true;
         } else if (event.key === Qt.Key_Left) {
-            grid.moveSelection(-1);
+            const g = root.weMode ? weGrid : grid
+            g.moveSelection(-1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Right) {
-            grid.moveSelection(1);
+            const g = root.weMode ? weGrid : grid
+            g.moveSelection(1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            grid.moveSelection(-grid.columns);
+            const g = root.weMode ? weGrid : grid
+            g.moveSelection(-root.columns);
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
-            grid.moveSelection(grid.columns);
+            const g = root.weMode ? weGrid : grid
+            g.moveSelection(root.columns);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            grid.activateCurrent();
+            if (root.weMode) {
+                const w = root.weFilteredWallpapers[weGrid.currentIndex]
+                if (w) root.applyWEWallpaper(w.id)
+            } else {
+                grid.activateCurrent();
+            }
             event.accepted = true;
         } else if (event.key === Qt.Key_Backspace) {
             if (filterField.text.length > 0) {
@@ -289,8 +349,10 @@ MouseArea {
                             { icon: "image", name: "Pictures", path: Directories.pictures }, 
                             { icon: "movie", name: "Videos", path: Directories.videos }, 
                             { icon: "", name: "---", path: "INTENTIONALLY_INVALID_DIR" }, 
-                            { icon: "wallpaper", name: "Wallpapers", path: `${Directories.pictures}/Wallpapers` }, 
+                            { icon: "wallpaper", name: "Wallpapers", path: `${Directories.pictures}/Wallpapers` },
                             ...((Config.options?.policies?.weeb ?? 0) === 1 ? [{ icon: "favorite", name: "Homework", path: `${Directories.pictures}/homework` }] : []),
+                            { icon: "", name: "---", path: "INTENTIONALLY_INVALID_DIR" },
+                            { icon: "animated_images", name: "WE", path: "__WE__" },
                         ]
                         delegate: RippleButton {
                             id: quickDirButton
@@ -299,9 +361,18 @@ MouseArea {
                                 left: parent.left
                                 right: parent.right
                             }
-                            onClicked: Wallpapers.setDirectory(quickDirButton.modelData.path)
+                            onClicked: {
+                                filterField.text = ""
+                                if (quickDirButton.modelData.path === "__WE__") {
+                                    root.weMode = true
+                                    root.loadWEWallpapers()
+                                } else {
+                                    root.weMode = false
+                                    Wallpapers.setDirectory(quickDirButton.modelData.path)
+                                }
+                            }
                             enabled: modelData.icon.length > 0
-                            toggled: Wallpapers.directory === Qt.resolvedUrl(modelData.path)
+                            toggled: modelData.path === "__WE__" ? root.weMode : (!root.weMode && Wallpapers.directory === Qt.resolvedUrl(modelData.path))
                             colBackgroundToggled: Appearance.colors.colSecondaryContainer
                             colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
                             colRippleToggled: Appearance.colors.colSecondaryContainerActive
@@ -334,6 +405,7 @@ MouseArea {
 
                 AddressBar {
                     id: addressBar
+                    visible: !root.weMode
                     Layout.margins: 4
                     Layout.fillWidth: true
                     Layout.fillHeight: false
@@ -342,6 +414,55 @@ MouseArea {
                         Wallpapers.setDirectory(path.length == 0 ? "/" : path);
                     }
                     radius: wallpaperGridBackground.radius - Layout.margins
+                }
+
+                // WE mode header
+                Rectangle {
+                    visible: root.weMode
+                    Layout.margins: 4
+                    Layout.fillWidth: true
+                    implicitHeight: visible ? weHeaderContent.implicitHeight + 16 : 0
+                    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                        : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                        : Appearance.colors.colLayer1
+                    radius: wallpaperGridBackground.radius - Layout.margins
+
+                    RowLayout {
+                        id: weHeaderContent
+                        anchors {
+                            fill: parent
+                            margins: 8
+                        }
+                        spacing: Appearance.sizes.spacingSmall
+
+                        MaterialSymbol {
+                            text: "animated_images"
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colPrimary
+                        }
+
+                        StyledText {
+                            text: Translation.tr("Wallpaper Engine") + ` (${root.weFilteredWallpapers.length})`
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colPrimary
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StyledText {
+                            visible: root.weCurrentId.length > 0
+                            text: {
+                                const active = root.weWallpapers.find(w => w.id === root.weCurrentId)
+                                return active ? Translation.tr("Active: %1").arg(active.title) : ""
+                            }
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Appearance.colors.colOnSurfaceVariant
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: 300
+                        }
+                    }
                 }
 
                 // Multi-monitor indicator
@@ -389,7 +510,7 @@ MouseArea {
 
                     StyledIndeterminateProgressBar {
                         id: indeterminateProgressBar
-                        visible: Wallpapers.thumbnailGenerationRunning && value == 0
+                        visible: !root.weMode && Wallpapers.thumbnailGenerationRunning && value == 0
                         anchors {
                             bottom: parent.top
                             left: parent.left
@@ -400,14 +521,14 @@ MouseArea {
                     }
 
                     StyledProgressBar {
-                        visible: Wallpapers.thumbnailGenerationRunning && value > 0
+                        visible: !root.weMode && Wallpapers.thumbnailGenerationRunning && value > 0
                         value: Wallpapers.thumbnailGenerationProgress
                         anchors.fill: indeterminateProgressBar
                     }
 
                     GridView {
                         id: grid
-                        visible: Wallpapers.folderModel.count > 0
+                        visible: !root.weMode && Wallpapers.folderModel.count > 0
 
                         readonly property int columns: root.columns
                         readonly property int rows: Math.max(1, Math.ceil(count / columns))
@@ -485,6 +606,60 @@ MouseArea {
                         }
                     }
 
+                    // ─── Wallpaper Engine grid ──────────────────────
+                    GridView {
+                        id: weGrid
+                        visible: root.weMode
+                        anchors.fill: parent
+                        cellWidth: width / root.columns
+                        cellHeight: cellWidth / root.previewCellAspectRatio
+                        interactive: true
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        bottomMargin: extraOptions.implicitHeight
+                        ScrollBar.vertical: StyledScrollBar {}
+
+                        property int currentIndex: 0
+
+                        function moveSelection(delta) {
+                            currentIndex = Math.max(0, Math.min(model.length - 1, currentIndex + delta))
+                            positionViewAtIndex(currentIndex, GridView.Contain)
+                        }
+
+                        model: root.weFilteredWallpapers
+
+                        delegate: WEWallpaperItem {
+                            required property int index
+                            required property var modelData
+
+                            weData: modelData
+                            width: weGrid.cellWidth
+                            height: weGrid.cellHeight
+                            colBackground: (index === weGrid.currentIndex || containsMouse)
+                                ? Appearance.colors.colPrimary
+                                : (modelData.id === root.weCurrentId)
+                                    ? Appearance.colors.colSecondaryContainer
+                                    : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+                            colText: (index === weGrid.currentIndex || containsMouse)
+                                ? Appearance.colors.colOnPrimary
+                                : (modelData.id === root.weCurrentId)
+                                    ? Appearance.colors.colOnSecondaryContainer
+                                    : Appearance.colors.colOnLayer0
+
+                            onEntered: weGrid.currentIndex = index
+                            onActivated: root.applyWEWallpaper(modelData.id)
+                        }
+
+                        layer.enabled: true
+                        layer.effect: GE.OpacityMask {
+                            maskSource: Rectangle {
+                                width: gridDisplayRegion.width
+                                height: gridDisplayRegion.height
+                                radius: wallpaperGridBackground.radius
+                            }
+                        }
+                    }
+
                     Toolbar {
                         id: extraOptions
                         anchors {
@@ -503,7 +678,9 @@ MouseArea {
                             return mapped.y
                         }
 
+                        // ─── Normal mode buttons ────────────────
                         IconToolbarButton {
+                            visible: !root.weMode
                             implicitWidth: height
                             onClicked: {
                                 Wallpapers.openFallbackPicker(root.useDarkMode);
@@ -521,6 +698,7 @@ MouseArea {
                         }
 
                         IconToolbarButton {
+                            visible: !root.weMode
                             implicitWidth: height
                             onClicked: {
                                 Wallpapers.randomFromCurrentFolder();
@@ -532,11 +710,43 @@ MouseArea {
                         }
 
                         IconToolbarButton {
+                            visible: !root.weMode
                             implicitWidth: height
                             onClicked: root.useDarkMode = !root.useDarkMode
                             text: root.useDarkMode ? "dark_mode" : "light_mode"
                             StyledToolTip {
                                 text: Translation.tr("Click to toggle light/dark mode\n(applied when wallpaper is chosen)")
+                            }
+                        }
+
+                        // ─── WE mode buttons ────────────────────
+                        IconToolbarButton {
+                            visible: root.weMode
+                            implicitWidth: height
+                            onClicked: root.applyRandomWE()
+                            text: "shuffle"
+                            StyledToolTip {
+                                text: Translation.tr("Random Wallpaper Engine wallpaper")
+                            }
+                        }
+
+                        IconToolbarButton {
+                            visible: root.weMode && root.weCurrentId.length > 0
+                            implicitWidth: height
+                            onClicked: root.stopWEWallpaper()
+                            text: "stop_circle"
+                            StyledToolTip {
+                                text: Translation.tr("Stop Wallpaper Engine and restore normal wallpaper")
+                            }
+                        }
+
+                        IconToolbarButton {
+                            visible: root.weMode
+                            implicitWidth: height
+                            onClicked: root.loadWEWallpapers()
+                            text: "refresh"
+                            StyledToolTip {
+                                text: Translation.tr("Reload Wallpaper Engine library")
                             }
                         }
 
@@ -550,7 +760,11 @@ MouseArea {
 
                             // Search
                             onTextChanged: {
-                                Wallpapers.searchQuery = text;
+                                if (root.weMode) {
+                                    root.weFilterText = text
+                                } else {
+                                    Wallpapers.searchQuery = text;
+                                }
                             }
 
                             Keys.onPressed: event => {
