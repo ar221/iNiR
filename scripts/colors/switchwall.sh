@@ -202,6 +202,26 @@ kill_existing_mpvpaper() {
     pkill -f -9 mpvpaper || true
 }
 
+kill_existing_wallpaper_engine() {
+    if pkill -f "linux-wallpaperengine" 2>/dev/null; then
+        sleep 0.3
+        echo "[switchwall.sh] Stopped Wallpaper Engine"
+    fi
+    # Clear externalWallpaper flag so Quickshell shows its own wallpaper layers
+    if [[ -f "$SHELL_CONFIG_FILE" ]]; then
+        local current_flag
+        current_flag=$(jq -r '.background.externalWallpaper // false' "$SHELL_CONFIG_FILE" 2>/dev/null)
+        if [[ "$current_flag" == "true" ]]; then
+            jq '.background.externalWallpaper = false' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" \
+                && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+            echo "[switchwall.sh] Cleared externalWallpaper flag"
+        fi
+    fi
+    # Clear we-wall state file
+    local we_wall_state="${XDG_STATE_HOME:-$HOME/.local/state}/we-wall/current"
+    rm -f "$we_wall_state" 2>/dev/null
+}
+
 start_mpvpaper_for_all_outputs() {
     local video_path="$1"
     local outputs=""
@@ -476,6 +496,10 @@ switch() {
 
         check_and_prompt_upscale "$imgpath" &
         kill_existing_mpvpaper
+        # Stop Wallpaper Engine if running (unless we-wall itself called us via --skip-config-write)
+        if [[ "$skip_config_write" != "1" ]]; then
+            kill_existing_wallpaper_engine
+        fi
 
         if is_video "$imgpath"; then
             mkdir -p "$THUMBNAIL_DIR"
