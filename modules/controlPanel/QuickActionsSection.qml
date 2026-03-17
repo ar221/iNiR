@@ -40,7 +40,7 @@ Rectangle {
         ActionTile {
             icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
             active: !(Audio.sink?.audio?.muted ?? false)
-            onClicked: Audio.sink?.audio?.toggleMute()
+            onClicked: Audio.toggleMute()
         }
 
         ActionTile {

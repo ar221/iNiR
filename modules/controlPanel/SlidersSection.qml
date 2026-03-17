@@ -59,7 +59,7 @@ Rectangle {
                 icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                 value: Audio.sink?.audio?.volume ?? 0
                 onMoved: (val) => Audio.setSinkVolume(val)
-                onIconClicked: Audio.sink?.audio?.toggleMute()
+                onIconClicked: Audio.toggleMute()
             }
         }
 

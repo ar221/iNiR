@@ -15,36 +15,43 @@ Singleton {
 
     property bool available: false
     property bool active: false
-    property bool serviceRunning: false
-    property int _queuedBypassState: 0
+    property bool nativeInstalled: false
 
     function fetchAvailability() {
+        if (whichProc.running || flatpakInfoProc.running) return
         whichProc.running = true
     }
 
     function fetchActiveState() {
         if (!root.available) {
-            root.serviceRunning = false
             root.active = false
             return
         }
-        if (bypassStatusProc.running) return
-        bypassStatusProc.running = true
+        if (root.nativeInstalled) {
+            if (nativeStatusProc.running) return
+            nativeStatusProc.running = true
+            return
+        }
+        if (flatpakPsProc.running) return
+        flatpakPsProc.running = true
     }
 
     function disable() {
         if (!root.available) return
         root.active = false
-        root._queuedBypassState = 1
-        applyBypassTimer.restart()
+        if (pkillProc.running || flatpakKillProc.running) return
+        pkillProc.running = true
     }
 
     function enable() {
         if (!root.available) return
         root.active = true
-        root._queuedBypassState = 2
-        Quickshell.execDetached(["/usr/bin/bash", "-lc", "/usr/bin/easyeffects --service-mode >/dev/null 2>&1 || /usr/bin/flatpak run com.github.wwmm.easyeffects --service-mode >/dev/null 2>&1"])
-        applyBypassTimer.restart()
+        if (root.nativeInstalled) {
+            Quickshell.execDetached(["/usr/bin/easyeffects", "--service-mode"])
+        } else {
+            Quickshell.execDetached(["/usr/bin/flatpak", "run", "com.github.wwmm.easyeffects", "--service-mode"])
+        }
+        refreshStateTimer.restart()
     }
 
     function toggle() {
@@ -53,19 +60,6 @@ Singleton {
         } else {
             root.enable()
         }
-    }
-
-    function applyQueuedBypassState(): void {
-        if (!root.available || bypassSetProc.running) return
-        const desiredState = root._queuedBypassState
-        if (desiredState !== 1 && desiredState !== 2) return
-        bypassSetProc.command = ["/usr/bin/bash", "-lc",
-            desiredState === 1
-                ? "/usr/bin/easyeffects -b 1 >/dev/null 2>&1 || /usr/bin/flatpak run com.github.wwmm.easyeffects -b 1 >/dev/null 2>&1"
-                : "/usr/bin/easyeffects -b 2 >/dev/null 2>&1 || /usr/bin/flatpak run com.github.wwmm.easyeffects -b 2 >/dev/null 2>&1"
-        ]
-        root._queuedBypassState = 0
-        bypassSetProc.running = true
     }
 
     Timer {
@@ -79,15 +73,8 @@ Singleton {
     }
 
     Timer {
-        id: applyBypassTimer
-        interval: 900
-        repeat: false
-        onTriggered: root.applyQueuedBypassState()
-    }
-
-    Timer {
         id: refreshStateTimer
-        interval: 700
+        interval: 900
         repeat: false
         onTriggered: root.fetchActiveState()
     }
@@ -98,6 +85,12 @@ Singleton {
         repeat: true
         running: Config.ready && root.available
         onTriggered: root.fetchActiveState()
+    }
+
+    Component.onCompleted: {
+        if (Config.ready) {
+            initTimer.start()
+        }
     }
 
     Connections {
@@ -115,8 +108,10 @@ Singleton {
         command: ["/usr/bin/which", "easyeffects"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
+                root.nativeInstalled = true
                 root.available = true
             } else {
+                root.nativeInstalled = false
                 flatpakInfoProc.running = true
             }
         }
@@ -127,43 +122,47 @@ Singleton {
         running: false
         command: ["/bin/sh", "-c", "flatpak info com.github.wwmm.easyeffects"]
         onExited: (exitCode, exitStatus) => {
+            root.nativeInstalled = false
             root.available = (exitCode === 0)
         }
     }
 
     Process {
-        id: bypassStatusProc
+        id: nativeStatusProc
         running: false
-        command: ["/usr/bin/bash", "-lc", "/usr/bin/easyeffects -b 3 2>/dev/null || /usr/bin/flatpak run com.github.wwmm.easyeffects -b 3 2>/dev/null"]
-        stdout: StdioCollector {
-            id: bypassStatusCollector
-            onStreamFinished: {
-                const lines = (bypassStatusCollector.text ?? "").split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0)
-                const state = lines.length > 0 ? lines[lines.length - 1] : ""
-                if (state === "1") {
-                    root.serviceRunning = true
-                    root.active = false
-                } else if (state === "2") {
-                    root.serviceRunning = true
-                    root.active = true
-                } else {
-                    root.serviceRunning = false
-                    root.active = false
-                }
-            }
-        }
+        command: ["/usr/bin/bash", "-lc", "/usr/bin/pgrep -af '(^|/)easyeffects($| )' | /usr/bin/grep -v ' -b ' | /usr/bin/grep -v ' -q' >/dev/null"]
         onExited: (exitCode, _exitStatus) => {
-            if (exitCode !== 0 && !(bypassStatusCollector.text ?? "").trim().length) {
-                root.serviceRunning = false
-                root.active = false
+            root.active = (exitCode === 0)
+        }
+    }
+
+    Process {
+        id: flatpakPsProc
+        running: false
+        command: ["/bin/sh", "-c", "flatpak ps --columns=application"]
+        stdout: StdioCollector {
+            id: flatpakPsCollector
+            onStreamFinished: {
+                const t = (flatpakPsCollector.text ?? "")
+                root.active = t.split("\n").some(l => l.trim().includes("com.github.wwmm.easyeffects"))
             }
         }
     }
 
     Process {
-        id: bypassSetProc
+        id: pkillProc
         running: false
-        command: ["/usr/bin/bash", "-lc", "/usr/bin/easyeffects -b 2 >/dev/null 2>&1 || /usr/bin/flatpak run com.github.wwmm.easyeffects -b 2 >/dev/null 2>&1"]
+        command: ["/usr/bin/pkill", "easyeffects"]
+        onExited: (_exitCode, _exitStatus) => {
+            flatpakKillProc.running = true
+            refreshStateTimer.restart()
+        }
+    }
+
+    Process {
+        id: flatpakKillProc
+        running: false
+        command: ["/bin/sh", "-c", "flatpak kill com.github.wwmm.easyeffects"]
         onExited: (_exitCode, _exitStatus) => refreshStateTimer.restart()
     }
 }

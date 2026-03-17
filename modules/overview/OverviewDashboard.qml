@@ -491,7 +491,7 @@ Item {
                           icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                           label: Translation.tr("Sound")
                           active: !(Audio.sink?.audio?.muted ?? true)
-                          onClicked: { if (Audio.sink?.audio) Audio.sink.audio.toggleMute() }
+                          onClicked: Audio.toggleMute()
                       }
                       QuickToggle {
                           icon: Network.wifiEnabled ? "wifi" : "wifi_off"
@@ -592,7 +592,7 @@ Item {
                             icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
                             value: Audio.sink?.audio?.volume ?? 0
                             onMoved: (val) => Audio.setSinkVolume(val)
-                            onIconClicked: { if (Audio.sink?.audio) Audio.sink.audio.toggleMute() }
+                            onIconClicked: Audio.toggleMute()
                         }
                     }
                 }

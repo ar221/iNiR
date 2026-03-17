@@ -299,7 +299,21 @@ Singleton {
             root._loadState()
             if (CompositorService.isNiri) {
                 root.checkFullscreen()
+                startupNiriSyncTimer.restart()
             }
+        }
+    }
+
+    Timer {
+        id: startupNiriSyncTimer
+        interval: 900
+        repeat: false
+        onTriggered: {
+            if (!CompositorService.isNiri || !root.controlNiriAnimations)
+                return
+            const shouldEnable = !root.active
+            root._lastNiriAnimState = shouldEnable
+            root.setNiriAnimations(shouldEnable)
         }
     }
 
@@ -307,7 +321,6 @@ Singleton {
     readonly property string niriAnimationsPath: {
         const configDir = (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config"))
         const modularPath = configDir + "/niri/config.d/60-animations.kdl"
-        const legacyPath = configDir + "/niri/config.kdl"
         return modularPath
     }
     readonly property string niriConfigPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/niri/config.kdl"
