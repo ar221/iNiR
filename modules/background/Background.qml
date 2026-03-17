@@ -114,6 +114,8 @@ Variants {
         
         // Backdrop mode
         readonly property bool backdropActive: bgRoot.backgroundOptions.backdrop?.hideWallpaper ?? false
+        // External wallpaper engine (e.g. linux-wallpaperengine) — hide internal wallpaper
+        readonly property bool externalWallpaperActive: bgRoot.backgroundOptions.externalWallpaper ?? false
         
         // Colors
         property bool shouldBlur: (GlobalStates.screenLocked && (bgRoot.lockBlurOptions.enable ?? false))
@@ -170,6 +172,7 @@ Variants {
         WlrLayershell.namespace: "quickshell:background"
         anchors { top: true; bottom: true; left: true; right: true }
         color: {
+            if (bgRoot.externalWallpaperActive) return "transparent";
             if (!bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo) return "transparent";
             return CF.ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colPrimary, 0.75);
         }
@@ -234,6 +237,7 @@ Variants {
         Item {
             anchors.fill: parent
             clip: true
+            visible: !bgRoot.externalWallpaperActive
 
             // Wallpaper container - used as reference for blur and widgets
             Item {

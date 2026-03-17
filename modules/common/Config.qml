@@ -518,6 +518,7 @@ Singleton {
                         property string footerText: "Touch Grass"
                     }
                 }
+                property bool externalWallpaper: false // Hide internal wallpaper for external WE (linux-wallpaperengine)
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
                 property string fillMode: "fill" // "fill", "fit", "center", "tile"

@@ -42,6 +42,7 @@ Variants {
         readonly property int backdropBlurRadius: iiBackdrop.blurRadius ?? 32
         readonly property int thumbnailBlurStrength: Config.options?.background?.effects?.thumbnailBlurStrength ?? 50
         readonly property bool enableAnimatedBlur: iiBackdrop.enableAnimatedBlur ?? false
+        readonly property bool externalWallpaperActive: Config.options?.background?.externalWallpaper ?? false
         readonly property int backdropDim: iiBackdrop.dim ?? 35
         readonly property real backdropSaturation: iiBackdrop.saturation ?? 0
         readonly property real backdropContrast: iiBackdrop.contrast ?? 0
@@ -130,6 +131,7 @@ Variants {
 
         Item {
             anchors.fill: parent
+            visible: !backdropWindow.externalWallpaperActive
 
             // Static Image (non-GIF, non-video images only)
             Image {
