@@ -347,13 +347,16 @@ ContentPage {
                         Config.setNestedValue("battery.chargeLimit.enable", checked);
                     }
                     StyledToolTip {
-                        text: Battery.chargeLimitSupported
-                            ? Translation.tr("Stop charging at a specific percentage to extend battery lifespan (requires polkit)")
-                            : Translation.tr("Not supported on this device")
+                        text: !Battery.chargeLimitSupported
+                            ? Translation.tr("Not supported on this device")
+                            : Battery.chargeLimitAdjustable
+                                ? Translation.tr("Stop charging at a specific percentage to extend battery lifespan (requires polkit)")
+                                : Translation.tr("Use your device's built-in battery conservation mode (requires polkit)")
                     }
                 }
                 ConfigSpinBox {
-                    enabled: (Config.options?.battery?.chargeLimit?.enable ?? false) && Battery.chargeLimitSupported
+                    visible: Battery.chargeLimitAdjustable
+                    enabled: (Config.options?.battery?.chargeLimit?.enable ?? false) && Battery.chargeLimitAdjustable
                     icon: "speed"
                     text: Translation.tr("at")
                     value: Config.options?.battery?.chargeLimit?.threshold ?? 80
@@ -370,10 +373,12 @@ ContentPage {
             }
 
             StyledText {
-                visible: Battery.chargeLimitSupported && Battery.currentChargeLimit > 0
+                visible: Battery.chargeLimitSupported
                 Layout.leftMargin: 16
-                text: Battery.currentChargeLimit < 100
-                    ? Translation.tr("Current limit: %1%").arg(Battery.currentChargeLimit)
+                text: Battery.chargeLimitActive
+                    ? (Battery.currentChargeLimit > 0 && Battery.currentChargeLimit < 100
+                        ? Translation.tr("Current limit: %1%").arg(Battery.currentChargeLimit)
+                        : Translation.tr("Battery conservation mode active"))
                     : Translation.tr("No charge limit active")
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
