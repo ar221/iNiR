@@ -312,18 +312,6 @@ Singleton {
             }
         },
         {
-            id: "opencode",
-            name: "OpenCode",
-            description: "The official OpenCode theme",
-            icon: "terminal",
-            colors: opencodeColors,
-            tags: ["dark", "minimal"],
-            meta: {
-                fontStyle: "mono",
-                roundingScale: 1.0
-            }
-        },
-        {
             id: "synthwave84",
             name: "Synthwave '84",
             description: "Retro neon aesthetics",
@@ -504,6 +492,30 @@ Singleton {
             meta: {
                 roundingScale: 0.5,
                 borderWidthScale: 0.5
+            }
+        },
+        {
+            id: "fields-of-the-shire",
+            name: "Fields of the Shire",
+            description: "Warm earthy tones of the pastoral countryside",
+            icon: "grass",
+            colors: fieldsOfTheShireDarkColors,
+            tags: ["dark", "nature"],
+            meta: {
+                roundingScale: 1.2,
+                fontStyle: "serif"
+            }
+        },
+        {
+            id: "fields-of-the-shire-light",
+            name: "Fields of the Shire Light",
+            description: "Morning sun over parchment meadows",
+            icon: "wb_sunny",
+            colors: fieldsOfTheShireLightColors,
+            tags: ["light", "nature"],
+            meta: {
+                roundingScale: 1.2,
+                fontStyle: "serif"
             }
         }
     ]
@@ -1899,64 +1911,6 @@ Singleton {
         m3onSuccessContainer: "#d8ecef"
     })
 
-    // OpenCode - Official Theme
-    readonly property var opencodeColors: ({
-        darkmode: true,
-        m3background: "#0a0a0a",
-        m3onBackground: "#eeeeee",
-        m3surface: "#0a0a0a",
-        m3surfaceDim: "#000000",
-        m3surfaceBright: "#1e1e1e",
-        m3surfaceContainerLowest: "#000000",
-        m3surfaceContainerLow: "#0a0a0a",
-        m3surfaceContainer: "#141414",
-        m3surfaceContainerHigh: "#1e1e1e",
-        m3surfaceContainerHighest: "#282828",
-        m3onSurface: "#eeeeee",
-        m3surfaceVariant: "#282828",
-        m3onSurfaceVariant: "#808080",
-        m3inverseSurface: "#eeeeee",
-        m3inverseOnSurface: "#0a0a0a",
-        m3outline: "#484848",
-        m3outlineVariant: "#3c3c3c",
-        m3shadow: "#000000",
-        m3scrim: "#000000",
-        m3surfaceTint: "#fab283",
-        m3primary: "#fab283",
-        m3onPrimary: "#0a0a0a",
-        m3primaryContainer: "#323232",
-        m3onPrimaryContainer: "#ffc09f",
-        m3inversePrimary: "#5c9cf5",
-        m3secondary: "#5c9cf5",
-        m3onSecondary: "#0a0a0a",
-        m3secondaryContainer: "#1e1e1e",
-        m3onSecondaryContainer: "#86e1fc",
-        m3tertiary: "#9d7cd8",
-        m3onTertiary: "#0a0a0a",
-        m3tertiaryContainer: "#282828",
-        m3onTertiaryContainer: "#c099ff",
-        m3error: "#e06c75",
-        m3onError: "#0a0a0a",
-        m3errorContainer: "#323232",
-        m3onErrorContainer: "#ff757f",
-        m3primaryFixed: "#fab283",
-        m3primaryFixedDim: "#d9956a",
-        m3onPrimaryFixed: "#0a0a0a",
-        m3onPrimaryFixedVariant: "#1e1e1e",
-        m3secondaryFixed: "#5c9cf5",
-        m3secondaryFixedDim: "#4a7ec0",
-        m3onSecondaryFixed: "#0a0a0a",
-        m3onSecondaryFixedVariant: "#1e1e1e",
-        m3tertiaryFixed: "#9d7cd8",
-        m3tertiaryFixedDim: "#7e62b0",
-        m3onTertiaryFixed: "#0a0a0a",
-        m3onTertiaryFixedVariant: "#1e1e1e",
-        m3success: "#7fd88f",
-        m3onSuccess: "#0a0a0a",
-        m3successContainer: "#1e1e1e",
-        m3onSuccessContainer: "#c3e88d"
-    })
-
     // Synthwave '84 - Retro Neon
     readonly property var synthwave84Colors: ({
         darkmode: true,
@@ -2884,6 +2838,123 @@ Singleton {
         m3onSuccess: "#0a0a0a",
         m3successContainer: "#263a53",
         m3onSuccessContainer: "#aaccf2"
+    })
+
+    // Fields of the Shire (Dark) — Inspired by OpenChamber's "Fields of the Shire"
+    // Warm earthy tones: muted olive greens, parchment creams, amber and clay
+    readonly property var fieldsOfTheShireDarkColors: ({
+        darkmode: true,
+        m3background: "#1b1815",
+        m3onBackground: "#ebe0d1",
+        m3surface: "#1b1815",
+        m3surfaceDim: "#141210",
+        m3surfaceBright: "#2b2622",
+        m3surfaceContainerLowest: "#141210",
+        m3surfaceContainerLow: "#1b1815",
+        m3surfaceContainer: "#231f1b",
+        m3surfaceContainerHigh: "#2b2622",
+        m3surfaceContainerHighest: "#332d28",
+        m3onSurface: "#ebe0d1",
+        m3surfaceVariant: "#332d28",
+        m3onSurfaceVariant: "#a89888",
+        m3inverseSurface: "#ebe0d1",
+        m3inverseOnSurface: "#1b1815",
+        m3outline: "#6a5e52",
+        m3outlineVariant: "#413e3a",
+        m3shadow: "#000000",
+        m3scrim: "#000000",
+        m3surfaceTint: "#7a8a5a",
+        m3primary: "#7a8a5a",
+        m3onPrimary: "#1b1815",
+        m3primaryContainer: "#3d4530",
+        m3onPrimaryContainer: "#a4b67d",
+        m3inversePrimary: "#93a56b",
+        m3secondary: "#c47a3a",
+        m3onSecondary: "#1b1815",
+        m3secondaryContainer: "#5c3a1e",
+        m3onSecondaryContainer: "#e8a870",
+        m3tertiary: "#5a6d7a",
+        m3onTertiary: "#ebe0d1",
+        m3tertiaryContainer: "#2e3840",
+        m3onTertiaryContainer: "#8fa8b8",
+        m3error: "#b34d3b",
+        m3onError: "#ebe0d1",
+        m3errorContainer: "#4a2520",
+        m3onErrorContainer: "#d98878",
+        m3primaryFixed: "#7a8a5a",
+        m3primaryFixedDim: "#5e6b45",
+        m3onPrimaryFixed: "#1b1815",
+        m3onPrimaryFixedVariant: "#2b2622",
+        m3secondaryFixed: "#c47a3a",
+        m3secondaryFixedDim: "#9a6030",
+        m3onSecondaryFixed: "#1b1815",
+        m3onSecondaryFixedVariant: "#2b2622",
+        m3tertiaryFixed: "#5a6d7a",
+        m3tertiaryFixedDim: "#485860",
+        m3onTertiaryFixed: "#ebe0d1",
+        m3onTertiaryFixedVariant: "#2b2622",
+        m3success: "#93a56b",
+        m3onSuccess: "#1b1815",
+        m3successContainer: "#3d4530",
+        m3onSuccessContainer: "#a4b67d"
+    })
+
+    // Fields of the Shire (Light) — Parchment and morning meadow
+    readonly property var fieldsOfTheShireLightColors: ({
+        darkmode: false,
+        m3background: "#f9f5eb",
+        m3onBackground: "#2c2820",
+        m3surface: "#f9f5eb",
+        m3surfaceDim: "#ece8de",
+        m3surfaceBright: "#f9f5eb",
+        m3surfaceContainerLowest: "#ffffff",
+        m3surfaceContainerLow: "#f5f1e7",
+        m3surfaceContainer: "#efebe1",
+        m3surfaceContainerHigh: "#e9e5db",
+        m3surfaceContainerHighest: "#e3dfd5",
+        m3onSurface: "#2c2820",
+        m3surfaceVariant: "#e3dfd5",
+        m3onSurfaceVariant: "#5a5348",
+        m3inverseSurface: "#2c2820",
+        m3inverseOnSurface: "#f9f5eb",
+        m3outline: "#8a7e70",
+        m3outlineVariant: "#c8c0b4",
+        m3shadow: "#000000",
+        m3scrim: "#000000",
+        m3surfaceTint: "#5a6b3a",
+        m3primary: "#5a6b3a",
+        m3onPrimary: "#ffffff",
+        m3primaryContainer: "#d8e8b8",
+        m3onPrimaryContainer: "#3d4a28",
+        m3inversePrimary: "#93a56b",
+        m3secondary: "#8a5a2a",
+        m3onSecondary: "#ffffff",
+        m3secondaryContainer: "#f0d0a8",
+        m3onSecondaryContainer: "#5c3a1a",
+        m3tertiary: "#3a5a6a",
+        m3onTertiary: "#ffffff",
+        m3tertiaryContainer: "#b8d8e8",
+        m3onTertiaryContainer: "#1a3a4a",
+        m3error: "#9a3528",
+        m3onError: "#ffffff",
+        m3errorContainer: "#f0c8c0",
+        m3onErrorContainer: "#5a2018",
+        m3primaryFixed: "#5a6b3a",
+        m3primaryFixedDim: "#485830",
+        m3onPrimaryFixed: "#ffffff",
+        m3onPrimaryFixedVariant: "#e9e5db",
+        m3secondaryFixed: "#8a5a2a",
+        m3secondaryFixedDim: "#704820",
+        m3onSecondaryFixed: "#ffffff",
+        m3onSecondaryFixedVariant: "#e9e5db",
+        m3tertiaryFixed: "#3a5a6a",
+        m3tertiaryFixedDim: "#2a4858",
+        m3onTertiaryFixed: "#ffffff",
+        m3onTertiaryFixedVariant: "#e9e5db",
+        m3success: "#5a6b3a",
+        m3onSuccess: "#ffffff",
+        m3successContainer: "#d8e8b8",
+        m3onSuccessContainer: "#3d4a28"
     })
 
     function getPreset(id) {
