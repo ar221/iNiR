@@ -131,8 +131,7 @@ Singleton {
             category: "system",
             keywords: ["bt", "wireless", "devices"],
             execute: () => {
-                const app = Config.options?.apps?.bluetooth ?? "blueman-manager"
-                Quickshell.execDetached(["/usr/bin/bash", "-c", app])
+                AppLauncher.launch("bluetooth")
             }
         },
         {
@@ -201,8 +200,7 @@ Singleton {
             category: "system",
             keywords: ["network", "wifi", "ethernet", "connection", "nm"],
             execute: () => {
-                const app = Config.options?.apps?.network ?? "nm-connection-editor"
-                Quickshell.execDetached(["/usr/bin/bash", "-c", app])
+                AppLauncher.launchNetworkSettings(Network.ethernet)
             }
         },
         {
@@ -213,8 +211,7 @@ Singleton {
             category: "system",
             keywords: ["audio", "sound", "volume", "mixer", "pavucontrol"],
             execute: () => {
-                const app = Config.options?.apps?.volumeMixer ?? "pavucontrol"
-                Quickshell.execDetached(["/usr/bin/bash", "-c", app])
+                AppLauncher.launch("volumeMixer")
             }
         },
         {
@@ -225,8 +222,7 @@ Singleton {
             category: "system",
             keywords: ["task", "process", "monitor", "cpu", "ram", "htop"],
             execute: () => {
-                const app = Config.options?.apps?.taskManager ?? "missioncenter"
-                Quickshell.execDetached(["/usr/bin/bash", "-c", app])
+                AppLauncher.launch("taskManager")
             }
         },
     ]

@@ -195,12 +195,12 @@ Item {
                     ActionTile {
                         tileIcon: "tune"
                         label: Translation.tr("Audio")
-                        onClicked: Quickshell.execDetached([Config.options?.apps?.volumeMixer ?? "/usr/bin/pavucontrol"])
+                        onClicked: AppLauncher.launch("volumeMixer")
                     }
                     ActionTile {
                         tileIcon: "language"
                         label: Translation.tr("Browser")
-                        onClicked: Quickshell.execDetached([Config.options?.apps?.browser ?? "/usr/bin/firefox"])
+                        onClicked: AppLauncher.launch("browser")
                     }
                     ActionTile {
                         tileIcon: "code"

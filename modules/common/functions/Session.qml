@@ -73,8 +73,7 @@ Singleton {
     }
 
     function launchTaskManager() {
-        const cmd = Config.options?.apps?.taskManager ?? "missioncenter"
-        Quickshell.execDetached(["/usr/bin/bash", "-lc", cmd])
+        AppLauncher.launch("taskManager")
     }
 
     function hibernate() {
