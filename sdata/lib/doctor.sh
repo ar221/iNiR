@@ -633,6 +633,148 @@ check_manifest() {
     fi
 }
 
+check_quickshell_abi() {
+    # Quickshell uses Qt private APIs — any Qt minor version bump (e.g. 6.10→6.11)
+    # breaks ABI and requires rebuilding quickshell. This is the #1 cause of
+    # "quickshell crashes on any UI interaction" after system updates.
+    # See: https://github.com/snowarch/iNiR/issues/93
+
+    if ! command -v qs >/dev/null 2>&1; then
+        # No qs binary — dependency check will catch this
+        return 0
+    fi
+
+    # qs --version prints version info to stdout, but Qt ABI mismatch warnings
+    # go to stderr at library load time before anything else runs
+    local qs_stderr
+    qs_stderr="$(qs --version 2>&1 >/dev/null || true)"
+
+    # Also check combined output in case the warning format differs
+    local qs_combined
+    qs_combined="$(qs --version 2>&1 || true)"
+
+    local mismatch_detected=false
+    local mismatch_msg=""
+
+    if echo "$qs_stderr" | grep -qiE "built against Qt|Qt.*mismatch|incompatible Qt"; then
+        mismatch_detected=true
+        mismatch_msg="$(echo "$qs_stderr" | grep -iE "built against Qt|Qt.*mismatch|incompatible Qt" | head -1)"
+    elif echo "$qs_combined" | grep -qiE "built against Qt|Qt.*mismatch|incompatible Qt"; then
+        mismatch_detected=true
+        mismatch_msg="$(echo "$qs_combined" | grep -iE "built against Qt|Qt.*mismatch|incompatible Qt" | head -1)"
+    fi
+
+    # Secondary check: compare compile-time vs runtime Qt versions
+    # ldd always shows the current system lib (not what qs was built against), so
+    # we extract the compile-time Qt version from the qs binary via strings, and
+    # the runtime Qt version from the libQt6Core.so symlink target.
+    if ! $mismatch_detected; then
+        local qs_path
+        qs_path="$(command -v qs 2>/dev/null || true)"
+        if [[ -n "$qs_path" ]]; then
+            local buildtime_qt=""
+            local runtime_qt=""
+
+            # Compile-time Qt version embedded in qs binary
+            if command -v strings >/dev/null 2>&1; then
+                buildtime_qt="$(strings "$qs_path" 2>/dev/null | grep -P '^6\.\d+\.\d+$' | head -1 || true)"
+            fi
+
+            # Runtime Qt version from library symlink or pkg-config
+            if [[ -L /usr/lib/libQt6Core.so.6 ]]; then
+                runtime_qt="$(readlink -f /usr/lib/libQt6Core.so.6 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+            fi
+            if [[ -z "$runtime_qt" ]] && command -v pkg-config >/dev/null 2>&1; then
+                runtime_qt="$(pkg-config --modversion Qt6Core 2>/dev/null || true)"
+            fi
+
+            if [[ -n "$buildtime_qt" && -n "$runtime_qt" ]]; then
+                local build_minor="${buildtime_qt%.*}"
+                local runtime_minor="${runtime_qt%.*}"
+                if [[ "$build_minor" != "$runtime_minor" ]]; then
+                    mismatch_detected=true
+                    mismatch_msg="Quickshell built against Qt $buildtime_qt but system has Qt $runtime_qt"
+                fi
+            fi
+        fi
+    fi
+
+    if $mismatch_detected; then
+        doctor_fail "Qt/Quickshell ABI mismatch: $mismatch_msg"
+        echo -e "  ${STY_YELLOW}Quickshell uses Qt private APIs that break on minor version bumps.${STY_RST}"
+        echo -e "  ${STY_YELLOW}The shell will crash on any UI interaction until quickshell is rebuilt.${STY_RST}"
+
+        # Attempt auto-fix on Arch
+        local can_rebuild=false
+        local rebuild_pkg=""
+        local rebuild_helper=""
+
+        if command -v pacman >/dev/null 2>&1; then
+            if pacman -Qi quickshell-git &>/dev/null; then
+                rebuild_pkg="quickshell-git"
+            elif pacman -Qi quickshell-bin &>/dev/null; then
+                rebuild_pkg="quickshell-bin"
+            elif pacman -Qi quickshell &>/dev/null; then
+                # Official package — should be rebuilt by maintainer, try reinstall
+                rebuild_pkg="quickshell"
+            fi
+
+            if [[ -n "$rebuild_pkg" ]]; then
+                for helper in yay paru; do
+                    if command -v "$helper" >/dev/null 2>&1; then
+                        rebuild_helper="$helper"
+                        can_rebuild=true
+                        break
+                    fi
+                done
+            fi
+        fi
+
+        if $can_rebuild; then
+            local do_rebuild=false
+            if ! ${ask:-true}; then
+                do_rebuild=true
+            elif tui_confirm "Rebuild $rebuild_pkg to fix ABI mismatch?"; then
+                do_rebuild=true
+            fi
+
+            # Determine the right rebuild command:
+            # - Official repo (quickshell): sudo pacman -Syu
+            # - Foreign/AUR package: --rebuild triggers source compilation
+            # - Binary repo (CachyOS, chaotic-aur): -Sa forces AUR source build
+            local rebuild_cmd=""
+            if [[ "$rebuild_pkg" == "quickshell" ]]; then
+                rebuild_cmd="sudo pacman -Syu"
+            elif pacman -Qm "$rebuild_pkg" &>/dev/null; then
+                rebuild_cmd="$rebuild_helper -S --rebuild --noconfirm $rebuild_pkg"
+            else
+                rebuild_cmd="$rebuild_helper -Sa --noconfirm $rebuild_pkg"
+            fi
+
+            if $do_rebuild; then
+                echo -e "  ${STY_FAINT}Running: $rebuild_cmd${STY_RST}"
+                if eval "$rebuild_cmd" 2>/dev/null; then
+                    doctor_fix "Rebuilt $rebuild_pkg for current Qt version"
+                    return 0
+                else
+                    echo -e "  ${STY_RED}Rebuild failed. Try manually: ${rebuild_cmd/--noconfirm /}${STY_RST}"
+                fi
+            else
+                echo -e "  ${STY_YELLOW}To fix manually: ${rebuild_cmd/--noconfirm /}${STY_RST}"
+            fi
+        else
+            echo -e "  ${STY_YELLOW}To fix: rebuild quickshell from source against the current Qt version.${STY_RST}"
+            if command -v pacman >/dev/null 2>&1; then
+                echo -e "  ${STY_YELLOW}On Arch: yay -Sa quickshell-git  (forces AUR source build)${STY_RST}"
+            fi
+        fi
+        return 1
+    fi
+
+    doctor_pass "Quickshell/Qt ABI compatible"
+    return 0
+}
+
 check_quickshell_loads() {
     local target
     local running_output
@@ -675,6 +817,13 @@ check_quickshell_loads() {
         
         if echo "$output" | grep -qE "(could not connect to display|no Qt platform plugin)"; then
             doctor_fail "Quickshell cannot connect to display"
+            return 1
+        fi
+        
+        # Check for ABI mismatch in crash output
+        if echo "$output" | grep -qiE "built against Qt|Qt.*mismatch|incompatible Qt"; then
+            doctor_fail "Quickshell crashed due to Qt ABI mismatch"
+            echo -e "  ${STY_YELLOW}Run: inir doctor  (to auto-rebuild quickshell)${STY_RST}"
             return 1
         fi
         
@@ -994,7 +1143,7 @@ check_niri_config() {
 ###############################################################################
 
 run_doctor_with_fixes() {
-    local total_steps=17
+    local total_steps=18
     doctor_passed=0
     doctor_failed=0
     doctor_fixed=0
@@ -1047,25 +1196,28 @@ run_doctor_with_fixes() {
     tui_step 10 $total_steps "Checking Python packages"
     check_python_packages
     
-    tui_step 11 $total_steps "Checking Quickshell"
+    tui_step 11 $total_steps "Checking Quickshell/Qt ABI"
+    check_quickshell_abi
+    
+    tui_step 12 $total_steps "Checking Quickshell"
     check_quickshell_loads
     
-    tui_step 12 $total_steps "Checking theme colors"
+    tui_step 13 $total_steps "Checking theme colors"
     check_matugen_colors
     
-    tui_step 13 $total_steps "Checking Qt theming"
+    tui_step 14 $total_steps "Checking Qt theming"
     check_qt_theming
     
-    tui_step 14 $total_steps "Checking conflicting services"
+    tui_step 15 $total_steps "Checking conflicting services"
     check_conflicting_services
     
-    tui_step 15 $total_steps "Checking wallpaper health"
+    tui_step 16 $total_steps "Checking wallpaper health"
     check_wallpaper_health
     
-    tui_step 16 $total_steps "Checking environment variables"
+    tui_step 17 $total_steps "Checking environment variables"
     check_environment_vars
     
-    tui_step 17 $total_steps "Checking Niri config"
+    tui_step 18 $total_steps "Checking Niri config"
     check_niri_config
     
     echo ""
