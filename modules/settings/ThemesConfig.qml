@@ -530,6 +530,47 @@ ContentPage {
         }
     }
 
+    // Scheme Variant Section
+    SettingsCardSection {
+        expanded: true
+        icon: "tune"
+        title: Translation.tr("Scheme Variant")
+
+        SettingsGroup {
+            StyledText {
+                text: Translation.tr("Adjust the color generation algorithm. Applies to both wallpaper-based and static themes.")
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+
+            ConfigSelectionArray {
+                currentValue: Config.options?.appearance?.palette?.type ?? "auto"
+                onSelected: newValue => {
+                    Config.setNestedValue("appearance.palette.type", newValue)
+                    if (ThemeService.isAutoTheme) {
+                        Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`]);
+                    } else {
+                        const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                        MaterialThemeLoader.applySchemeVariant(hex, newValue)
+                    }
+                }
+                options: [
+                    { "value": "auto", "displayName": Translation.tr("Auto") },
+                    { "value": "scheme-content", "displayName": Translation.tr("Content") },
+                    { "value": "scheme-expressive", "displayName": Translation.tr("Expressive") },
+                    { "value": "scheme-fidelity", "displayName": Translation.tr("Fidelity") },
+                    { "value": "scheme-fruit-salad", "displayName": Translation.tr("Fruit Salad") },
+                    { "value": "scheme-monochrome", "displayName": Translation.tr("Monochrome") },
+                    { "value": "scheme-neutral", "displayName": Translation.tr("Neutral") },
+                    { "value": "scheme-rainbow", "displayName": Translation.tr("Rainbow") },
+                    { "value": "scheme-tonal-spot", "displayName": Translation.tr("Tonal Spot") }
+                ]
+            }
+        }
+    }
+
     // Theme Scheduling Section
     SettingsCardSection {
         expanded: false
@@ -1653,7 +1694,7 @@ ContentPage {
         SettingsGroup {
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Themes apply a Material 3 color palette. 'Auto' generates colors from your wallpaper using matugen.")
+                text: Translation.tr("Themes apply a Material 3 color palette. 'Auto' generates colors from your wallpaper automatically.")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 wrapMode: Text.WordWrap
