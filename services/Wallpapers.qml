@@ -222,7 +222,20 @@ Singleton {
     property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
     property alias folderModel: folderModel
     property string searchQuery: ""
-    readonly property list<string> extensions: ["jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", "gif", "mp4", "webm", "mkv", "avi", "mov"]
+    property string typeFilter: "all" // "all", "images", "video"
+    property bool showFavoritesOnly: false
+    property var favoritePaths: ({}) // { "/path/to/file": true }
+    property string colorFilter: "" // empty = no filter, or bucket name
+    property var colorCache: ({}) // { "/path/to/file": { bucket: "blue", ... } }
+    property var tagCache: ({}) // { "/path/to/file": ["tag1", "tag2", ...] }
+    readonly property list<string> imageExtensions: ["jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", "gif"]
+    readonly property list<string> videoExtensions: ["mp4", "webm", "mkv", "avi", "mov"]
+    readonly property list<string> extensions: imageExtensions.concat(videoExtensions)
+    readonly property list<string> _activeExtensions: {
+        if (root.typeFilter === "images") return root.imageExtensions
+        if (root.typeFilter === "video") return root.videoExtensions
+        return root.extensions
+    }
     property list<string> wallpapers: []
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
     property real thumbnailGenerationProgress: 0
@@ -418,15 +431,94 @@ Singleton {
         folder: Qt.resolvedUrl(root.defaultFolder)
         caseSensitive: false
         nameFilters: {
+            const currentDir = FileUtils.trimFileProtocol(folderModel.folder.toString()).replace(/\/+$/, "")
+            const exts = root._activeExtensions
             const query = root.searchQuery.trim().toLowerCase()
+            const hasColorFilter = root.colorFilter.length > 0
+            const hasFavFilter = root.showFavoritesOnly
+
+            // If we need path-level filtering (favorites or color), build explicit filename list
+            if (hasFavFilter || hasColorFilter) {
+                // Start with all files we know about
+                let candidates = []
+
+                if (hasFavFilter) {
+                    // Only favorited files in this directory
+                    candidates = Object.keys(root.favoritePaths)
+                        .filter(p => p.substring(0, p.lastIndexOf("/")) === currentDir)
+                } else {
+                    // All files in this directory (from color cache or extension match)
+                    // For color filter, we need the cache entries for this dir
+                    candidates = Object.keys(root.colorCache)
+                        .filter(p => p.substring(0, p.lastIndexOf("/")) === currentDir)
+                }
+
+                // Apply color filter
+                if (hasColorFilter) {
+                    candidates = candidates.filter(p => {
+                        const entry = root.colorCache[p]
+                        return entry && entry.bucket === root.colorFilter
+                    })
+                }
+
+                // Apply favorites filter (if both active)
+                if (hasFavFilter && hasColorFilter) {
+                    candidates = candidates.filter(p => root.favoritePaths[p])
+                }
+
+                // Extract filenames and apply type + search filters (including tag match)
+                const names = candidates
+                    .filter(p => {
+                        const name = p.substring(p.lastIndexOf("/") + 1)
+                        const ext = name.substring(name.lastIndexOf(".") + 1).toLowerCase()
+                        if (!exts.includes(ext)) return false
+                        if (query.length > 0) {
+                            const nameMatch = name.toLowerCase().includes(query)
+                            const tags = root.tagCache[p] ?? []
+                            const tagMatch = tags.some(t => t.includes(query))
+                            if (!nameMatch && !tagMatch) return false
+                        }
+                        return true
+                    })
+                    .map(p => p.substring(p.lastIndexOf("/") + 1))
+
+                return names.length > 0 ? names : ["__NO_MATCH__"]
+            }
+
+            // Standard filtering (no favorites or color filter)
+            const hasTagCache = Object.keys(root.tagCache).length > 0
+
             // Check if query is an extension filter (e.g., ".gif", ".mp4")
             if (query.startsWith(".")) {
                 const ext = query.slice(1)
-                if (root.extensions.includes(ext)) return [`*.${ext}`]
+                if (exts.includes(ext)) return [`*.${ext}`]
             }
-            // Normal search: apply query to all extensions
+
+            // If there's a search query and we have tags, do tag-aware filtering
+            if (query.length > 0 && hasTagCache) {
+                // Find files in current directory matching by tag
+                const tagMatchFiles = Object.keys(root.tagCache)
+                    .filter(p => {
+                        if (p.substring(0, p.lastIndexOf("/")) !== currentDir) return false
+                        const tags = root.tagCache[p]
+                        return tags && tags.some(t => t.includes(query))
+                    })
+                    .map(p => p.substring(p.lastIndexOf("/") + 1))
+                    .filter(name => {
+                        const ext = name.substring(name.lastIndexOf(".") + 1).toLowerCase()
+                        return exts.includes(ext)
+                    })
+
+                // Combine with filename glob matches
+                const searchParts = query.split(" ").filter(s => s.length > 0).map(s => `*${s}*`).join("")
+                const globPatterns = exts.map(ext => `*${searchParts}*.${ext}`)
+                // Merge: glob patterns for filename match + explicit names for tag match
+                return [...globPatterns, ...tagMatchFiles]
+            }
+
+            // Normal search: apply query to active extensions (filtered by type)
             const searchParts = query.split(" ").filter(s => s.length > 0).map(s => `*${s}*`).join("")
-            return root.extensions.map(ext => `*${searchParts}*.${ext}`)
+            return exts.map(ext => `*${searchParts}*.${ext}`)
         }
         showDirs: true
         showDotAndDotDot: false

@@ -462,10 +462,19 @@ QtObject {
     property int defaultLimit: Config.options?.sidebar?.wallhaven?.limit ?? 24
     // Reuse global NSFW toggle used by Anime boorus for now
     property bool allowNsfw: Persistent.states?.booru?.allowNsfw ?? false
-    // Listing mode: "toplist", "date_added", "random", etc.
+    // Listing mode: "toplist", "date_added", "random", "views", "favorites", "relevance"
     property string sortingMode: "date_added"
     // Toplist range when sortingMode == "toplist": 1d, 3d, 1w, 1M, 3M, 6M, 1y
     property string topRange: "1M"
+
+    // ── Extended filters ──────────────────────────────────
+    property string colorFilter: ""      // hex without # (e.g. "0066cc"), empty = no filter
+    property string categories: "111"    // bitmask: General/Anime/People
+    property string minResolution: ""    // e.g. "1920x1080", empty = any
+    property string ratios: ""              // e.g. "16x9,16x10", empty = any
+    property string exactResolution: ""   // e.g. "3840x2160" for resolutions= param
+    property bool useExactResolution: false // true = resolutions= param, false = atleast=
+    property bool hideAiArt: false        // ai_art_filter=1 when true
 
     function clearResponses() {
         responses = []
@@ -497,8 +506,8 @@ QtObject {
         var effLimit = (limit && limit > 0) ? limit : defaultLimit
         params.push("per_page=" + effLimit)
 
-        // categories: general, anime, people -> 111 = all
-        params.push("categories=111")
+        // categories: general, anime, people -> bitmask
+        params.push("categories=" + (root.categories || "111"))
 
         // purity: 100 = sfw, 110 = sfw+sketchy, 111 = sfw+sketchy+nsfw
         var purity = "100" // default: SFW only
@@ -513,6 +522,28 @@ QtObject {
         params.push("order=desc")
         if (sorting === "toplist" && topRange.length > 0) {
             params.push("topRange=" + topRange)
+        }
+
+        // Color filter
+        if (root.colorFilter.length > 0) {
+            params.push("colors=" + root.colorFilter)
+        }
+
+        // Resolution filter
+        if (root.useExactResolution && root.exactResolution.length > 0) {
+            params.push("resolutions=" + root.exactResolution)
+        } else if (root.minResolution.length > 0) {
+            params.push("atleast=" + root.minResolution)
+        }
+
+        // Aspect ratio filter
+        if (root.ratios.length > 0) {
+            params.push("ratios=" + root.ratios)
+        }
+
+        // AI art filter
+        if (root.hideAiArt) {
+            params.push("ai_art_filter=1")
         }
 
         if (apiKey && apiKey.length > 0) {
@@ -571,10 +602,12 @@ QtObject {
                 }
             }
 
+            console.log("[Wallhaven] Response status:", xhr.status, "responseText length:", (xhr.responseText || "").length)
             if (xhr.status === 200) {
                 try {
                     var payload = JSON.parse(xhr.responseText)
                     var list = payload.data || []
+                    console.log("[Wallhaven] Parsed", list.length, "images")
                     var images = list.map(function(item) {
                         var path = item.path || ""
                         var thumbs = item.thumbs || {}

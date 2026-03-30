@@ -60,6 +60,24 @@ Item {
         return (tags || []).join(" ")
     }
 
+    // Re-trigger search with current filters. Clears old results first for a fresh view.
+    // Uses the last search tags from the input field, or empty tags for browse-by-filter mode.
+    function _searchWithFilters() {
+        Wallhaven.clearResponses()
+        const currentText = tagInputField?.text?.trim() ?? ""
+        let tags = []
+        if (currentText.length > 0 && !currentText.startsWith(root.commandPrefix)) {
+            const parsed = root.parseTagsAndPage(currentText)
+            tags = parsed.tags
+        }
+        Wallhaven.makeRequest(
+            tags,
+            Persistent.states.booru.allowNsfw,
+            Config.options?.sidebar?.wallhaven?.limit ?? Wallhaven.defaultLimit,
+            1
+        )
+    }
+
     Connections {
         target: Wallhaven
         function onResponseFinished() {
@@ -596,6 +614,449 @@ Item {
             }
         }
 
+        // ─── Collapsible filter panel ────────────────────────
+        Rectangle {
+            id: filterPanel
+            visible: filterPanelExpanded
+            Layout.fillWidth: true
+            radius: Appearance.rounding.normal - root.padding
+            color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                : Appearance.inirEverywhere ? Appearance.inir.colLayer2
+                : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface
+                : Appearance.colors.colLayer2
+            implicitHeight: visible ? filterPanelColumn.implicitHeight + 12 : 0
+            clip: true
+
+            property bool filterPanelExpanded: true
+
+            Behavior on implicitHeight {
+                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            }
+
+            ColumnLayout {
+                id: filterPanelColumn
+                anchors {
+                    fill: parent
+                    margins: 6
+                }
+                spacing: 6
+
+                // ── Color dots ──────────────────────
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 3
+
+                    MaterialSymbol {
+                        iconSize: 14
+                        text: "palette"
+                        color: Appearance.colors.colOnSurfaceVariant
+                    }
+
+                    Repeater {
+                        // These hex values are from Wallhaven's actual color palette.
+                        // Only these exact codes return results from their API.
+                        model: [
+                            { name: "red",        hex: "cc0000" },
+                            { name: "dark red",   hex: "660000" },
+                            { name: "orange",     hex: "cc6633" },
+                            { name: "yellow",     hex: "ffff00" },
+                            { name: "green",      hex: "336600" },
+                            { name: "lime",       hex: "77cc33" },
+                            { name: "teal",       hex: "0099cc" },
+                            { name: "cyan",       hex: "66cccc" },
+                            { name: "blue",       hex: "0066cc" },
+                            { name: "indigo",     hex: "663399" },
+                            { name: "pink",       hex: "ea4c88" },
+                            { name: "brown",      hex: "996633" },
+                            { name: "black",      hex: "000000" },
+                            { name: "gray",       hex: "999999" },
+                            { name: "white",      hex: "ffffff" },
+                        ]
+                        delegate: MouseArea {
+                            required property var modelData
+                            implicitWidth: 18
+                            implicitHeight: 18
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (Wallhaven.colorFilter === modelData.hex)
+                                    Wallhaven.colorFilter = ""
+                                else
+                                    Wallhaven.colorFilter = modelData.hex
+                                root._searchWithFilters()
+                            }
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: Wallhaven.colorFilter === parent.modelData.hex ? 18 : (parent.containsMouse ? 16 : 13)
+                                height: width
+                                radius: width / 2
+                                color: "#" + parent.modelData.hex
+                                Behavior on width { NumberAnimation { duration: 100 } }
+                                Rectangle {
+                                    visible: Wallhaven.colorFilter === parent.parent.modelData.hex
+                                    anchors.centerIn: parent
+                                    width: parent.width + 4
+                                    height: width
+                                    radius: width / 2
+                                    color: "transparent"
+                                    border.width: 2
+                                    border.color: Appearance.colors.colOnSurface
+                                }
+                            }
+                            StyledToolTip {
+                                visible: parent.containsMouse
+                                text: parent.modelData.name.charAt(0).toUpperCase() + parent.modelData.name.slice(1)
+                            }
+                        }
+                    }
+
+                    // Clear color
+                    MouseArea {
+                        visible: Wallhaven.colorFilter.length > 0
+                        implicitWidth: 16
+                        implicitHeight: 16
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { Wallhaven.colorFilter = ""; root._searchWithFilters() }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            iconSize: 14
+                            text: "close"
+                            color: Appearance.colors.colOnSurfaceVariant
+                        }
+                    }
+                }
+
+                // ── Category chips ──────────────────
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    Repeater {
+                        model: [
+                            { label: "General", bit: 0 },
+                            { label: "Anime",   bit: 1 },
+                            { label: "People",  bit: 2 },
+                        ]
+                        delegate: RippleButton {
+                            required property var modelData
+                            readonly property bool isOn: Wallhaven.categories.charAt(modelData.bit) === "1"
+                            implicitHeight: 24
+                            implicitWidth: catChipText.implicitWidth + 16
+                            buttonRadius: height / 2
+                            toggled: isOn
+                            colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                            colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                            colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                            colBackground: "transparent"
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                            onClicked: {
+                                let cats = Wallhaven.categories.split("")
+                                cats[modelData.bit] = cats[modelData.bit] === "1" ? "0" : "1"
+                                if (cats.join("") === "000") return
+                                Wallhaven.categories = cats.join("")
+                                root._searchWithFilters()
+                            }
+                            contentItem: StyledText {
+                                id: catChipText
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+                    }
+
+                    Rectangle { width: 1; Layout.fillHeight: true; Layout.topMargin: 4; Layout.bottomMargin: 4; color: Appearance.colors.colOutlineVariant }
+
+                    // AI art toggle
+                    MouseArea {
+                        implicitWidth: aiRow.implicitWidth
+                        implicitHeight: 24
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { Wallhaven.hideAiArt = !Wallhaven.hideAiArt; root._searchWithFilters() }
+                        RowLayout {
+                            id: aiRow
+                            anchors.centerIn: parent
+                            spacing: 3
+                            MaterialSymbol {
+                                iconSize: 14
+                                text: Wallhaven.hideAiArt ? "block" : "auto_awesome"
+                                color: Wallhaven.hideAiArt ? Appearance.colors.colError : Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledText {
+                                text: "AI"
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Wallhaven.hideAiArt ? Appearance.colors.colError : Appearance.colors.colOnSurfaceVariant
+                                font.strikeout: Wallhaven.hideAiArt
+                            }
+                        }
+                    }
+                }
+
+                // ── Sort chips ──────────────────────
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 3
+
+                    Repeater {
+                        model: [
+                            { label: "Latest",  mode: "date_added", icon: "schedule" },
+                            { label: "Top",     mode: "toplist",    icon: "trending_up" },
+                            { label: "Random",  mode: "random",     icon: "shuffle" },
+                            { label: "Views",   mode: "views",      icon: "visibility" },
+                            { label: "Favs",    mode: "favorites",  icon: "favorite" },
+                        ]
+                        delegate: RippleButton {
+                            required property var modelData
+                            implicitHeight: 24
+                            implicitWidth: sortChipRow.implicitWidth + 12
+                            buttonRadius: height / 2
+                            toggled: Wallhaven.sortingMode === modelData.mode
+                            colBackgroundToggled: Appearance.colors.colPrimaryContainer
+                            colBackgroundToggledHover: ColorUtils.mix(Appearance.colors.colPrimaryContainer, Appearance.colors.colOnPrimaryContainer, 0.08)
+                            colRippleToggled: ColorUtils.mix(Appearance.colors.colPrimaryContainer, Appearance.colors.colOnPrimaryContainer, 0.12)
+                            colBackground: "transparent"
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                            onClicked: { Wallhaven.sortingMode = modelData.mode; root._searchWithFilters() }
+                            contentItem: Row {
+                                id: sortChipRow
+                                anchors.centerIn: parent
+                                spacing: 2
+                                MaterialSymbol {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    iconSize: 12
+                                    text: modelData.icon
+                                    color: parent.parent.toggled ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurfaceVariant
+                                }
+                                StyledText {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData.label
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    color: parent.parent.toggled ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurfaceVariant
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Top range chips (visible when sort = toplist) ──
+                RowLayout {
+                    visible: Wallhaven.sortingMode === "toplist"
+                    Layout.fillWidth: true
+                    spacing: 3
+
+                    StyledText {
+                        text: "Range:"
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colOnSurfaceVariant
+                    }
+
+                    Repeater {
+                        model: [
+                            { label: "1d", value: "1d" },
+                            { label: "1w", value: "1w" },
+                            { label: "1M", value: "1M" },
+                            { label: "3M", value: "3M" },
+                            { label: "1y", value: "1y" },
+                        ]
+                        delegate: RippleButton {
+                            required property var modelData
+                            implicitHeight: 22
+                            implicitWidth: rangeText.implicitWidth + 14
+                            buttonRadius: height / 2
+                            toggled: Wallhaven.topRange === modelData.value
+                            colBackgroundToggled: Appearance.colors.colTertiaryContainer
+                            colBackgroundToggledHover: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.08)
+                            colRippleToggled: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.12)
+                            colBackground: "transparent"
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                            onClicked: { Wallhaven.topRange = modelData.value; root._searchWithFilters() }
+                            contentItem: StyledText {
+                                id: rangeText
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: parent.toggled ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+                    }
+                }
+
+                // ── Aspect ratio presets (multi-select) ──────
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 3
+
+                    // Helper: check if a ratio value is in the active comma-separated list
+                    function isRatioActive(value) {
+                        if (!Wallhaven.ratios || Wallhaven.ratios.length === 0) return false
+                        return Wallhaven.ratios.split(",").indexOf(value) !== -1
+                    }
+                    function toggleRatio(value) {
+                        if (!value) { Wallhaven.ratios = ""; root._searchWithFilters(); return }
+                        const current = Wallhaven.ratios ? Wallhaven.ratios.split(",").filter(s => s.length > 0) : []
+                        const idx = current.indexOf(value)
+                        if (idx !== -1) current.splice(idx, 1)
+                        else current.push(value)
+                        Wallhaven.ratios = current.join(",")
+                        root._searchWithFilters()
+                    }
+
+                    MaterialSymbol {
+                        width: 16; height: 22
+                        iconSize: 14
+                        text: "aspect_ratio"
+                        color: Appearance.colors.colOnSurfaceVariant
+                    }
+
+                    // "Any" clears all
+                    RippleButton {
+                        implicitHeight: 22; implicitWidth: anyRatioText.implicitWidth + 10
+                        buttonRadius: height / 2
+                        toggled: !Wallhaven.ratios || Wallhaven.ratios.length === 0
+                        colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                        colBackground: "transparent"
+                        colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                        onClicked: { Wallhaven.ratios = ""; root._searchWithFilters() }
+                        contentItem: StyledText { id: anyRatioText; anchors.centerIn: parent; text: "Any"; font.pixelSize: Appearance.font.pixelSize.smaller; color: parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant }
+                    }
+
+                    // Individual ratio chips
+                    Repeater {
+                        model: [
+                            { label: "16:9",  value: "16x9" },
+                            { label: "16:10", value: "16x10" },
+                            { label: "21:9",  value: "21x9" },
+                            { label: "32:9",  value: "32x9" },
+                            { label: "48:9",  value: "48x9" },
+                            { label: "9:16",  value: "9x16" },
+                            { label: "10:16", value: "10x16" },
+                            { label: "9:18",  value: "9x18" },
+                            { label: "1:1",   value: "1x1" },
+                            { label: "4:3",   value: "4x3" },
+                            { label: "5:4",   value: "5x4" },
+                            { label: "3:2",   value: "3x2" },
+                        ]
+                        delegate: RippleButton {
+                            required property var modelData
+                            implicitHeight: 22
+                            implicitWidth: ratioChipText.implicitWidth + 10
+                            buttonRadius: height / 2
+                            toggled: parent.isRatioActive(modelData.value)
+                            colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                            colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                            colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                            colBackground: "transparent"
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                            onClicked: parent.toggleRatio(modelData.value)
+                            contentItem: StyledText {
+                                id: ratioChipText
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+                    }
+                }
+
+                // ── Resolution presets ──────
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 3
+
+                    // Mode toggle: At least / Exact
+                    RippleButton {
+                        implicitHeight: 22
+                        implicitWidth: resModeRow.implicitWidth + 10
+                        buttonRadius: height / 2
+                        toggled: Wallhaven.useExactResolution
+                        colBackgroundToggled: Appearance.colors.colTertiaryContainer
+                        colBackgroundToggledHover: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.08)
+                        colRippleToggled: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.12)
+                        colBackground: "transparent"
+                        colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                        onClicked: {
+                            Wallhaven.useExactResolution = !Wallhaven.useExactResolution
+                            // Sync the active value to the correct property
+                            if (Wallhaven.useExactResolution) {
+                                Wallhaven.exactResolution = Wallhaven.minResolution
+                                Wallhaven.minResolution = ""
+                            } else {
+                                Wallhaven.minResolution = Wallhaven.exactResolution
+                                Wallhaven.exactResolution = ""
+                            }
+                            if (Wallhaven.minResolution.length > 0 || Wallhaven.exactResolution.length > 0)
+                                root._searchWithFilters()
+                        }
+                        contentItem: Row {
+                            id: resModeRow
+                            anchors.centerIn: parent
+                            spacing: 2
+                            MaterialSymbol {
+                                anchors.verticalCenter: parent.verticalCenter
+                                iconSize: 12
+                                text: Wallhaven.useExactResolution ? "crop_free" : "open_in_full"
+                                color: parent.parent.toggled ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledText {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: Wallhaven.useExactResolution ? "Exact" : "Min"
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: parent.parent.toggled ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+                    }
+
+                    // Resolution presets
+                    Repeater {
+                        model: [
+                            { label: "Any",     res: "" },
+                            { label: "720p",    res: "1280x720" },
+                            { label: "1080p",   res: "1920x1080" },
+                            { label: "1440p",   res: "2560x1440" },
+                            { label: "UW",      res: "3440x1440" },
+                            { label: "4K",      res: "3840x2160" },
+                            { label: "5K",      res: "5120x2880" },
+                            { label: "8K",      res: "7680x4320" },
+                        ]
+                        delegate: RippleButton {
+                            required property var modelData
+                            readonly property string activeRes: Wallhaven.useExactResolution ? Wallhaven.exactResolution : Wallhaven.minResolution
+                            implicitHeight: 22
+                            implicitWidth: resChipText.implicitWidth + 10
+                            buttonRadius: height / 2
+                            toggled: activeRes === modelData.res
+                            colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                            colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                            colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                            colBackground: "transparent"
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+                            onClicked: {
+                                if (Wallhaven.useExactResolution) {
+                                    Wallhaven.exactResolution = modelData.res
+                                    Wallhaven.minResolution = ""
+                                } else {
+                                    Wallhaven.minResolution = modelData.res
+                                    Wallhaven.exactResolution = ""
+                                }
+                                root._searchWithFilters()
+                            }
+                            contentItem: StyledText {
+                                id: resChipText
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Rectangle {
             id: tagInputContainer
             property real columnSpacing: 5
@@ -816,6 +1277,24 @@ Item {
                                 Persistent.states.booru.allowNsfw = checked;
                             }
                         }
+                    }
+                }
+
+                // Filter panel toggle
+                RippleButton {
+                    implicitWidth: 30
+                    implicitHeight: 30
+                    buttonRadius: Appearance.rounding.small
+                    toggled: filterPanel.filterPanelExpanded
+                    onClicked: filterPanel.filterPanelExpanded = !filterPanel.filterPanelExpanded
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        iconSize: 18
+                        text: "tune"
+                        color: parent.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Toggle search filters")
                     }
                 }
 

@@ -11,6 +11,8 @@ MouseArea {
     required property var fileModelData
     property bool isDirectory: fileModelData.fileIsDir
     property bool useThumbnail: Images.isValidMediaByName(fileModelData.fileName)
+    property bool isFavorite: false
+    signal favoriteToggled()
 
     property alias colBackground: background.color
     property alias colText: wallpaperItemName.color
@@ -104,6 +106,40 @@ MouseArea {
                         fileModelData: root.fileModelData
                         sourceSize.width: wallpaperItemColumnLayout.width
                         sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
+                    }
+                }
+
+                // Favorite heart overlay
+                MouseArea {
+                    id: heartButton
+                    visible: !root.isDirectory && (root.containsMouse || root.isFavorite)
+                    anchors {
+                        top: parent.top
+                        right: parent.right
+                        margins: 4
+                    }
+                    width: 24
+                    height: 24
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    z: 10
+
+                    onClicked: root.favoriteToggled()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: heartButton.containsMouse
+                            ? ColorUtils.transparentize(Appearance.colors.colSurface, 0.2)
+                            : ColorUtils.transparentize(Appearance.colors.colSurface, 0.4)
+                    }
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        iconSize: 18
+                        text: root.isFavorite ? "favorite" : "favorite_border"
+                        color: root.isFavorite ? Appearance.colors.colError : Appearance.colors.colOnSurface
+                        fill: root.isFavorite ? 1 : 0
                     }
                 }
             }

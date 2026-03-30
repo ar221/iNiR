@@ -22,6 +22,217 @@ MouseArea {
     property string _capturedMonitor: ""
     readonly property bool multiMonitorActive: Config.options?.background?.multiMonitor?.enable ?? false
 
+    // ─── Favorites system ──────────────────────────────────
+    property bool _showFavoritesOnly: false
+    property var _favorites: ({})
+    readonly property int _favoritesCount: Object.keys(_favorites).length
+    readonly property string _favoritesPath: {
+        const xdg = Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+        return xdg + "/quickshell/wallpaper-favorites.json"
+    }
+
+    function _loadFavorites() {
+        _favLoadProc.command = ["cat", root._favoritesPath]
+        _favLoadProc.running = true
+    }
+
+    function _saveFavorites() {
+        _favSaveProc.command = ["bash", "-c", `mkdir -p "$(dirname '${root._favoritesPath}')" && cat > '${root._favoritesPath}'`]
+        _favSaveProc.stdinEnabled = true
+        _favSaveProc.running = true
+        _favSaveProc.write(JSON.stringify(Object.keys(root._favorites)))
+        _favSaveProc.stdinEnabled = false // Close stdin to finish writing
+    }
+
+    function toggleFavorite(filePath: string) {
+        const copy = Object.assign({}, root._favorites)
+        if (copy[filePath]) {
+            delete copy[filePath]
+        } else {
+            copy[filePath] = true
+        }
+        root._favorites = copy
+        root._saveFavorites()
+    }
+
+    function isFavorite(filePath: string): bool {
+        return root._favorites[filePath] === true
+    }
+
+    Process {
+        id: _favLoadProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => { _favLoadProc._buf += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0 && _favLoadProc._buf.length > 0) {
+                try {
+                    const arr = JSON.parse(_favLoadProc._buf)
+                    const obj = {}
+                    for (const p of arr) obj[p] = true
+                    root._favorites = obj
+                } catch(e) { root._favorites = {} }
+            }
+            _favLoadProc._buf = ""
+        }
+    }
+
+    Process {
+        id: _favSaveProc
+    }
+
+    // ─── Color filter system ─────────────────────────────
+    property string _colorFilter: "" // empty = no filter, or bucket name like "blue"
+    property var _colorCache: ({}) // { "/path/file.jpg": { hue, sat, lum, bucket } }
+    property bool _colorAnalysisRunning: false
+    readonly property string _colorCachePath: {
+        const xdg = Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+        return xdg + "/quickshell/wallpaper-colors.json"
+    }
+    readonly property string _colorAnalysisScript: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/colors/analyze-wallpaper-colors.py`
+
+    // Color bucket definitions with representative colors
+    readonly property var _colorBuckets: [
+        { name: "red",     color: "#E53935" },
+        { name: "orange",  color: "#FB8C00" },
+        { name: "yellow",  color: "#FDD835" },
+        { name: "lime",    color: "#7CB342" },
+        { name: "green",   color: "#43A047" },
+        { name: "teal",    color: "#00897B" },
+        { name: "cyan",    color: "#00ACC1" },
+        { name: "blue",    color: "#1E88E5" },
+        { name: "indigo",  color: "#5E35B1" },
+        { name: "violet",  color: "#8E24AA" },
+        { name: "pink",    color: "#D81B60" },
+        { name: "neutral", color: "#78909C" },
+    ]
+
+    function _loadColorCache() {
+        _colorLoadProc._buf = ""
+        _colorLoadProc.command = ["cat", root._colorCachePath]
+        _colorLoadProc.running = true
+    }
+
+    function _runColorAnalysis() {
+        if (root._colorAnalysisRunning) return
+        const dir = Wallpapers.effectiveDirectory
+        if (!dir) return
+        root._colorAnalysisRunning = true
+        _colorAnalyzeProc.command = ["python3", root._colorAnalysisScript, dir, "--json-output"]
+        _colorAnalyzeProc.running = true
+    }
+
+    function _getColorBucket(filePath: string): string {
+        const entry = root._colorCache[filePath]
+        return entry ? entry.bucket : ""
+    }
+
+    // Count wallpapers per bucket in current directory
+    function _bucketCount(bucketName: string): int {
+        const dir = Wallpapers.effectiveDirectory
+        let count = 0
+        for (const path in root._colorCache) {
+            if (path.startsWith(dir + "/") && root._colorCache[path].bucket === bucketName)
+                count++
+        }
+        return count
+    }
+
+    Process {
+        id: _colorLoadProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => { _colorLoadProc._buf += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0 && _colorLoadProc._buf.length > 0) {
+                try {
+                    root._colorCache = JSON.parse(_colorLoadProc._buf)
+                } catch(e) { root._colorCache = {} }
+            }
+            _colorLoadProc._buf = ""
+        }
+    }
+
+    Process {
+        id: _colorAnalyzeProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.startsWith("PROGRESS ")) return // Skip progress lines
+                _colorAnalyzeProc._buf += data
+            }
+        }
+        onExited: (exitCode) => {
+            root._colorAnalysisRunning = false
+            if (exitCode === 0 && _colorAnalyzeProc._buf.length > 0) {
+                try {
+                    const newData = JSON.parse(_colorAnalyzeProc._buf)
+                    // Merge into existing cache
+                    root._colorCache = Object.assign({}, root._colorCache, newData)
+                } catch(e) { /* parse error, ignore */ }
+            }
+            _colorAnalyzeProc._buf = ""
+        }
+    }
+
+    // Auto-analyze when directory changes
+    Connections {
+        target: Wallpapers
+        function onFolderChanged() {
+            // Check if current directory has unanalyzed files — trigger analysis
+            root._colorAnalysisDebounce.restart()
+        }
+    }
+
+    Timer {
+        id: _colorAnalysisDebounce
+        interval: 1000
+        onTriggered: root._runColorAnalysis()
+    }
+
+    // ─── AI tag system ───────────────────────────────────────
+    property var _tagCache: ({}) // { "/path/file.jpg": ["anime", "dark", ...] }
+    readonly property string _tagCachePath: {
+        const xdg = Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+        return xdg + "/quickshell/wallpaper-tags.json"
+    }
+    readonly property string _tagScript: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/colors/tag-wallpapers.py`
+
+    function _loadTagCache() {
+        _tagLoadProc._buf = ""
+        _tagLoadProc.command = ["cat", root._tagCachePath]
+        _tagLoadProc.running = true
+    }
+
+    function _getTagsForFile(filePath: string): list<string> {
+        return root._tagCache[filePath] ?? []
+    }
+
+    Process {
+        id: _tagLoadProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => { _tagLoadProc._buf += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0 && _tagLoadProc._buf.length > 0) {
+                try {
+                    root._tagCache = JSON.parse(_tagLoadProc._buf)
+                } catch(e) { root._tagCache = {} }
+            }
+            _tagLoadProc._buf = ""
+        }
+    }
+
+    // ─── Sync local filter state → Wallpapers service ─────
+    Binding { target: Wallpapers; property: "showFavoritesOnly"; value: root._showFavoritesOnly }
+    Binding { target: Wallpapers; property: "favoritePaths"; value: root._favorites }
+    Binding { target: Wallpapers; property: "colorFilter"; value: root._colorFilter }
+    Binding { target: Wallpapers; property: "colorCache"; value: root._colorCache }
+    Binding { target: Wallpapers; property: "tagCache"; value: root._tagCache }
+
     // ─── Wallpaper Engine mode ─────────────────────────────
     property bool weMode: false
     property var weWallpapers: []
@@ -80,6 +291,11 @@ MouseArea {
     }
 
     Component.onCompleted: {
+        // Load favorites
+        root._loadFavorites()
+        root._loadColorCache()
+        root._loadTagCache()
+
         // Read target monitor from GlobalStates (set before opening, no timing issues)
         const gsTarget = GlobalStates.wallpaperSelectorTargetMonitor ?? ""
         if (gsTarget && WallpaperListener.screenNames.includes(gsTarget)) {
@@ -465,6 +681,308 @@ MouseArea {
                     }
                 }
 
+                // ─── Filter bar (type chips + color dots) ────────────────
+                Rectangle {
+                    id: filterChipsBar
+                    visible: !root.weMode
+                    Layout.fillWidth: true
+                    Layout.margins: 4
+                    Layout.topMargin: 0
+                    implicitHeight: visible ? filterBarColumn.implicitHeight + 8 : 0
+                    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                        : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                        : Appearance.colors.colLayer1
+                    radius: wallpaperGridBackground.radius - Layout.margins
+
+                    ColumnLayout {
+                        id: filterBarColumn
+                        anchors {
+                            fill: parent
+                            leftMargin: 8
+                            rightMargin: 8
+                            topMargin: 4
+                            bottomMargin: 4
+                        }
+                        spacing: 2
+
+                        // Row 1: Type chips + favorites + item count
+                        RowLayout {
+                            id: filterChipsRow
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            // Type filter chips
+                            Repeater {
+                                model: [
+                                    { label: qsTr("All"), icon: "apps", filter: "all" },
+                                    { label: qsTr("Images"), icon: "image", filter: "images" },
+                                    { label: qsTr("Video"), icon: "movie", filter: "video" },
+                                ]
+                                delegate: RippleButton {
+                                    required property var modelData
+                                    required property int index
+                                    implicitHeight: 28
+                                    implicitWidth: chipContent.implicitWidth + 18
+                                    buttonRadius: height / 2
+                                    toggled: modelData.filter === "all" ? (!root.weMode && Wallpapers.typeFilter === "all") : Wallpapers.typeFilter === modelData.filter
+                                    colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                                    colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                                    colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                                    colBackground: "transparent"
+                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+
+                                    onClicked: {
+                                        root.weMode = false
+                                        Wallpapers.typeFilter = modelData.filter
+                                    }
+
+                                    contentItem: Row {
+                                        id: chipContent
+                                        anchors.centerIn: parent
+                                        spacing: 4
+                                        MaterialSymbol {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            iconSize: 14
+                                            text: modelData.icon
+                                            color: parent.parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                                        }
+                                        StyledText {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: modelData.label
+                                            font.pixelSize: Appearance.font.pixelSize.smaller
+                                            color: parent.parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                                        }
+                                    }
+                                }
+                            }
+
+                            // WE chip
+                            RippleButton {
+                                implicitHeight: 28
+                                implicitWidth: weChipContent.implicitWidth + 18
+                                buttonRadius: height / 2
+                                toggled: root.weMode
+                                colBackgroundToggled: Appearance.colors.colSecondaryContainer
+                                colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+                                colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                                colBackground: "transparent"
+                                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+
+                                onClicked: {
+                                    root.weMode = true
+                                    root.loadWEWallpapers()
+                                }
+
+                                contentItem: Row {
+                                    id: weChipContent
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    MaterialSymbol {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        iconSize: 14
+                                        text: "animated_images"
+                                        color: parent.parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                                    }
+                                    StyledText {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "WE"
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: parent.parent.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                                    }
+                                }
+                            }
+
+                            // Separator
+                            Rectangle {
+                                Layout.fillHeight: true
+                                Layout.topMargin: 4
+                                Layout.bottomMargin: 4
+                                width: 1
+                                color: Appearance.colors.colOutlineVariant
+                                visible: root._favoritesCount > 0
+                            }
+
+                            // Favorites chip
+                            RippleButton {
+                                visible: root._favoritesCount > 0
+                                implicitHeight: 28
+                                implicitWidth: favChipContent.implicitWidth + 18
+                                buttonRadius: height / 2
+                                toggled: root._showFavoritesOnly
+                                colBackgroundToggled: Appearance.colors.colTertiaryContainer
+                                colBackgroundToggledHover: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.08)
+                                colRippleToggled: ColorUtils.mix(Appearance.colors.colTertiaryContainer, Appearance.colors.colOnTertiaryContainer, 0.12)
+                                colBackground: "transparent"
+                                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.92)
+
+                                onClicked: root._showFavoritesOnly = !root._showFavoritesOnly
+
+                                contentItem: Row {
+                                    id: favChipContent
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    MaterialSymbol {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        iconSize: 14
+                                        text: parent.parent.toggled ? "favorite" : "favorite_border"
+                                        color: parent.parent.toggled ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant
+                                    }
+                                    StyledText {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: qsTr("Favorites") + ` (${root._favoritesCount})`
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: parent.parent.toggled ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant
+                                    }
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            // Item count
+                            StyledText {
+                                text: `${Wallpapers.folderModel.count} items`
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colOnSurfaceVariant
+                            }
+                        }
+
+                        // Row 2: Color filter dots
+                        RowLayout {
+                            id: colorDotsRow
+                            Layout.fillWidth: true
+                            spacing: 3
+
+                            MaterialSymbol {
+                                iconSize: 14
+                                text: "palette"
+                                color: Appearance.colors.colOnSurfaceVariant
+                                Layout.rightMargin: 2
+                            }
+
+                            Repeater {
+                                model: root._colorBuckets
+                                delegate: MouseArea {
+                                    required property var modelData
+                                    required property int index
+                                    implicitWidth: 18
+                                    implicitHeight: 18
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+
+                                    onClicked: {
+                                        if (root._colorFilter === modelData.name)
+                                            root._colorFilter = ""
+                                        else
+                                            root._colorFilter = modelData.name
+                                    }
+
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: root._colorFilter === parent.modelData.name ? 18 : (parent.containsMouse ? 16 : 14)
+                                        height: width
+                                        radius: width / 2
+                                        color: parent.modelData.color
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: 100 }
+                                        }
+
+                                        // Selection ring
+                                        Rectangle {
+                                            visible: root._colorFilter === parent.parent.modelData.name
+                                            anchors.centerIn: parent
+                                            width: parent.width + 4
+                                            height: width
+                                            radius: width / 2
+                                            color: "transparent"
+                                            border.width: 2
+                                            border.color: Appearance.colors.colOnSurface
+                                        }
+                                    }
+
+                                    StyledToolTip {
+                                        visible: parent.containsMouse
+                                        text: {
+                                            const name = parent.modelData.name
+                                            const count = root._bucketCount(name)
+                                            return name.charAt(0).toUpperCase() + name.slice(1) + ` (${count})`
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Clear color filter button
+                            MouseArea {
+                                visible: root._colorFilter.length > 0
+                                implicitWidth: 18
+                                implicitHeight: 18
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root._colorFilter = ""
+
+                                MaterialSymbol {
+                                    anchors.centerIn: parent
+                                    iconSize: 14
+                                    text: "close"
+                                    color: Appearance.colors.colOnSurfaceVariant
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            // Color analysis indicator
+                            RowLayout {
+                                visible: root._colorAnalysisRunning
+                                spacing: 4
+                                MaterialSymbol {
+                                    iconSize: 12
+                                    text: "hourglass_empty"
+                                    color: Appearance.colors.colOnSurfaceVariant
+                                }
+                                StyledText {
+                                    text: qsTr("Analyzing colors...")
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    color: Appearance.colors.colOnSurfaceVariant
+                                }
+                            }
+
+                            // Sort by color button
+                            MouseArea {
+                                visible: !root._colorAnalysisRunning && Object.keys(root._colorCache).length > 0
+                                implicitWidth: sortByColorContent.implicitWidth + 8
+                                implicitHeight: 18
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                property bool sortByColor: false
+                                onClicked: {
+                                    sortByColor = !sortByColor
+                                    // Toggle sort mode in Wallpapers service
+                                    // FolderListModel.Name = 0, FolderListModel.Time = 3
+                                    Wallpapers.folderModel.sortField = sortByColor ? 0 : 3
+                                }
+                                Row {
+                                    id: sortByColorContent
+                                    anchors.centerIn: parent
+                                    spacing: 2
+                                    MaterialSymbol {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        iconSize: 12
+                                        text: "sort"
+                                        color: Appearance.colors.colOnSurfaceVariant
+                                    }
+                                    StyledText {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: parent.parent.sortByColor ? qsTr("By color") : qsTr("By date")
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colOnSurfaceVariant
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Multi-monitor indicator
                 Rectangle {
                     visible: Config.options?.background?.multiMonitor?.enable ?? false
@@ -580,13 +1098,14 @@ MouseArea {
                             })
                             width: grid.cellWidth
                             height: grid.cellHeight
+                            isFavorite: root.isFavorite(filePath)
                             colBackground: (index === grid?.currentIndex || containsMouse) ? Appearance.colors.colPrimary : (filePath === (Config.options?.background?.wallpaperPath ?? "")) ? Appearance.colors.colSecondaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
                             colText: (index === grid.currentIndex || containsMouse) ? Appearance.colors.colOnPrimary : (filePath === (Config.options?.background?.wallpaperPath ?? "")) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
 
                             onEntered: {
                                 grid.currentIndex = index;
                             }
-                            
+
                             onActivated: {
                                 if (fileIsDir) {
                                     Wallpapers.setDirectory(filePath);
@@ -594,6 +1113,8 @@ MouseArea {
                                     root.selectWallpaperPath(filePath);
                                 }
                             }
+
+                            onFavoriteToggled: root.toggleFavorite(filePath)
                         }
 
                         layer.enabled: true
@@ -810,6 +1331,10 @@ MouseArea {
         function onWallpaperSelectorOpenChanged() {
             if (GlobalStates.wallpaperSelectorOpen && monitorIsFocused) {
                 filterField.forceActiveFocus();
+                // Reset filters on open
+                Wallpapers.typeFilter = "all"
+                root._showFavoritesOnly = false
+                root._colorFilter = ""
             }
         }
     }
