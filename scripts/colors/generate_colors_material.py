@@ -765,6 +765,13 @@ if args.render_templates:
         rendered = _VAR_RE.sub(_resolve, content)
 
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        # Break symlinks before writing so we don't corrupt external themes
+        if os.path.islink(out_path):
+            print(
+                f"[render-templates] Replacing symlink with regular file: {out_path}",
+                file=sys.stderr,
+            )
+            os.remove(out_path)
         with open(out_path, "w") as f:
             f.write(rendered)
         rendered_count += 1
