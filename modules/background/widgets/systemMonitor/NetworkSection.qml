@@ -6,7 +6,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-ColumnLayout {
+RowLayout {
     id: root
 
     property var configEntry: ({})
@@ -14,17 +14,15 @@ ColumnLayout {
     // Network data
     property string connectionType: ""
     property string connectionName: ""
-    property string ipAddress: ""
-    property string wifiSignal: ""
 
     // Speed tracking
     property real lastRxBytes: 0
     property real lastTxBytes: 0
-    property real rxSpeed: 0  // bytes/sec
-    property real txSpeed: 0  // bytes/sec
+    property real rxSpeed: 0
+    property real txSpeed: 0
     property string activeInterface: "br0"
 
-    spacing: 8
+    spacing: 10
 
     // ── Detect connection ──
     Process {
@@ -51,18 +49,6 @@ ColumnLayout {
         }
     }
 
-    Process {
-        id: ipProc
-        command: ["/usr/bin/hostname", "-I"]
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => {
-                const ips = data.trim().split(/\s+/)
-                root.ipAddress = ips[0] ?? ""
-            }
-        }
-    }
-
     // ── Speed measurement ──
     Process {
         id: speedProc
@@ -76,9 +62,7 @@ ColumnLayout {
                 if (lines.length >= 2) {
                     const rx = parseFloat(lines[0])
                     const tx = parseFloat(lines[1])
-
                     if (root.lastRxBytes > 0) {
-                        // Interval is 2 seconds
                         root.rxSpeed = Math.max(0, (rx - root.lastRxBytes) / 2)
                         root.txSpeed = Math.max(0, (tx - root.lastTxBytes) / 2)
                     }
@@ -91,7 +75,6 @@ ColumnLayout {
 
     Component.onCompleted: {
         netProc.running = true
-        ipProc.running = true
         speedProc.running = true
     }
 
@@ -107,114 +90,61 @@ ColumnLayout {
         interval: 30000
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            netProc.running = true
-            ipProc.running = true
-        }
+        onTriggered: netProc.running = true
     }
 
-    // ── Connection row ──
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 10
-
-        MaterialSymbol {
-            text: {
-                if (root.connectionType === "wifi") return "wifi"
-                if (root.connectionType === "ethernet" || root.connectionType === "bridge") return "lan"
-                return "wifi_off"
-            }
-            iconSize: 20
-            color: root.connectionType === "disconnected"
-                ? Appearance.colors.colError
-                : Appearance.colors.colPrimary
+    // ── Icon ──
+    MaterialSymbol {
+        text: {
+            if (root.connectionType === "wifi") return "wifi"
+            if (root.connectionType === "ethernet" || root.connectionType === "bridge") return "lan"
+            return "wifi_off"
         }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 0
-
-            StyledText {
-                Layout.fillWidth: true
-                text: {
-                    if (root.connectionType === "disconnected") return "Disconnected"
-                    if (root.connectionType === "wifi") return root.connectionName
-                    if (root.connectionType === "bridge") return "Bridge (" + root.connectionName + ")"
-                    return "Ethernet" + (root.connectionName ? " (" + root.connectionName + ")" : "")
-                }
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: Appearance.colors.colOnLayer0
-                elide: Text.ElideRight
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                visible: root.ipAddress !== ""
-                text: root.ipAddress
-                font.pixelSize: Appearance.font.pixelSize.smallest
-                font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colSubtext
-            }
-        }
+        iconSize: 16
+        color: root.connectionType === "disconnected"
+            ? Appearance.colors.colError
+            : Appearance.colors.colPrimary
     }
 
-    // ── Speed pills ──
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 8
-
-        // Download
-        Rectangle {
-            Layout.preferredHeight: 26
-            Layout.preferredWidth: dlRow.implicitWidth + 14
-            radius: 13
-            color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
-
-            RowLayout {
-                id: dlRow
-                anchors.centerIn: parent
-                spacing: 4
-                MaterialSymbol {
-                    text: "arrow_downward"
-                    iconSize: 13
-                    color: Appearance.colors.colPrimary
-                }
-                StyledText {
-                    text: formatSpeed(root.rxSpeed)
-                    font.pixelSize: Appearance.font.pixelSize.smallest
-                    font.family: Appearance.font.family.monospace
-                    color: Appearance.colors.colOnLayer0
-                }
-            }
+    // ── Connection name ──
+    StyledText {
+        text: {
+            if (root.connectionType === "disconnected") return "Disconnected"
+            if (root.connectionType === "wifi") return root.connectionName
+            if (root.connectionType === "bridge") return "Bridge (" + root.connectionName + ")"
+            return "Ethernet"
         }
+        font.pixelSize: Appearance.font.pixelSize.small
+        font.weight: Font.Medium
+        color: Appearance.colors.colOnLayer0
+        elide: Text.ElideRight
+    }
 
-        // Upload
-        Rectangle {
-            Layout.preferredHeight: 26
-            Layout.preferredWidth: ulRow.implicitWidth + 14
-            radius: 13
-            color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+    Item { Layout.fillWidth: true }
 
-            RowLayout {
-                id: ulRow
-                anchors.centerIn: parent
-                spacing: 4
-                MaterialSymbol {
-                    text: "arrow_upward"
-                    iconSize: 13
-                    color: Appearance.colors.colSecondary
-                }
-                StyledText {
-                    text: formatSpeed(root.txSpeed)
-                    font.pixelSize: Appearance.font.pixelSize.smallest
-                    font.family: Appearance.font.family.monospace
-                    color: Appearance.colors.colOnLayer0
-                }
-            }
-        }
+    // ── Speed indicators ──
+    MaterialSymbol {
+        text: "arrow_downward"
+        iconSize: 12
+        color: Appearance.colors.colPrimary
+    }
+    StyledText {
+        text: formatSpeed(root.rxSpeed)
+        font.pixelSize: Appearance.font.pixelSize.smallest
+        font.family: Appearance.font.family.monospace
+        color: Appearance.colors.colSubtext
+    }
 
-        Item { Layout.fillWidth: true }
+    MaterialSymbol {
+        text: "arrow_upward"
+        iconSize: 12
+        color: Appearance.colors.colSecondary
+    }
+    StyledText {
+        text: formatSpeed(root.txSpeed)
+        font.pixelSize: Appearance.font.pixelSize.smallest
+        font.family: Appearance.font.family.monospace
+        color: Appearance.colors.colSubtext
     }
 
     function formatSpeed(bytesPerSec) {

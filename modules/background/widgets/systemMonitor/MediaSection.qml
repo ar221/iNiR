@@ -17,9 +17,20 @@ ColumnLayout {
     readonly property var allPlayers: MprisController.displayPlayers ?? []
     readonly property bool multiplePlayers: allPlayers.length > 1
     readonly property bool isPlaying: MprisController.isPlaying
+    readonly property bool hasArt: albumArt.status === Image.Ready
 
     visible: hasPlayer
-    spacing: 10
+    spacing: 8
+
+    // Preload album art (invisible until used)
+    Image {
+        id: albumArt
+        visible: false
+        source: root.player?.trackArtUrl ?? ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        width: 0; height: 0
+    }
 
     // Cava visualizer process
     CavaProcess {
@@ -27,7 +38,7 @@ ColumnLayout {
         active: root.hasPlayer && root.isPlaying
     }
 
-    // Player switcher bar (only when multiple sources)
+    // Player switcher (only when multiple sources)
     RowLayout {
         Layout.fillWidth: true
         visible: root.multiplePlayers
@@ -87,25 +98,30 @@ ColumnLayout {
         }
     }
 
-    // Album art with visualizer overlay
+    // ── Album art with visualizer (only when playing + has art) ──
     Item {
         Layout.fillWidth: true
         Layout.preferredHeight: artContainer.height
+        visible: root.hasArt && root.isPlaying
         clip: true
+
+        Behavior on Layout.preferredHeight {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
 
         Rectangle {
             id: artContainer
             anchors.left: parent.left
             anchors.right: parent.right
-            height: 140
+            height: 120
             radius: Appearance.rounding.normal
             color: Appearance.colors.colSurfaceContainer
             clip: true
 
             Image {
-                id: albumArt
+                id: artDisplay
                 anchors.fill: parent
-                source: root.player?.trackArtUrl ?? ""
+                source: albumArt.source
                 fillMode: Image.PreserveAspectCrop
                 visible: false
                 asynchronous: true
@@ -113,38 +129,19 @@ ColumnLayout {
 
             GE.OpacityMask {
                 anchors.fill: parent
-                source: albumArt
+                source: artDisplay
                 maskSource: Rectangle {
                     width: artContainer.width
                     height: artContainer.height
                     radius: artContainer.radius
                 }
-                visible: albumArt.status === Image.Ready
+                visible: artDisplay.status === Image.Ready
             }
 
-            // Fallback when no art
-            ColumnLayout {
-                anchors.centerIn: parent
-                visible: albumArt.status !== Image.Ready
-                spacing: 4
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "music_note"
-                    iconSize: 48
-                    color: ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
-                }
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: root.player?.identity ?? ""
-                    font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
-                }
-            }
-
-            // Gradient overlay for readability
+            // Gradient overlay
             Rectangle {
                 anchors.fill: parent
-                visible: albumArt.status === Image.Ready
+                visible: artDisplay.status === Image.Ready
                 radius: artContainer.radius
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
@@ -153,7 +150,7 @@ ColumnLayout {
                 }
             }
 
-            // Cava wave visualizer overlay
+            // Cava wave overlay
             WaveVisualizer {
                 anchors.fill: parent
                 points: cavaProcess.points
@@ -164,14 +161,48 @@ ColumnLayout {
         }
     }
 
-    // Track info + controls
+    // ── Track info + controls ──
     RowLayout {
         Layout.fillWidth: true
-        spacing: 12
+        spacing: 10
+
+        // Small album art thumbnail (when no big art or paused)
+        Rectangle {
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            radius: Appearance.rounding.small
+            color: Appearance.colors.colSurfaceContainer
+            visible: !root.isPlaying || !root.hasArt
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: albumArt.source
+                fillMode: Image.PreserveAspectCrop
+                visible: false
+                id: thumbArt
+                asynchronous: true
+            }
+
+            GE.OpacityMask {
+                anchors.fill: parent
+                source: thumbArt
+                maskSource: Rectangle { width: 40; height: 40; radius: Appearance.rounding.small }
+                visible: thumbArt.status === Image.Ready
+            }
+
+            MaterialSymbol {
+                anchors.centerIn: parent
+                text: "music_note"
+                iconSize: 20
+                color: ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
+                visible: thumbArt.status !== Image.Ready
+            }
+        }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: 1
 
             StyledText {
                 Layout.fillWidth: true
@@ -198,43 +229,43 @@ ColumnLayout {
             spacing: 2
 
             RippleButton {
-                implicitWidth: 32; implicitHeight: 32
-                buttonRadius: 16
+                implicitWidth: 30; implicitHeight: 30
+                buttonRadius: 15
                 colBackground: "transparent"
                 colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
                 onClicked: MprisController.previous()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_previous"
-                    iconSize: 22
+                    iconSize: 20
                     color: Appearance.colors.colOnLayer0
                 }
             }
 
             RippleButton {
-                implicitWidth: 40; implicitHeight: 40
-                buttonRadius: 20
+                implicitWidth: 36; implicitHeight: 36
+                buttonRadius: 18
                 colBackground: Appearance.colors.colPrimary
                 colBackgroundHover: ColorUtils.lighten(Appearance.colors.colPrimary, 0.1)
                 onClicked: MprisController.togglePlaying()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: root.isPlaying ? "pause" : "play_arrow"
-                    iconSize: 24
+                    iconSize: 22
                     color: Appearance.colors.colOnPrimary
                 }
             }
 
             RippleButton {
-                implicitWidth: 32; implicitHeight: 32
-                buttonRadius: 16
+                implicitWidth: 30; implicitHeight: 30
+                buttonRadius: 15
                 colBackground: "transparent"
                 colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
                 onClicked: MprisController.next()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_next"
-                    iconSize: 22
+                    iconSize: 20
                     color: Appearance.colors.colOnLayer0
                 }
             }

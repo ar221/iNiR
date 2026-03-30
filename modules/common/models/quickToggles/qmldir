@@ -3,6 +3,8 @@ QuickToggleModel 1.0 QuickToggleModel.qml
 AntiFlashbangToggle 1.0 AntiFlashbangToggle.qml
 AudioToggle 1.0 AudioToggle.qml
 BluetoothToggle 1.0 BluetoothToggle.qml
+ClaudeCodeProxyToggle 1.0 ClaudeCodeProxyToggle.qml
+DictationServerToggle 1.0 DictationServerToggle.qml
 CloudflareWarpToggle 1.0 CloudflareWarpToggle.qml
 ColorPickerToggle 1.0 ColorPickerToggle.qml
 DarkModeToggle 1.0 DarkModeToggle.qml

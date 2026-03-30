@@ -279,6 +279,84 @@ Item {
         }
 
         Loader {
+            active: Config.options?.bar?.utilButtons?.showProxyToggle ?? false
+            visible: active
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: ClaudeCodeProxy.toggle()
+                altAction: () => {
+                    if (ClaudeCodeProxy.active) ClaudeCodeProxy.stop()
+                }
+
+                Item {
+                    anchors.fill: parent
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: ClaudeCodeProxy.active ? 1 : 0
+                        text: "dns"
+                        iconSize: Appearance.font.pixelSize.large
+                        color: ClaudeCodeProxy.active
+                            ? (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+                            : (Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer2)
+                    }
+
+                    Rectangle {
+                        visible: ClaudeCodeProxy.active
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                        }
+                    }
+                }
+            }
+        }
+
+        Loader {
+            active: Config.options?.bar?.utilButtons?.showDictationToggle ?? false
+            visible: active
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: DictationServer.toggle()
+                altAction: () => {
+                    if (DictationServer.active) DictationServer.stop()
+                }
+
+                Item {
+                    anchors.fill: parent
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: DictationServer.active ? 1 : 0
+                        text: "mic"
+                        iconSize: Appearance.font.pixelSize.large
+                        color: DictationServer.active
+                            ? (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+                            : (Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer2)
+                    }
+
+                    Rectangle {
+                        visible: DictationServer.active
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                        }
+                    }
+                }
+            }
+        }
+
+        Loader {
             active: Config.options?.bar?.utilButtons?.showDarkModeToggle ?? true
             visible: active
             sourceComponent: CircleUtilButton {

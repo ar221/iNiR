@@ -2514,6 +2514,169 @@ ContentPage {
     }
 
     SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "graphic_eq"
+        title: Translation.tr("Widget: Audio Visualizer")
+
+        SettingsGroup {
+            // Enable
+            SettingsSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                checked: Config.options.background.widgets.audioVisualizer.enable
+                onCheckedChanged: {
+                    Config.options.background.widgets.audioVisualizer.enable = checked;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Full-screen audio visualizer on the desktop background (requires cava)")
+                }
+            }
+
+            // Style
+            ConfigSelectionArray {
+                currentValue: Config.options.background.widgets.audioVisualizer.style ?? "bars"
+                onSelected: newValue => {
+                    Config.options.background.widgets.audioVisualizer.style = newValue;
+                }
+                options: [
+                    {
+                        displayName: Translation.tr("Bars"),
+                        icon: "bar_chart",
+                        value: "bars"
+                    },
+                    {
+                        displayName: Translation.tr("Wave"),
+                        icon: "waves",
+                        value: "wave"
+                    },
+                ]
+            }
+
+            // Appearance
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Opacity (%)")
+                    value: Math.round((Config.options.background.widgets.audioVisualizer.opacity ?? 0.45) * 100)
+                    from: 10
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.background.widgets.audioVisualizer.opacity = value / 100;
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "height"
+                    text: Translation.tr("Height (px)")
+                    value: Config.options.background.widgets.audioVisualizer.height ?? 200
+                    from: 50
+                    to: 600
+                    stepSize: 25
+                    onValueChanged: {
+                        Config.options.background.widgets.audioVisualizer.height = value;
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "view_column"
+                    text: Translation.tr("Bar count")
+                    value: Config.options.background.widgets.audioVisualizer.barCount ?? 80
+                    from: 20
+                    to: 200
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.options.background.widgets.audioVisualizer.barCount = value;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Number of bars (bars style only)")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "space_bar"
+                    text: Translation.tr("Bar spacing (px)")
+                    value: Config.options.background.widgets.audioVisualizer.barSpacing ?? 3
+                    from: 0
+                    to: 10
+                    stepSize: 1
+                    onValueChanged: {
+                        Config.options.background.widgets.audioVisualizer.barSpacing = value;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Gap between bars (bars style only)")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "rounded_corner"
+                    text: Translation.tr("Bar radius (px)")
+                    value: Config.options.background.widgets.audioVisualizer.barRadius ?? 2
+                    from: 0
+                    to: 10
+                    stepSize: 1
+                    onValueChanged: {
+                        Config.options.background.widgets.audioVisualizer.barRadius = value;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Corner radius of bars (bars style only)")
+                    }
+                }
+            }
+
+            // Color
+            ContentSubsection {
+                title: Translation.tr("Color")
+
+                ConfigSelectionArray {
+                    currentValue: Config.options.background.widgets.audioVisualizer.colorSource ?? "primary"
+                    onSelected: newValue => {
+                        Config.options.background.widgets.audioVisualizer.colorSource = newValue;
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Primary"),
+                            icon: "palette",
+                            value: "primary"
+                        },
+                        {
+                            displayName: Translation.tr("Secondary"),
+                            icon: "palette",
+                            value: "secondary"
+                        },
+                        {
+                            displayName: Translation.tr("Tertiary"),
+                            icon: "palette",
+                            value: "tertiary"
+                        },
+                        {
+                            displayName: Translation.tr("Container"),
+                            icon: "palette",
+                            value: "primaryContainer"
+                        },
+                    ]
+                }
+            }
+
+            // Behavior
+            SettingsSwitch {
+                buttonIcon: "visibility_off"
+                text: Translation.tr("Auto-hide when silent")
+                checked: Config.options.background.widgets.audioVisualizer.autoHide ?? true
+                onCheckedChanged: {
+                    Config.options.background.widgets.audioVisualizer.autoHide = checked;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Hide the visualizer when no audio is playing")
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
         expanded: false
         icon: "notifications"
         title: Translation.tr("Notifications")

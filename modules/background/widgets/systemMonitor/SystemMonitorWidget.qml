@@ -204,16 +204,9 @@ AbstractBackgroundWidget {
             configEntry: root.monitorConfig
         }
 
-        // ── Quick launch ──
-        QuickLaunchSection {
-            Layout.fillWidth: true
-            visible: root.monitorConfig.showQuickLaunch ?? true
-            configEntry: root.monitorConfig
-        }
-
         // ── Separator ──
         SectionSeparator {
-            visible: (root.monitorConfig.showQuickLaunch ?? true)
+            visible: (root.monitorConfig.showMedia ?? true)
                 && (root.monitorConfig.showNetwork ?? true)
         }
 
