@@ -237,24 +237,20 @@ apply_shell_scale() {
 }
 
 apply_qt_runtime_env() {
-    # The shell uses custom QML styling. Inheriting desktop-wide KDE platform/theme
-    # integration loads KF6XmlGui into the Quickshell process and triggers startup
-    # warnings before our own QML initializes.
+    # Preserve the session's Qt platform theme and style — unsetting these breaks
+    # icon theme resolution (QIcon::fromTheme) and Qt widget styling.
+    # Override via INIR_QT_QPA_PLATFORMTHEME / INIR_QT_STYLE_OVERRIDE if needed.
     if [[ -n "${INIR_QT_QPA_PLATFORMTHEME+x}" ]]; then
         export QT_QPA_PLATFORMTHEME="$INIR_QT_QPA_PLATFORMTHEME"
-    else
-        unset QT_QPA_PLATFORMTHEME
     fi
 
     if [[ -n "${INIR_QT_STYLE_OVERRIDE+x}" ]]; then
         export QT_STYLE_OVERRIDE="$INIR_QT_STYLE_OVERRIDE"
-    else
-        unset QT_STYLE_OVERRIDE
     fi
 }
 
 apply_qt_logging_rules() {
-    local extra_rules="quickshell.dbus.properties=false;qt.qml.settings.warning=false;qt.core.qsettings.warning=false"
+    local extra_rules="quickshell.dbus.properties=false;qt.qml.settings.warning=false;qt.core.qsettings.warning=false;kf.xmlgui=false;kf.coreaddons=false;kf.config.core=false;kf.iconthemes=false"
 
     if [[ -z "${QT_LOGGING_RULES:-}" ]]; then
         export QT_LOGGING_RULES="$extra_rules"
