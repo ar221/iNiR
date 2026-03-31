@@ -274,81 +274,10 @@ Item {
                                     anchors.centerIn: parent
                                     text: "close"
                                     iconSize: 16
-                                    color: Appearance.colors.colOnErrorContainer 
-            }
-
-            // ── YouTube Like OAuth ─────────────────────────────
-            Rectangle { Layout.fillWidth: true; Layout.topMargin: 4; height: 1; color: root.colBorder }
-
-            StyledText {
-                text: Translation.tr("YouTube Like/Unlike")
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.DemiBold
-                color: root.colText
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: oauthStatusCol.implicitHeight + 16
-                radius: root.radiusSmall
-                color: YtMusic.oauthConfigured
-                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.92)
-                    : ColorUtils.transparentize(root.colTextSecondary, 0.95)
-
-                ColumnLayout {
-                    id: oauthStatusCol
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 6
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        MaterialSymbol {
-                            text: YtMusic.oauthConfigured ? "check_circle" : "info"
-                            iconSize: 18
-                            color: YtMusic.oauthConfigured ? Appearance.colors.colPrimary : root.colTextSecondary
+                                    color: Appearance.colors.colOnErrorContainer
+                                }
+                            }
                         }
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: YtMusic.oauthConfigured
-                                ? (YtMusic.oauthChannel || Translation.tr("OAuth Connected"))
-                                : Translation.tr("Not configured — likes are local only")
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: root.colText
-                            wrapMode: Text.WordWrap
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 6
-                        YtActionChip {
-                            visible: !YtMusic.oauthConfigured
-                            iconName: "passkey"
-                            label: Translation.tr("Setup")
-                            compact: true
-                            chipBackground: root.colPrimary
-                            chipBackgroundHover: ColorUtils.transparentize(root.colPrimary, 0.1)
-                            chipForeground: Appearance.colors.colOnPrimary
-                            onClicked: { advancedOptionsPopup.close(); oauthSetupPopup.open() }
-                        }
-
-                        YtActionChip {
-                            visible: YtMusic.oauthConfigured
-                            iconName: "link_off"
-                            label: Translation.tr("Remove")
-                            compact: true
-                            chipBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
-                            chipBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.82)
-                            chipForeground: Appearance.colors.colError
-                            onClicked: { YtMusic.disconnectOAuth(); advancedOptionsPopup.close() }
-                        }
-                    }
-                }
-            }
-        }
-    }
                     }
                 }
 
@@ -524,6 +453,74 @@ Item {
                         chipBackgroundHover: root.colLayer2Hover
                         chipForeground: root.colPrimary
                         onClicked: YtMusic.openYtMusicInBrowser()
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: oauthStatusCol.implicitHeight + 16
+                radius: root.radiusSmall
+                color: YtMusic.oauthConfigured
+                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.92)
+                    : ColorUtils.transparentize(root.colTextSecondary, 0.95)
+                border.width: root.borderWidth
+                border.color: YtMusic.oauthConfigured
+                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.72)
+                    : root.colBorder
+
+                ColumnLayout {
+                    id: oauthStatusCol
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            text: YtMusic.oauthConfigured ? "check_circle" : "info"
+                            iconSize: 18
+                            color: YtMusic.oauthConfigured ? Appearance.colors.colPrimary : root.colTextSecondary
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: YtMusic.oauthConfigured
+                                ? (YtMusic.oauthChannel || Translation.tr("OAuth Connected"))
+                                : Translation.tr("Not configured — likes are local only")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: root.colText
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        YtActionChip {
+                            visible: !YtMusic.oauthConfigured
+                            iconName: "passkey"
+                            label: Translation.tr("Setup")
+                            compact: true
+                            chipBackground: root.colPrimary
+                            chipBackgroundHover: ColorUtils.transparentize(root.colPrimary, 0.1)
+                            chipForeground: Appearance.colors.colOnPrimary
+                            onClicked: oauthSetupPopup.open()
+                        }
+
+                        YtActionChip {
+                            visible: YtMusic.oauthConfigured
+                            iconName: "link_off"
+                            label: Translation.tr("Remove")
+                            compact: true
+                            chipBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                            chipBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.82)
+                            chipForeground: Appearance.colors.colError
+                            onClicked: YtMusic.disconnectOAuth()
+                        }
                     }
                 }
             }
