@@ -333,6 +333,9 @@ Variants {
                     source: (bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo || bgRoot.wallpaperIsGif) ? "" : bgRoot.wallpaperPath
                     transitionDuration: wallpaperContainer._transitionDur
                     easingBezierCurve: wallpaperContainer._transitionBezierCurve
+                    transitionType: Config.options?.background?.transition?.type ?? "crossfade"
+                    transitionDirection: Config.options?.background?.transition?.direction ?? "right"
+                    transitionEnabled: (Config.options?.background?.transition?.enable ?? true) && Appearance.animationsEnabled
                     fillMode: bgRoot.fillMode === "fit" ? Image.PreserveAspectFit
                             : bgRoot.fillMode === "tile" ? Image.Tile
                             : bgRoot.fillMode === "center" ? Image.Pad

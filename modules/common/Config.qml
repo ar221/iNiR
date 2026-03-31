@@ -533,8 +533,12 @@ Singleton {
                     property int dynamicDim: 0 // Extra dim when there are windows on the current workspace (0-100)
                 }
                 property JsonObject transition: JsonObject {
+                    property bool enable: true // Master toggle for wallpaper transitions
+                    property string type: "crossfade" // crossfade|fadeThrough|wipe|slide|push|zoom|blurFade
+                    property string direction: "right" // left|right|top|bottom (for wipe/slide/push)
                     property int duration: 800 // Wallpaper + color transition duration (ms)
                     property bool animateColors: true // Smooth Material You color interpolation on wallpaper change
+                    property list<real> bezier: [0.54, 0.0, 0.34, 0.99] // Custom cubic bezier [x1,y1,x2,y2]
                 }
                 property JsonObject backdrop: JsonObject {
                     property bool enable: true

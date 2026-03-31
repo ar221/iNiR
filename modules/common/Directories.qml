@@ -37,6 +37,7 @@ Singleton {
     property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse`)
     property string shellConfigName: "config.json"
     property string shellConfigPath: `${Directories.shellConfig}/${Directories.shellConfigName}`
+    property string metricsConfigPath: `${Directories.shellConfig}/metrics.json`
     property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
     property string notepadPath: FileUtils.trimFileProtocol(`${Directories.state}/user/notepad.txt`)
     property string notesPath: FileUtils.trimFileProtocol(`${Directories.state}/user/notes.txt`)
