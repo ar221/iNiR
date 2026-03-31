@@ -10,7 +10,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Widgets
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -450,23 +449,12 @@ Item {
                             }
                         }
 
-                        Loader {
+                        Tint {
                             active: wsConfig.monochromeIcons
                             anchors.fill: mainAppIcon
-                            sourceComponent: Item {
-                                Desaturate {
-                                    id: desaturatedIcon
-                                    visible: false // There's already color overlay
-                                    anchors.fill: parent
-                                    source: mainAppIcon
-                                    desaturation: 0.8
-                                }
-                                ColorOverlay {
-                                    anchors.fill: desaturatedIcon
-                                    source: desaturatedIcon
-                                    color: ColorUtils.transparentize(wsDot.color, 0.9)
-                                }
-                            }
+                            source: mainAppIcon
+                            tintColor: wsDot.color
+                            tintOpacity: 0.1
                         }
                     }
                 }
@@ -620,23 +608,12 @@ Item {
                             }
                         }
 
-                        Loader {
+                        Tint {
                             active: wsConfig.monochromeIcons
                             anchors.fill: columnAppIcon
-                            sourceComponent: Item {
-                                Desaturate {
-                                    id: colDesaturatedIcon
-                                    visible: false
-                                    anchors.fill: parent
-                                    source: columnAppIcon
-                                    desaturation: 0.8
-                                }
-                                ColorOverlay {
-                                    anchors.fill: colDesaturatedIcon
-                                    source: colDesaturatedIcon
-                                    color: ColorUtils.transparentize(columnDot.color, 0.9)
-                                }
-                            }
+                            source: columnAppIcon
+                            tintColor: columnDot.color
+                            tintOpacity: 0.1
                         }
                     }
                 }

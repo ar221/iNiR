@@ -96,9 +96,34 @@ Singleton {
     onEffectsEnabledChanged: console.log("[Appearance] effectsEnabled:", effectsEnabled, "gameModeActive:", _gameModeActive)
     onAnimationsEnabledChanged: console.log("[Appearance] animationsEnabled:", animationsEnabled)
 
+    // Scale factors from config (appearance.metrics.*).
+    // Not a JsonObject — read imperatively on configChanged to avoid
+    // deserialization crashes from deep reactive binding cascades.
+    property real _metricsRoundingScale: 1.0
+    property real _metricsFontScale: 1.0
+    property real _metricsDurationScale: 1.0
+    property real _metricsSpacingScale: 1.0
+
+    function _reloadMetrics() {
+        const m = MetricsConfig.options
+        if (!m) return
+        _metricsRoundingScale = m.roundingScale ?? 1.0
+        _metricsFontScale = m.fontScale ?? 1.0
+        _metricsDurationScale = m.durationScale ?? 1.0
+        _metricsSpacingScale = m.spacingScale ?? 1.0
+    }
+
+    Connections {
+        target: MetricsConfig
+        function onMetricsChanged() { root._reloadMetrics() }
+    }
+    Component.onCompleted: _reloadMetrics()
+
     // Helper for calculating effective animation duration
+    // Applies duration scale for user-controlled animation speed,
+    // returns 0 when animations are disabled (GameMode, config toggle)
     function calcEffectiveDuration(baseDuration) {
-        return animationsEnabled ? baseDuration : 0
+        return animationsEnabled ? Math.round(baseDuration * _metricsDurationScale) : 0
     }
 
     // Color transition system — smooth Material You palette changes on wallpaper switch
@@ -374,9 +399,9 @@ Singleton {
     }
 
     rounding: QtObject {
-        // Dynamic rounding scalar based on theme metadata
-        // Matrix -> 0, Zen Garden -> 1.5, Standard -> 1.0
-        property real scale: root._themeMeta.roundingScale ?? 1.0
+        // Dynamic rounding scalar: theme metadata * user override from Metrics
+        // Matrix -> 0, Zen Garden -> 1.5, Standard -> 1.0 (theme base)
+        property real scale: (root._themeMeta.roundingScale ?? 1.0) * root._metricsRoundingScale
         
         property int unsharpen: Math.max(0, Math.round(2 * scale))
         property int unsharpenmore: Math.max(0, Math.round(6 * scale))
@@ -390,8 +415,8 @@ Singleton {
         property int windowRounding: Math.max(0, Math.round(18 * scale))
     }
 
-    // Typography scale factor from config
-    property real fontSizeScale: Config.options?.appearance?.typography?.sizeScale ?? 1.0
+    // Typography scale factor: config base * user override from Metrics
+    property real fontSizeScale: (Config.options?.appearance?.typography?.sizeScale ?? 1.0) * _metricsFontScale
 
     // Theme Metadata Logic
     readonly property var activeThemePreset: ThemePresets.getPreset(Config.options?.appearance?.theme ?? "auto")
@@ -474,11 +499,25 @@ Singleton {
     }
 
     animation: QtObject {
+        // Named duration tiers (pre-scaled by durationScale, respects GameMode)
+        property QtObject durations: QtObject {
+            readonly property int supershort: root.calcEffectiveDuration(100)
+            readonly property int short_: root.calcEffectiveDuration(200)
+            readonly property int normal: root.calcEffectiveDuration(400)
+            readonly property int long_: root.calcEffectiveDuration(600)
+            readonly property int extraLong: root.calcEffectiveDuration(1000)
+        }
+
         property QtObject elementMove: QtObject {
             property int duration: root.calcEffectiveDuration(animationCurves.expressiveDefaultSpatialDuration)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 650
+            property Component colorAnimation: Component { ColorAnimation {
+                duration: root.animation.elementMove.duration
+                easing.type: root.animation.elementMove.type
+                easing.bezierCurve: root.animation.elementMove.bezierCurve
+            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMove.duration
@@ -493,6 +532,11 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedDecel
             property int velocity: 650
+            property Component colorAnimation: Component { ColorAnimation {
+                duration: root.animation.elementMoveEnter.duration
+                easing.type: root.animation.elementMoveEnter.type
+                easing.bezierCurve: root.animation.elementMoveEnter.bezierCurve
+            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMoveEnter.duration
@@ -507,6 +551,11 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedAccel
             property int velocity: 650
+            property Component colorAnimation: Component { ColorAnimation {
+                duration: root.animation.elementMoveExit.duration
+                easing.type: root.animation.elementMoveExit.type
+                easing.bezierCurve: root.animation.elementMoveExit.bezierCurve
+            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMoveExit.duration
@@ -538,6 +587,11 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasized
             property int velocity: 650
+            property Component colorAnimation: Component { ColorAnimation {
+                duration: root.animation.elementResize.duration
+                easing.type: root.animation.elementResize.type
+                easing.bezierCurve: root.animation.elementResize.bezierCurve
+            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementResize.duration
@@ -552,13 +606,18 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 850
+            property Component colorAnimation: Component { ColorAnimation {
+                duration: root.animation.clickBounce.duration
+                easing.type: root.animation.clickBounce.type
+                easing.bezierCurve: root.animation.clickBounce.bezierCurve
+            }}
             property Component numberAnimation: Component { NumberAnimation {
                     duration: root.animation.clickBounce.duration
                     easing.type: root.animation.clickBounce.type
                     easing.bezierCurve: root.animation.clickBounce.bezierCurve
             }}
         }
-        
+
         property QtObject scroll: QtObject {
             property int duration: root.calcEffectiveDuration(200)
             property int type: Easing.BezierSpline
@@ -896,9 +955,9 @@ Singleton {
     }
 
     sizes: QtObject {
-        property real spacingSmall: 8
-        property real spacingMedium: 12
-        property real spacingLarge: 16
+        property real spacingSmall: Math.round(8 * root._metricsSpacingScale)
+        property real spacingMedium: Math.round(12 * root._metricsSpacingScale)
+        property real spacingLarge: Math.round(16 * root._metricsSpacingScale)
         property real baseBarHeight: 40
         property real barHeight: (((Config.options?.bar?.cornerStyle ?? 0) === 1) || ((Config.options?.bar?.cornerStyle ?? 0) === 3)) ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight

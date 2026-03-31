@@ -6,7 +6,6 @@ import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
-import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -542,23 +541,12 @@ Scope {
                                 source: modelData.icon || ""
                             }
                             
-                            Loader {
+                            Tint {
                                 active: root.altMonochromeIcons && !root.isHighLoad
                                 anchors.fill: compactIcon
-                                sourceComponent: Item {
-                                    Desaturate {
-                                        id: desaturatedCompactIcon
-                                        visible: false
-                                        anchors.fill: parent
-                                        source: compactIcon
-                                        desaturation: 0.8
-                                    }
-                                    ColorOverlay {
-                                        anchors.fill: desaturatedCompactIcon
-                                        source: desaturatedCompactIcon
-                                        color: ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary, 0.9)
-                                    }
-                                }
+                                source: compactIcon
+                                tintColor: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+                                tintOpacity: 0.1
                             }
                             
                             Rectangle {
@@ -953,24 +941,12 @@ Scope {
                                     implicitSize: parent.height
                                 }
 
-                                // Optional monochrome tint, same pattern as dock/workspaces
-                                Loader {
+                                Tint {
                                     active: root.altMonochromeIcons
                                     anchors.fill: altSwitcherIcon
-                                    sourceComponent: Item {
-                                        Desaturate {
-                                            id: desaturatedAltSwitcherIcon
-                                            visible: false // ColorOverlay handles final output
-                                            anchors.fill: parent
-                                            source: altSwitcherIcon
-                                            desaturation: 0.8
-                                        }
-                                        ColorOverlay {
-                                            anchors.fill: desaturatedAltSwitcherIcon
-                                            source: desaturatedAltSwitcherIcon
-                                            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
-                                        }
-                                    }
+                                    source: altSwitcherIcon
+                                    tintColor: Appearance.colors.colPrimary
+                                    tintOpacity: 0.1
                                 }
                             }
                         }

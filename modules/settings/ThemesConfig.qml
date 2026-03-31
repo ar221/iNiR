@@ -1598,6 +1598,90 @@ ContentPage {
 
     SettingsCardSection {
         expanded: false
+        icon: "tune"
+        title: Translation.tr("Interface Scale")
+
+        SettingsGroup {
+            StyledText {
+                Layout.fillWidth: true
+                text: Translation.tr("Adjust spacing, rounding, font size and animation speed globally.")
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                wrapMode: Text.WordWrap
+            }
+
+            ConfigSpinBox {
+                id: spacingScaleSpinBox
+                icon: "space_bar"
+                text: Translation.tr("Spacing") + " (%)"
+                value: Math.round((MetricsConfig.options.spacingScale ?? 1.0) * 100)
+                from: 75
+                to: 150
+                stepSize: 5
+                property bool _ready: false
+                Component.onCompleted: _ready = true
+                onValueChanged: {
+                    if (!_ready) return
+                    MetricsConfig.options.spacingScale = value / 100
+                }
+            }
+
+            ConfigSpinBox {
+                id: roundingScaleSpinBox
+                icon: "rounded_corner"
+                text: Translation.tr("Rounding") + " (%)"
+                value: Math.round((MetricsConfig.options.roundingScale ?? 1.0) * 100)
+                from: 0
+                to: 200
+                stepSize: 10
+                property bool _ready: false
+                Component.onCompleted: _ready = true
+                onValueChanged: {
+                    if (!_ready) return
+                    MetricsConfig.options.roundingScale = value / 100
+                }
+            }
+
+            ConfigSpinBox {
+                id: fontScaleSpinBox
+                icon: "text_fields"
+                text: Translation.tr("Font Size") + " (%)"
+                value: Math.round((MetricsConfig.options.fontScale ?? 1.0) * 100)
+                from: 80
+                to: 130
+                stepSize: 5
+                property bool _ready: false
+                Component.onCompleted: _ready = true
+                onValueChanged: {
+                    if (!_ready) return
+                    MetricsConfig.options.fontScale = value / 100
+                }
+            }
+
+            ConfigSpinBox {
+                id: durationScaleSpinBox
+                icon: "speed"
+                text: Translation.tr("Animation Speed") + " (%)"
+                value: Math.round((MetricsConfig.options.durationScale ?? 1.0) * 100)
+                from: 50
+                to: 200
+                stepSize: 10
+                property bool _ready: false
+                Component.onCompleted: _ready = true
+                onValueChanged: {
+                    if (!_ready) return
+                    MetricsConfig.options.durationScale = value / 100
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Higher = slower animations. 0% disables animations entirely.")
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
         icon: "folder"
         title: Translation.tr("Icon Theme")
 

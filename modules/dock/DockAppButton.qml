@@ -2,7 +2,6 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -335,23 +334,12 @@ DockButton {
                 }
             }
 
-            Loader {
+            Tint {
                 active: Config.options?.dock?.monochromeIcons ?? false
                 anchors.fill: iconImageLoader
-                sourceComponent: Item {
-                    Desaturate {
-                        id: desaturatedIcon
-                        visible: false // There's already color overlay
-                        anchors.fill: parent
-                        source: iconImageLoader
-                        desaturation: 0.8
-                    }
-                    ColorOverlay {
-                        anchors.fill: desaturatedIcon
-                        source: desaturatedIcon
-                        color: ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary, 0.9)
-                    }
-                }
+                source: iconImageLoader
+                tintColor: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+                tintOpacity: 0.1
             }
 
             // Smart indicator: shows window count and which is focused

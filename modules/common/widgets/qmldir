@@ -105,6 +105,7 @@ StyledText 1.0 StyledText.qml
 StyledToolTipContent 1.0 StyledToolTipContent.qml
 StyledToolTip 1.0 StyledToolTip.qml
 ThumbnailImage 1.0 ThumbnailImage.qml
+Tint 1.0 Tint.qml
 ToastNotification 1.0 ToastNotification.qml
 ToolbarButton 1.0 ToolbarButton.qml
 Toolbar 1.0 Toolbar.qml

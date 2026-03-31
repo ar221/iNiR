@@ -6,7 +6,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
-import Qt5Compat.GraphicalEffects
 
 MouseArea {
     id: root
@@ -100,38 +99,20 @@ MouseArea {
 
     IconImage {
         id: trayIcon
-        visible: !(Config.options?.bar?.tray?.monochromeIcons ?? false)
         source: root.item?.icon ?? ""
         anchors.centerIn: parent
         width: parent.width
         height: parent.height
     }
 
-    Loader {
+    Tint {
         active: Config.options?.bar?.tray?.monochromeIcons ?? false
         anchors.centerIn: parent
         width: root.width
         height: root.height
-        sourceComponent: Item {
-            IconImage {
-                id: tintedIcon
-                visible: false
-                anchors.fill: parent
-                source: root.item?.icon ?? ""
-            }
-            Desaturate {
-                id: desaturatedIcon
-                visible: false
-                anchors.fill: parent
-                source: tintedIcon
-                desaturation: 0.8
-            }
-            ColorOverlay {
-                anchors.fill: desaturatedIcon
-                source: desaturatedIcon
-                color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
-            }
-        }
+        source: trayIcon
+        tintColor: Appearance.colors.colOnLayer0
+        tintOpacity: 0.1
     }
 
     PopupToolTip {
