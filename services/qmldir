@@ -14,6 +14,7 @@ singleton DictationServer 1.0 DictationServer.qml
 singleton Cliphist 1.0 Cliphist.qml
 singleton CompositorService 1.0 CompositorService.qml
 singleton ConflictKiller 1.0 ConflictKiller.qml
+singleton Contracts 1.0 Contracts.qml
 DankSocket 1.0 DankSocket.qml
 singleton DateTime 1.0 DateTime.qml
 singleton EasyEffects 1.0 EasyEffects.qml

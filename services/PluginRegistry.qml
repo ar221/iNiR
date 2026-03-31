@@ -73,6 +73,7 @@ Singleton {
                 name: _plugins[id].name,
                 type: _plugins[id].type,
                 enabled: _plugins[id].enabled,
+                contract: _plugins[id].contract ?? null,
                 interval: _plugins[id].interval ?? null,
                 lastStatus: _plugins[id].lastStatus,
                 lastError: _plugins[id].lastError
@@ -84,6 +85,8 @@ Singleton {
         if (_scanning) return
         _scanning = true
         _reloadVersion++
+        // Reset contract overrides before re-scan to clear stale state
+        Contracts.resetAll()
         print("[PluginRegistry] Scanning " + pluginDir + " (v" + _reloadVersion + ")")
         scanProc.running = true
     }
@@ -120,9 +123,42 @@ Singleton {
         for (const chunk of chunks) {
             try {
                 const manifest = JSON.parse(chunk.trim())
-                if (!manifest.id || !manifest.barWidget) continue
+                if (!manifest.id) continue
 
                 const isEnabled = enabledList ? (enabledList.indexOf(manifest.id) !== -1) : true
+
+                // Override plugins — replace a contract slot with a custom component
+                if (manifest.override) {
+                    const pluginEntry = {
+                        name: manifest.name ?? manifest.id,
+                        type: "override",
+                        enabled: isEnabled,
+                        contract: manifest.override.contract ?? "",
+                        entryPoint: manifest.override.entryPoint ?? "Main.qml",
+                        lastStatus: isEnabled ? "active" : "disabled",
+                        lastError: "",
+                        manifest: manifest
+                    }
+                    newPlugins[manifest.id] = pluginEntry
+
+                    // Apply override to the contract slot if enabled
+                    if (isEnabled && pluginEntry.contract) {
+                        const slot = Contracts.getSlot(pluginEntry.contract)
+                        if (slot) {
+                            const pluginUrl = "file://" + root.pluginDir + "/" + manifest.id + "/" + pluginEntry.entryPoint
+                            slot.override(pluginUrl)
+                            pluginEntry.lastStatus = "active"
+                        } else {
+                            pluginEntry.lastStatus = "error"
+                            pluginEntry.lastError = "Unknown contract slot: " + pluginEntry.contract
+                        }
+                    }
+                    continue
+                }
+
+                // Bar widget plugins — existing poll/qml types
+                if (!manifest.barWidget) continue
+
                 const widgetType = manifest.barWidget.type ?? "poll"
 
                 const pluginEntry = {
