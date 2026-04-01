@@ -44,7 +44,7 @@ opencode.json
 .memory/
 .task/
 .tmp/
-.knowledge
+.knowledge/
 context-architect/
 hooks/
 inir-docs/
