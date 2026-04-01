@@ -236,19 +236,7 @@ case "${SKIP_NIRI}" in
     [[ -f "$NIRI_BINDS_CFG" ]] && NIRI_BINDS_TARGET="$NIRI_BINDS_CFG"
 
     if [[ -f "$NIRI_CFG" ]]; then
-      POLKIT_AGENT=""
-      for agent in \
-        "/usr/lib/polkit-kde-authentication-agent-1" \
-        "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" \
-        "/usr/lib/mate-polkit/polkit-mate-authentication-agent-1" \
-        "/usr/lib/lxpolkit/lxpolkit" \
-        "/usr/bin/lxqt-policykit-agent"
-      do
-        if [[ -f "$agent" ]] || [[ -x "$agent" ]]; then
-          POLKIT_AGENT="$agent"
-          break
-        fi
-      done
+      POLKIT_AGENT="$(get-polkit-agent)"
       if [[ -n "$POLKIT_AGENT" ]]; then
         sed -i "s|spawn-at-startup \"/usr/lib/mate-polkit/polkit-mate-authentication-agent-1\"|spawn-at-startup \"${POLKIT_AGENT}\"|" "$NIRI_STARTUP_TARGET"
         log_success "Polkit agent: $(basename "$(dirname "$POLKIT_AGENT")")/$(basename "$POLKIT_AGENT")"

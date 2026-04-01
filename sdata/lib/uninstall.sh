@@ -151,9 +151,12 @@ niri_config_has_user_customizations() {
 # Check if a config file was modified by user (compare to defaults if available)
 config_was_user_modified() {
     local config_path="$1"
-    local default_path="${REPO_dots}/.config/${config_path#${XDG_CONFIG_HOME}/}"
+    local runtime_dir
+    runtime_dir="$(get_runtime_shell_dir)"
+    local repo_dots="${runtime_dir:+${runtime_dir}/dots}"
+    local default_path="${repo_dots:+${repo_dots}/.config/${config_path#${XDG_CONFIG_HOME}/}}"
     
-    if [[ -f "$default_path" && -f "$config_path" ]]; then
+    if [[ -n "$default_path" && -f "$default_path" && -f "$config_path" ]]; then
         ! diff -q "$config_path" "$default_path" &>/dev/null
     else
         # If no default to compare, assume user modified
