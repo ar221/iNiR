@@ -53,21 +53,18 @@ handle_kde_material_you_colors() {
             ;;
     esac
 
-    # Kill any previous kde-material-you-colors instance to prevent stacking
+    # Kill any previous wrapper process to prevent stacking
     local pidfile="$CACHE_DIR/kde-material-you-colors.pid"
     if [[ -f "$pidfile" ]]; then
         local old_pid
         old_pid=$(<"$pidfile")
         if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
             kill "$old_pid" 2>/dev/null
-            wait "$old_pid" 2>/dev/null
         fi
     fi
 
-    "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant" &
+    nohup "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant" >/dev/null 2>&1 &
     echo $! > "$pidfile"
-    wait $!
-    rm -f "$pidfile"
 }
 
 pre_process() {
