@@ -5,7 +5,7 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.17.4] - 2026-04-05
 
 ### Added
 - **Complete Internationalization**: 14 new languages fully translated with 3400+ keys each (es_AR, fr_FR, de_DE, it_IT, pt_BR, ru_RU, uk_UA, hi_IN, ar_SA, he_HE, zh_CN, ja_JP, ko_KR, vi_VN).
