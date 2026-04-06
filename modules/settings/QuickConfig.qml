@@ -1,3 +1,4 @@
+import qs
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -21,43 +22,11 @@ ContentPage {
     Process {
         id: randomWallProc
         property string status: ""
-        property string scriptPath: `${Directories.scriptPath}/colors/random/random_konachan_wall.sh`
+        property string scriptPath: `${Directories.scriptsPath}/colors/random/random_konachan_wall.sh`
         command: ["/usr/bin/bash", "-c", FileUtils.trimFileProtocol(randomWallProc.scriptPath)]
         stdout: SplitParser {
             onRead: data => {
                 randomWallProc.status = data.trim();
-            }
-        }
-    }
-
-    component SmallLightDarkPreferenceButton: RippleButton {
-        id: smallLightDarkPreferenceButton
-        required property bool dark
-        property color colText: toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
-        padding: 5
-        Layout.fillWidth: true
-        toggled: Appearance.m3colors.darkmode === dark
-        colBackground: Appearance.colors.colLayer2
-        onClicked: {
-            Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${dark ? "dark" : "light"} --noswitch`]);
-        }
-        contentItem: Item {
-            anchors.centerIn: parent
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 0
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignHCenter
-                    iconSize: 30
-                    text: dark ? "dark_mode" : "light_mode"
-                    color: smallLightDarkPreferenceButton.colText
-                }
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: dark ? Translation.tr("Dark") : Translation.tr("Light")
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: smallLightDarkPreferenceButton.colText
-                }
             }
         }
     }
@@ -70,122 +39,209 @@ ContentPage {
         Layout.fillWidth: true
 
         SettingsGroup {
-            RowLayout {
+            // ── Hero wallpaper preview ──
+            Rectangle {
+                id: heroCard
                 Layout.fillWidth: true
+                Layout.preferredHeight: 220
+                radius: Appearance.rounding.normal
+                color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                     : Appearance.inirEverywhere ? Appearance.inir.colLayer0
+                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                     : Appearance.colors.colLayer0
+                border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                    : Appearance.inirEverywhere ? 1 : (Appearance.auroraEverywhere ? 0 : 1)
+                border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                           : Appearance.inirEverywhere ? Appearance.inir.colBorder
+                           : Appearance.colors.colLayer0Border
+                layer.enabled: true
+                layer.smooth: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: heroCard.width
+                        height: heroCard.height
+                        radius: heroCard.radius
+                    }
+                }
 
-                Item {
-                    implicitWidth: 340
-                    implicitHeight: 200
-                    
-                    StyledImage {
-                        id: wallpaperPreview
-                        anchors.fill: parent
-                        sourceSize.width: parent.implicitWidth
-                        sourceSize.height: parent.implicitHeight
-                        fillMode: Image.PreserveAspectCrop
-                        source: Wallpapers.effectiveWallpaperUrl
-                        cache: false
-                        layer.enabled: true
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: 360
-                                height: 200
-                                radius: Appearance.rounding.normal
+                StyledImage {
+                    id: wallpaperPreview
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectCrop
+                    source: Wallpapers.effectiveWallpaperUrl
+                    cache: false
+                    mipmap: true
+                    smooth: true
+                }
+
+                // Top gradient for controls
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 60
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.45) }
+                        GradientStop { position: 1.0; color: "transparent" }
+                    }
+                }
+
+                // Bottom gradient for controls
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 80
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 0.4; color: Qt.rgba(0, 0, 0, 0.25) }
+                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.65) }
+                    }
+                }
+
+                // Right-side gradient for button contrast
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    width: parent.width * 0.45
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 0.6; color: Qt.rgba(0, 0, 0, 0.25) }
+                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.55) }
+                    }
+                }
+
+                // Light/Dark toggle — top right
+                ButtonGroup {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: 10
+                    uniformCellSizes: true
+                    spacing: 0
+
+                    SelectionGroupButton {
+                        buttonIcon: "light_mode"
+                        buttonText: Translation.tr("Light")
+                        toggled: !Appearance.m3colors.darkmode
+                        leftmost: true
+                        onClicked: MaterialThemeLoader.setDarkMode(false)
+                    }
+                    SelectionGroupButton {
+                        buttonIcon: "dark_mode"
+                        buttonText: Translation.tr("Dark")
+                        toggled: Appearance.m3colors.darkmode
+                        rightmost: true
+                        onClicked: MaterialThemeLoader.setDarkMode(true)
+                    }
+                }
+
+                // Bottom left — random buttons (conditional on weeb policy)
+                RowLayout {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.margins: 10
+                    spacing: 6
+                    visible: (Config.options?.policies?.weeb ?? 0) === 1
+
+                    RippleButtonWithIcon {
+                        enabled: !randomWallProc.running
+                        buttonRadius: Appearance.rounding.full
+                        materialIcon: "ifl"
+                        mainText: randomWallProc.running ? Translation.tr("...") : Translation.tr("Konachan")
+                        colBackground: Qt.rgba(0, 0, 0, 0.5)
+                        colBackgroundHover: Qt.rgba(0, 0, 0, 0.65)
+                        mainContentComponent: Component {
+                            StyledText {
+                                text: randomWallProc.running ? Translation.tr("...") : Translation.tr("Konachan")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: "white"
                             }
+                        }
+                        onClicked: {
+                            randomWallProc.scriptPath = `${Directories.scriptsPath}/colors/random/random_konachan_wall.sh`;
+                            randomWallProc.running = true;
+                        }
+                        StyledToolTip {
+                            text: Translation.tr("Random SFW Anime wallpaper from Konachan\nImage is saved to ~/Pictures/Wallpapers").replace("~/Pictures/Wallpapers", Directories.shortHomePath(Directories.wallpapersPath))
+                        }
+                    }
+                    RippleButtonWithIcon {
+                        enabled: !randomWallProc.running
+                        buttonRadius: Appearance.rounding.full
+                        materialIcon: "ifl"
+                        mainText: randomWallProc.running ? Translation.tr("...") : Translation.tr("osu!")
+                        colBackground: Qt.rgba(0, 0, 0, 0.5)
+                        colBackgroundHover: Qt.rgba(0, 0, 0, 0.65)
+                        mainContentComponent: Component {
+                            StyledText {
+                                text: randomWallProc.running ? Translation.tr("...") : Translation.tr("osu!")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: "white"
+                            }
+                        }
+                        onClicked: {
+                            randomWallProc.scriptPath = `${Directories.scriptsPath}/colors/random/random_osu_wall.sh`;
+                            randomWallProc.running = true;
+                        }
+                        StyledToolTip {
+                            text: Translation.tr("Random osu! seasonal background\nImage is saved to ~/Pictures/Wallpapers").replace("~/Pictures/Wallpapers", Directories.shortHomePath(Directories.wallpapersPath))
                         }
                     }
                 }
 
-                ColumnLayout {
-                    RippleButtonWithIcon {
-                        enabled: !randomWallProc.running
-                        visible: Config.options.policies.weeb === 1
-                        Layout.fillWidth: true
-                        buttonRadius: Appearance.rounding.small
-                        materialIcon: "ifl"
-                        mainText: randomWallProc.running ? Translation.tr("Be patient...") : Translation.tr("Random: Konachan")
-                        onClicked: {
-                            randomWallProc.scriptPath = `${Directories.scriptPath}/colors/random/random_konachan_wall.sh`;
-                            randomWallProc.running = true;
-                        }
-                        StyledToolTip {
-                            text: Translation.tr("Random SFW Anime wallpaper from Konachan\nImage is saved to ~/Pictures/Wallpapers")
-                        }
+                // Bottom right — choose file button with keyboard shortcut
+                RippleButtonWithIcon {
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    anchors.margins: 10
+                    buttonRadius: Appearance.rounding.full
+                    materialIcon: "wallpaper"
+                    colBackground: Qt.rgba(0, 0, 0, 0.5)
+                    colBackgroundHover: Qt.rgba(0, 0, 0, 0.65)
+                    onClicked: {
+                        Quickshell.execDetached(`${Directories.wallpaperSwitchScriptPath}`);
                     }
-                    RippleButtonWithIcon {
-                        enabled: !randomWallProc.running
-                        visible: Config.options.policies.weeb === 1
-                        Layout.fillWidth: true
-                        buttonRadius: Appearance.rounding.small
-                        materialIcon: "ifl"
-                        mainText: randomWallProc.running ? Translation.tr("Be patient...") : Translation.tr("Random: osu! seasonal")
-                        onClicked: {
-                            randomWallProc.scriptPath = `${Directories.scriptPath}/colors/random/random_osu_wall.sh`;
-                            randomWallProc.running = true;
-                        }
-                        StyledToolTip {
-                            text: Translation.tr("Random osu! seasonal background\nImage is saved to ~/Pictures/Wallpapers")
-                        }
-                    }
-                    RippleButtonWithIcon {
-                        Layout.fillWidth: true
-                        materialIcon: "wallpaper"
-                        StyledToolTip {
-                            text: Translation.tr("Pick wallpaper image on your system")
-                        }
-                        onClicked: {
-                            Quickshell.execDetached(`${Directories.wallpaperSwitchScriptPath}`);
-                        }
-                        mainContentComponent: Component {
+                    mainContentComponent: Component {
+                        RowLayout {
+                            spacing: 8
+                            StyledText {
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                text: Translation.tr("Choose file")
+                                color: "white"
+                            }
                             RowLayout {
-                                spacing: 10
+                                spacing: 2
+                                KeyboardKey { key: "Ctrl" }
+                                KeyboardKey { key: "Alt" }
                                 StyledText {
-                                    font.pixelSize: Appearance.font.pixelSize.small
-                                    text: Translation.tr("Choose file")
-                                    color: Appearance.colors.colOnSecondaryContainer
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: "+"
+                                    color: Qt.rgba(1, 1, 1, 0.6)
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
                                 }
-                                RowLayout {
-                                    spacing: 3
-                                    KeyboardKey {
-                                        key: "Ctrl"
-                                    }
-                                    KeyboardKey {
-                                        key: "Alt"
-                                    }
-                                    StyledText {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: "+"
-                                    }
-                                    KeyboardKey {
-                                        key: "T"
-                                    }
-                                }
+                                KeyboardKey { key: "T" }
                             }
                         }
                     }
-                    RowLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        uniformCellSizes: true
-
-                        SmallLightDarkPreferenceButton {
-                            Layout.fillHeight: true
-                            dark: false
-                        }
-                        SmallLightDarkPreferenceButton {
-                            Layout.fillHeight: true
-                            dark: true
-                        }
+                    StyledToolTip {
+                        text: Translation.tr("Pick wallpaper image on your system")
                     }
                 }
             }
 
+            // ── Color scheme variant chips ──
             ConfigSelectionArray {
-                currentValue: Config.options.appearance.palette.type
+                currentValue: Config.options?.appearance?.palette?.type ?? "auto"
                 onSelected: newValue => {
-                    Config.options.appearance.palette.type = newValue;
-                    Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`]);
+                    Config.setNestedValue("appearance.palette.type", newValue)
+                    if (ThemeService.isAutoTheme) {
+                        Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`]);
+                    } else {
+                        const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                        MaterialThemeLoader.applySchemeVariant(hex, newValue)
+                    }
                 }
                 options: [
                     {
@@ -227,19 +283,55 @@ ContentPage {
                 ]
             }
 
+            ConfigSpinBox {
+                icon: "palette"
+                text: Translation.tr("Wallpaper color strength") + " (%)"
+                value: Math.round((Config.options?.appearance?.wallpaperTheming?.colorStrength ?? 1.0) * 100)
+                from: 60
+                to: 180
+                stepSize: 5
+                property bool _ready: false
+                Component.onCompleted: _ready = true
+                onValueChanged: {
+                    if (!_ready) return;
+                    Config.setNestedValue("appearance.wallpaperTheming.colorStrength", value / 100)
+                    if (ThemeService.isAutoTheme)
+                        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch"])
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Controls how vivid wallpaper-derived accent colors are. 100% keeps the default balance; higher values produce richer accents.")
+                }
+            }
+
+            // ── Options strip ──
             SettingsSwitch {
                 buttonIcon: "ev_shadow"
                 text: Translation.tr("Transparency")
-                checked: Config.options.appearance.transparency.enable
+                checked: Config.options?.appearance?.transparency?.enable ?? false
                 onCheckedChanged: {
-                    Config.options.appearance.transparency.enable = checked;
+                    Config.setNestedValue("appearance.transparency.enable", checked)
                 }
                 StyledToolTip {
                     text: Translation.tr("Might look ass. Unsupported.")
                 }
             }
 
-            // Quick wallpaper grid
+            SettingsSwitch {
+                buttonIcon: "palette"
+                text: Translation.tr("Colors only mode")
+                checked: Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode ?? false
+                onCheckedChanged: {
+                    Config.setNestedValue("appearance.wallpaperTheming.colorsOnlyMode", checked)
+                    if (!checked)
+                        Config.setNestedValue("appearance.wallpaperTheming.previewSourcePath", "")
+                }
+                StyledToolTip {
+                    text: Translation.tr("Use any thumbnail as the theme source while keeping the current wallpaper")
+                }
+            }
+
+            // ── Wallpaper browser ──
             ContentSubsection {
                 title: Translation.tr("Quick select")
 
@@ -249,16 +341,30 @@ ContentPage {
 
                     RowLayout {
                         Layout.fillWidth: true
-                        StyledText {
-                            text: Translation.tr("Browse local wallpapers for a quick change")
-                            color: Appearance.colors.colSubtext
-                            font.pixelSize: Appearance.font.pixelSize.smaller
+
+                        // Folder breadcrumb
+                        RowLayout {
+                            spacing: 4
+                            MaterialSymbol {
+                                text: "folder"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colSubtext
+                            }
+                            StyledText {
+                                Layout.fillWidth: true
+                                elide: Text.ElideMiddle
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                text: FileUtils.trimFileProtocol(Wallpapers.effectiveDirectory)
+                                color: Appearance.colors.colSubtext
+                            }
                         }
+
                         Item { Layout.fillWidth: true }
+
                         RippleButtonWithIcon {
                             buttonRadius: Appearance.rounding.full
                             materialIcon: "folder_open"
-                            mainText: Translation.tr("Use current folder")
+                            mainText: Translation.tr("Current folder")
                             onClicked: {
                                 const currentPath = Config.options?.background?.wallpaperPath ?? "";
                                 if (currentPath && currentPath.length) {
@@ -267,34 +373,24 @@ ContentPage {
                                     Wallpapers.setDirectory(Wallpapers.defaultFolder.toString());
                                 }
                             }
+                            StyledToolTip {
+                                text: Translation.tr("Switch to the folder containing the current wallpaper")
+                            }
                         }
                         RippleButtonWithIcon {
                             buttonRadius: Appearance.rounding.full
                             materialIcon: "apps"
-                            mainText: Translation.tr("Open selector")
+                            mainText: Translation.tr("Selector")
                             onClicked: {
                                 Config.setNestedValue("wallpaperSelector.selectionTarget", "main")
                                 if (Config.options?.background?.multiMonitor?.enable && multiMonitorPanel.selectedMonitor) {
                                     Config.setNestedValue("wallpaperSelector.targetMonitor", multiMonitorPanel.selectedMonitor)
                                 }
-                                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"]);
+                                Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"]);
                             }
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        StyledText {
-                            text: Translation.tr("Folder:")
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colSubtext
-                        }
-                        StyledText {
-                            Layout.fillWidth: true
-                            elide: Text.ElideMiddle
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            text: FileUtils.trimFileProtocol(Wallpapers.effectiveDirectory)
-                            color: Appearance.colors.colOnLayer1
+                            StyledToolTip {
+                                text: Translation.tr("Open the full wallpaper selector overlay")
+                            }
                         }
                     }
 
@@ -342,7 +438,7 @@ ContentPage {
 
                         Behavior on Layout.preferredHeight {
                             enabled: Appearance.animationsEnabled
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                     }
 
@@ -374,6 +470,14 @@ ContentPage {
                             anchors.fill: parent
                             anchors.margins: Appearance.sizes.spacingSmall
                             model: Wallpapers.folderModel
+                            Component.onCompleted: Wallpapers.generateThumbnail("large")
+
+                            Connections {
+                                target: Wallpapers
+                                function onFolderChanged() {
+                                    Wallpapers.generateThumbnail("large")
+                                }
+                            }
 
                             // Responsive cell sizing - fill available width
                             property int minCellWidth: 110
@@ -410,8 +514,15 @@ ContentPage {
                                         if (delegateItem.fileIsDir) return false
                                         if (multiMonitorPanel.visible && multiMonitorPanel.backdropViewActive)
                                             return delegateItem.filePath === multiMonitorPanel.backdropPath
-                                        const multiMon = Config.options?.background?.multiMonitor?.enable && multiMonitorPanel.selectedMonitor
-                                        return delegateItem.filePath === (multiMon ? (WallpaperListener.effectivePerMonitor[multiMonitorPanel.selectedMonitor]?.path ?? Config.options.background.wallpaperPath) : Config.options.background.wallpaperPath)
+                                        if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode ?? false) {
+                                            const previewPath = Config.options?.appearance?.wallpaperTheming?.previewSourcePath ?? ""
+                                            return delegateItem.filePath === previewPath
+                                        }
+                                        const multiMon = (Config.options?.background?.multiMonitor?.enable ?? false) && multiMonitorPanel.selectedMonitor
+                                        const currentWallpaperPath = Config.options?.background?.wallpaperPath ?? ""
+                                        return delegateItem.filePath === (multiMon
+                                            ? (WallpaperListener.effectivePerMonitor[multiMonitorPanel.selectedMonitor]?.path ?? currentWallpaperPath)
+                                            : currentWallpaperPath)
                                     }
                                     isHovered: delegateItem.index === wallpaperGrid.currentHoverIndex
 
@@ -429,6 +540,8 @@ ContentPage {
                                             }
                                             Config.setNestedValue("background.backdrop.useMainWallpaper", false)
                                             Wallpapers.ensureVideoFirstFrame(delegateItem.filePath)
+                                        } else if (Config.options?.appearance?.wallpaperTheming?.colorsOnlyMode) {
+                                            Wallpapers.applyColorsOnly(delegateItem.filePath, Appearance.m3colors.darkmode)
                                         } else {
                                             const mon = (Config.options?.background?.multiMonitor?.enable ?? false) ? (multiMonitorPanel.selectedMonitor || "") : ""
                                             Wallpapers.select(delegateItem.filePath, Appearance.m3colors.darkmode, mon);
@@ -439,11 +552,14 @@ ContentPage {
                         }
 
                         // Empty state
-                        PagePlaceholder {
+                        MaterialPlaceholderMessage {
+                            anchors.centerIn: parent
+                            maximumWidth: 360
                             shown: Wallpapers.folderModel.count === 0
                             icon: "image"
-                            description: Translation.tr("No images found")
-                            shape: MaterialShape.Shape.Cookie7Sided
+                            text: Translation.tr("No images found")
+                            explanation: Translation.tr("Add wallpapers to this folder or choose a different location")
+                            shape: MaterialShape.Shape.Bun
                         }
                     }
                 }
@@ -474,6 +590,9 @@ ContentPage {
                 spacing: Appearance.sizes.spacingSmall
 
                 property string selectedMonitor: {
+                    const primary = GlobalStates.primaryScreen
+                    const primaryName = primary ? (WallpaperListener.getMonitorName(primary) ?? "") : ""
+                    if (primaryName) return primaryName
                     const focused = WallpaperListener.getFocusedMonitor()
                     if (focused) return focused
                     const screens = Quickshell.screens
@@ -606,11 +725,11 @@ ContentPage {
 
                                     Behavior on opacity {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
                                     Behavior on z {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
 
                                     StyledImage {
@@ -729,11 +848,11 @@ ContentPage {
                                     opacity: monitorStack.isSelected ? 1.0 : (monCardMa.containsMouse ? 0.95 : 0.8)
                                     Behavior on scale {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
                                     Behavior on opacity {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
 
                                     MouseArea {
@@ -893,7 +1012,7 @@ ContentPage {
                                         border.color: Appearance.colors.colPrimary
                                         Behavior on border.width {
                                             enabled: Appearance.animationsEnabled
-                                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                         }
                                     }
                                 }
@@ -973,11 +1092,11 @@ ContentPage {
                                         opacity: splitMonCard.isSelected ? 1.0 : 0.75
                                         Behavior on scale {
                                             enabled: Appearance.animationsEnabled
-                                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                         }
                                         Behavior on opacity {
                                             enabled: Appearance.animationsEnabled
-                                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                         }
 
                                         MouseArea {
@@ -997,6 +1116,7 @@ ContentPage {
                                             sourceSize.height: splitMonCard.height * 2
                                             cache: true
                                             layer.enabled: true
+                                            layer.smooth: true
                                             layer.effect: OpacityMask {
                                                 maskSource: Rectangle {
                                                     width: splitMonCard.width
@@ -1020,6 +1140,7 @@ ContentPage {
                                             cache: true
                                             playing: false
                                             layer.enabled: true
+                                            layer.smooth: true
                                             layer.effect: OpacityMask {
                                                 maskSource: Rectangle {
                                                     width: splitMonCard.width
@@ -1040,6 +1161,7 @@ ContentPage {
                                             }
                                             cache: true
                                             layer.enabled: true
+                                            layer.smooth: true
                                             layer.effect: OpacityMask {
                                                 maskSource: Rectangle {
                                                     width: splitMonCard.width
@@ -1143,7 +1265,7 @@ ContentPage {
                                             border.color: Appearance.colors.colPrimary
                                             Behavior on border.width {
                                                 enabled: Appearance.animationsEnabled
-                                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                                animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                             }
                                         }
                                     }
@@ -1195,7 +1317,7 @@ ContentPage {
                                         if (mon) {
                                             Config.setNestedValue("wallpaperSelector.selectionTarget", "main")
                                             Config.setNestedValue("wallpaperSelector.targetMonitor", mon)
-                                            Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"])
+                                            Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"])
                                         }
                                     }
                                 }
@@ -1265,7 +1387,7 @@ ContentPage {
                                     visible: multiMonitorPanel.backdropEnabled
                                     onClicked: {
                                         Config.setNestedValue("wallpaperSelector.selectionTarget", "backdrop")
-                                        Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"])
+                                        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"])
                                     }
                                     StyledToolTip {
                                         text: Translation.tr("Change the backdrop wallpaper (used for overview/blur)")
@@ -1324,10 +1446,10 @@ ContentPage {
                 ContentSubsection {
                     title: Translation.tr("Bar position")
                     ConfigSelectionArray {
-                        currentValue: (Config.options.bar.bottom ? 1 : 0) | (Config.options.bar.vertical ? 2 : 0)
+                        currentValue: ((Config.options?.bar?.bottom ?? false) ? 1 : 0) | ((Config.options?.bar?.vertical ?? false) ? 2 : 0)
                         onSelected: newValue => {
-                            Config.options.bar.bottom = (newValue & 1) !== 0;
-                            Config.options.bar.vertical = (newValue & 2) !== 0;
+                            Config.setNestedValue("bar.bottom", (newValue & 1) !== 0)
+                            Config.setNestedValue("bar.vertical", (newValue & 2) !== 0)
                         }
                         options: [
                             {
@@ -1357,7 +1479,7 @@ ContentPage {
                     title: Translation.tr("Bar style")
 
                     ConfigSelectionArray {
-                        currentValue: Config.options.bar.cornerStyle
+                        currentValue: Config.options?.bar?.cornerStyle ?? 0
                         onSelected: newValue => {
                             // HUG mode (0) is incompatible with Angel style — revert to Float
                             if (newValue === 0 && Appearance.angelEverywhere) {
@@ -1392,9 +1514,9 @@ ContentPage {
                     title: Translation.tr("Screen round corner")
 
                     ConfigSelectionArray {
-                        currentValue: Config.options.appearance.fakeScreenRounding
+                        currentValue: Config.options?.appearance?.fakeScreenRounding ?? 0
                         onSelected: newValue => {
-                            Config.options.appearance.fakeScreenRounding = newValue;
+                            Config.setNestedValue("appearance.fakeScreenRounding", newValue)
                         }
                         options: [
                             {
@@ -1422,9 +1544,7 @@ ContentPage {
                     ConfigSelectionArray {
                         currentValue: Config.options?.background?.backdrop?.hideWallpaper ? 1 : 0
                         onSelected: newValue => {
-                            if (!Config.options.background) Config.options.background = ({});
-                            if (!Config.options.background.backdrop) Config.options.background.backdrop = ({});
-                            Config.options.background.backdrop.hideWallpaper = (newValue === 1);
+                            Config.setNestedValue("background.backdrop.hideWallpaper", newValue === 1);
                         }
                         options: [
                             {
@@ -1501,6 +1621,18 @@ ContentPage {
 
             SettingsSwitch {
                 buttonIcon: "visibility_off"
+                text: Translation.tr("Disable Discover overlay")
+                checked: Config.options?.gameMode?.disableDiscoverOverlay ?? true
+                onCheckedChanged: {
+                    Config.setNestedValue("gameMode.disableDiscoverOverlay", checked)
+                }
+                StyledToolTip {
+                    text: Translation.tr("Stop discover-overlay while Game Mode is active")
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "visibility_off"
                 text: Translation.tr("Minimal mode")
                 checked: Config.options?.gameMode?.minimalMode ?? true
                 onCheckedChanged: {
@@ -1529,7 +1661,7 @@ ContentPage {
                     buttonRadius: Appearance.rounding.small
                     materialIcon: "refresh"
                     mainText: Translation.tr("Reload shell")
-                    onClicked: Quickshell.execDetached(["/usr/bin/setsid", "/usr/bin/fish", "-c", "qs kill -c ii; sleep 0.3; qs -c ii"])
+                    onClicked: Quickshell.execDetached(["/usr/bin/bash", Quickshell.shellPath("scripts/restart-shell.sh")])
                 }
 
                 RippleButtonWithIcon {
@@ -1545,7 +1677,7 @@ ContentPage {
                     buttonRadius: Appearance.rounding.small
                     materialIcon: "keyboard"
                     mainText: Translation.tr("Shortcuts")
-                    onClicked: Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "cheatsheet", "toggle"])
+                    onClicked: Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "cheatsheet", "toggle"])
                 }
             }
 
@@ -1553,10 +1685,7 @@ ContentPage {
                 buttonIcon: "notifications_active"
                 text: Translation.tr("Show reload toasts")
                 checked: Config.options?.reloadToasts?.enable ?? true
-                onCheckedChanged: {
-                    if (!Config.options.reloadToasts) Config.options.reloadToasts = ({})
-                    Config.options.reloadToasts.enable = checked
-                }
+                onCheckedChanged: Config.setNestedValue("reloadToasts.enable", checked)
                 StyledToolTip {
                     text: Translation.tr("Show toast notifications when Quickshell or Niri config reloads.\nErrors are always shown.")
                 }

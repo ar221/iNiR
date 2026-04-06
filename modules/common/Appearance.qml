@@ -93,8 +93,8 @@ Singleton {
     // Components should check this to hide backgrounds/shadows during GameMode
     readonly property bool gameModeMinimal: _gameModeMinimalMode
 
-    onEffectsEnabledChanged: console.log("[Appearance] effectsEnabled:", effectsEnabled, "gameModeActive:", _gameModeActive)
-    onAnimationsEnabledChanged: console.log("[Appearance] animationsEnabled:", animationsEnabled)
+    onEffectsEnabledChanged: if (Qt.application.arguments.indexOf("--debug") !== -1) console.log("[Appearance] effectsEnabled:", effectsEnabled, "gameModeActive:", _gameModeActive)
+    onAnimationsEnabledChanged: if (Qt.application.arguments.indexOf("--debug") !== -1) console.log("[Appearance] animationsEnabled:", animationsEnabled)
 
     // Scale factors from config (appearance.metrics.*).
     // Not a JsonObject — read imperatively on configChanged to avoid
@@ -125,16 +125,6 @@ Singleton {
     function calcEffectiveDuration(baseDuration) {
         return animationsEnabled ? Math.round(baseDuration * _metricsDurationScale) : 0
     }
-
-    // Color transition system — smooth Material You palette changes on wallpaper switch
-    readonly property int colorTransitionDuration: calcEffectiveDuration(
-        Config.options?.background?.transition?.colorDuration
-        ?? Config.options?.background?.transition?.duration
-        ?? 800
-    )
-    readonly property bool colorTransitionsEnabled: animationsEnabled
-        && (Config.options?.background?.transition?.animateColors ?? true)
-    property bool _suppressColorTransition: false
 
     m3colors: QtObject {
         property bool darkmode: true
@@ -194,62 +184,6 @@ Singleton {
         property color m3onSuccess: "#213528"
         property color m3successContainer: "#374B3E"
         property color m3onSuccessContainer: "#D1E9D6"
-        // Color transition Behaviors — smooth Material You palette changes on wallpaper switch
-        // Skipping term0-term15 (terminal colors snap instantly)
-        Behavior on m3background { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onBackground { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surface { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceDim { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceBright { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceContainerLowest { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceContainerLow { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceContainerHigh { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceContainerHighest { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSurface { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSurfaceVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3inverseSurface { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3inverseOnSurface { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3outline { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3outlineVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3shadow { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3scrim { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3surfaceTint { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3primary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onPrimary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3primaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onPrimaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3inversePrimary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3secondary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSecondary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3secondaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSecondaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3tertiary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onTertiary { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3tertiaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onTertiaryContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3error { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onError { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3errorContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onErrorContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3primaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3primaryFixedDim { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onPrimaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onPrimaryFixedVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3secondaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3secondaryFixedDim { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSecondaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSecondaryFixedVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3tertiaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3tertiaryFixedDim { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onTertiaryFixed { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onTertiaryFixedVariant { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3success { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSuccess { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3successContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-        Behavior on m3onSuccessContainer { enabled: root.colorTransitionsEnabled && !root._suppressColorTransition; ColorAnimation { duration: root.colorTransitionDuration; easing.type: Easing.InOutQuad } }
-
         property color term0: "#EDE4E4"
         property color term1: "#B52755"
         property color term2: "#A97363"
@@ -399,9 +333,9 @@ Singleton {
     }
 
     rounding: QtObject {
-        // Dynamic rounding scalar: theme metadata * user override from Metrics
-        // Matrix -> 0, Zen Garden -> 1.5, Standard -> 1.0 (theme base)
-        property real scale: (root._themeMeta.roundingScale ?? 1.0) * root._metricsRoundingScale
+        // Dynamic rounding scalar based on theme metadata
+        // Matrix -> 0, Zen Garden -> 1.5, Standard -> 1.0
+        property real scale: root._themeMeta.roundingScale ?? 1.0
         
         property int unsharpen: Math.max(0, Math.round(2 * scale))
         property int unsharpenmore: Math.max(0, Math.round(6 * scale))
@@ -415,8 +349,8 @@ Singleton {
         property int windowRounding: Math.max(0, Math.round(18 * scale))
     }
 
-    // Typography scale factor: config base * user override from Metrics
-    property real fontSizeScale: (Config.options?.appearance?.typography?.sizeScale ?? 1.0) * _metricsFontScale
+    // Typography scale factor from config
+    property real fontSizeScale: Config.options?.appearance?.typography?.sizeScale ?? 1.0
 
     // Theme Metadata Logic
     readonly property var activeThemePreset: ThemePresets.getPreset(Config.options?.appearance?.theme ?? "auto")
@@ -499,25 +433,11 @@ Singleton {
     }
 
     animation: QtObject {
-        // Named duration tiers (pre-scaled by durationScale, respects GameMode)
-        property QtObject durations: QtObject {
-            readonly property int supershort: root.calcEffectiveDuration(100)
-            readonly property int short_: root.calcEffectiveDuration(200)
-            readonly property int normal: root.calcEffectiveDuration(400)
-            readonly property int long_: root.calcEffectiveDuration(600)
-            readonly property int extraLong: root.calcEffectiveDuration(1000)
-        }
-
         property QtObject elementMove: QtObject {
             property int duration: root.calcEffectiveDuration(animationCurves.expressiveDefaultSpatialDuration)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 650
-            property Component colorAnimation: Component { ColorAnimation {
-                duration: root.animation.elementMove.duration
-                easing.type: root.animation.elementMove.type
-                easing.bezierCurve: root.animation.elementMove.bezierCurve
-            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMove.duration
@@ -532,11 +452,6 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedDecel
             property int velocity: 650
-            property Component colorAnimation: Component { ColorAnimation {
-                duration: root.animation.elementMoveEnter.duration
-                easing.type: root.animation.elementMoveEnter.type
-                easing.bezierCurve: root.animation.elementMoveEnter.bezierCurve
-            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMoveEnter.duration
@@ -551,11 +466,6 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedAccel
             property int velocity: 650
-            property Component colorAnimation: Component { ColorAnimation {
-                duration: root.animation.elementMoveExit.duration
-                easing.type: root.animation.elementMoveExit.type
-                easing.bezierCurve: root.animation.elementMoveExit.bezierCurve
-            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementMoveExit.duration
@@ -587,11 +497,6 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasized
             property int velocity: 650
-            property Component colorAnimation: Component { ColorAnimation {
-                duration: root.animation.elementResize.duration
-                easing.type: root.animation.elementResize.type
-                easing.bezierCurve: root.animation.elementResize.bezierCurve
-            }}
             property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: root.animation.elementResize.duration
@@ -606,18 +511,13 @@ Singleton {
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.expressiveDefaultSpatial
             property int velocity: 850
-            property Component colorAnimation: Component { ColorAnimation {
-                duration: root.animation.clickBounce.duration
-                easing.type: root.animation.clickBounce.type
-                easing.bezierCurve: root.animation.clickBounce.bezierCurve
-            }}
             property Component numberAnimation: Component { NumberAnimation {
                     duration: root.animation.clickBounce.duration
                     easing.type: root.animation.clickBounce.type
                     easing.bezierCurve: root.animation.clickBounce.bezierCurve
             }}
         }
-
+        
         property QtObject scroll: QtObject {
             property int duration: root.calcEffectiveDuration(200)
             property int type: Easing.BezierSpline
@@ -954,31 +854,31 @@ Singleton {
         readonly property int roundingLarge: Config.options?.appearance?.angel?.rounding?.large ?? 25
     }
 
-    sizes: QtObject {
-        property real spacingSmall: Math.round(8 * root._metricsSpacingScale)
-        property real spacingMedium: Math.round(12 * root._metricsSpacingScale)
-        property real spacingLarge: Math.round(16 * root._metricsSpacingScale)
-        property real baseBarHeight: 40
+     sizes: QtObject {
+         property real spacingSmall: Math.round(8 * root.fontSizeScale)
+         property real spacingMedium: Math.round(12 * root.fontSizeScale)
+         property real spacingLarge: Math.round(16 * root.fontSizeScale)
+        property real baseBarHeight: Math.round(40 * root.fontSizeScale)
         property real barHeight: (((Config.options?.bar?.cornerStyle ?? 0) === 1) || ((Config.options?.bar?.cornerStyle ?? 0) === 3)) ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
-        property real barCenterSideModuleWidth: (Config.options?.bar?.verbose ?? true) ? 360 : 140
-        property real barCenterSideModuleWidthShortened: 280
-        property real barCenterSideModuleWidthHellaShortened: 190
+        property real barCenterSideModuleWidth: (Config.options?.bar?.verbose ?? true) ? Math.round(360 * root.fontSizeScale) : Math.round(140 * root.fontSizeScale)
+        property real barCenterSideModuleWidthShortened: Math.round(280 * root.fontSizeScale)
+        property real barCenterSideModuleWidthHellaShortened: Math.round(190 * root.fontSizeScale)
         property real barShortenScreenWidthThreshold: 1200 // Shorten if screen width is at most this value
         property real barHellaShortenScreenWidthThreshold: 1000 // Shorten even more...
-        property real elevationMargin: 10
+        property real elevationMargin: Math.round(10 * root.fontSizeScale)
         property real fabShadowRadius: 5
         property real fabHoveredShadowRadius: 7
         property real hyprlandGapsOut: 5
-        property real mediaControlsWidth: 380
-        property real mediaControlsHeight: 150
-        property real notificationPopupWidth: 520
-        property real osdWidth: 180
-        property real searchWidthCollapsed: 210
-        property real searchWidth: 360
-        property real sidebarWidth: 460
-        property real sidebarWidthExtended: 750
-        property real baseVerticalBarWidth: 46
+        property real mediaControlsWidth: Math.round(380 * root.fontSizeScale)
+        property real mediaControlsHeight: Math.round(150 * root.fontSizeScale)
+        property real notificationPopupWidth: Math.round(410 * root.fontSizeScale)
+        property real osdWidth: Math.round(180 * root.fontSizeScale)
+        property real searchWidthCollapsed: Math.round(210 * root.fontSizeScale)
+        property real searchWidth: Math.round(360 * root.fontSizeScale)
+        property real sidebarWidth: Math.round(460 * root.fontSizeScale)
+        property real sidebarWidthExtended: Math.round(750 * root.fontSizeScale)
+        property real baseVerticalBarWidth: Math.round(46 * root.fontSizeScale)
         property real verticalBarWidth: (((Config.options?.bar?.cornerStyle ?? 0) === 1) || ((Config.options?.bar?.cornerStyle ?? 0) === 3)) ? 
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
         property real wallpaperSelectorWidth: 1200

@@ -83,12 +83,14 @@ DockButton {
     scale: appIsActive ? 1.05 : 1.0
     Behavior on scale {
         enabled: Appearance.animationsEnabled
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
     }
 
     property bool isSeparator: appToplevel.appId === "SEPARATOR"
     // Use originalAppId (preserves case) for desktop entry lookup, fallback to appId for backwards compat
-    property var desktopEntry: DesktopEntries.heuristicLookup(appToplevel.originalAppId ?? appToplevel.appId)
+    // AppSearch.lookupDesktopEntry adds StartupWMClass, exec-basename, and desktop-id-stem matching
+    // which covers AppImages and other apps where heuristicLookup alone fails.
+    property var desktopEntry: AppSearch.lookupDesktopEntry(appToplevel.originalAppId ?? appToplevel.appId)
     enabled: !isSeparator
 
     readonly property real dockHeight: Config.options?.dock?.height ?? 70
@@ -105,7 +107,7 @@ DockButton {
         opacity: root.buttonHovered && !root.isSeparator ? 0.6 : 0
         Behavior on opacity {
             enabled: Appearance.animationsEnabled
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
     }
 

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -19,8 +21,22 @@ AbstractWidget {
     property bool visibleWhenLocked: false
     property var configEntry: Config.options?.background?.widgets?.[configEntryName] ?? {}
     property string placementStrategy: configEntry.placementStrategy
-    property real targetX: Math.max(0, Math.min(configEntry.x, scaledScreenWidth - width))
-    property real targetY : Math.max(0, Math.min(configEntry.y, scaledScreenHeight - height))
+    function _snapToPixel(value: real): real {
+        const numeric = Number(value)
+        return Math.round(Number.isFinite(numeric) ? numeric : 0)
+    }
+    property real targetX: {
+        const rawX = Number(configEntry?.x ?? 0)
+        const safeX = Number.isFinite(rawX) ? rawX : 0
+        const maxX = Math.max(0, scaledScreenWidth - width)
+        return _snapToPixel(Math.max(0, Math.min(safeX, maxX)))
+    }
+    property real targetY: {
+        const rawY = Number(configEntry?.y ?? 0)
+        const safeY = Number.isFinite(rawY) ? rawY : 0
+        const maxY = Math.max(0, scaledScreenHeight - height)
+        return _snapToPixel(Math.max(0, Math.min(safeY, maxY)))
+    }
 
     Binding {
         target: root
@@ -34,16 +50,24 @@ AbstractWidget {
         value: root.targetY
         when: root.placementStrategy !== "free"
     }
+    Behavior on x {
+        enabled: Appearance.animationsEnabled && root.placementStrategy !== "free"
+        NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+    }
+    Behavior on y {
+        enabled: Appearance.animationsEnabled && root.placementStrategy !== "free"
+        NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+    }
 
     visible: opacity > 0
     opacity: (GlobalStates.screenLocked && !visibleWhenLocked) ? 0 : 1
     enabled: !GlobalStates.screenLocked
     Behavior on opacity {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
     }
     scale: (draggable && containsPress) ? 1.05 : 1
     Behavior on scale {
-        animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+        animation: NumberAnimation { duration: Appearance.animation.elementResize.duration; easing.type: Appearance.animation.elementResize.type; easing.bezierCurve: Appearance.animation.elementResize.bezierCurve }
     }
 
     draggable: placementStrategy === "free" && !GlobalStates.screenLocked && GlobalStates.widgetEditMode
@@ -65,8 +89,8 @@ AbstractWidget {
 
     onReleased: {
         if (GlobalStates.screenLocked) return;
-        let newX = root.x
-        let newY = root.y
+        let newX = root._snapToPixel(root.x)
+        let newY = root._snapToPixel(root.y)
         if (_gridSnapEnabled) {
             newX = _snapToGrid(newX, _gridCellW)
             newY = _snapToGrid(newY, _gridCellH)
@@ -94,7 +118,7 @@ AbstractWidget {
         z: 999
 
         Behavior on opacity {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
         // Widget name label
@@ -135,7 +159,7 @@ AbstractWidget {
     }
     property string wallpaperPath: wallpaperIsVideo ? (Config.options?.background?.thumbnailPath ?? "") : (Config.options?.background?.wallpaperPath ?? "")
     
-    onWallpaperPathChanged: refreshPlacementIfNeeded()
+    onWallpaperPathChanged: _placementDebounce.restart()
     onPlacementStrategyChanged: {
         syncFreePositionFromConfig()
         refreshPlacementIfNeeded()
@@ -146,6 +170,12 @@ AbstractWidget {
             refreshPlacementIfNeeded()
             syncFreePositionFromConfig()
         }
+    }
+    Timer {
+        id: _placementDebounce
+        interval: 500
+        repeat: false
+        onTriggered: root.refreshPlacementIfNeeded()
     }
     function refreshPlacementIfNeeded() {
         if (!Config.ready || (root.placementStrategy === "free" && root.needsColText)) return;
@@ -181,8 +211,8 @@ AbstractWidget {
                 const parsedContent = JSON.parse(output);
                 root.dominantColor = parsedContent.dominant_color || Appearance.colors.colPrimary;
                 if (root.placementStrategy === "free") return;
-                let autoX = parsedContent.center_x * root.wallpaperScale - root.width / 2
-                let autoY = parsedContent.center_y * root.wallpaperScale - root.height / 2
+                let autoX = root._snapToPixel(parsedContent.center_x * root.wallpaperScale - root.width / 2)
+                let autoY = root._snapToPixel(parsedContent.center_y * root.wallpaperScale - root.height / 2)
                 if (root._gridSnapEnabled) {
                     autoX = root._snapToGrid(autoX, root._gridCellW)
                     autoY = root._snapToGrid(autoY, root._gridCellH)
@@ -193,4 +223,3 @@ AbstractWidget {
         }
     }
 }
-

@@ -15,11 +15,15 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from zed.theme_generator import generate_zed_config
-from vscode.theme_generator import generate_vscode_theme, generate_all_vscode_themes, VSCODE_FORKS
+from vscode.theme_generator import (
+    generate_vscode_theme,
+    generate_all_vscode_themes,
+    VSCODE_FORKS,
+)
 
 
 def parse_scss_colors(scss_path):
-    """Parse material_colors.scss and extract color variables"""
+    """Parse material_colors.scss compatibility values."""
     colors = {}
     try:
         with open(scss_path, "r") as f:
@@ -32,6 +36,26 @@ def parse_scss_colors(scss_path):
     except FileNotFoundError:
         print(f"Error: Could not find {scss_path}", file=sys.stderr)
         sys.exit(1)
+    return colors
+
+
+def load_json_colors(json_path):
+    try:
+        with open(json_path, "r") as f:
+            data = json.load(f)
+            return {k: v for k, v in data.items() if isinstance(v, str)}
+    except FileNotFoundError:
+        return {}
+
+
+def load_generator_colors(scss_path, palette_json_path, terminal_json_path):
+    colors = parse_scss_colors(scss_path) if scss_path else {}
+    palette_colors = load_json_colors(palette_json_path)
+    terminal_colors = load_json_colors(terminal_json_path)
+
+    # Explicit contracts should win over SCSS compatibility values.
+    colors.update(palette_colors)
+    colors.update(terminal_colors)
     return colors
 
 
@@ -71,13 +95,13 @@ def generate_kitty_config(colors, output_path):
 # Do not edit manually - changes will be overwritten
 
 # The basic colors
-foreground              {colors.get("term7", "#A89984")}
+foreground              {colors.get("term15", "#EBDBB2")}
 background              {colors.get("term0", "#282828")}
 selection_foreground    {colors.get("term0", "#282828")}
-selection_background    {colors.get("term7", "#A89984")}
+selection_background    {colors.get("term15", "#EBDBB2")}
 
 # Cursor colors
-cursor                  {colors.get("term7", "#A89984")}
+cursor                  {colors.get("term15", "#EBDBB2")}
 cursor_text_color       {colors.get("term0", "#282828")}
 
 # URL underline color when hovering with mouse
@@ -130,8 +154,17 @@ color7  {colors.get("term7", "#A89984")}
 color15 {colors.get("term15", "#EBDBB2")}
 """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
+    # Write config to a secondary file
+    theme_conf = os.path.join(os.path.dirname(output_path), "theme.conf")
+    with open(theme_conf, "w") as f:
         f.write(config)
+
+    # Use atomic mv for the symlink swap (eliminates race conditions)
+    tmp_link = output_path + f".{os.getpid()}.tmp"
+    if os.path.lexists(tmp_link):
+        os.remove(tmp_link)
+    os.symlink("theme.conf", tmp_link)
+    os.replace(tmp_link, output_path)
 
     # Auto-integrate into kitty.conf
     home = os.path.expanduser("~")
@@ -143,27 +176,18 @@ color15 {colors.get("term15", "#EBDBB2")}
     else:
         print(f"✓ Generated Kitty config (already integrated)")
 
-    # Live reload kitty colors via remote control sockets
-    import glob as glob_mod
+    # Live reload kitty config via SIGUSR1 (updates all windows and tab bar)
     import subprocess
 
-    kitty_sockets = glob_mod.glob("/tmp/kitty-*")
-    if kitty_sockets:
-        reloaded = 0
-        for socket_path in kitty_sockets:
-            try:
-                subprocess.run(
-                    ["kitten", "@", "--to", f"unix:{socket_path}", "set-colors", "--all", output_path],
-                    capture_output=True,
-                    timeout=2,
-                )
-                reloaded += 1
-            except Exception:
-                pass
-        if reloaded:
-            print(f"  → Live-reloaded Kitty colors on {reloaded} instance(s)")
-    else:
-        print(f"  [kitty] No sockets found at /tmp/kitty-* (enable listen_on in kitty.conf for live reload)")
+    try:
+        subprocess.run(
+            ["pkill", "--signal", "SIGUSR1", "-x", "kitty"],
+            capture_output=True,
+            timeout=2,
+        )
+        print("  → Live-reloaded Kitty config (SIGUSR1)")
+    except Exception:
+        pass
 
 
 def fix_alacritty_import_order(config_path):
@@ -294,15 +318,15 @@ def generate_alacritty_config(colors, output_path):
 
 [colors.primary]
 background = '{colors.get("term0", "#282828")}'
-foreground = '{colors.get("term7", "#A89984")}'
+foreground = '{colors.get("term15", "#EBDBB2")}'
 
 [colors.cursor]
 text   = '{colors.get("term0", "#282828")}'
-cursor = '{colors.get("term7", "#A89984")}'
+cursor = '{colors.get("term15", "#EBDBB2")}'
 
 [colors.selection]
 text       = '{colors.get("term0", "#282828")}'
-background = '{colors.get("term7", "#A89984")}'
+background = '{colors.get("term15", "#EBDBB2")}'
 
 [colors.normal]
 black   = '{colors.get("term0", "#282828")}'
@@ -357,7 +381,7 @@ def generate_foot_config(colors, output_path):
 # Do not edit manually - changes will be overwritten
 
 [colors]
-foreground={colors.get("term7", "#A89984")[1:]}
+foreground={colors.get("term15", "#EBDBB2")[1:]}
 background={colors.get("term0", "#282828")[1:]}
 
 ## Normal/regular colors (color palette 0-7)
@@ -382,7 +406,7 @@ bright7={colors.get("term15", "#EBDBB2")[1:]}  # bright white
 
 ## Cursor and selection colors
 selection-foreground={colors.get("term0", "#282828")[1:]}
-selection-background={colors.get("term7", "#A89984")[1:]}
+selection-background={colors.get("term15", "#EBDBB2")[1:]}
 jump-labels={colors.get("term0", "#282828")[1:]} {colors.get("term3", "#D79921")[1:]}
 urls={colors.get("term4", "#458588")[1:]}
 """
@@ -403,20 +427,6 @@ urls={colors.get("term4", "#458588")[1:]}
     else:
         print(f"✓ Generated Foot config (already integrated)")
 
-    # Remove stale colors.ini include (legacy from old matugen terminal template,
-    # no longer updated — was overriding inir-colors.ini with stale colors)
-    foot_path = Path(foot_conf)
-    if foot_path.exists():
-        old_content = foot_path.read_text()
-        new_content = re.sub(
-            r"^include\s*=\s*~/.config/foot/colors\.ini\s*\n?",
-            "",
-            old_content,
-            flags=re.MULTILINE,
-        )
-        if new_content != old_content:
-            foot_path.write_text(new_content)
-
 
 def generate_wezterm_config(colors, output_path):
     """Generate WezTerm terminal color config and auto-integrate"""
@@ -424,15 +434,15 @@ def generate_wezterm_config(colors, output_path):
 -- Do not edit manually - changes will be overwritten
 
 return {{
-  foreground = '{colors.get("term7", "#A89984")}',
+  foreground = '{colors.get("term15", "#EBDBB2")}',
   background = '{colors.get("term0", "#282828")}',
 
-  cursor_bg = '{colors.get("term7", "#A89984")}',
+  cursor_bg = '{colors.get("term15", "#EBDBB2")}',
   cursor_fg = '{colors.get("term0", "#282828")}',
-  cursor_border = '{colors.get("term7", "#A89984")}',
+  cursor_border = '{colors.get("term15", "#EBDBB2")}',
 
   selection_fg = '{colors.get("term0", "#282828")}',
-  selection_bg = '{colors.get("term7", "#A89984")}',
+  selection_bg = '{colors.get("term15", "#EBDBB2")}',
 
   scrollbar_thumb = '{colors.get("term8", "#928374")}',
   split = '{colors.get("term8", "#928374")}',
@@ -518,12 +528,12 @@ def generate_ghostty_config(colors, output_path):
 # Do not edit manually - changes will be overwritten
 
 background = {colors.get("term0", "#282828")}
-foreground = {colors.get("term7", "#A89984")}
+foreground = {colors.get("term15", "#EBDBB2")}
 
-cursor-color = {colors.get("term7", "#A89984")}
+cursor-color = {colors.get("term15", "#EBDBB2")}
 cursor-text = {colors.get("term0", "#282828")}
 
-selection-background = {colors.get("term7", "#A89984")}
+selection-background = {colors.get("term15", "#EBDBB2")}
 selection-foreground = {colors.get("term0", "#282828")}
 
 # Black
@@ -580,7 +590,7 @@ Color={colors.get("term0", "#282828")[1:]}
 Color={colors.get("term0", "#282828")[1:]}
 
 [Foreground]
-Color={colors.get("term7", "#A89984")[1:]}
+Color={colors.get("term15", "#EBDBB2")[1:]}
 
 [ForegroundIntense]
 Color={colors.get("term15", "#EBDBB2")[1:]}
@@ -661,7 +671,7 @@ onTertiary = '{colors.get("onTertiary", "#1D2021")}'
 surface = '{colors.get("surface", "#1D2021")}'
 onSurface = '{colors.get("onSurface", "#EBDBB2")}'
 background = '{colors.get("term0", "#282828")}'
-foreground = '{colors.get("term7", "#A89984")}'
+foreground = '{colors.get("term15", "#EBDBB2")}'
 black = '{colors.get("term0", "#282828")}'
 red = '{colors.get("term1", "#CC241D")}'
 green = '{colors.get("term2", "#98971A")}'
@@ -869,17 +879,14 @@ def generate_omp_config(colors, output_path):
                         "foreground": on_surface_variant,
                         "background": surface_container_high,
                         "template": " {{ .FormattedMs }} ",
-                        "properties": {
-                            "style": "austin",
-                            "threshold": 500
-                        }
+                        "properties": {"style": "austin", "threshold": 500},
                     },
                     {
                         "type": "status",
                         "style": "plain",
                         "foreground": on_error_container,
                         "background": error_container,
-                        "template": " {{ if gt .Code 0 }}✗ {{ .Code }}{{ end }} "
+                        "template": " {{ if gt .Code 0 }}✗ {{ .Code }}{{ end }} ",
                     },
                     {
                         "type": "path",
@@ -887,10 +894,7 @@ def generate_omp_config(colors, output_path):
                         "foreground": on_surface,
                         "background": surface_container,
                         "template": " {{ .Path }} ",
-                        "properties": {
-                            "style": "full",
-                            "folder_separator_icon": "/"
-                        }
+                        "properties": {"style": "full", "folder_separator_icon": "/"},
                     },
                     {
                         "type": "git",
@@ -898,12 +902,9 @@ def generate_omp_config(colors, output_path):
                         "foreground": on_primary_container,
                         "background": primary_container,
                         "template": " {{ .HEAD }}{{ if .Working.Changed }} ●{{ end }}{{ if .Staging.Changed }} ✚{{ end }} ",
-                        "properties": {
-                            "branch_icon": "",
-                            "fetch_status": True
-                        }
-                    }
-                ]
+                        "properties": {"branch_icon": "", "fetch_status": True},
+                    },
+                ],
             },
             {
                 "type": "rprompt",
@@ -912,9 +913,9 @@ def generate_omp_config(colors, output_path):
                         "type": "time",
                         "style": "plain",
                         "foreground": on_surface_variant,
-                        "template": " {{ .CurrentDate | date \"15:04\" }} "
+                        "template": ' {{ .CurrentDate | date "15:04" }} ',
                     }
-                ]
+                ],
             },
             {
                 "type": "prompt",
@@ -925,11 +926,11 @@ def generate_omp_config(colors, output_path):
                         "type": "text",
                         "style": "plain",
                         "foreground": primary,
-                        "template": "❯ "
+                        "template": "❯ ",
                     }
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     }
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -1121,17 +1122,15 @@ rules = [
   {{ mime = "image/*", fg = "{magenta}" }},
   {{ mime = "video/*", fg = "{cyan}" }},
   {{ mime = "audio/*", fg = "{cyan}" }},
-  {{ mime = "application/{{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}}", fg = "{red}" }},
-  {{ mime = "application/{{pdf,doc,rtf}}", fg = "{cyan}" }},
-  {{ url = "*", is = "orphan", bg = "red" }},
-  {{ url = "*", is = "exec", fg = "green" }},
-  {{ url = "*/", fg = "{primary}" }},
-  {{ url = "*",  fg = "{fg_dim}" }},
-]
-
-[icon]
-prepend_conds = [
-  {{ if = "dir", text = "\uf07b", fg = "{primary}" }},
+  {{ mime = "application/zip",             fg = "{red}" }},
+  {{ mime = "application/gzip",            fg = "{red}" }},
+  {{ mime = "application/x-tar",           fg = "{red}" }},
+  {{ mime = "application/x-bzip",          fg = "{red}" }},
+  {{ mime = "application/x-bzip2",         fg = "{red}" }},
+  {{ mime = "application/x-7z-compressed", fg = "{red}" }},
+  {{ mime = "application/x-rar",           fg = "{red}" }},
+  {{ name = "*",  fg = "{fg_dim}" }},
+  {{ name = "*/", fg = "{primary}" }},
 ]
 """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -1143,27 +1142,33 @@ prepend_conds = [
     theme_toml = f"{home}/.config/yazi/theme.toml"
     theme_path = Path(theme_toml)
 
-    flavor_block = 'dark  = "ii-auto"\nlight = "ii-auto"'
+    flavor_line = 'use = "ii-auto"'
     if theme_path.exists():
         content = theme_path.read_text()
-        if '[flavor]' in content:
-            # Remove old `use = "ii-auto"` if present
-            content = re.sub(r'^use\s*=\s*"ii-auto"\s*\n?', '', content, flags=re.MULTILINE)
-            # Check if already has correct 26.x format
-            if re.search(r'^dark\s*=\s*"ii-auto"', content, re.MULTILINE):
+        if "[flavor]" in content:
+            if re.search(r'^use\s*=\s*"ii-auto"', content, re.MULTILINE):
                 print(f"\u2713 Generated yazi flavor (already using ii-auto)")
-            else:
-                # Replace entire [flavor] section with correct format
-                new_content = re.sub(r'\[flavor\].*$', f'[flavor]\n{flavor_block}', content, flags=re.DOTALL)
+            elif re.search(r"^use\s*=", content, re.MULTILINE):
+                new_content = re.sub(
+                    r"^(use\s*=).*$",
+                    f'use = "ii-auto"',
+                    content,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
                 theme_path.write_text(new_content)
                 print(f"\u2713 Generated yazi flavor and updated theme.toml")
+            else:
+                new_content = content.replace("[flavor]", f"[flavor]\n{flavor_line}")
+                theme_path.write_text(new_content)
+                print(f"\u2713 Generated yazi flavor and added use directive")
         else:
             with open(theme_toml, "a") as f:
-                f.write(f"\n[flavor]\n{flavor_block}\n")
+                f.write(f"\n[flavor]\n{flavor_line}\n")
             print(f"\u2713 Generated yazi flavor and added [flavor] section")
     else:
         theme_path.parent.mkdir(parents=True, exist_ok=True)
-        theme_path.write_text(f"[flavor]\n{flavor_block}\n")
+        theme_path.write_text(f"[flavor]\n{flavor_line}\n")
         print(f"\u2713 Generated yazi flavor and created theme.toml")
 
 
@@ -1319,7 +1324,7 @@ map F                          follow
 
 # Quick mark / goto mark (bookmarks)
 map m                          mark_evaluate
-map \'                         mark_evaluate
+map '                          mark_evaluate
 """
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -1449,9 +1454,9 @@ set -gx EZA_COLORS '{eza_colors_str}'
             capture_output=True,
             timeout=3,
         )
-        print(f"✓ Generated eza colors (propagated to all fish sessions)")
+        print(f"\u2713 Generated eza colors (propagated to all fish sessions)")
     except Exception:
-        print(f"✓ Generated eza colors (will apply on next shell start)")
+        print(f"\u2713 Generated eza colors (will apply on next shell start)")
 
 
 def generate_fuzzel_config(colors, output_path):
@@ -1536,6 +1541,22 @@ def main():
         help="Path to material_colors.scss file",
     )
     parser.add_argument(
+        "--colors",
+        type=str,
+        default=os.path.expanduser(
+            "~/.local/state/quickshell/user/generated/palette.json"
+        ),
+        help="Path to palette/colors JSON file",
+    )
+    parser.add_argument(
+        "--terminal-json",
+        type=str,
+        default=os.path.expanduser(
+            "~/.local/state/quickshell/user/generated/terminal.json"
+        ),
+        help="Path to terminal JSON file",
+    )
+    parser.add_argument(
         "--terminals",
         type=str,
         nargs="+",
@@ -1555,7 +1576,7 @@ def main():
             "zathura",
             "all",
         ],
-        default=["all"],
+        default=None,
         help="Which terminals/tools to generate configs for",
     )
     parser.add_argument(
@@ -1578,33 +1599,33 @@ def main():
 
     args = parser.parse_args()
 
-    # Parse colors from SCSS
-    colors = parse_scss_colors(args.scss)
+    # Prefer explicit generated contracts, keep SCSS as compatibility fallback.
+    colors = load_generator_colors(args.scss, args.colors, args.terminal_json)
 
     if not colors:
         print("Error: No colors found in SCSS file", file=sys.stderr)
         sys.exit(1)
 
     home = os.path.expanduser("~")
-    terminals = (
-        args.terminals
-        if "all" not in args.terminals
-        else [
-            "kitty",
-            "alacritty",
-            "foot",
-            "wezterm",
-            "ghostty",
-            "konsole",
-            "starship",
-            "omp",
-            "btop",
-            "lazygit",
-            "yazi",
-            "eza",
-            "zathura",
-        ]
-    )
+    all_terminals = [
+        "kitty",
+        "alacritty",
+        "foot",
+        "wezterm",
+        "ghostty",
+        "konsole",
+        "starship",
+        "omp",
+        "btop",
+        "lazygit",
+        "yazi",
+        "eza",
+        "zathura",
+    ]
+    if args.terminals is None:
+        terminals = [] if (args.zed or args.vscode) else all_terminals
+    else:
+        terminals = args.terminals if "all" not in args.terminals else all_terminals
 
     # Generate configs for requested terminals
     if "kitty" in terminals:
@@ -1631,31 +1652,39 @@ def main():
         generate_starship_config(colors, f"{home}/.config/starship/ii-palette.toml")
 
     if "omp" in terminals:
-        colors_json_path = os.path.expanduser(
-            "~/.local/state/quickshell/user/generated/colors.json"
-        )
+        colors_json_path = args.colors
+        terminal_json_path = args.terminal_json
         try:
             with open(colors_json_path, "r") as f:
                 m3_colors = json.load(f)
                 omp_colors = {**colors, **m3_colors}
-                generate_omp_config(omp_colors, f"{home}/.config/oh-my-posh/ii-auto.json")
+                if os.path.exists(terminal_json_path):
+                    with open(terminal_json_path, "r") as tf:
+                        omp_colors.update(json.load(tf))
+                generate_omp_config(
+                    omp_colors, f"{home}/.config/oh-my-posh/ii-auto.json"
+                )
         except FileNotFoundError:
-            print(f"Warning: {colors_json_path} not found, oh-my-posh theme may be incomplete")
+            print(
+                f"Warning: {colors_json_path} not found, oh-my-posh theme may be incomplete"
+            )
             generate_omp_config(colors, f"{home}/.config/oh-my-posh/ii-auto.json")
 
     if "btop" in terminals:
-        # btop needs full M3 tokens from colors.json, not just terminal colors
-        colors_json_path = os.path.expanduser(
-            "~/.local/state/quickshell/user/generated/colors.json"
-        )
+        # btop needs full M3 tokens from palette.json, not just terminal colors
+        colors_json_path = args.colors
         try:
             with open(colors_json_path, "r") as f:
                 m3_colors = json.load(f)
                 # Merge M3 tokens with terminal colors
                 btop_colors = {**colors, **m3_colors}
-                generate_btop_config(btop_colors, f"{home}/.config/btop/themes/ii-auto.theme")
+                generate_btop_config(
+                    btop_colors, f"{home}/.config/btop/themes/ii-auto.theme"
+                )
         except FileNotFoundError:
-            print(f"Warning: {colors_json_path} not found, btop theme may be incomplete")
+            print(
+                f"Warning: {colors_json_path} not found, btop theme may be incomplete"
+            )
             generate_btop_config(colors, f"{home}/.config/btop/themes/ii-auto.theme")
 
     if "lazygit" in terminals:
@@ -1674,16 +1703,22 @@ def main():
 
     if args.zed:
         generate_zed_config(
-            colors, args.scss, f"{home}/.config/zed/themes/ii-theme.json"
+            colors,
+            args.scss,
+            f"{home}/.config/zed/themes/ii-theme.json",
+            args.colors,
+            args.terminal_json,
         )
 
     if args.vscode:
         # Use the new multi-fork generation that auto-detects all installed forks
-        colors_json = os.path.expanduser(
-            "~/.local/state/quickshell/user/generated/colors.json"
-        )
+        colors_json = args.colors
         # Parse enabled forks from --vscode-forks argument if provided
-        forks_to_generate = args.vscode_forks if hasattr(args, 'vscode_forks') and args.vscode_forks else None
+        forks_to_generate = (
+            args.vscode_forks
+            if hasattr(args, "vscode_forks") and args.vscode_forks
+            else None
+        )
         results = generate_all_vscode_themes(colors_json, args.scss, forks_to_generate)
         if not results:
             print("✗ No VSCode forks found or all disabled")

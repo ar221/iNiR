@@ -64,7 +64,7 @@ ContentPage {
                 mainText: Translation.tr("Pick main wallpaper")
                 onClicked: {
                     Config.setNestedValue("wallpaperSelector.selectionTarget", "main")
-                    Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"]);
+                    Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"]);
                 }
             }
 
@@ -76,7 +76,7 @@ ContentPage {
                 mainText: Translation.tr("Pick Waffle wallpaper")
                 onClicked: {
                     Config.setNestedValue("wallpaperSelector.selectionTarget", "waffle")
-                    Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"]);
+                    Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"]);
                 }
             }
 
@@ -125,16 +125,6 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options?.waffles?.background?.effects?.enableBlur ?? false
-                icon: "blur_circular"
-                text: Translation.tr("Static blur (%)")
-                from: 0; to: 100; stepSize: 5
-                value: Config.options?.waffles?.background?.effects?.blurStatic ?? 0
-                onValueChanged: Config.setNestedValue("waffles.background.effects.blurStatic", value)
-                StyledToolTip { text: Translation.tr("Always-on blur percentage. Dynamic blur adds on top when windows are present.") }
-            }
-
-            ConfigSpinBox {
                 icon: "brightness_5"
                 text: Translation.tr("Dim (%)")
                 from: 0; to: 100; stepSize: 5
@@ -173,7 +163,7 @@ ContentPage {
                 text: Translation.tr("Enable backdrop layer for overview")
                 checked: Config.options?.waffles?.background?.backdrop?.enable ?? true
                 onCheckedChanged: {
-                    Config.options.waffles.background.backdrop.enable = checked;
+                    Config.setNestedValue("waffles.background.backdrop.enable", checked)
                 }
             }
 
@@ -196,7 +186,7 @@ ContentPage {
                 text: Translation.tr("Hide main wallpaper (show only backdrop)")
                 checked: Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false
                 onCheckedChanged: {
-                    Config.options.waffles.background.backdrop.hideWallpaper = checked;
+                    Config.setNestedValue("waffles.background.backdrop.hideWallpaper", checked);
                 }
                 StyledToolTip { text: Translation.tr("Hides the desktop wallpaper, showing only the backdrop during Niri's overview") }
             }
@@ -207,8 +197,8 @@ ContentPage {
                 text: Translation.tr("Use main wallpaper")
                 checked: Config.options?.waffles?.background?.backdrop?.useMainWallpaper ?? true
                 onCheckedChanged: {
-                    Config.options.waffles.background.backdrop.useMainWallpaper = checked;
-                    if (checked) Config.options.waffles.background.backdrop.wallpaperPath = "";
+                    Config.setNestedValue("waffles.background.backdrop.useMainWallpaper", checked)
+                    if (checked) Config.setNestedValue("waffles.background.backdrop.wallpaperPath", "")
                 }
             }
 
@@ -220,7 +210,7 @@ ContentPage {
                 mainText: Translation.tr("Pick backdrop wallpaper")
                 onClicked: {
                     Config.setNestedValue("wallpaperSelector.selectionTarget", "waffle-backdrop")
-                    Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"]);
+                    Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"]);
                 }
             }
 
@@ -230,7 +220,7 @@ ContentPage {
                 text: Translation.tr("Blur radius")
                 from: 0; to: 100; stepSize: 5
                 value: Config.options?.waffles?.background?.backdrop?.blurRadius ?? 32
-                onValueChanged: Config.options.waffles.background.backdrop.blurRadius = value
+                onValueChanged: Config.setNestedValue("waffles.background.backdrop.blurRadius", value)
             }
 
             ConfigSpinBox {
@@ -239,7 +229,7 @@ ContentPage {
                 text: Translation.tr("Dim (%)")
                 from: 0; to: 100; stepSize: 5
                 value: Config.options?.waffles?.background?.backdrop?.dim ?? 35
-                onValueChanged: Config.options.waffles.background.backdrop.dim = value
+                onValueChanged: Config.setNestedValue("waffles.background.backdrop.dim", value)
             }
 
             ConfigSpinBox {
@@ -248,7 +238,7 @@ ContentPage {
                 text: Translation.tr("Saturation")
                 from: 0; to: 200; stepSize: 10
                 value: Math.round((Config.options?.waffles?.background?.backdrop?.saturation ?? 1.0) * 100)
-                onValueChanged: Config.options.waffles.background.backdrop.saturation = value / 100.0
+                onValueChanged: Config.setNestedValue("waffles.background.backdrop.saturation", value / 100.0)
             }
 
             ConfigSpinBox {
@@ -257,7 +247,7 @@ ContentPage {
                 text: Translation.tr("Contrast")
                 from: 0; to: 200; stepSize: 10
                 value: Math.round((Config.options?.waffles?.background?.backdrop?.contrast ?? 1.0) * 100)
-                onValueChanged: Config.options.waffles.background.backdrop.contrast = value / 100.0
+                onValueChanged: Config.setNestedValue("waffles.background.backdrop.contrast", value / 100.0)
             }
 
             SettingsSwitch {
@@ -265,7 +255,7 @@ ContentPage {
                 buttonIcon: "vignette"
                 text: Translation.tr("Vignette")
                 checked: Config.options?.waffles?.background?.backdrop?.vignetteEnabled ?? false
-                onCheckedChanged: Config.options.waffles.background.backdrop.vignetteEnabled = checked
+                onCheckedChanged: Config.setNestedValue("waffles.background.backdrop.vignetteEnabled", checked)
             }
 
             ConfigSpinBox {
@@ -274,7 +264,7 @@ ContentPage {
                 text: Translation.tr("Vignette intensity")
                 from: 0; to: 100; stepSize: 5
                 value: Math.round((Config.options?.waffles?.background?.backdrop?.vignetteIntensity ?? 0.5) * 100)
-                onValueChanged: Config.options.waffles.background.backdrop.vignetteIntensity = value / 100.0
+                onValueChanged: Config.setNestedValue("waffles.background.backdrop.vignetteIntensity", value / 100.0)
             }
         }
     }
@@ -290,28 +280,28 @@ ContentPage {
                 buttonIcon: "vertical_align_bottom"
                 text: Translation.tr("Bottom position")
                 checked: Config.options?.waffles?.bar?.bottom ?? true
-                onCheckedChanged: Config.options.waffles.bar.bottom = checked
+                onCheckedChanged: Config.setNestedValue("waffles.bar.bottom", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "format_align_left"
                 text: Translation.tr("Left-align apps")
                 checked: Config.options?.waffles?.bar?.leftAlignApps ?? false
-                onCheckedChanged: Config.options.waffles.bar.leftAlignApps = checked
+                onCheckedChanged: Config.setNestedValue("waffles.bar.leftAlignApps", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "palette"
                 text: Translation.tr("Tint app icons")
                 checked: Config.options?.waffles?.bar?.monochromeIcons ?? false
-                onCheckedChanged: Config.options.waffles.bar.monochromeIcons = checked
+                onCheckedChanged: Config.setNestedValue("waffles.bar.monochromeIcons", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "palette"
                 text: Translation.tr("Tint tray icons")
                 checked: Config.options?.waffles?.bar?.tintTrayIcons ?? false
-                onCheckedChanged: Config.options.waffles.bar.tintTrayIcons = checked
+                onCheckedChanged: Config.setNestedValue("waffles.bar.tintTrayIcons", checked)
             }
         }
     }
@@ -331,7 +321,7 @@ ContentPage {
                 buttonIcon: "format_color_fill"
                 text: Translation.tr("Use Material colors")
                 checked: Config.options?.waffles?.theming?.useMaterialColors ?? false
-                onCheckedChanged: Config.options.waffles.theming.useMaterialColors = checked
+                onCheckedChanged: Config.setNestedValue("waffles.theming.useMaterialColors", checked)
                 StyledToolTip { text: Translation.tr("Apply the Material ii color scheme instead of Windows 11 grey") }
             }
 
@@ -407,7 +397,7 @@ ContentPage {
                 buttonIcon: "stacks"
                 text: Translation.tr("Allow multiple panels open")
                 checked: Config.options?.waffles?.behavior?.allowMultiplePanels ?? false
-                onCheckedChanged: Config.options.waffles.behavior.allowMultiplePanels = checked
+                onCheckedChanged: Config.setNestedValue("waffles.behavior.allowMultiplePanels", checked)
             }
         }
     }
@@ -430,7 +420,7 @@ ContentPage {
                 buttonIcon: "animation"
                 text: Translation.tr("Animated transition")
                 checked: Config.options?.familyTransitionAnimation ?? true
-                onCheckedChanged: Config.options.familyTransitionAnimation = checked
+                onCheckedChanged: Config.setNestedValue("familyTransitionAnimation", checked)
                 StyledToolTip { text: Translation.tr("Show a smooth animated overlay when switching between panel families") }
             }
         }
@@ -452,7 +442,7 @@ ContentPage {
                     { displayName: Translation.tr("Wide"), icon: "view_week", value: "wide" }
                 ]
                 currentValue: Config.options?.waffles?.startMenu?.sizePreset ?? "normal"
-                onSelected: (newValue) => Config.options.waffles.startMenu.sizePreset = newValue
+                onSelected: (newValue) => Config.setNestedValue("waffles.startMenu.sizePreset", newValue)
             }
 
             ConfigSpinBox {
@@ -477,14 +467,14 @@ ContentPage {
                 buttonIcon: "animation"
                 text: Translation.tr("Smoother menu animations")
                 checked: Config.options?.waffles?.tweaks?.smootherMenuAnimations ?? true
-                onCheckedChanged: Config.options.waffles.tweaks.smootherMenuAnimations = checked
+                onCheckedChanged: Config.setNestedValue("waffles.tweaks.smootherMenuAnimations", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "toggle_on"
                 text: Translation.tr("Switch handle position fix")
                 checked: Config.options?.waffles?.tweaks?.switchHandlePositionFix ?? true
-                onCheckedChanged: Config.options.waffles.tweaks.switchHandlePositionFix = checked
+                onCheckedChanged: Config.setNestedValue("waffles.tweaks.switchHandlePositionFix", checked)
             }
         }
     }
@@ -500,22 +490,33 @@ ContentPage {
                 buttonIcon: "calendar_today"
                 text: Translation.tr("Force 2-character day of week")
                 checked: Config.options?.waffles?.calendar?.force2CharDayOfWeek ?? true
-                onCheckedChanged: Config.options.waffles.calendar.force2CharDayOfWeek = checked
+                onCheckedChanged: Config.setNestedValue("waffles.calendar.force2CharDayOfWeek", checked)
             }
         }
     }
 
     SettingsCardSection {
-        visible: root.isWaffleActive && root.isPanelEnabled("iiAltSwitcher")
-        expanded: true
+        visible: root.isWaffleActive
+        expanded: false
         icon: "swap_horiz"
         title: Translation.tr("Alt+Tab Switcher")
 
         SettingsGroup {
             SettingsSwitch {
+                enabled: {
+                    const preset = Config.options?.waffles?.altSwitcher?.preset ?? "thumbnails"
+                    return preset !== "skew" && preset !== "none"
+                }
                 buttonIcon: "visibility_off"
                 text: Translation.tr("No visual UI (cycle windows only)")
-                checked: Config.options?.waffles?.altSwitcher?.noVisualUi ?? false
+                checked: {
+                    const preset = Config.options?.waffles?.altSwitcher?.preset ?? "thumbnails"
+                    if (preset === "none")
+                        return true
+                    if (preset === "skew")
+                        return false
+                    return Config.options?.waffles?.altSwitcher?.noVisualUi ?? false
+                }
                 onCheckedChanged: Config.setNestedValue("waffles.altSwitcher.noVisualUi", checked)
                 StyledToolTip { text: Translation.tr("Use Alt+Tab to switch windows without showing the switcher overlay") }
             }
@@ -526,10 +527,14 @@ ContentPage {
                     { displayName: Translation.tr("Cards"), icon: "view_carousel", value: "cards" },
                     { displayName: Translation.tr("Compact"), icon: "view_module", value: "compact" },
                     { displayName: Translation.tr("List"), icon: "view_list", value: "list" },
+                    { displayName: Translation.tr("Skew previews"), icon: "view_in_ar", value: "skew" },
                     { displayName: Translation.tr("None (no UI)"), icon: "visibility_off", value: "none" }
                 ]
                 currentValue: Config.options?.waffles?.altSwitcher?.preset ?? "thumbnails"
-                onSelected: (newValue) => Config.setNestedValue("waffles.altSwitcher.preset", newValue)
+                onSelected: (newValue) => {
+                    Config.setNestedValue("waffles.altSwitcher.preset", newValue)
+                    Config.setNestedValue("waffles.altSwitcher.noVisualUi", newValue === "none")
+                }
             }
 
             SettingsSwitch {
@@ -627,35 +632,35 @@ ContentPage {
                 buttonIcon: "schedule"
                 text: Translation.tr("Date & Time")
                 checked: Config.options?.waffles?.widgetsPanel?.showDateTime ?? true
-                onCheckedChanged: Config.options.waffles.widgetsPanel.showDateTime = checked
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.showDateTime", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "cloud"
                 text: Translation.tr("Weather")
                 checked: Config.options?.waffles?.widgetsPanel?.showWeather ?? true
-                onCheckedChanged: Config.options.waffles.widgetsPanel.showWeather = checked
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.showWeather", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "memory"
                 text: Translation.tr("System Resources")
                 checked: Config.options?.waffles?.widgetsPanel?.showSystem ?? true
-                onCheckedChanged: Config.options.waffles.widgetsPanel.showSystem = checked
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.showSystem", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "music_note"
                 text: Translation.tr("Media Player")
                 checked: Config.options?.waffles?.widgetsPanel?.showMedia ?? true
-                onCheckedChanged: Config.options.waffles.widgetsPanel.showMedia = checked
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.showMedia", checked)
             }
 
             SettingsSwitch {
                 buttonIcon: "bolt"
                 text: Translation.tr("Quick Actions")
                 checked: Config.options?.waffles?.widgetsPanel?.showQuickActions ?? true
-                onCheckedChanged: Config.options.waffles.widgetsPanel.showQuickActions = checked
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.showQuickActions", checked)
             }
         }
     }

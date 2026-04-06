@@ -156,12 +156,11 @@ WSettingsPage {
                         color: Looks.colors.subfg
                     }
 
-                    TextInput {
+                    WTextInput {
                         id: themeSearchInput
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
                         font.pixelSize: Looks.font.pixelSize.small
-                        font.family: Looks.font.family
                         color: Looks.colors.fg
                         clip: true
                         onTextChanged: colorThemeCard.searchQuery = text
@@ -454,12 +453,10 @@ WSettingsPage {
             : derivedStyle
 
         function _applyGlobalStyle(styleId) {
-            console.log("[GlobalStyle] apply", styleId)
             if (styleId === "cards") {
                 Config.setNestedValue("dock.cardStyle", true)
                 Config.setNestedValue("sidebar.cardStyle", true)
                 Config.setNestedValue("bar.cornerStyle", 3)
-                Config.setNestedValue("appearance.transparency.enable", false)
                 return;
             }
 
@@ -467,7 +464,6 @@ WSettingsPage {
                 Config.setNestedValue("dock.cardStyle", false)
                 Config.setNestedValue("sidebar.cardStyle", false)
                 if ((Config.options?.bar?.cornerStyle ?? 1) === 3) Config.setNestedValue("bar.cornerStyle", 1)
-                Config.setNestedValue("appearance.transparency.enable", true)
                 return;
             }
 
@@ -475,7 +471,6 @@ WSettingsPage {
                 Config.setNestedValue("dock.cardStyle", false)
                 Config.setNestedValue("sidebar.cardStyle", false)
                 if ((Config.options?.bar?.cornerStyle ?? 1) === 3) Config.setNestedValue("bar.cornerStyle", 1)
-                Config.setNestedValue("appearance.transparency.enable", true)
                 return;
             }
 
@@ -483,7 +478,6 @@ WSettingsPage {
             Config.setNestedValue("dock.cardStyle", false)
             Config.setNestedValue("sidebar.cardStyle", false)
             if ((Config.options?.bar?.cornerStyle ?? 1) === 3) Config.setNestedValue("bar.cornerStyle", 1)
-            Config.setNestedValue("appearance.transparency.enable", false)
         }
 
         WSettingsDropdown {
@@ -499,7 +493,6 @@ WSettingsPage {
                 { value: "angel", displayName: Translation.tr("Angel") }
             ]
             onSelected: newValue => {
-                console.log("[GlobalStyle] selected", newValue)
                 Config.setNestedValue("appearance.globalStyle", newValue)
                 globalStyleCard._applyGlobalStyle(newValue)
             }
@@ -544,7 +537,12 @@ WSettingsPage {
             ]
             onSelected: newValue => {
                 Config.setNestedValue("appearance.palette.type", newValue)
-                ShellExec.execCmd(`${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`)
+                if (ThemeService.isAutoTheme) {
+                    ShellExec.execCmd(`${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`)
+                } else {
+                    const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                    MaterialThemeLoader.applySchemeVariant(hex, newValue)
+                }
             }
         }
     }
@@ -568,6 +566,22 @@ WSettingsPage {
             description: Translation.tr("Generate Discord theme from wallpaper colors")
             checked: Config.options?.appearance?.wallpaperTheming?.enableVesktop ?? true
             onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.enableVesktop", checked)
+        }
+
+        WSettingsSwitch {
+            label: Translation.tr("Spotify theming")
+            icon: "music-note-2"
+            description: Translation.tr("Generate and apply Spicetify theme from wallpaper colors")
+            checked: Config.options?.appearance?.wallpaperTheming?.enableSpicetify ?? false
+            onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.enableSpicetify", checked)
+        }
+
+        WSettingsSwitch {
+            label: Translation.tr("Steam theming")
+            icon: "gamepad"
+            description: Translation.tr("Apply Material You colors to Steam via Adwaita for Steam (requires AdwSteamGtk)")
+            checked: Config.options?.appearance?.wallpaperTheming?.enableAdwSteam ?? false
+            onCheckedChanged: Config.setNestedValue("appearance.wallpaperTheming.enableAdwSteam", checked)
         }
 
         WSettingsSwitch {

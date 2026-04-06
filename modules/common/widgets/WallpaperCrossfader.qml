@@ -1,580 +1,693 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Effects
 
+import qs.modules.common
+
 Item {
     id: root
-    clip: true
 
+    // ── Public API ──────────────────────────────────────────────────────
     property string source
     property int fillMode: Image.PreserveAspectCrop
     property size sourceSize
 
-    property int transitionDuration: 800
-    property int easingType: Easing.InOutQuad
-    property list<real> easingBezierCurve: []
+    // Transition config — read from Config with sensible defaults
+    property int transitionBaseDuration: Config.options?.background?.transition?.duration ?? 800
+    property int transitionDuration: Appearance.calcEffectiveDuration(transitionBaseDuration)
+    property string transitionType: Config.options?.background?.transition?.type ?? "crossfade"
+    property string transitionDirection: Config.options?.background?.transition?.direction ?? "right"
+    property bool enableTransitions: Config.options?.background?.transition?.enable ?? true
+    readonly property list<real> _defaultBezier: [0.54, 0.0, 0.34, 0.99]
+    readonly property var _configuredBezier: Config.options?.background?.transition?.bezier ?? _defaultBezier
+    readonly property list<real> _effectiveBezier: _normalizeBezier(_configuredBezier)
+    readonly property list<real> transitionBezierCurve: [_effectiveBezier[0], _effectiveBezier[1], _effectiveBezier[2], _effectiveBezier[3], 1, 1]
+    readonly property list<real> transitionMoveCurve: _positionCurveFor(_effectiveType)
+    readonly property int transitionMoveEasingType: Easing.BezierSpline
 
-    property string transitionType: "crossfade"
-    property string transitionDirection: "right"
-    property bool transitionEnabled: true
-
-    property bool ready: {
-        const aw = internal.activeIndex === 0 ? wrapper0 : wrapper1
-        const ai = internal.activeIndex === 0 ? img0 : img1
-        return ai.status === Image.Ready
-    }
+    // Read-only state — `ready` stays true during transitions so that
+    // external consumers (blur layers, visibility guards) don't flicker.
+    readonly property bool ready: img0.status === Image.Ready || img1.status === Image.Ready
     readonly property alias activeIndex: internal.activeIndex
 
-    // ── helpers ──
+    // Transition signals for external consumers (e.g. defer magick identify)
+    signal transitionStarted()
+    signal transitionFinished()
 
-    function _easingType() {
-        return easingBezierCurve.length === 6 ? Easing.BezierSpline : easingType
-    }
-    function _easingCurve() {
-        return easingBezierCurve.length === 6 ? easingBezierCurve : []
+    // ── Internal state ─────────────────────────────────────────────────
+    property bool _transitioning: false
+    readonly property bool _canTransition: enableTransitions && Appearance.animationsEnabled && _normalizedTransitionType(transitionType) !== "none"
+    readonly property string _effectiveType: _canTransition ? _normalizedTransitionType(transitionType) : "none"
+    readonly property real _zoomEnterFrom: 1.12
+    readonly property real _zoomExitTo: 0.9
+    readonly property real _wipeIncomingParallax: 0.08
+    readonly property real _wipeOutgoingParallax: 0.045
+    readonly property real _slideExitDistance: 0.32
+    readonly property real _pushDistance: 1.05
+    readonly property real _crossfadeIncomingScale: 1.018
+    readonly property real _crossfadeOutgoingScale: 0.985
+    readonly property real _blurFadeIncomingScale: 1.035
+    readonly property real _blurFadeOutgoingScale: 0.96
+    readonly property real _blurFadeMax: 0.82
+    readonly property list<real> transitionProgressCurve: _progressCurveFor(_effectiveType)
+    property real _transitionWidthSnapshot: 0
+    property real _transitionHeightSnapshot: 0
+    property size _transitionSourceSizeSnapshot: Qt.size(0, 0)
+
+    function _normalizeBezier(raw): list<real> {
+        if (!raw || raw.length !== 4)
+            return _defaultBezier
+
+        const result = []
+        for (let i = 0; i < 4; i++) {
+            const value = Number(raw[i])
+            if (!Number.isFinite(value))
+                return _defaultBezier
+            result.push(value)
+        }
+        return result
     }
 
-    // ── internal state ──
+    function _positionCurveFor(type: string): list<real> {
+        switch (type) {
+        case "slide":
+            return Appearance.animationCurves.expressiveSlowSpatial
+        case "push":
+            return Appearance.animationCurves.expressiveDefaultSpatial
+        case "wipe":
+            return Appearance.animationCurves.expressiveDefaultSpatial
+        default:
+            return transitionBezierCurve
+        }
+    }
+
+    function _progressCurveFor(type: string): list<real> {
+        switch (type) {
+        case "slide":
+            return _positionCurveFor(type)
+        case "push":
+            return _positionCurveFor(type)
+        case "wipe":
+            return _positionCurveFor(type)
+        case "zoom":
+            return Appearance.animationCurves.emphasizedDecel
+        case "fadeThrough":
+            return Appearance.animationCurves.emphasized
+        case "blurFade":
+            return Appearance.animationCurves.expressiveEffects
+        default:
+            return transitionBezierCurve
+        }
+    }
+
+    function _clamp01(value: real): real {
+        return Math.max(0, Math.min(1, value))
+    }
+
+    // Instantly complete the current transition so a new one can begin.
+    // Called when a new wallpaper arrives while a transition is in progress.
+    function _fastForwardTransition(): void {
+        if (!root._transitioning) return
+        transitionAnim.stop()
+        transitionState.progress = 0
+        if (internal.transitionToIndex >= 0)
+            internal.activeIndex = internal.transitionToIndex
+        _transitioning = false
+        internal.displayedSource = internal.activeImage().source
+        internal.loadingSource = ""
+        if (internal.pendingSource === internal.displayedSource)
+            internal.pendingSource = ""
+        internal.transitionFromIndex = -1
+        internal.transitionToIndex = -1
+        root._transitionWidthSnapshot = 0
+        root._transitionHeightSnapshot = 0
+        root._transitionSourceSizeSnapshot = Qt.size(0, 0)
+        transitionFinished()
+    }
+
+    function _normalizedTransitionType(rawType: string): string {
+        switch (String(rawType ?? "crossfade")) {
+        case "none":
+            return "none"
+        case "simple":
+        case "fade":
+            return "crossfade"
+        case "left":
+        case "right":
+        case "top":
+        case "bottom":
+            return "slide"
+        case "wave":
+        case "wipe":
+            return "wipe"
+        case "grow":
+        case "center":
+        case "outer":
+        case "any":
+        case "random":
+            return "zoom"
+        default:
+            return String(rawType ?? "crossfade")
+        }
+    }
+
+    function _resolvedTransitionDirection(): string {
+        if (["left", "right", "top", "bottom"].includes(transitionType))
+            return transitionType
+        return transitionDirection
+    }
+
+    function _lerp(from: real, to: real, progress: real): real {
+        return from + ((to - from) * progress)
+    }
+
+    function _isVerticalDirection(): bool {
+        const direction = _resolvedTransitionDirection()
+        return direction === "top" || direction === "bottom"
+    }
+
+    function _directionSign(): real {
+        const direction = _resolvedTransitionDirection()
+        return direction === "right" || direction === "bottom" ? 1 : -1
+    }
+
+    function _travelDistance(): real {
+        return _isVerticalDirection() ? root.height : root.width
+    }
+
+    function _transitionWidth(): real {
+        return Math.max(1, root._transitioning ? root._transitionWidthSnapshot : root.width)
+    }
+
+    function _transitionHeight(): real {
+        return Math.max(1, root._transitioning ? root._transitionHeightSnapshot : root.height)
+    }
+
+    function _slotRenderWidth(slotIndex: int): real {
+        if (_transitioning && internal.transitionFromIndex === slotIndex)
+            return _transitionWidth()
+        return root.width
+    }
+
+    function _slotRenderHeight(slotIndex: int): real {
+        if (_transitioning && internal.transitionFromIndex === slotIndex)
+            return _transitionHeight()
+        return root.height
+    }
+
+    function _slotSourceSize(slotIndex: int): size {
+        if (_transitioning && internal.transitionFromIndex === slotIndex)
+            return _transitionSourceSizeSnapshot
+        return root.sourceSize
+    }
+
+    QtObject {
+        id: transitionState
+        property real progress: 0
+    }
+
+    NumberAnimation {
+        id: transitionAnim
+        target: transitionState
+        property: "progress"
+        from: 0
+        to: 1
+        duration: root.transitionDuration
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: root.transitionProgressCurve
+        onFinished: root._onTransitionEnd()
+    }
 
     QtObject {
         id: internal
         property int activeIndex: 0
-        property bool transitioning: false
+        property int transitionFromIndex: -1
+        property int transitionToIndex: -1
+        property string displayedSource: ""
+        property string pendingSource: ""
+        property string loadingSource: ""
 
-        function wrapperFor(idx) { return idx === 0 ? wrapper0 : wrapper1 }
-        function imgFor(idx)     { return idx === 0 ? img0 : img1 }
+        function slotImage(slotIndex: int): Item {
+            return slotIndex === 0 ? img0 : img1
+        }
 
-        function updateSource() {
-            if (root.source === "") {
+        function activeImage(): Item {
+            return slotImage(activeIndex)
+        }
+
+        function inactiveImage(): Item {
+            return slotImage(activeIndex === 0 ? 1 : 0)
+        }
+
+        function resetTransition(): void {
+            transitionAnim.stop()
+            transitionState.progress = 0
+            transitionFromIndex = -1
+            transitionToIndex = -1
+            root._transitionWidthSnapshot = 0
+            root._transitionHeightSnapshot = 0
+            root._transitionSourceSizeSnapshot = Qt.size(0, 0)
+        }
+
+        function switchTo(newSource: string): void {
+            if (newSource === "") {
+                resetTransition()
+                root._transitioning = false
                 img0.source = ""
                 img1.source = ""
+                displayedSource = ""
+                pendingSource = ""
+                loadingSource = ""
+                activeIndex = 0
                 return
             }
 
-            var currentImg = imgFor(activeIndex)
-            if (currentImg.source == root.source && currentImg.status === Image.Ready)
-                return
+            pendingSource = newSource
 
-            // If mid-transition, cancel it first
-            if (transitioning)
-                cancelTransition()
-
-            var nextIdx = activeIndex === 0 ? 1 : 0
-            var targetImg = imgFor(nextIdx)
-
-            if (targetImg.source == root.source && targetImg.status === Image.Ready) {
-                startTransition(nextIdx)
-            } else {
-                if (targetImg.source != root.source)
-                    targetImg.source = root.source
-            }
-        }
-
-        function onImageReady(imgIndex) {
-            var img = imgFor(imgIndex)
-            if (img.status === Image.Ready && imgIndex !== activeIndex && img.source == root.source) {
-                startTransition(imgIndex)
-            }
-        }
-
-        function startTransition(newIndex) {
-            var oldIdx = activeIndex
-            var newIdx = newIndex
-            var oldW = wrapperFor(oldIdx)
-            var newW = wrapperFor(newIdx)
-
-            // Ensure new wrapper is on top
-            newW.z = 1
-            oldW.z = 0
-
-            if (!root.transitionEnabled || root.transitionDuration <= 0) {
-                // Instant swap
-                snapToFinal(oldW, newW)
-                activeIndex = newIdx
+            if (!root._canTransition) {
+                const active = activeImage()
+                active.source = newSource
+                if (activeIndex === 0)
+                    img1.source = ""
+                else
+                    img0.source = ""
+                displayedSource = newSource
+                pendingSource = ""
+                loadingSource = ""
+                resetTransition()
                 return
             }
 
-            transitioning = true
-            activeIndex = newIdx
-
-            // Reset new wrapper to starting state
-            newW.opacity = 0
-            newW.x = 0
-            newW.y = 0
-            newW.scale = 1.0
-            newW._clipX = 0
-            newW._clipY = 0
-            newW._clipW = root.width
-            newW._clipH = root.height
-            newW._useClip = false
-            newW._blurAmount = 0
-
-            // Reset old wrapper to fully visible
-            oldW.opacity = 1
-            oldW.x = 0
-            oldW.y = 0
-            oldW.scale = 1.0
-            oldW._blurAmount = 0
-
-            switch (root.transitionType) {
-            case "fadeThrough":
-                runFadeThrough(oldW, newW)
-                break
-            case "wipe":
-                runWipe(oldW, newW)
-                break
-            case "slide":
-                runSlide(oldW, newW)
-                break
-            case "push":
-                runPush(oldW, newW)
-                break
-            case "zoom":
-                runZoom(oldW, newW)
-                break
-            case "blurFade":
-                runBlurFade(oldW, newW)
-                break
-            default: // crossfade
-                runCrossfade(oldW, newW)
-                break
-            }
-        }
-
-        function cancelTransition() {
-            transitionAnim.stop()
-            transitioning = false
-
-            var activeW = wrapperFor(activeIndex)
-            var otherIdx = activeIndex === 0 ? 1 : 0
-            var otherW = wrapperFor(otherIdx)
-            snapToFinal(otherW, activeW)
-        }
-
-        function snapToFinal(oldW, newW) {
-            oldW.opacity = 0
-            oldW.x = 0
-            oldW.y = 0
-            oldW.scale = 1.0
-            oldW._blurAmount = 0
-            oldW._useClip = false
-
-            newW.opacity = 1
-            newW.x = 0
-            newW.y = 0
-            newW.scale = 1.0
-            newW._clipX = 0
-            newW._clipY = 0
-            newW._clipW = root.width
-            newW._clipH = root.height
-            newW._useClip = false
-            newW._blurAmount = 0
-            newW.z = 1
-            oldW.z = 0
-        }
-
-        function finishTransition() {
-            var oldIdx = activeIndex === 0 ? 1 : 0
-            var oldW = wrapperFor(oldIdx)
-            var newW = wrapperFor(activeIndex)
-            snapToFinal(oldW, newW)
-            transitioning = false
-        }
-
-        // ── transition runners ──
-
-        function runCrossfade(oldW, newW) {
-            animOldOpacity.target = oldW
-            animOldOpacity.from = 1; animOldOpacity.to = 0
-            animOldOpacity.duration = root.transitionDuration
-
-            animNewOpacity.target = newW
-            animNewOpacity.from = 0; animNewOpacity.to = 1
-            animNewOpacity.duration = root.transitionDuration
-
-            crossfadeAnim.restart()
-        }
-
-        function runFadeThrough(oldW, newW) {
-            var dur = root.transitionDuration
-            // Phase 1: old fades out (40%)
-            fadeOutPhase.target = oldW
-            fadeOutPhase.from = 1; fadeOutPhase.to = 0
-            fadeOutPhase.duration = Math.round(dur * 0.4)
-
-            // Pause (10%)
-            fadePause.duration = Math.round(dur * 0.1)
-
-            // Phase 2: new fades in (50%)
-            fadeInPhase.target = newW
-            fadeInPhase.from = 0; fadeInPhase.to = 1
-            fadeInPhase.duration = Math.round(dur * 0.5)
-
-            fadeThroughAnim.restart()
-        }
-
-        function runWipe(oldW, newW) {
-            newW._useClip = true
-            // Old stays underneath, new reveals via clip
-            oldW.z = 0
-            newW.z = 1
-
-            var dir = root.transitionDirection
-            var dur = root.transitionDuration
-
-            // Starting clip: zero-size at the edge the wipe comes from
-            // Ending clip: full size
-            if (dir === "left") {
-                newW._clipX = root.width; newW._clipY = 0
-                newW._clipW = 0; newW._clipH = root.height
-                animClipX.target = newW; animClipX.from = root.width; animClipX.to = 0; animClipX.duration = dur
-                animClipW.target = newW; animClipW.from = 0; animClipW.to = root.width; animClipW.duration = dur
-                animClipY.target = newW; animClipY.from = 0; animClipY.to = 0; animClipY.duration = 0
-                animClipH.target = newW; animClipH.from = root.height; animClipH.to = root.height; animClipH.duration = 0
-            } else if (dir === "top") {
-                newW._clipX = 0; newW._clipY = root.height
-                newW._clipW = root.width; newW._clipH = 0
-                animClipY.target = newW; animClipY.from = root.height; animClipY.to = 0; animClipY.duration = dur
-                animClipH.target = newW; animClipH.from = 0; animClipH.to = root.height; animClipH.duration = dur
-                animClipX.target = newW; animClipX.from = 0; animClipX.to = 0; animClipX.duration = 0
-                animClipW.target = newW; animClipW.from = root.width; animClipW.to = root.width; animClipW.duration = 0
-            } else if (dir === "bottom") {
-                newW._clipX = 0; newW._clipY = 0
-                newW._clipW = root.width; newW._clipH = 0
-                animClipH.target = newW; animClipH.from = 0; animClipH.to = root.height; animClipH.duration = dur
-                animClipX.target = newW; animClipX.from = 0; animClipX.to = 0; animClipX.duration = 0
-                animClipY.target = newW; animClipY.from = 0; animClipY.to = 0; animClipY.duration = 0
-                animClipW.target = newW; animClipW.from = root.width; animClipW.to = root.width; animClipW.duration = 0
-            } else { // right (default)
-                newW._clipX = 0; newW._clipY = 0
-                newW._clipW = 0; newW._clipH = root.height
-                animClipW.target = newW; animClipW.from = 0; animClipW.to = root.width; animClipW.duration = dur
-                animClipX.target = newW; animClipX.from = 0; animClipX.to = 0; animClipX.duration = 0
-                animClipY.target = newW; animClipY.from = 0; animClipY.to = 0; animClipY.duration = 0
-                animClipH.target = newW; animClipH.from = root.height; animClipH.to = root.height; animClipH.duration = 0
+            if (newSource === displayedSource && !root._transitioning && loadingSource === "") {
+                pendingSource = ""
+                loadingSource = ""
+                return
             }
 
-            newW.opacity = 1
-            wipeAnim.restart()
-        }
-
-        function runSlide(oldW, newW) {
-            var dir = root.transitionDirection
-            var dur = root.transitionDuration
-
-            // New slides in over old from the specified direction
-            oldW.z = 0; newW.z = 1
-            newW.opacity = 1
-
-            var isHorizontal = (dir === "left" || dir === "right")
-            var anim = isHorizontal ? animNewX : animNewY
-
-            if (dir === "right") {
-                newW.x = root.width
-                anim.target = newW; anim.from = root.width; anim.to = 0
-            } else if (dir === "left") {
-                newW.x = -root.width
-                anim.target = newW; anim.from = -root.width; anim.to = 0
-            } else if (dir === "bottom") {
-                newW.y = root.height
-                anim.target = newW; anim.from = root.height; anim.to = 0
-            } else { // top
-                newW.y = -root.height
-                anim.target = newW; anim.from = -root.height; anim.to = 0
-            }
-            anim.duration = dur
-            slideAnim.restart()
-        }
-
-        function runPush(oldW, newW) {
-            var dir = root.transitionDirection
-            var dur = root.transitionDuration
-
-            newW.opacity = 1
-            var isHorizontal = (dir === "left" || dir === "right")
-
-            if (isHorizontal) {
-                var sign = (dir === "right") ? 1 : -1
-                newW.x = sign * root.width
-                animNewX.target = newW; animNewX.from = sign * root.width; animNewX.to = 0; animNewX.duration = dur
-                animOldX.target = oldW; animOldX.from = 0; animOldX.to = -sign * root.width; animOldX.duration = dur
-            } else {
-                var signV = (dir === "bottom") ? 1 : -1
-                newW.y = signV * root.height
-                animNewY.target = newW; animNewY.from = signV * root.height; animNewY.to = 0; animNewY.duration = dur
-                animOldY.target = oldW; animOldY.from = 0; animOldY.to = -signV * root.height; animOldY.duration = dur
+            if (root._transitioning) {
+                // Fast-forward current transition so the new wallpaper
+                // starts loading immediately instead of waiting.
+                root._fastForwardTransition()
+                // pendingSource was already set above; now load it.
             }
 
-            pushAnim.restart()
+            loadPending()
         }
 
-        function runZoom(oldW, newW) {
-            var dur = root.transitionDuration
+        function loadPending(): void {
+            if (root._transitioning)
+                return
 
-            animOldScale.target = oldW; animOldScale.from = 1.0; animOldScale.to = 0.85; animOldScale.duration = dur
-            animOldOpacity.target = oldW; animOldOpacity.from = 1; animOldOpacity.to = 0; animOldOpacity.duration = dur
-            animNewScale.target = newW; animNewScale.from = 1.15; animNewScale.to = 1.0; animNewScale.duration = dur
-            animNewOpacity.target = newW; animNewOpacity.from = 0; animNewOpacity.to = 1; animNewOpacity.duration = dur
+            if (pendingSource === "" || pendingSource === displayedSource) {
+                pendingSource = ""
+                loadingSource = ""
+                return
+            }
 
-            newW.scale = 1.15
-            zoomAnim.restart()
+            const inactive = inactiveImage()
+            if (inactive.source === pendingSource && inactive.status === Image.Ready) {
+                loadingSource = ""
+                performSwitch()
+                return
+            }
+
+            loadingSource = pendingSource
+            inactive.source = pendingSource
         }
 
-        function runBlurFade(oldW, newW) {
-            var dur = root.transitionDuration
+        function handleReady(slotIndex: int, loadedSource: string): void {
+            if (loadedSource === "" || loadedSource !== pendingSource)
+                return
 
-            // Activate blur on old wrapper
-            oldW._blurActive = true
+            const inactiveIndex = activeIndex === 0 ? 1 : 0
+            if (slotIndex !== inactiveIndex || root._transitioning)
+                return
 
-            animOldBlur.target = oldW; animOldBlur.from = 0; animOldBlur.to = 1.0; animOldBlur.duration = dur
-            animOldOpacity.target = oldW; animOldOpacity.from = 1; animOldOpacity.to = 0; animOldOpacity.duration = dur
-            animNewOpacity.target = newW; animNewOpacity.from = 0; animNewOpacity.to = 1; animNewOpacity.duration = dur
-
-            blurFadeAnim.restart()
+            loadingSource = ""
+            performSwitch()
         }
-    }
 
-    onSourceChanged: internal.updateSource()
+        function handleError(slotIndex: int, failedSource: string): void {
+            const inactiveIndex = activeIndex === 0 ? 1 : 0
+            if (slotIndex !== inactiveIndex)
+                return
 
-    // ── animation objects ──
+            if (failedSource !== pendingSource && failedSource !== loadingSource)
+                return
 
-    // Shared NumberAnimation building blocks
-    NumberAnimation {
-        id: animOldOpacity; property: "opacity"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animNewOpacity; property: "opacity"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animOldX; property: "x"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animNewX; property: "x"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animOldY; property: "y"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animNewY; property: "y"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animOldScale; property: "scale"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animNewScale; property: "scale"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animOldBlur; property: "_blurAmount"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
+            loadingSource = ""
+            pendingSource = ""
+        }
 
-    // Wipe clip animations
-    NumberAnimation {
-        id: animClipX; property: "_clipX"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animClipY; property: "_clipY"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animClipW; property: "_clipW"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: animClipH; property: "_clipH"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
+        function performSwitch(): void {
+            if (pendingSource === "" || pendingSource === displayedSource)
+                return
 
-    // fadeThrough phase animations
-    NumberAnimation {
-        id: fadeOutPhase; property: "opacity"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    NumberAnimation {
-        id: fadeInPhase; property: "opacity"
-        easing.type: root._easingType(); easing.bezierCurve: root._easingCurve()
-    }
-    PauseAnimation { id: fadePause }
-
-    // ── composite animations ──
-
-    // Generic finish handler
-    property var _onFinished: function() { internal.finishTransition() }
-
-    ParallelAnimation {
-        id: transitionAnim
-        // Placeholder — individual types use specific animations below
-    }
-
-    ParallelAnimation {
-        id: crossfadeAnim
-        animations: [animOldOpacity, animNewOpacity]
-        onFinished: internal.finishTransition()
-    }
-
-    SequentialAnimation {
-        id: fadeThroughAnim
-        animations: [fadeOutPhase, fadePause, fadeInPhase]
-        onFinished: internal.finishTransition()
-    }
-
-    ParallelAnimation {
-        id: wipeAnim
-        animations: [animClipX, animClipY, animClipW, animClipH]
-        onFinished: internal.finishTransition()
-    }
-
-    // Slide uses a single animation — we pick X or Y in runSlide
-    // But we need a wrapper to get onFinished
-    ParallelAnimation {
-        id: slideAnim
-        animations: [animNewX, animNewY]
-        onFinished: internal.finishTransition()
-    }
-
-    ParallelAnimation {
-        id: pushAnim
-        animations: [animNewX, animNewY, animOldX, animOldY]
-        onFinished: internal.finishTransition()
-    }
-
-    ParallelAnimation {
-        id: zoomAnim
-        animations: [animOldScale, animOldOpacity, animNewScale, animNewOpacity]
-        onFinished: internal.finishTransition()
-    }
-
-    ParallelAnimation {
-        id: blurFadeAnim
-        animations: [animOldBlur, animOldOpacity, animNewOpacity]
-        onFinished: {
-            wrapper0._blurActive = false
-            wrapper1._blurActive = false
-            internal.finishTransition()
+            root._transitioning = true
+            root._transitionWidthSnapshot = Math.max(1, root.width)
+            root._transitionHeightSnapshot = Math.max(1, root.height)
+            root._transitionSourceSizeSnapshot = Qt.size(
+                Math.max(0, Number(root.sourceSize.width) || 0),
+                Math.max(0, Number(root.sourceSize.height) || 0)
+            )
+            transitionStarted()
+            transitionFromIndex = activeIndex
+            transitionToIndex = activeIndex === 0 ? 1 : 0
+            transitionState.progress = 0
+            transitionAnim.restart()
         }
     }
 
-    // ── image wrappers ──
+    function _onTransitionEnd(): void {
+        transitionAnim.stop()
+        const fromIndex = internal.transitionFromIndex
+        if (internal.transitionToIndex >= 0)
+            internal.activeIndex = internal.transitionToIndex
+        _transitioning = false
+        transitionState.progress = 0
+        internal.displayedSource = internal.activeImage().source
+        internal.loadingSource = ""
+        if (internal.pendingSource === internal.displayedSource)
+            internal.pendingSource = ""
+        internal.transitionFromIndex = -1
+        internal.transitionToIndex = -1
+
+        // Release the old wallpaper texture from the inactive slot.
+        // Without this, every wallpaper ever displayed stays in Qt's
+        // QPixmapCache because cache:true retains decoded pixmaps by URL.
+        // Only clear when there's no pending source that needs the slot.
+        if (internal.pendingSource === "" || internal.pendingSource === internal.displayedSource) {
+            internal.inactiveImage().source = ""
+        }
+
+        transitionFinished()
+        if (internal.pendingSource !== "" && internal.pendingSource !== internal.displayedSource)
+            internal.loadPending()
+    }
+
+    onSourceChanged: internal.switchTo(source)
+
+    clip: true
+
+    function _transitionDirection(): int {
+        return _directionSign()
+    }
+
+    function _slotVisible(slotIndex: int): bool {
+        if (_transitioning)
+            return internal.transitionFromIndex === slotIndex || internal.transitionToIndex === slotIndex
+        return internal.activeIndex === slotIndex && internal.slotImage(slotIndex).source !== ""
+    }
+
+    function _slotOpacity(slotIndex: int): real {
+        if (!_transitioning)
+            return internal.activeIndex === slotIndex ? 1 : 0
+
+        const progress = _clamp01(transitionState.progress)
+        const isFrom = internal.transitionFromIndex === slotIndex
+        const isTo = internal.transitionToIndex === slotIndex
+
+        switch (_effectiveType) {
+        case "slide":
+        case "push":
+            return (isFrom || isTo) ? 1 : 0
+        case "wipe":
+            return isFrom ? _lerp(1, 0.86, progress) : isTo ? _lerp(0.74, 1, progress) : 0
+        case "zoom":
+            return isFrom ? (1 - progress) : isTo ? progress : 0
+        case "blurFade":
+            return isFrom ? (1 - progress) : isTo ? _clamp01((progress - 0.08) / 0.92) : 0
+        case "fadeThrough": {
+            const outProgress = _clamp01(progress / 0.4)
+            const inProgress = progress <= 0.5 ? 0 : _clamp01((progress - 0.5) / 0.5)
+            return isFrom ? (1 - outProgress) : isTo ? inProgress : 0
+        }
+        default:
+            return isFrom ? (1 - progress) : isTo ? progress : 0
+        }
+    }
+
+    function _slotX(slotIndex: int): real {
+        if (!_transitioning)
+            return 0
+
+        const progress = _clamp01(transitionState.progress)
+        const travelWidth = _transitionWidth()
+        const vertical = _isVerticalDirection()
+        const direction = _transitionDirection()
+        const isFrom = internal.transitionFromIndex === slotIndex
+        const isTo = internal.transitionToIndex === slotIndex
+
+        if (vertical)
+            return 0
+
+        switch (_effectiveType) {
+        case "slide":
+            if (isFrom)
+                return -direction * travelWidth * _slideExitDistance * progress
+            if (isTo)
+                return direction * travelWidth * (1 - progress)
+            return 0
+        case "push":
+            if (isFrom)
+                return -direction * travelWidth * _pushDistance * progress
+            if (isTo)
+                return direction * travelWidth * _pushDistance * (1 - progress)
+            return 0
+        case "wipe":
+            if (isFrom)
+                return -direction * travelWidth * _wipeOutgoingParallax * progress
+            if (isTo)
+                return direction * travelWidth * _wipeIncomingParallax * (1 - progress)
+            return 0
+        default:
+            return 0
+        }
+    }
+
+    function _slotY(slotIndex: int): real {
+        if (!_transitioning)
+            return 0
+
+        const progress = _clamp01(transitionState.progress)
+        const travelHeight = _transitionHeight()
+        const vertical = _isVerticalDirection()
+        const direction = _transitionDirection()
+        const isFrom = internal.transitionFromIndex === slotIndex
+        const isTo = internal.transitionToIndex === slotIndex
+
+        if (!vertical)
+            return 0
+
+        switch (_effectiveType) {
+        case "slide":
+            if (isFrom)
+                return -direction * travelHeight * _slideExitDistance * progress
+            if (isTo)
+                return direction * travelHeight * (1 - progress)
+            return 0
+        case "push":
+            if (isFrom)
+                return -direction * travelHeight * _pushDistance * progress
+            if (isTo)
+                return direction * travelHeight * _pushDistance * (1 - progress)
+            return 0
+        case "wipe":
+            if (isFrom)
+                return -direction * travelHeight * _wipeOutgoingParallax * progress
+            if (isTo)
+                return direction * travelHeight * _wipeIncomingParallax * (1 - progress)
+            return 0
+        default:
+            return 0
+        }
+    }
+
+    function _slotZ(slotIndex: int): real {
+        if (_transitioning)
+            return internal.transitionToIndex === slotIndex ? 2 : internal.transitionFromIndex === slotIndex ? 1 : 0
+        return internal.activeIndex === slotIndex ? 1 : 0
+    }
+
+    function _slotScale(slotIndex: int): real {
+        if (!_transitioning) {
+            if (_effectiveType === "zoom")
+                return internal.activeIndex === slotIndex ? 1 : _zoomEnterFrom
+            return 1
+        }
+
+        const progress = _clamp01(transitionState.progress)
+        const isFrom = internal.transitionFromIndex === slotIndex
+        const isTo = internal.transitionToIndex === slotIndex
+
+        switch (_effectiveType) {
+        case "crossfade":
+            if (isFrom)
+                return _lerp(1, _crossfadeOutgoingScale, progress)
+            if (isTo)
+                return _lerp(_crossfadeIncomingScale, 1, progress)
+            return 1
+        case "wipe":
+            if (isFrom)
+                return _lerp(1, 0.975, progress)
+            if (isTo)
+                return _lerp(1.04, 1, progress)
+            return 1
+        case "zoom":
+            if (isFrom)
+                return _lerp(1, _zoomExitTo, progress)
+            if (isTo)
+                return _lerp(_zoomEnterFrom, 1, progress)
+            return 1
+        case "blurFade":
+            if (isFrom)
+                return _lerp(1, _blurFadeOutgoingScale, progress)
+            if (isTo)
+                return _lerp(_blurFadeIncomingScale, 1, progress)
+            return 1
+        case "fadeThrough": {
+            const outProgress = _clamp01(progress / 0.4)
+            const inProgress = progress <= 0.5 ? 0 : _clamp01((progress - 0.5) / 0.5)
+            if (isFrom)
+                return _lerp(1, 0.96, outProgress)
+            if (isTo)
+                return _lerp(0.92, 1, inProgress)
+            return 1
+        }
+        default:
+            return 1
+        }
+    }
+
+    function _slotBlur(slotIndex: int): real {
+        if (!_transitioning || _effectiveType !== "blurFade")
+            return 0
+        if (internal.transitionFromIndex !== slotIndex)
+            return 0
+        return _blurFadeMax * _clamp01(transitionState.progress)
+    }
+
+    function _slotClipEnabled(slotIndex: int): bool {
+        return _transitioning && _effectiveType === "wipe" && internal.transitionToIndex === slotIndex
+    }
+
+    function _slotWrapperX(slotIndex: int): real {
+        if (!_slotClipEnabled(slotIndex) || _isVerticalDirection())
+            return 0
+
+        const progress = _clamp01(transitionState.progress)
+        const width = _transitionWidth() * progress
+        return _resolvedTransitionDirection() === "right" ? _transitionWidth() - width : 0
+    }
+
+    function _slotWrapperY(slotIndex: int): real {
+        if (!_slotClipEnabled(slotIndex) || !_isVerticalDirection())
+            return 0
+
+        const progress = _clamp01(transitionState.progress)
+        const height = _transitionHeight() * progress
+        return _resolvedTransitionDirection() === "bottom" ? _transitionHeight() - height : 0
+    }
+
+    function _slotWrapperWidth(slotIndex: int): real {
+        if (!_slotClipEnabled(slotIndex) || _isVerticalDirection())
+            return _slotRenderWidth(slotIndex)
+        return Math.max(1, _transitionWidth() * _clamp01(transitionState.progress))
+    }
+
+    function _slotWrapperHeight(slotIndex: int): real {
+        if (!_slotClipEnabled(slotIndex) || !_isVerticalDirection())
+            return _slotRenderHeight(slotIndex)
+        return Math.max(1, _transitionHeight() * _clamp01(transitionState.progress))
+    }
 
     Item {
-        id: wrapper0
-        width: root.width
-        height: root.height
-        transformOrigin: Item.Center
-        opacity: 1
+        id: slot0
+        x: root._slotWrapperX(0)
+        y: root._slotWrapperY(0)
+        width: root._slotWrapperWidth(0)
+        height: root._slotWrapperHeight(0)
+        clip: root._slotClipEnabled(0)
+        visible: root._slotVisible(0)
+        z: root._slotZ(0)
 
-        property real _blurAmount: 0
-        property bool _blurActive: false
+        Image {
+            id: img0
+            x: root._slotX(0)
+            y: root._slotY(0)
+            width: root._slotRenderWidth(0)
+            height: root._slotRenderHeight(0)
+            fillMode: root.fillMode
+            sourceSize: root._slotSourceSize(0)
+            asynchronous: true
+            cache: false
+            mipmap: true
+            smooth: true
+            opacity: root._slotOpacity(0)
+            scale: root._slotScale(0)
+            transformOrigin: Item.Center
 
-        // Clip properties for wipe
-        property bool _useClip: false
-        property real _clipX: 0
-        property real _clipY: 0
-        property real _clipW: root.width
-        property real _clipH: root.height
-
-        // Clip layer — only used during wipe transitions
-        Item {
-            id: clipContainer0
-            x: wrapper0._useClip ? wrapper0._clipX : 0
-            y: wrapper0._useClip ? wrapper0._clipY : 0
-            width: wrapper0._useClip ? wrapper0._clipW : root.width
-            height: wrapper0._useClip ? wrapper0._clipH : root.height
-            clip: wrapper0._useClip
-
-            Image {
-                id: img0
-                // Position relative to clip container so image stays stationary
-                x: wrapper0._useClip ? -wrapper0._clipX : 0
-                y: wrapper0._useClip ? -wrapper0._clipY : 0
-                width: root.width
-                height: root.height
-                fillMode: root.fillMode
-                sourceSize: root.sourceSize
-                asynchronous: true
-                cache: true
-                mipmap: true
-                smooth: true
-                visible: !blur0Loader.active
-
-                onStatusChanged: internal.onImageReady(0)
+            onStatusChanged: {
+                if (status === Image.Ready)
+                    internal.handleReady(0, source)
+                else if (status === Image.Error)
+                    internal.handleError(0, source)
             }
-        }
 
-        Loader {
-            id: blur0Loader
-            anchors.fill: clipContainer0
-            active: wrapper0._blurActive && wrapper0._blurAmount > 0
-            sourceComponent: MultiEffect {
-                source: img0
-                anchors.fill: parent
+            layer.enabled: root._canTransition && Appearance.effectsEnabled
+                           && root._effectiveType === "blurFade"
+                           && root._transitioning
+                           && internal.transitionFromIndex === 0
+            layer.effect: MultiEffect {
                 blurEnabled: true
+                blur: root._slotBlur(0)
                 blurMax: 64
-                blur: wrapper0._blurAmount
             }
         }
     }
 
     Item {
-        id: wrapper1
-        width: root.width
-        height: root.height
-        transformOrigin: Item.Center
-        opacity: 0
+        id: slot1
+        x: root._slotWrapperX(1)
+        y: root._slotWrapperY(1)
+        width: root._slotWrapperWidth(1)
+        height: root._slotWrapperHeight(1)
+        clip: root._slotClipEnabled(1)
+        visible: root._slotVisible(1)
+        z: root._slotZ(1)
 
-        property real _blurAmount: 0
-        property bool _blurActive: false
+        Image {
+            id: img1
+            x: root._slotX(1)
+            y: root._slotY(1)
+            width: root._slotRenderWidth(1)
+            height: root._slotRenderHeight(1)
+            fillMode: root.fillMode
+            sourceSize: root._slotSourceSize(1)
+            asynchronous: true
+            cache: false
+            mipmap: true
+            smooth: true
+            opacity: root._slotOpacity(1)
+            scale: root._slotScale(1)
+            transformOrigin: Item.Center
 
-        property bool _useClip: false
-        property real _clipX: 0
-        property real _clipY: 0
-        property real _clipW: root.width
-        property real _clipH: root.height
-
-        Item {
-            id: clipContainer1
-            x: wrapper1._useClip ? wrapper1._clipX : 0
-            y: wrapper1._useClip ? wrapper1._clipY : 0
-            width: wrapper1._useClip ? wrapper1._clipW : root.width
-            height: wrapper1._useClip ? wrapper1._clipH : root.height
-            clip: wrapper1._useClip
-
-            Image {
-                id: img1
-                x: wrapper1._useClip ? -wrapper1._clipX : 0
-                y: wrapper1._useClip ? -wrapper1._clipY : 0
-                width: root.width
-                height: root.height
-                fillMode: root.fillMode
-                sourceSize: root.sourceSize
-                asynchronous: true
-                cache: true
-                mipmap: true
-                smooth: true
-                visible: !blur1Loader.active
-
-                onStatusChanged: internal.onImageReady(1)
+            onStatusChanged: {
+                if (status === Image.Ready)
+                    internal.handleReady(1, source)
+                else if (status === Image.Error)
+                    internal.handleError(1, source)
             }
-        }
 
-        Loader {
-            id: blur1Loader
-            anchors.fill: clipContainer1
-            active: wrapper1._blurActive && wrapper1._blurAmount > 0
-            sourceComponent: MultiEffect {
-                source: img1
-                anchors.fill: parent
+            layer.enabled: root._canTransition && Appearance.effectsEnabled
+                           && root._effectiveType === "blurFade"
+                           && root._transitioning
+                           && internal.transitionFromIndex === 1
+            layer.effect: MultiEffect {
                 blurEnabled: true
+                blur: root._slotBlur(1)
                 blurMax: 64
-                blur: wrapper1._blurAmount
             }
         }
     }
@@ -582,8 +695,7 @@ Item {
     Component.onCompleted: {
         if (root.source !== "") {
             img0.source = root.source
-            wrapper0.opacity = 1
-            wrapper1.opacity = 0
+            internal.displayedSource = root.source
         }
     }
 }

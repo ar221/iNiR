@@ -201,13 +201,13 @@ Item {
                 }
             }
 
-            PagePlaceholder {
+            MaterialPlaceholderMessage {
                 id: placeholderItem
                 z: 2
                 shown: root.responses.length === 0
                 icon: "image"
-                title: Translation.tr("Wallhaven wallpapers")
-                description: Translation.tr("Type tags and hit Enter to search on wallhaven.cc")
+                text: Translation.tr("Wallhaven wallpapers")
+                explanation: Translation.tr("Type tags and hit Enter to search on wallhaven.cc")
                 shape: MaterialShape.Shape.Bun
             }
 
@@ -250,7 +250,7 @@ Item {
             clip: true
 
             Behavior on implicitHeight {
-                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 
             RowLayout {

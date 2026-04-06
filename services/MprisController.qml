@@ -48,21 +48,23 @@ Singleton {
 		const _ = _playbackStateVersion;
 		// Only consider tracked if it survived filtering
 		const tracked = players.includes(trackedPlayer) ? trackedPlayer : null;
-		// If tracked player is actively playing, use it
-		if (tracked?.isPlaying) return tracked;
+		// If user manually selected a player, keep it active immediately
+		if (tracked) return tracked;
 		// Otherwise, find any player that IS playing (iterate to ensure reactivity)
 		for (let i = 0; i < players.length; i++) {
 			if (players[i]?.isPlaying) return players[i];
 		}
-		// Fallback to tracked or first player (even if paused)
-		return tracked ?? players[0] ?? null;
+		// Final fallback
+		return players[0] ?? null;
 	}
 
 	readonly property bool isYtMusicActive: {
-		if (YtMusic.currentVideoId) return true;
-		if (YtMusic.mpvPlayer) return true;
-		if (!activePlayer) return false;
-		return _isYtMusicMpv(activePlayer);
+		if (!(Config.options?.sidebar?.ytmusic?.enable ?? false)) return false;
+		if (activePlayer) return _isYtMusicMpv(activePlayer);
+		// Fallback only during transient gaps where activePlayer is momentarily null
+		// while YtMusic is still playing/initializing.
+		if (!YtMusic.currentVideoId) return false;
+		return !!YtMusic.mpvPlayer || !!YtMusic.isPlaying;
 	}
 	
 	property bool hasPlasmaIntegration: false
@@ -152,6 +154,9 @@ Singleton {
 		if (!Config.options?.media?.filterDuplicatePlayers) return true;
 		const name = player?.dbusName ?? "";
 		if (!name) return false;
+		
+		const ytMusicEnabled = Config.options?.sidebar?.ytmusic?.enable ?? false;
+		if (!ytMusicEnabled && _isYtMusicMpvRaw(player)) return false;
 
 		// Explicitly drop X/Twitter media noise early (url/title/album)
 		const rawUrl = player?.metadata?.["xesam:url"] ?? "";
@@ -290,7 +295,7 @@ Singleton {
 
 	property var activeTrack;
 
-	function _isYtMusicMpv(player): bool {
+	function _isYtMusicMpvRaw(player): bool {
 		if (!player) return false;
 		if (YtMusic.mpvPlayer && player === YtMusic.mpvPlayer) return true;
 		const id = (player.identity ?? "").toLowerCase();
@@ -307,6 +312,11 @@ Singleton {
 		}
 		return false;
 	}
+
+	function _isYtMusicMpv(player): bool {
+		if (!(Config.options?.sidebar?.ytmusic?.enable ?? false)) return false;
+		return _isYtMusicMpvRaw(player);
+	}
 	
 	function _normTitle(s): string {
 		return (s ?? "").toLowerCase().replace(/[\t\r\n|•·]+/g, " ").replace(/\s+/g, " ").trim();
@@ -315,6 +325,7 @@ Singleton {
 	// Check if player is related to YtMusic (for duplicate filtering)
 	function _isYtMusicRelated(player): bool {
 		if (!player) return false;
+		if (!(Config.options?.sidebar?.ytmusic?.enable ?? false)) return false;
 		if (_isYtMusicMpv(player)) return true;
 		// Only consider browser YouTube players as YtMusic-related if titles match closely
 		if (!YtMusic.currentVideoId && !YtMusic.currentTitle) return false;
@@ -358,15 +369,17 @@ Singleton {
 		let filtered = [];
 		let used = new Set();
 		
-		const allPlayers = [...ytMusic, ...nonYtMusic];
+		const allPlayers = [...ytMusic, ...nonYtMusic].filter(player => player);
 		for (let i = 0; i < allPlayers.length; i++) {
 			if (used.has(i)) continue;
 			const p1 = allPlayers[i];
+			if (!p1) continue;
 			let group = [i];
 			
 			for (let j = i + 1; j < allPlayers.length; j++) {
 				if (used.has(j)) continue;
 				const p2 = allPlayers[j];
+				if (!p2) continue;
 				
 				// Title similarity check
 				const titleMatch = p1.trackTitle && p2.trackTitle && 

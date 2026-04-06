@@ -105,13 +105,13 @@ DEPS_AUDIO_SOCAT="arch:socat fedora:socat debian:socat ubuntu:socat opensuse:soc
 # Network
 ###############################################################################
 DEPS_NET_NETWORKMANAGER="arch:networkmanager fedora:NetworkManager debian:network-manager ubuntu:network-manager opensuse:NetworkManager void:NetworkManager"
+DEPS_NET_NMCONNECTIONEDITOR="arch:nm-connection-editor fedora:nm-connection-editor debian:network-manager-gnome ubuntu:network-manager-gnome opensuse:NetworkManager-connection-editor void:network-manager-applet"
 DEPS_NET_GNOMEKEYRING="arch:gnome-keyring fedora:gnome-keyring debian:gnome-keyring ubuntu:gnome-keyring opensuse:gnome-keyring void:gnome-keyring"
 DEPS_NET_BLUEMAN="arch:blueman fedora:blueman debian:blueman ubuntu:blueman opensuse:blueman void:blueman"
 
 ###############################################################################
 # Theming and appearance
 ###############################################################################
-DEPS_THEME_MATUGEN="arch:matugen fedora:CARGO:matugen debian:CARGO:matugen ubuntu:CARGO:matugen opensuse:CARGO:matugen void:CARGO:matugen"
 DEPS_THEME_QT6CT="arch:qt6ct fedora:qt6ct debian:qt6ct ubuntu:qt6ct opensuse:qt6ct void:qt6ct"
 DEPS_THEME_KVANTUM="arch:kvantum fedora:kvantum debian:qt6-style-kvantum ubuntu:qt6-style-kvantum opensuse:kvantum-qt6 void:kvantum"
 DEPS_THEME_BREEZE="arch:breeze fedora:breeze-gtk debian:breeze-gtk-theme ubuntu:breeze-gtk-theme opensuse:metatheme-breeze-common void:breeze"
@@ -154,6 +154,7 @@ DEPS_MISC_FOOT="arch:foot fedora:foot debian:foot ubuntu:foot opensuse:foot void
 DEPS_MISC_KITTY="arch:kitty fedora:kitty debian:kitty ubuntu:kitty opensuse:kitty void:kitty"
 DEPS_MISC_POLKIT="arch:polkit fedora:polkit debian:policykit-1 ubuntu:policykit-1 opensuse:polkit void:polkit"
 DEPS_MISC_UV="arch:AUR:uv fedora:CARGO:uv debian:CARGO:uv ubuntu:CARGO:uv opensuse:CARGO:uv void:CARGO:uv"
+DEPS_MISC_GOWALL="arch:AUR:gowall-bin fedora:CARGO:gowall debian:CARGO:gowall ubuntu:CARGO:gowall opensuse:CARGO:gowall void:CARGO:gowall"
 DEPS_MISC_KCONFIG="arch:kconfig fedora:kf6-kconfig debian:libkf6config-bin ubuntu:libkf6config-bin opensuse:kconfig void:kconfig"
 
 ###############################################################################

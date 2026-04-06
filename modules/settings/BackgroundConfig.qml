@@ -1,3 +1,4 @@
+import qs
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
@@ -6,6 +7,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import "root:modules/common/functions/parallax.js" as ParallaxMath
 
 ContentPage {
     id: root
@@ -14,6 +16,30 @@ ContentPage {
     settingsPageIcon: "texture"
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
+    readonly property var iiParallax: Config.options?.background?.parallax ?? {}
+    readonly property string iiParallaxPreset: ParallaxMath.detectPreset(
+        iiParallax.zoom ?? iiParallax.workspaceZoom ?? 1.07,
+        iiParallax.workspaceShift ?? 1,
+        iiParallax.panelShift ?? iiParallax.sidebarShift ?? 0.15,
+        iiParallax.widgetDepth ?? iiParallax.widgetsFactor ?? 1.2
+    )
+
+    function setIiParallaxAxis(value: string): void {
+        Config.setNestedValue("background.parallax.axis", value)
+        Config.setNestedValue("background.parallax.autoVertical", value === "auto")
+        Config.setNestedValue("background.parallax.vertical", value === "vertical")
+    }
+
+    function applyIiParallaxPreset(presetId: string): void {
+        const preset = ParallaxMath.preset(presetId)
+        Config.setNestedValue("background.parallax.enable", true)
+        Config.setNestedValue("background.parallax.zoom", preset.zoom)
+        Config.setNestedValue("background.parallax.workspaceZoom", preset.zoom)
+        Config.setNestedValue("background.parallax.workspaceShift", preset.workspaceShift)
+        Config.setNestedValue("background.parallax.panelShift", preset.panelShift)
+        Config.setNestedValue("background.parallax.widgetDepth", preset.widgetDepth)
+        Config.setNestedValue("background.parallax.widgetsFactor", preset.widgetDepth)
+    }
 
     SettingsCardSection {
         visible: !root.isIiActive
@@ -40,14 +66,49 @@ ContentPage {
 
         SettingsGroup {
             SettingsSwitch {
-                buttonIcon: "unfold_more_double"
-                text: Translation.tr("Vertical")
-                checked: Config.options.background.parallax.vertical
-                onCheckedChanged: {
-                    Config.options.background.parallax.vertical = checked;
-                }
+                buttonIcon: "image"
+                text: Translation.tr("Enable parallax")
+                checked: root.iiParallax.enable ?? ((root.iiParallax.enableWorkspace ?? false) || (root.iiParallax.enableSidebar ?? false))
+                onCheckedChanged: Config.setNestedValue("background.parallax.enable", checked)
                 StyledToolTip {
-                    text: Translation.tr("Enable vertical parallax movement based on mouse position")
+                    text: Translation.tr("Move the wallpaper and background widgets with workspaces and panels")
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: Translation.tr("When parallax is active, ii renders the wallpaper internally so workspace motion, widget depth and wallpaper transitions stay synchronized.")
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.small
+                wrapMode: Text.WordWrap
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Motion profile")
+
+                ConfigSelectionArray {
+                    currentValue: root.iiParallaxPreset === "custom" ? null : root.iiParallaxPreset
+                    options: [
+                        { displayName: Translation.tr("Subtle"), icon: "bedtime", value: "subtle" },
+                        { displayName: Translation.tr("Balanced"), icon: "tune", value: "balanced" },
+                        { displayName: Translation.tr("Immersive"), icon: "movie", value: "immersive" }
+                    ]
+                    onSelected: newValue => root.applyIiParallaxPreset(newValue)
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Axis")
+
+                ConfigSelectionArray {
+                    currentValue: root.iiParallax.axis
+                        ?? ((root.iiParallax.autoVertical ?? false) ? "auto" : ((root.iiParallax.vertical ?? false) ? "vertical" : "horizontal"))
+                    options: [
+                        { displayName: Translation.tr("Horizontal"), icon: "east", value: "horizontal" },
+                        { displayName: Translation.tr("Vertical"), icon: "north", value: "vertical" },
+                        { displayName: Translation.tr("Auto"), icon: "sync_alt", value: "auto" }
+                    ]
+                    onSelected: newValue => root.setIiParallaxAxis(newValue)
                 }
             }
 
@@ -55,40 +116,95 @@ ContentPage {
                 uniform: true
                 SettingsSwitch {
                     buttonIcon: "counter_1"
-                    text: Translation.tr("Depends on workspace")
-                    checked: Config.options.background.parallax.enableWorkspace
-                    onCheckedChanged: {
-                        Config.options.background.parallax.enableWorkspace = checked;
-                    }
+                    text: Translation.tr("Follow workspace")
+                    checked: root.iiParallax.enableWorkspace ?? false
+                    enabled: root.iiParallax.enable ?? true
+                    onCheckedChanged: Config.setNestedValue("background.parallax.enableWorkspace", checked)
                     StyledToolTip {
-                        text: Translation.tr("Shift wallpaper based on current workspace position")
+                        text: Translation.tr("Use the current workspace range to shift the wallpaper")
                     }
                 }
                 SettingsSwitch {
                     buttonIcon: "side_navigation"
-                    text: Translation.tr("Depends on sidebars")
-                    checked: Config.options.background.parallax.enableSidebar
-                    onCheckedChanged: {
-                        Config.options.background.parallax.enableSidebar = checked;
-                    }
+                    text: Translation.tr("Follow sidebars")
+                    checked: root.iiParallax.enableSidebar ?? false
+                    enabled: root.iiParallax.enable ?? true
+                    onCheckedChanged: Config.setNestedValue("background.parallax.enableSidebar", checked)
                     StyledToolTip {
-                        text: Translation.tr("Shift wallpaper when sidebars are open")
+                        text: Translation.tr("Add lateral offset when left or right sidebar is open")
                     }
                 }
             }
+
             ConfigSpinBox {
                 icon: "loupe"
-                text: Translation.tr("Preferred wallpaper zoom (%)")
-                value: Config.options.background.parallax.workspaceZoom * 100
+                text: Translation.tr("Wallpaper zoom (%)")
+                value: Math.round((root.iiParallax.zoom ?? root.iiParallax.workspaceZoom ?? 1.07) * 100)
                 from: 100
-                to: 150
+                to: 140
                 stepSize: 1
                 onValueChanged: {
-                    Config.options.background.parallax.workspaceZoom = value / 100;
+                    Config.setNestedValue("background.parallax.zoom", value / 100)
+                    Config.setNestedValue("background.parallax.workspaceZoom", value / 100)
                 }
                 StyledToolTip {
-                    text: Translation.tr("How much to zoom the wallpaper for parallax effect")
+                    text: Translation.tr("Extra wallpaper scale reserved for parallax movement")
                 }
+            }
+
+            ConfigSpinBox {
+                icon: "north"
+                text: Translation.tr("Workspace travel (%)")
+                value: Math.round((root.iiParallax.workspaceShift ?? 1) * 100)
+                from: 0
+                to: 150
+                stepSize: 5
+                enabled: (root.iiParallax.enable ?? true) && (root.iiParallax.enableWorkspace ?? false)
+                onValueChanged: Config.setNestedValue("background.parallax.workspaceShift", value / 100)
+            }
+
+            ConfigSpinBox {
+                icon: "left_panel_open"
+                text: Translation.tr("Sidebar travel (%)")
+                value: Math.round((root.iiParallax.panelShift ?? root.iiParallax.sidebarShift ?? 0.15) * 100)
+                from: 0
+                to: 30
+                stepSize: 1
+                enabled: (root.iiParallax.enable ?? true) && (root.iiParallax.enableSidebar ?? false)
+                onValueChanged: Config.setNestedValue("background.parallax.panelShift", value / 100)
+            }
+
+            ConfigSpinBox {
+                icon: "layers"
+                text: Translation.tr("Widget depth (%)")
+                value: Math.round((root.iiParallax.widgetDepth ?? root.iiParallax.widgetsFactor ?? 1.2) * 100)
+                from: 50
+                to: 180
+                stepSize: 5
+                enabled: root.iiParallax.enable ?? true
+                onValueChanged: {
+                    Config.setNestedValue("background.parallax.widgetDepth", value / 100)
+                    Config.setNestedValue("background.parallax.widgetsFactor", value / 100)
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "transition_fade"
+                text: Translation.tr("Pause during wallpaper transitions")
+                checked: root.iiParallax.pauseDuringTransitions ?? true
+                enabled: root.iiParallax.enable ?? true
+                onCheckedChanged: Config.setNestedValue("background.parallax.pauseDuringTransitions", checked)
+            }
+
+            ConfigSpinBox {
+                icon: "timer"
+                text: Translation.tr("Transition settle (ms)")
+                value: root.iiParallax.transitionSettleMs ?? 220
+                from: 0
+                to: 1200
+                stepSize: 20
+                enabled: (root.iiParallax.enable ?? true) && (root.iiParallax.pauseDuringTransitions ?? true)
+                onValueChanged: Config.setNestedValue("background.parallax.transitionSettleMs", value)
             }
         }
     }
@@ -126,6 +242,11 @@ ContentPage {
                 spacing: Appearance.sizes.spacingSmall
 
                 property string selectedMonitor: {
+                    const primary = GlobalStates.primaryScreen
+                    const primaryName = primary ? (WallpaperListener.getMonitorName(primary) ?? "") : ""
+                    if (primaryName) return primaryName
+                    const focused = WallpaperListener.getFocusedMonitor()
+                    if (focused) return focused
                     const screens = Quickshell.screens
                     if (!screens || screens.length === 0) return ""
                     return WallpaperListener.getMonitorName(screens[0]) ?? ""
@@ -228,9 +349,9 @@ ContentPage {
                                         ? 1.0
                                         : (bgBackdropMa.containsMouse ? 0.7 : 0.5)
 
-                                    Behavior on x { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgBackdropCard) }
-                                    Behavior on y { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgBackdropCard) }
-                                    Behavior on opacity { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgBackdropCard) }
+                                    Behavior on x { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on y { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on opacity { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                                     StyledImage {
                                         visible: !WallpaperListener.isVideoPath(bgMonDelegate.backdropWpPath) && !WallpaperListener.isGifPath(bgMonDelegate.backdropWpPath)
@@ -274,7 +395,7 @@ ContentPage {
                                         anchors.fill: parent
                                         radius: parent.radius
                                         color: Qt.rgba(0, 0, 0, bgMultiMonPanel.showBackdropView && bgMonDelegate.isSelected ? 0 : 0.45)
-                                        Behavior on color { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
+                                        Behavior on color { enabled: Appearance.animationsEnabled; animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
                                     }
 
                                     // "Backdrop" label
@@ -357,11 +478,11 @@ ContentPage {
                                     scale: bgMonDelegate.isSelected && !bgMultiMonPanel.showBackdropView
                                         ? 1.0 : (bgMonCardMa.containsMouse ? 0.97 : 0.93)
 
-                                    Behavior on x { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgMonCard) }
-                                    Behavior on y { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgMonCard) }
-                                    Behavior on scale { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgMonCard) }
-                                    Behavior on opacity { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgMonCard) }
-                                    Behavior on border.width { enabled: Appearance.animationsEnabled; animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(bgMonCard) }
+                                    Behavior on x { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on y { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on scale { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on opacity { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                                    Behavior on border.width { enabled: Appearance.animationsEnabled; animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                                     MouseArea {
                                         id: bgMonCardMa
@@ -763,7 +884,7 @@ ContentPage {
                                         if (mon) {
                                             Config.setNestedValue("wallpaperSelector.selectionTarget", "main")
                                             Config.setNestedValue("wallpaperSelector.targetMonitor", mon)
-                                            Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"])
+                                            Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"])
                                         }
                                     }
                                 }
@@ -807,7 +928,7 @@ ContentPage {
                                     }
                                     onClicked: {
                                         Config.setNestedValue("wallpaperSelector.selectionTarget", "backdrop")
-                                        Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"])
+                                        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"])
                                     }
                                 }
                                 RippleButtonWithIcon {
@@ -917,39 +1038,15 @@ ContentPage {
     SettingsCardSection {
         expanded: true
         icon: "wallpaper"
-        title: Translation.tr("Wallpaper backend")
+        title: Translation.tr("Wallpaper backend (awww)")
 
         SettingsGroup {
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Use the built-in renderer for the full iNiR effects stack, or hand the visible static wallpaper to awww while keeping selectors, config, per-monitor logic, theming, and backdrops synchronized.")
-                color: Appearance.colors.colSubtext
-                font.pixelSize: Appearance.font.pixelSize.small
-                wrapMode: Text.WordWrap
-                opacity: 0.85
-            }
-
-            ConfigSelectionArray {
-                currentValue: Config.options?.background?.backend?.provider ?? "internal"
-                onSelected: newValue => {
-                    Config.setNestedValue("background.backend.provider", newValue)
-                }
-                options: [
-                    { displayName: Translation.tr("Internal"), icon: "wallpaper", value: "internal" },
-                    { displayName: Translation.tr("awww"), icon: "cloud_sync", value: "awww" }
-                ]
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: {
-                    if ((Config.options?.background?.backend?.provider ?? "internal") !== "awww")
-                        return Translation.tr("Built-in QML renderer active.")
-                    if (AwwwBackend.available)
-                        return Translation.tr("awww detected. Static wallpapers are synced per monitor from your current config.")
-                    return Translation.tr("awww selected, but the `awww` / `awww-daemon` binaries were not found in PATH. iNiR will keep using the internal renderer until they are installed.")
-                }
-                color: (Config.options?.background?.backend?.provider ?? "internal") === "awww" && !AwwwBackend.available
+                text: AwwwBackend.available
+                    ? Translation.tr("awww is active. Static wallpapers are rendered externally with awww-native transitions, while GIF/video and backdrop layers use the internal fallback renderer automatically.")
+                    : Translation.tr("awww is the default backend, but the `awww` / `awww-daemon` binaries were not found in PATH. Install them to enable hardware-accelerated wallpaper rendering and transitions. The internal renderer is used as fallback until then.")
+                color: !AwwwBackend.available
                     ? Appearance.colors.colError
                     : Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.small
@@ -957,32 +1054,8 @@ ContentPage {
                 opacity: 0.9
             }
 
-            StyledText {
-                visible: (Config.options?.background?.backend?.provider ?? "internal") === "awww"
-                Layout.fillWidth: true
-                text: Translation.tr("During the awww test period, iNiR still keeps internal fallback rendering for GIF/video wallpapers, lock blur, blur overlays, overview/backdrop paths, and any case where the external renderer cannot match the current wallpaper mode.")
-                color: Appearance.colors.colSubtext
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                wrapMode: Text.WordWrap
-                opacity: 0.8
-            }
-
-            StyledText {
-                visible: (Config.options?.background?.backend?.provider ?? "internal") === "awww"
-                Layout.fillWidth: true
-                text: ((Config.options?.background?.fillMode ?? "fill") === "tile" || (Config.options?.background?.parallax?.enableWorkspace ?? false) || (Config.options?.background?.parallax?.enableSidebar ?? false))
-                    ? Translation.tr("Current wallpaper mode needs internal fallback for visual parity: tile scaling and dynamic parallax cannot be rendered by awww, so iNiR will keep the internal renderer visible for those cases while still syncing the static image to awww.")
-                    : Translation.tr("Current wallpaper mode is compatible with awww-visible rendering for static images.")
-                color: ((Config.options?.background?.fillMode ?? "fill") === "tile" || (Config.options?.background?.parallax?.enableWorkspace ?? false) || (Config.options?.background?.parallax?.enableSidebar ?? false))
-                    ? Appearance.colors.colError
-                    : Appearance.colors.colSubtext
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                wrapMode: Text.WordWrap
-                opacity: 0.82
-            }
-
             ConfigSpinBox {
-                visible: (Config.options?.background?.backend?.provider ?? "internal") === "awww"
+                visible: AwwwBackend.available
                 icon: "speed"
                 text: Translation.tr("awww transition FPS")
                 value: Config.options?.background?.backend?.awww?.transitionFps ?? 60
@@ -993,7 +1066,7 @@ ContentPage {
             }
 
             ConfigRow {
-                visible: (Config.options?.background?.backend?.provider ?? "internal") === "awww"
+                visible: AwwwBackend.available
                 uniform: true
 
                 ConfigSpinBox {
@@ -1046,16 +1119,24 @@ ContentPage {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 2
                     text: {
-                        const t = Config.options?.background?.transition?.type ?? "crossfade"
+                        const raw = Config.options?.background?.transition?.type ?? "crossfade"
+                        const t = AwwwBackend.normalizedAwwwTransitionType(raw, Config.options?.background?.transition?.direction ?? "right")
                         switch (t) {
-                        case "crossfade":    return Translation.tr("A clean dissolve tuned for everyday wallpaper changes")
-                        case "fadeThrough":  return Translation.tr("A staged handoff: outgoing fades away, a short breath, then the new wallpaper settles in")
-                        case "wipe":         return Translation.tr("A directional reveal inspired by modern shader-based shells, with subtle depth and motion")
-                        case "slide":        return Translation.tr("The new wallpaper glides across the old one with a restrained spatial drift")
-                        case "push":         return Translation.tr("A full spatial handoff where the next wallpaper physically pushes the previous one away")
-                        case "zoom":         return Translation.tr("A cinematic lens change: the old wallpaper recedes while the new one focuses into place")
-                        case "blurFade":     return Translation.tr("The previous wallpaper softens into blur while the next one appears sharp and stable")
-                        default:             return ""
+                        case "none":   return Translation.tr("Instant switch — no visible transition.")
+                        case "simple": return Translation.tr("Classic step-based dissolve. Fast, simple and lightweight.")
+                        case "fade":   return Translation.tr("Smooth fade using a bezier curve for the transition progression.")
+                        case "left":   return Translation.tr("Directional sweep from left to right.")
+                        case "right":  return Translation.tr("Directional sweep from right to left.")
+                        case "top":    return Translation.tr("Directional sweep from top to bottom.")
+                        case "bottom": return Translation.tr("Directional sweep from bottom to top.")
+                        case "wipe":   return Translation.tr("Wipe with configurable angle derived from the chosen direction.")
+                        case "wave":   return Translation.tr("Wave transition with the same directional angle controls as wipe.")
+                        case "grow":   return Translation.tr("Circular grow from a chosen origin point.")
+                        case "center": return Translation.tr("Grow centered on screen.")
+                        case "any":    return Translation.tr("Grow from a random point on the screen.")
+                        case "outer":  return Translation.tr("The circle shrinks instead of growing.")
+                        case "random": return Translation.tr("Randomly chooses one of the available transition effects.")
+                        default:       return ""
                         }
                     }
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -1065,25 +1146,42 @@ ContentPage {
                 }
 
                 ConfigSelectionArray {
-                    currentValue: Config.options?.background?.transition?.type ?? "crossfade"
+                    currentValue: AwwwBackend.normalizedAwwwTransitionType(
+                        Config.options?.background?.transition?.type ?? "crossfade",
+                        Config.options?.background?.transition?.direction ?? "right"
+                    )
                     onSelected: newValue => {
                         Config.setNestedValue("background.transition.type", newValue);
                     }
                     options: [
-                        { displayName: Translation.tr("Dissolve"), icon: "transition_fade", value: "crossfade" },
-                        { displayName: Translation.tr("Fade through"), icon: "motion_photos_on", value: "fadeThrough" },
-                        { displayName: Translation.tr("Reveal"), icon: "left_panel_open", value: "wipe" },
-                        { displayName: Translation.tr("Slide"), icon: "swipe_right_alt", value: "slide" },
-                        { displayName: Translation.tr("Push"), icon: "compare_arrows", value: "push" },
-                        { displayName: Translation.tr("Zoom"), icon: "zoom_in", value: "zoom" },
-                        { displayName: Translation.tr("Blur fade"), icon: "blur_on", value: "blurFade" }
+                        { displayName: Translation.tr("None"), icon: "block", value: "none" },
+                        { displayName: Translation.tr("Simple"), icon: "transition_fade", value: "simple" },
+                        { displayName: Translation.tr("Fade"), icon: "motion_photos_on", value: "fade" },
+                        { displayName: Translation.tr("From left"), icon: "west", value: "left" },
+                        { displayName: Translation.tr("From right"), icon: "east", value: "right" },
+                        { displayName: Translation.tr("From top"), icon: "north", value: "top" },
+                        { displayName: Translation.tr("From bottom"), icon: "south", value: "bottom" },
+                        { displayName: Translation.tr("Wipe"), icon: "left_panel_open", value: "wipe" },
+                        { displayName: Translation.tr("Wave"), icon: "water", value: "wave" },
+                        { displayName: Translation.tr("Grow"), icon: "filter_center_focus", value: "grow" },
+                        { displayName: Translation.tr("Center"), icon: "center_focus_strong", value: "center" },
+                        { displayName: Translation.tr("Any"), icon: "shuffle", value: "any" },
+                        { displayName: Translation.tr("Outer"), icon: "blur_circular", value: "outer" },
+                        { displayName: Translation.tr("Random"), icon: "casino", value: "random" }
                     ]
                 }
             }
 
             ContentSubsection {
-                visible: (Config.options?.background?.transition?.enable ?? true)
-                         && (["wipe", "slide", "push"].indexOf(Config.options?.background?.transition?.type ?? "crossfade") >= 0)
+                visible: {
+                    if (!(Config.options?.background?.transition?.enable ?? true))
+                        return false
+                    const t = AwwwBackend.normalizedAwwwTransitionType(
+                        Config.options?.background?.transition?.type ?? "crossfade",
+                        Config.options?.background?.transition?.direction ?? "right"
+                    )
+                    return ["wipe", "wave"].indexOf(t) >= 0
+                }
                 title: Translation.tr("Transition direction")
 
                 StyledText {
@@ -1110,73 +1208,16 @@ ContentPage {
                 }
             }
 
-            ContentSubsection {
-                visible: Config.options?.background?.transition?.enable ?? true
-                title: Translation.tr("Transition curve")
-
-                StyledText {
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: 2
-                    text: {
-                        const raw = Config.options?.background?.transition?.bezier ?? [0.54, 0.0, 0.34, 0.99]
-                        if (!raw || raw.length !== 4)
-                            return Translation.tr("Refined standard motion curve")
-                        const values = raw.map(value => Number(value).toFixed(2)).join(", ")
-                        return Translation.tr("Active bezier: %1").arg(values)
-                    }
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: Appearance.colors.colSubtext
-                    opacity: 0.8
-                    wrapMode: Text.WordWrap
-                }
-
-                ConfigSelectionArray {
-                    currentValue: {
-                        const raw = Config.options?.background?.transition?.bezier ?? [0.54, 0.0, 0.34, 0.99]
-                        if (!raw || raw.length !== 4)
-                            return "refined"
-
-                        const normalized = raw.map(value => Number(value).toFixed(2)).join(",")
-                        switch (normalized) {
-                        case "0.54,0.00,0.34,0.99": return "refined"
-                        case "0.20,0.00,0.00,1.00": return "settle"
-                        case "0.05,0.70,0.10,1.00": return "gentle"
-                        case "0.30,0.00,0.80,0.15": return "assertive"
-                        case "0.42,0.00,0.58,1.00": return "balanced"
-                        default: return "refined"
-                        }
-                    }
-                    onSelected: newValue => {
-                        switch (newValue) {
-                        case "settle":
-                            Config.setNestedValue("background.transition.bezier", [0.2, 0.0, 0.0, 1.0]);
-                            break;
-                        case "gentle":
-                            Config.setNestedValue("background.transition.bezier", [0.05, 0.7, 0.1, 1.0]);
-                            break;
-                        case "assertive":
-                            Config.setNestedValue("background.transition.bezier", [0.3, 0.0, 0.8, 0.15]);
-                            break;
-                        case "balanced":
-                            Config.setNestedValue("background.transition.bezier", [0.42, 0.0, 0.58, 1.0]);
-                            break;
-                        default:
-                            Config.setNestedValue("background.transition.bezier", [0.54, 0.0, 0.34, 0.99]);
-                            break;
-                        }
-                    }
-                    options: [
-                        { displayName: Translation.tr("Refined"), icon: "auto_awesome", value: "refined" },
-                        { displayName: Translation.tr("Settle"), icon: "speed", value: "settle" },
-                        { displayName: Translation.tr("Gentle"), icon: "south_east", value: "gentle" },
-                        { displayName: Translation.tr("Assertive"), icon: "north_east", value: "assertive" },
-                        { displayName: Translation.tr("Balanced"), icon: "timeline", value: "balanced" }
-                    ]
-                }
-            }
-
             ConfigSpinBox {
-                visible: Config.options?.background?.transition?.enable ?? true
+                visible: {
+                    if (!(Config.options?.background?.transition?.enable ?? true))
+                        return false
+                    const t = AwwwBackend.normalizedAwwwTransitionType(
+                        Config.options?.background?.transition?.type ?? "crossfade",
+                        Config.options?.background?.transition?.direction ?? "right"
+                    )
+                    return t !== "simple" && t !== "none"
+                }
                 icon: "timer"
                 text: Translation.tr("Transition duration (ms)")
                 value: Config.options?.background?.transition?.duration ?? 800
@@ -1187,7 +1228,7 @@ ContentPage {
                     Config.setNestedValue("background.transition.duration", value);
                 }
                 StyledToolTip {
-                    text: Translation.tr("How long the transition animation takes in milliseconds. Lower values feel snappy, higher values feel cinematic.")
+                    text: Translation.tr("How long the transition takes in milliseconds. Ignored for 'Simple' and 'None' modes.")
                 }
             }
         }
@@ -1210,9 +1251,299 @@ ContentPage {
                     options: [
                         { displayName: Translation.tr("Fill"), icon: "crop", value: "fill" },
                         { displayName: Translation.tr("Fit"), icon: "fit_screen", value: "fit" },
-                        { displayName: Translation.tr("Center"), icon: "center_focus_strong", value: "center" },
-                        { displayName: Translation.tr("Tile"), icon: "grid_view", value: "tile" }
+                        { displayName: Translation.tr("Center"), icon: "center_focus_strong", value: "center" }
                     ]
+                }
+            }
+
+            // Pan + Zoom card
+            Rectangle {
+                id: panCard
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                visible: (Config.options?.background?.fillMode ?? "fill") === "fill"
+
+                readonly property var _screen: GlobalStates.primaryScreen ?? Quickshell.screens[0] ?? null
+                readonly property real screenAspect: _screen ? (_screen.width / Math.max(1, _screen.height)) : (16 / 9)
+                readonly property real currentPanX: Config.options?.background?.pan?.x ?? 0.0
+                readonly property real currentPanY: Config.options?.background?.pan?.y ?? 0.0
+                readonly property real currentPanZoom: Math.max(1.0, Math.min(3.0, Config.options?.background?.pan?.zoom ?? 1.0))
+                readonly property bool hasPan: currentPanX !== 0.0 || currentPanY !== 0.0 || currentPanZoom !== 1.0
+
+                implicitHeight: panCardContent.implicitHeight + 16
+                radius: SettingsMaterialPreset.cardRadius
+                color: SettingsMaterialPreset.cardColor
+                border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
+                border.color: SettingsMaterialPreset.cardBorderColor
+
+                ColumnLayout {
+                    id: panCardContent
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 8
+
+                    // Header row
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        MaterialSymbol {
+                            text: "open_with"
+                            iconSize: 16
+                            color: Appearance.inirEverywhere ? Appearance.inir.colPrimary
+                                 : Appearance.auroraEverywhere ? Appearance.m3colors.m3primary
+                                 : Appearance.colors.colPrimary
+                        }
+
+                        StyledText {
+                            text: Translation.tr("Wallpaper position")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.Medium
+                            color: Appearance.inirEverywhere ? Appearance.inir.colText
+                                 : Appearance.auroraEverywhere ? Appearance.m3colors.m3onSurface
+                                 : Appearance.colors.colOnLayer1
+                        }
+
+                        MaterialSymbol {
+                            text: "info"
+                            iconSize: Appearance.font.pixelSize.large
+                            color: Appearance.colors.colSubtext
+                            MouseArea {
+                                id: panInfoMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.WhatsThisCursor
+                                StyledToolTip {
+                                    extraVisibleCondition: false
+                                    alternativeVisibleCondition: panInfoMouseArea.containsMouse
+                                    text: Translation.tr("Drag to reposition, scroll to zoom.\nWhen repositioned or zoomed, the shell renders the wallpaper internally.")
+                                }
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        RippleButton {
+                            visible: panCard.hasPan
+                            implicitWidth: 26
+                            implicitHeight: 26
+                            buttonRadius: Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
+                                : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
+                                : Appearance.colors.colLayer2Hover
+                            onClicked: {
+                                Config.setNestedValue("background.pan.x", 0)
+                                Config.setNestedValue("background.pan.y", 0)
+                                Config.setNestedValue("background.pan.zoom", 1.0)
+                            }
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "restart_alt"
+                                iconSize: 14
+                                color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary
+                                     : Appearance.auroraEverywhere ? Appearance.m3colors.m3onSurfaceVariant
+                                     : Appearance.colors.colSubtext
+                            }
+                            StyledToolTip { text: Translation.tr("Reset position and zoom") }
+                        }
+                    }
+
+                    // Wallpaper preview viewport — fills full card width
+                    Rectangle {
+                        id: panViewport
+                        Layout.fillWidth: true
+                        implicitHeight: Math.max(140, Math.round(Math.max(1, panCardContent.width) / panCard.screenAspect))
+                        Layout.preferredHeight: implicitHeight
+                        radius: SettingsMaterialPreset.groupRadius
+                        color: Appearance.colors.colLayer0
+                        clip: true
+                        border.width: panDragArea.drag.active ? 2 : 0
+                        border.color: Appearance.m3colors.m3primary
+
+                        Behavior on border.width {
+                            enabled: Appearance.animationsEnabled
+                            animation: NumberAnimation { duration: 120 }
+                        }
+
+                        // Wallpaper image — Image.Stretch so zoom actually scales pixels
+                        StyledImage {
+                            id: panWallpaperImage
+                            readonly property string wpPath: {
+                                if (WallpaperListener.multiMonitorEnabled && panCard._screen) {
+                                    const _monName = WallpaperListener.getMonitorName(panCard._screen)
+                                    const _monData = WallpaperListener.effectivePerMonitor[_monName]
+                                    if (_monData && _monData.path) return _monData.path
+                                }
+                                return Config.options?.background?.wallpaperPath ?? ""
+                            }
+                            source: wpPath ? (wpPath.startsWith("file://") ? wpPath : "file://" + wpPath) : ""
+                            sourceSize.width: 1200
+                            cache: false
+                            fillMode: Image.Stretch
+                            visible: status === Image.Ready
+
+                            readonly property real imgNatW: implicitWidth > 0 ? implicitWidth : 1
+                            readonly property real imgNatH: implicitHeight > 0 ? implicitHeight : 1
+                            readonly property real scaleToFill: Math.max(
+                                panViewport.width / imgNatW,
+                                panViewport.height / imgNatH
+                            ) * panCard.currentPanZoom
+                            readonly property real scaledW: imgNatW * scaleToFill
+                            readonly property real scaledH: imgNatH * scaleToFill
+                            readonly property real excessX: Math.max(0, scaledW - panViewport.width)
+                            readonly property real excessY: Math.max(0, scaledH - panViewport.height)
+
+                            width: scaledW
+                            height: scaledH
+
+                            readonly property real restX: -(excessX / 2) + (panCard.currentPanX * excessX / 2)
+                            readonly property real restY: -(excessY / 2) + (panCard.currentPanY * excessY / 2)
+
+                            x: panDragArea.drag.active ? x : restX
+                            y: panDragArea.drag.active ? y : restY
+
+                            Behavior on x {
+                                enabled: Appearance.animationsEnabled && !panDragArea.drag.active
+                                animation: NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on y {
+                                enabled: Appearance.animationsEnabled && !panDragArea.drag.active
+                                animation: NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on width {
+                                enabled: Appearance.animationsEnabled && !panDragArea.drag.active
+                                animation: NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on height {
+                                enabled: Appearance.animationsEnabled && !panDragArea.drag.active
+                                animation: NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        StyledText {
+                            anchors.centerIn: parent
+                            visible: !panWallpaperImage.visible
+                            text: Translation.tr("No wallpaper")
+                            color: Appearance.colors.colSubtext
+                            font.pixelSize: Appearance.font.pixelSize.small
+                        }
+
+                        MouseArea {
+                            id: panDragArea
+                            anchors.fill: parent
+                            drag.target: panWallpaperImage
+                            drag.axis: Drag.XAndYAxis
+                            drag.minimumX: -(panWallpaperImage.excessX)
+                            drag.maximumX: 0
+                            drag.minimumY: -(panWallpaperImage.excessY)
+                            drag.maximumY: 0
+                            cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                            enabled: panWallpaperImage.visible
+                            scrollGestureEnabled: false
+
+                            onReleased: {
+                                if (!panWallpaperImage.visible) return
+                                const ex = panWallpaperImage.excessX
+                                const ey = panWallpaperImage.excessY
+                                const newPanX = ex > 0 ? Math.max(-1, Math.min(1, (panWallpaperImage.x + ex / 2) / (ex / 2))) : 0
+                                const newPanY = ey > 0 ? Math.max(-1, Math.min(1, (panWallpaperImage.y + ey / 2) / (ey / 2))) : 0
+                                Config.setNestedValue("background.pan.x", Math.round(newPanX * 100) / 100)
+                                Config.setNestedValue("background.pan.y", Math.round(newPanY * 100) / 100)
+                            }
+
+                            onWheel: wheel => {
+                                const delta = wheel.angleDelta.y / 120
+                                const newZoom = Math.max(1.0, Math.min(3.0, Math.round((panCard.currentPanZoom + delta * 0.1) * 100) / 100))
+                                Config.setNestedValue("background.pan.zoom", newZoom)
+                            }
+                        }
+
+                        // Zoom badge (top-right corner)
+                        Rectangle {
+                            anchors { top: parent.top; right: parent.right; margins: 8 }
+                            width: zoomBadgeLabel.implicitWidth + 12
+                            height: zoomBadgeLabel.implicitHeight + 6
+                            radius: SettingsMaterialPreset.groupRadius
+                            color: Qt.rgba(0, 0, 0, 0.6)
+                            visible: panCard.currentPanZoom !== 1.0
+
+                            StyledText {
+                                id: zoomBadgeLabel
+                                anchors.centerIn: parent
+                                text: panCard.currentPanZoom.toFixed(1) + "×"
+                                color: "white"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.Medium
+                            }
+                        }
+
+                        // Crosshairs (visible while dragging)
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 1; height: parent.height
+                            color: Qt.rgba(1, 1, 1, 0.25)
+                            visible: panDragArea.drag.active
+                        }
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width; height: 1
+                            color: Qt.rgba(1, 1, 1, 0.25)
+                            visible: panDragArea.drag.active
+                        }
+                    }
+
+                    // Zoom slider row
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Appearance.sizes.spacingSmall
+
+                        MaterialSymbol {
+                            text: "zoom_out"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colSubtext
+                        }
+
+                        StyledSlider {
+                            id: panZoomSlider
+                            Layout.fillWidth: true
+                            from: 1.0
+                            to: 3.0
+                            stepSize: 0.1
+                            stopIndicatorValues: []
+                            value: panCard.currentPanZoom
+                            tooltipContent: panCard.currentPanZoom.toFixed(1) + "×"
+                            enableSettingsSearch: false
+
+                            onMoved: {
+                                Config.setNestedValue("background.pan.zoom", Math.round(value * 10) / 10)
+                            }
+                        }
+
+                        MaterialSymbol {
+                            text: "zoom_in"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    // Status text
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: {
+                            if (!panCard.hasPan) return Translation.tr("Centered, no zoom")
+                            const parts = []
+                            const x = Math.round(panCard.currentPanX * 100)
+                            const y = Math.round(panCard.currentPanY * 100)
+                            if (panCard.currentPanX !== 0.0 || panCard.currentPanY !== 0.0)
+                                parts.push(Translation.tr("%1%, %2%").arg(x).arg(y))
+                            if (panCard.currentPanZoom !== 1.0)
+                                parts.push(panCard.currentPanZoom.toFixed(1) + "×")
+                            return parts.join(" · ")
+                        }
+                        color: Appearance.colors.colSubtext
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
                 }
             }
             
@@ -1253,9 +1584,9 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "blur_on"
                 text: Translation.tr("Enable wallpaper blur")
-                checked: Config.options.background.effects.enableBlur
+                checked: Config.options?.background?.effects?.enableBlur ?? false
                 onCheckedChanged: {
-                    Config.options.background.effects.enableBlur = checked;
+                    Config.setNestedValue("background.effects.enableBlur", checked);
                 }
                 StyledToolTip {
                     text: Translation.tr("Blur the wallpaper when windows are present")
@@ -1263,15 +1594,15 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
+                visible: Config.options?.background?.effects?.enableBlur ?? false
                 icon: "blur_medium"
                 text: Translation.tr("Blur radius")
-                value: Config.options.background.effects.blurRadius
+                value: Config.options?.background?.effects?.blurRadius ?? 32
                 from: 0
                 to: 100
                 stepSize: 2
                 onValueChanged: {
-                    Config.options.background.effects.blurRadius = value;
+                    Config.setNestedValue("background.effects.blurRadius", value);
                 }
                 StyledToolTip {
                     text: Translation.tr("Amount of blur applied to the wallpaper")
@@ -1279,31 +1610,15 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
-                icon: "blur_linear"
-                text: Translation.tr("Static blur when no windows (%)")
-                value: Config.options.background.effects.blurStatic
-                from: 0
-                to: 100
-                stepSize: 5
-                onValueChanged: {
-                    Config.options.background.effects.blurStatic = value;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Percentage of blur to keep even when no windows are open")
-                }
-            }
-
-            ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
+                visible: Config.options?.background?.effects?.enableBlur ?? false
                 icon: "blur_circular"
                 text: Translation.tr("Thumbnail blur strength (%)")
-                value: Config.options.background.effects.thumbnailBlurStrength
+                value: Config.options?.background?.effects?.thumbnailBlurStrength ?? 50
                 from: 0
                 to: 100
                 stepSize: 5
                 onValueChanged: {
-                    Config.options.background.effects.thumbnailBlurStrength = value;
+                    Config.setNestedValue("background.effects.thumbnailBlurStrength", value);
                 }
                 StyledToolTip {
                     text: Translation.tr("Blur strength for video wallpapers (percentage of full blur radius)")
@@ -1313,12 +1628,12 @@ ContentPage {
             ConfigSpinBox {
                 icon: "brightness_6"
                 text: Translation.tr("Dim overlay (%)")
-                value: Config.options.background.effects.dim
+                value: Config.options?.background?.effects?.dim ?? 0
                 from: 0
                 to: 100
                 stepSize: 5
                 onValueChanged: {
-                    Config.options.background.effects.dim = value;
+                    Config.setNestedValue("background.effects.dim", value);
                 }
                 StyledToolTip {
                     text: Translation.tr("Adds a dark overlay over the wallpaper. 0 = no dimming, 100 = completely black")
@@ -1331,12 +1646,12 @@ ContentPage {
             ConfigSpinBox {
                 icon: "brightness_low"
                 text: Translation.tr("Extra dim when windows (%)")
-                value: Config.options.background.effects.dynamicDim
+                value: Config.options?.background?.effects?.dynamicDim ?? 0
                 from: 0
                 to: 100
                 stepSize: 5
                 onValueChanged: {
-                    Config.options.background.effects.dynamicDim = value;
+                    Config.setNestedValue("background.effects.dynamicDim", value);
                 }
                 StyledToolTip {
                     text: Translation.tr("Additional dim applied when there are windows on the current workspace.")
@@ -1497,9 +1812,9 @@ ContentPage {
                 SettingsSwitch {
                     buttonIcon: "texture"
                     text: Translation.tr("Enable backdrop layer for overview")
-                    checked: Config.options.background.backdrop.enable
+                    checked: Config.options?.background?.backdrop?.enable ?? true
                     onCheckedChanged: {
-                        Config.options.background.backdrop.enable = checked;
+                        Config.setNestedValue("background.backdrop.enable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show a separate backdrop layer when overview is open")
@@ -1507,7 +1822,7 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "palette"
                     text: Translation.tr("Derive theme colors from backdrop")
                     checked: Config.options?.appearance?.wallpaperTheming?.useBackdropForColors ?? false
@@ -1524,12 +1839,12 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "play_circle"
                     text: Translation.tr("Enable animated wallpapers (videos/GIFs)")
-                    checked: Config.options.background.backdrop.enableAnimation
+                    checked: Config.options?.background?.backdrop?.enableAnimation ?? true
                     onCheckedChanged: {
-                        Config.options.background.backdrop.enableAnimation = checked;
+                        Config.setNestedValue("background.backdrop.enableAnimation", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Play videos and GIFs in backdrop (may impact performance)")
@@ -1537,7 +1852,7 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable && Config.options.background.backdrop.enableAnimation
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && (Config.options?.background?.backdrop?.enableAnimation ?? true)
                     buttonIcon: "blur_circular"
                     text: Translation.tr("Blur animated wallpapers (videos/GIFs)")
                     checked: Config.options?.background?.backdrop?.enableAnimatedBlur ?? false
@@ -1550,12 +1865,12 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "blur_on"
                     text: Translation.tr("Aurora glass effect")
-                    checked: Config.options.background.backdrop.useAuroraStyle
+                    checked: Config.options?.background?.backdrop?.useAuroraStyle ?? false
                     onCheckedChanged: {
-                        Config.options.background.backdrop.useAuroraStyle = checked;
+                        Config.setNestedValue("background.backdrop.useAuroraStyle", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Use glass blur effect with adaptive colors from wallpaper (same as sidebars)")
@@ -1563,15 +1878,15 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable && Config.options.background.backdrop.useAuroraStyle
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && (Config.options?.background?.backdrop?.useAuroraStyle ?? false)
                     icon: "opacity"
                     text: Translation.tr("Aurora overlay opacity (%)")
-                    value: Math.round((Config.options.background.backdrop.auroraOverlayOpacity) * 100)
+                    value: Math.round((Config.options?.background?.backdrop?.auroraOverlayOpacity ?? 0.5) * 100)
                     from: 0
                     to: 200
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.background.backdrop.auroraOverlayOpacity = value / 100.0;
+                        Config.setNestedValue("background.backdrop.auroraOverlayOpacity", value / 100.0);
                     }
                     StyledToolTip {
                         text: Translation.tr("Transparency of the color overlay on the blurred wallpaper")
@@ -1579,12 +1894,12 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "visibility_off"
                     text: Translation.tr("Hide main wallpaper (show only backdrop)")
-                    checked: Config.options.background.backdrop.hideWallpaper
+                    checked: Config.options?.background?.backdrop?.hideWallpaper ?? false
                     onCheckedChanged: {
-                        Config.options.background.backdrop.hideWallpaper = checked;
+                        Config.setNestedValue("background.backdrop.hideWallpaper", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Only show the backdrop, hide the main wallpaper entirely")
@@ -1592,13 +1907,14 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    buttonIcon: "link"
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && !(Config.options?.background?.backdrop?.hideWallpaper ?? false)
+                    buttonIcon: "image"
                     text: Translation.tr("Use main wallpaper")
-                    checked: Config.options.background.backdrop.useMainWallpaper
+                    checked: Config.options?.background?.backdrop?.useMainWallpaper ?? true
                     onCheckedChanged: {
-                        Config.options.background.backdrop.useMainWallpaper = checked;
+                        Config.setNestedValue("background.backdrop.useMainWallpaper", checked);
                         if (checked) {
-                            Config.options.background.backdrop.wallpaperPath = "";
+                            Config.setNestedValue("background.backdrop.wallpaperPath", "");
                         }
                     }
                     StyledToolTip {
@@ -1606,40 +1922,39 @@ ContentPage {
                     }
                 }
 
-                MaterialTextArea {
-                    visible: Config.options.background.backdrop.enable
-                             && !Config.options.background.backdrop.useMainWallpaper
+                TextEdit {
+                    visible: (Config.options?.background?.backdrop?.enable ?? true)
+                             && !(Config.options?.background?.backdrop?.useMainWallpaper ?? true)
                     Layout.fillWidth: true
-                    placeholderText: Translation.tr("Backdrop wallpaper path (empty = use main wallpaper)")
-                    text: Config.options.background.backdrop.wallpaperPath
+                    text: Config.options?.background?.backdrop?.wallpaperPath ?? ""
                     wrapMode: TextEdit.NoWrap
                     onTextChanged: {
-                        Config.options.background.backdrop.wallpaperPath = text;
+                        Config.setNestedValue("background.backdrop.wallpaperPath", text);
                     }
                 }
 
                 RippleButtonWithIcon {
-                    visible: !Config.options.background.backdrop.useMainWallpaper
+                    visible: !(Config.options?.background?.backdrop?.useMainWallpaper ?? true)
                     Layout.fillWidth: true
                     buttonRadius: Appearance.rounding.small
                     materialIcon: "wallpaper"
                     mainText: Translation.tr("Pick backdrop wallpaper")
                     onClicked: {
                         Config.setNestedValue("wallpaperSelector.selectionTarget", "backdrop")
-                        Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "toggle"]);
+                        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "wallpaperSelector", "toggle"]);
                     }
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     icon: "blur_on"
                     text: Translation.tr("Backdrop blur radius")
-                    value: Config.options.background.backdrop.blurRadius
+                    value: Config.options?.background?.backdrop?.blurRadius ?? 64
                     from: 0
                     to: 100
                     stepSize: 2
                     onValueChanged: {
-                        Config.options.background.backdrop.blurRadius = value;
+                        Config.setNestedValue("background.backdrop.blurRadius", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Amount of blur applied to the backdrop layer")
@@ -1647,15 +1962,15 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     icon: "brightness_5"
                     text: Translation.tr("Backdrop dim (%)")
-                    value: Config.options.background.backdrop.dim
+                    value: Config.options?.background?.backdrop?.dim ?? 20
                     from: 0
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.background.backdrop.dim = value;
+                        Config.setNestedValue("background.backdrop.dim", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Darken the backdrop layer")
@@ -1747,8 +2062,8 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
-        icon: "clock_loader_40"
+        expanded: false
+        icon: "schedule"
         title: Translation.tr("Widget: Clock")
 
         SettingsGroup {
@@ -1761,7 +2076,7 @@ ContentPage {
                     text: Translation.tr("Enable")
                     checked: Config.options.background.widgets.clock.enable
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.enable = checked;
+                        Config.setNestedValue("background.widgets.clock.enable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show the desktop clock widget")
@@ -1774,7 +2089,7 @@ ContentPage {
                     Layout.fillWidth: false
                     currentValue: Config.options.background.widgets.clock.placementStrategy
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.placementStrategy = newValue;
+                        Config.setNestedValue("background.widgets.clock.placementStrategy", newValue);
                     }
                     options: [
                         {
@@ -1801,12 +2116,12 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.style
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.style = newValue;
+                        Config.setNestedValue("background.widgets.clock.style", newValue);
                     }
                     options: [
                         {
                             displayName: Translation.tr("Digital"),
-                            icon: "timer_10",
+                            icon: "timer",
                             value: "digital"
                         },
                         {
@@ -1827,10 +2142,124 @@ ContentPage {
                     text: Translation.tr("Animate time change")
                     checked: Config.options.background.widgets.clock.digital.animateChange
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.digital.animateChange = checked;
+                        Config.setNestedValue("background.widgets.clock.digital.animateChange", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Smoothly animate digits when time changes")
+                    }
+                }
+
+                ContentSubsection {
+                    title: Translation.tr("Time format")
+                    ConfigSelectionArray {
+                        currentValue: Config.options?.background?.widgets?.clock?.timeFormat ?? "system"
+                        onSelected: newValue => {
+                            Config.setNestedValue("background.widgets.clock.timeFormat", newValue);
+                        }
+                        options: [
+                            {
+                                displayName: Translation.tr("System"),
+                                icon: "settings",
+                                value: "system"
+                            },
+                            {
+                                displayName: Translation.tr("24h"),
+                                icon: "schedule",
+                                value: "24h"
+                            },
+                            {
+                                displayName: Translation.tr("12h"),
+                                icon: "nest_clock_farsight_analog",
+                                value: "12h"
+                            }
+                        ]
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "timer"
+                    text: Translation.tr("Show seconds")
+                    checked: Config.options?.background?.widgets?.clock?.showSeconds ?? false
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.clock.showSeconds", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Display seconds in the time string")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "calendar_today"
+                    text: Translation.tr("Show date")
+                    checked: Config.options?.background?.widgets?.clock?.showDate ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.clock.showDate", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Show a date line below the time")
+                    }
+                }
+
+                ContentSubsection {
+                    visible: Config.options?.background?.widgets?.clock?.showDate ?? true
+                    title: Translation.tr("Date style")
+                    ConfigSelectionArray {
+                        currentValue: Config.options?.background?.widgets?.clock?.dateStyle ?? "long"
+                        onSelected: newValue => {
+                            Config.setNestedValue("background.widgets.clock.dateStyle", newValue);
+                        }
+                        options: [
+                            {
+                                displayName: Translation.tr("Long"),
+                                icon: "calendar_month",
+                                value: "long"
+                            },
+                            {
+                                displayName: Translation.tr("Minimal"),
+                                icon: "event_note",
+                                value: "minimal"
+                            },
+                            {
+                                displayName: Translation.tr("Weekday"),
+                                icon: "today",
+                                value: "weekday"
+                            },
+                            {
+                                displayName: Translation.tr("Numeric"),
+                                icon: "123",
+                                value: "numeric"
+                            }
+                        ]
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "format_size"
+                    text: Translation.tr("Time scale (%)")
+                    value: Config.options?.background?.widgets?.clock?.timeScale ?? 100
+                    from: 50
+                    to: 200
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.clock.timeScale", value);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Scale the time text size")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "format_size"
+                    text: Translation.tr("Date scale (%)")
+                    value: Config.options?.background?.widgets?.clock?.dateScale ?? 100
+                    from: 50
+                    to: 200
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.clock.dateScale", value);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Scale the date text size")
                     }
                 }
             }
@@ -1846,10 +2275,41 @@ ContentPage {
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.background.widgets.clock.dim = value;
+                        Config.setNestedValue("background.widgets.clock.dim", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Only affects the clock widget text, independent from the global wallpaper dim.")
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Clock appearance")
+
+                FontSelector {
+                    id: clockFontSelector
+                    label: Translation.tr("Clock font")
+                    icon: "font_download"
+                    selectedFont: Config.options?.background?.widgets?.clock?.fontFamily ?? "Space Grotesk"
+                    onSelectedFontChanged: {
+                        if (Config.options?.background?.widgets?.clock)
+                            Config.setNestedValue("background.widgets.clock.fontFamily", selectedFont);
+                    }
+                    Connections {
+                        target: Config.options?.background?.widgets?.clock ?? null
+                        function onFontFamilyChanged() { clockFontSelector.selectedFont = Config.options.background.widgets.clock.fontFamily }
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "shadow"
+                    text: Translation.tr("Show text shadow")
+                    checked: Config.options?.background?.widgets?.clock?.showShadow ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.clock.showShadow", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Draw a subtle shadow behind clock text for better readability")
                     }
                 }
             }
@@ -1863,7 +2323,7 @@ ContentPage {
                     text: Translation.tr("Auto styling with Gemini")
                     checked: Config.options.background.widgets.clock.cookie.aiStyling
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.cookie.aiStyling = checked;
+                        Config.setNestedValue("background.widgets.clock.cookie.aiStyling", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Uses Gemini to categorize the wallpaper then picks a preset based on it.\nYou'll need to set Gemini API key on the left sidebar first.\nImages are downscaled for performance, but just to be safe,\ndo not select wallpapers with sensitive information.")
@@ -1875,7 +2335,7 @@ ContentPage {
                     text: Translation.tr("Use old sine wave cookie implementation")
                     checked: Config.options.background.widgets.clock.cookie.useSineCookie
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.cookie.useSineCookie = checked;
+                        Config.setNestedValue("background.widgets.clock.cookie.useSineCookie", checked);
                     }
                     StyledToolTip {
                         text: "Looks a bit softer and more consistent with different number of sides,\nbut has less impressive morphing"
@@ -1890,7 +2350,7 @@ ContentPage {
                     to: 40
                     stepSize: 1
                     onValueChanged: {
-                        Config.options.background.widgets.clock.cookie.sides = value;
+                        Config.setNestedValue("background.widgets.clock.cookie.sides", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Number of sides for the polygon shape")
@@ -1902,7 +2362,7 @@ ContentPage {
                     text: Translation.tr("Constantly rotate")
                     checked: Config.options.background.widgets.clock.cookie.constantlyRotate
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.cookie.constantlyRotate = checked;
+                        Config.setNestedValue("background.widgets.clock.cookie.constantlyRotate", checked);
                     }
                     StyledToolTip {
                         text: "Makes the clock always rotate. This is extremely expensive\n(expect 50% usage on Intel UHD Graphics) and thus impractical."
@@ -1920,7 +2380,7 @@ ContentPage {
                             checked = Config.options.background.widgets.clock.cookie.hourMarks;
                         }
                         onCheckedChanged: {
-                            Config.options.background.widgets.clock.cookie.hourMarks = checked;
+                            Config.setNestedValue("background.widgets.clock.cookie.hourMarks", checked);
                         }
                         StyledToolTip {
                             text: "Can only be turned on using the 'Dots' or 'Full' dial style for aesthetic reasons"
@@ -1929,14 +2389,14 @@ ContentPage {
 
                     SettingsSwitch {
                         enabled: Config.options.background.widgets.clock.style === "cookie" && Config.options.background.widgets.clock.cookie.dialNumberStyle !== "numbers"
-                        buttonIcon: "timer_10"
+                        buttonIcon: "123"
                         text: Translation.tr("Digits in the middle")
                         checked: Config.options.background.widgets.clock.cookie.timeIndicators
                         onEnabledChanged: {
                             checked = Config.options.background.widgets.clock.cookie.timeIndicators;
                         }
                         onCheckedChanged: {
-                            Config.options.background.widgets.clock.cookie.timeIndicators = checked;
+                            Config.setNestedValue("background.widgets.clock.cookie.timeIndicators", checked);
                         }
                         StyledToolTip {
                             text: "Can't be turned on when using 'Numbers' dial style for aesthetic reasons"
@@ -1951,12 +2411,12 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.cookie.dialNumberStyle
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.cookie.dialNumberStyle = newValue;
+                        Config.setNestedValue("background.widgets.clock.cookie.dialNumberStyle", newValue);
                         if (newValue !== "dots" && newValue !== "full") {
-                            Config.options.background.widgets.clock.cookie.hourMarks = false;
+                            Config.setNestedValue("background.widgets.clock.cookie.hourMarks", false);
                         }
                         if (newValue === "numbers") {
-                            Config.options.background.widgets.clock.cookie.timeIndicators = false;
+                            Config.setNestedValue("background.widgets.clock.cookie.timeIndicators", false);
                         }
                     }
                     options: [
@@ -1990,7 +2450,7 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.cookie.hourHandStyle
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.cookie.hourHandStyle = newValue;
+                        Config.setNestedValue("background.widgets.clock.cookie.hourHandStyle", newValue);
                     }
                     options: [
                         {
@@ -2024,7 +2484,7 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.cookie.minuteHandStyle
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.cookie.minuteHandStyle = newValue;
+                        Config.setNestedValue("background.widgets.clock.cookie.minuteHandStyle", newValue);
                     }
                     options: [
                         {
@@ -2063,7 +2523,7 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.cookie.secondHandStyle
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.cookie.secondHandStyle = newValue;
+                        Config.setNestedValue("background.widgets.clock.cookie.secondHandStyle", newValue);
                     }
                     options: [
                         {
@@ -2097,7 +2557,7 @@ ContentPage {
                 ConfigSelectionArray {
                     currentValue: Config.options.background.widgets.clock.cookie.dateStyle
                     onSelected: newValue => {
-                        Config.options.background.widgets.clock.cookie.dateStyle = newValue;
+                        Config.setNestedValue("background.widgets.clock.cookie.dateStyle", newValue);
                     }
                     options: [
                         {
@@ -2132,7 +2592,7 @@ ContentPage {
                     text: Translation.tr("Enable")
                     checked: Config.options.background.widgets.clock.quote.enable
                     onCheckedChanged: {
-                        Config.options.background.widgets.clock.quote.enable = checked;
+                        Config.setNestedValue("background.widgets.clock.quote.enable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show a quote text widget below the clock")
@@ -2144,7 +2604,46 @@ ContentPage {
                     text: Config.options.background.widgets.clock.quote.text
                     wrapMode: TextEdit.Wrap
                     onTextChanged: {
-                        Config.options.background.widgets.clock.quote.text = text;
+                        Config.setNestedValue("background.widgets.clock.quote.text", text);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Reset")
+
+                RippleButton {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 34
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.colors.colLayer2
+                    colBackgroundHover: Appearance.colors.colLayer2Hover
+                    onClicked: {
+                        Config.setNestedValue("background.widgets.clock.fontFamily", "Space Grotesk");
+                        Config.setNestedValue("background.widgets.clock.timeFormat", "system");
+                        Config.setNestedValue("background.widgets.clock.showSeconds", false);
+                        Config.setNestedValue("background.widgets.clock.showDate", true);
+                        Config.setNestedValue("background.widgets.clock.dateStyle", "long");
+                        Config.setNestedValue("background.widgets.clock.timeScale", 100);
+                        Config.setNestedValue("background.widgets.clock.dateScale", 100);
+                        Config.setNestedValue("background.widgets.clock.showShadow", true);
+                        Config.setNestedValue("background.widgets.clock.dim", 70);
+                        Config.setNestedValue("background.widgets.clock.digital.animateChange", true);
+                    }
+                    contentItem: RowLayout {
+                        spacing: 6
+                        Item { Layout.fillWidth: true }
+                        MaterialSymbol {
+                            text: "restart_alt"
+                            iconSize: 15
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        StyledText {
+                            text: Translation.tr("Reset clock settings to defaults")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        Item { Layout.fillWidth: true }
                     }
                 }
             }
@@ -2177,7 +2676,7 @@ ContentPage {
                     text: Translation.tr("Enable")
                     checked: Config.options.background.widgets.weather.enable
                     onCheckedChanged: {
-                        Config.options.background.widgets.weather.enable = checked;
+                        Config.setNestedValue("background.widgets.weather.enable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show the desktop weather widget")
@@ -2190,7 +2689,7 @@ ContentPage {
                     Layout.fillWidth: false
                     currentValue: Config.options.background.widgets.weather.placementStrategy
                     onSelected: newValue => {
-                        Config.options.background.widgets.weather.placementStrategy = newValue;
+                        Config.setNestedValue("background.widgets.weather.placementStrategy", newValue);
                     }
                     options: [
                         {
@@ -2230,7 +2729,7 @@ ContentPage {
                     text: Translation.tr("Enable")
                     checked: Config.options.background.widgets.mediaControls.enable
                     onCheckedChanged: {
-                        Config.options.background.widgets.mediaControls.enable = checked;
+                        Config.setNestedValue("background.widgets.mediaControls.enable", checked);
                     }
                 }
                 Item {
@@ -2240,7 +2739,7 @@ ContentPage {
                     Layout.fillWidth: false
                     currentValue: Config.options.background.widgets.mediaControls.placementStrategy
                     onSelected: newValue => {
-                        Config.options.background.widgets.mediaControls.placementStrategy = newValue;
+                        Config.setNestedValue("background.widgets.mediaControls.placementStrategy", newValue);
                     }
                     options: [
                         {
@@ -2273,7 +2772,7 @@ ContentPage {
                     Layout.fillWidth: true
                     currentValue: Config.options.background.widgets.mediaControls.playerPreset
                     onSelected: newValue => {
-                        Config.options.background.widgets.mediaControls.playerPreset = newValue;
+                        Config.setNestedValue("background.widgets.mediaControls.playerPreset", newValue);
                     }
                     options: [
                         {

@@ -53,6 +53,23 @@ Singleton {
         return !!(/^\d+\t\[\[.*binary data.*\d+x\d+.*\]\]$/.test(entry))
     }
 
+    function entryId(entry): string {
+        const match = String(entry ?? "").match(/^\s*(\d+)/)
+        return match ? match[1] : ""
+    }
+
+    function decodeCommand(entry): string {
+        if (root.cliphistBinary.includes("cliphist")) {
+            const id = root.entryId(entry)
+            if (id.length > 0)
+                return `${root.cliphistBinary} decode ${id}`
+            return `printf '%s\n' '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode`
+        }
+
+        const entryNumber = String(entry ?? "").split("\t")[0]
+        return `${root.cliphistBinary} decode ${entryNumber}`
+    }
+
     function refresh() {
         readProc.buffer = []
         readProc.running = true
@@ -61,22 +78,13 @@ Singleton {
     function copy(entry) {
         root._log("[Cliphist] copy()", String(entry).slice(0, 120))
         root._selfCopy = true
-        if (root.cliphistBinary.includes("cliphist"))
-            Quickshell.execDetached(["/usr/bin/bash", "-c", `printf '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode | /usr/bin/wl-copy`]);
-        else {
-            const entryNumber = entry.split("\t")[0];
-            Quickshell.execDetached(["/usr/bin/bash", "-c", `${root.cliphistBinary} decode ${entryNumber} | /usr/bin/wl-copy`]);
-        }
+        selfCopyResetTimer.restart()
+        Quickshell.execDetached(["/usr/bin/bash", "-c", `${root.decodeCommand(entry)} | /usr/bin/wl-copy`]);
     }
 
     function paste(entry) {
         root._selfCopy = true
-        if (root.cliphistBinary.includes("cliphist"))
-            Quickshell.execDetached(["/usr/bin/bash", "-c", `printf '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode | /usr/bin/wl-copy\n/usr/bin/wl-paste`]);
-        else {
-            const entryNumber = entry.split("\t")[0];
-            Quickshell.execDetached(["/usr/bin/bash", "-c", `${root.cliphistBinary} decode ${entryNumber} | /usr/bin/wl-copy\n${root.pressPasteCommand}`]);
-        }
+        Quickshell.execDetached(["/usr/bin/bash", "-c", `${root.decodeCommand(entry)} | /usr/bin/wl-copy\n${root.pressPasteCommand}`]);
     }
 
     function superpaste(count, isImage = false) {
@@ -85,7 +93,7 @@ Singleton {
             if (!isImage) return true;
             return entryIsImage(entry);
         }).slice(0, count)
-        const pasteCommands = [...targetEntries].reverse().map(entry => `printf '${StringUtils.shellSingleQuoteEscape(entry)}' | ${root.cliphistBinary} decode | /usr/bin/wl-copy\n/usr/bin/sleep ${root.pasteDelay}\n${root.pressPasteCommand}`)
+        const pasteCommands = [...targetEntries].reverse().map(entry => `${root.decodeCommand(entry)} | /usr/bin/wl-copy\n/usr/bin/sleep ${root.pasteDelay}\n${root.pressPasteCommand}`)
         // Act
         Quickshell.execDetached(["/usr/bin/bash", "-c", pasteCommands.join(`\n/usr/bin/sleep ${root.pasteDelay}\n`)]);
     }
@@ -138,6 +146,7 @@ Singleton {
             // Skip refresh if clipboard text matches what we just copied ourselves
             if (root._selfCopy) {
                 root._selfCopy = false;
+                selfCopyResetTimer.stop();
                 return;
             }
             // Skip refresh while window previews are being captured
@@ -149,6 +158,18 @@ Singleton {
 
     property bool _selfCopy: false
     property bool suppressRefresh: false
+
+    // Safety: reset _selfCopy if onClipboardTextChanged never fires (e.g. pipeline failed)
+    Timer {
+        id: selfCopyResetTimer
+        interval: 2000
+        onTriggered: {
+            if (root._selfCopy) {
+                root._log("[Cliphist] _selfCopy reset by timeout (pipeline may have failed)")
+                root._selfCopy = false
+            }
+        }
+    }
 
     Timer {
         id: delayedUpdateTimer

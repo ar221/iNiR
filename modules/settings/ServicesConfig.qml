@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
@@ -89,11 +90,11 @@ ContentPage {
             MaterialTextArea {
                 Layout.fillWidth: true
                 placeholderText: Translation.tr("System prompt")
-                text: Config.options.ai.systemPrompt
+                text: Config.options?.ai?.systemPrompt ?? ""
                 wrapMode: TextEdit.Wrap
                 onTextChanged: {
                     Qt.callLater(() => {
-                        Config.options.ai.systemPrompt = text;
+                        Config.setNestedValue("ai.systemPrompt", text)
                     });
                 }
             }
@@ -109,12 +110,12 @@ ContentPage {
             ConfigSpinBox {
                 icon: "timer_off"
                 text: Translation.tr("Total duration timeout (s)")
-                value: Config.options.musicRecognition.timeout
+                value: Config.options?.musicRecognition?.timeout ?? 16
                 from: 10
                 to: 100
                 stepSize: 2
                 onValueChanged: {
-                    Config.options.musicRecognition.timeout = value;
+                    Config.setNestedValue("musicRecognition.timeout", value)
                 }
                 StyledToolTip {
                     text: Translation.tr("Maximum time to wait for music recognition result")
@@ -123,12 +124,12 @@ ContentPage {
             ConfigSpinBox {
                 icon: "av_timer"
                 text: Translation.tr("Polling interval (s)")
-                value: Config.options.musicRecognition.interval
+                value: Config.options?.musicRecognition?.interval ?? 4
                 from: 2
                 to: 10
                 stepSize: 1
                 onValueChanged: {
-                    Config.options.musicRecognition.interval = value;
+                    Config.setNestedValue("musicRecognition.interval", value)
                 }
                 StyledToolTip {
                     text: Translation.tr("How often to check for recognition result")
@@ -146,10 +147,10 @@ ContentPage {
             MaterialTextArea {
                 Layout.fillWidth: true
                 placeholderText: Translation.tr("User agent (for services that require it)")
-                text: Config.options.networking.userAgent
+                text: Config.options?.networking?.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
                 wrapMode: TextEdit.Wrap
                 onTextChanged: {
-                    Config.options.networking.userAgent = text;
+                    Config.setNestedValue("networking.userAgent", text)
                 }
             }
         }
@@ -164,12 +165,12 @@ ContentPage {
             ConfigSpinBox {
                 icon: "av_timer"
                 text: Translation.tr("Polling interval (ms)")
-                value: Config.options.resources.updateInterval
+                value: Config.options?.resources?.updateInterval ?? 3000
                 from: 100
                 to: 10000
                 stepSize: 100
                 onValueChanged: {
-                    Config.options.resources.updateInterval = value;
+                    Config.setNestedValue("resources.updateInterval", value)
                 }
                 StyledToolTip {
                     text: Translation.tr("How often to update CPU, RAM, and disk usage stats")
@@ -186,9 +187,9 @@ ContentPage {
         SettingsGroup {
             SettingsSwitch {
                 text: Translation.tr("Use Levenshtein distance-based algorithm instead of fuzzy")
-                checked: Config.options.search.sloppy
+                checked: Config.options?.search?.sloppy ?? false
                 onCheckedChanged: {
-                    Config.options.search.sloppy = checked;
+                    Config.setNestedValue("search.sloppy", checked)
                 }
                 StyledToolTip {
                     text: Translation.tr("Could be better if you make a ton of typos,\nbut results can be weird and might not work with acronyms\n(e.g. \"GIMP\" might not give you the paint program)")
@@ -202,28 +203,28 @@ ContentPage {
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Action")
-                        text: Config.options.search.prefix.action
+                        text: Config.options?.search?.prefix?.action ?? "/"
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.action = text;
+                            Config.setNestedValue("search.prefix.action", text)
                         }
                     }
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Clipboard")
-                        text: Config.options.search.prefix.clipboard
+                        text: Config.options?.search?.prefix?.clipboard ?? ";"
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.clipboard = text;
+                            Config.setNestedValue("search.prefix.clipboard", text)
                         }
                     }
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Emojis")
-                        text: Config.options.search.prefix.emojis
+                        text: Config.options?.search?.prefix?.emojis ?? ":"
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.emojis = text;
+                            Config.setNestedValue("search.prefix.emojis", text)
                         }
                     }
                 }
@@ -233,28 +234,28 @@ ContentPage {
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Math")
-                        text: Config.options.search.prefix.math
+                        text: Config.options?.search?.prefix?.math ?? "="
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.math = text;
+                            Config.setNestedValue("search.prefix.math", text)
                         }
                     }
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Shell command")
-                        text: Config.options.search.prefix.shellCommand
+                        text: Config.options?.search?.prefix?.shellCommand ?? "$"
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.shellCommand = text;
+                            Config.setNestedValue("search.prefix.shellCommand", text)
                         }
                     }
                     MaterialTextArea {
                         Layout.fillWidth: true
                         placeholderText: Translation.tr("Web search")
-                        text: Config.options.search.prefix.webSearch
+                        text: Config.options?.search?.prefix?.webSearch ?? "?"
                         wrapMode: TextEdit.Wrap
                         onTextChanged: {
-                            Config.options.search.prefix.webSearch = text;
+                            Config.setNestedValue("search.prefix.webSearch", text)
                         }
                     }
                 }
@@ -264,10 +265,10 @@ ContentPage {
                 MaterialTextArea {
                     Layout.fillWidth: true
                     placeholderText: Translation.tr("Base URL")
-                    text: Config.options.search.engineBaseUrl
+                    text: Config.options?.search?.engineBaseUrl ?? "https://www.google.com/search?q="
                     wrapMode: TextEdit.Wrap
                     onTextChanged: {
-                        Config.options.search.engineBaseUrl = text;
+                        Config.setNestedValue("search.engineBaseUrl", text)
                     }
                 }
             }
@@ -383,8 +384,8 @@ ContentPage {
                     return Appearance.colors.colLayer0Border
                 }
 
-                Behavior on color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
-                Behavior on border.color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
+                Behavior on color { animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                Behavior on border.color { animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                 ColumnLayout {
                     id: statusCardCol
@@ -439,6 +440,7 @@ ContentPage {
                                     if (ShellUpdates.isUpdating) return Translation.tr("Updating…")
                                     if (ShellUpdates.isChecking) return Translation.tr("Checking for updates…")
                                     if (ShellUpdates.hasUpdate) return Translation.tr("Update available")
+                                    if (ShellUpdates.managedExternally) return "Managed externally"
                                     if (ShellUpdates.lastError.length > 0) return Translation.tr("Error")
                                     if (ShellUpdates.available) return Translation.tr("Up to date")
                                     return Translation.tr("Not available")
@@ -468,6 +470,14 @@ ContentPage {
                                     : ""
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: Appearance.colors.colSubtext
+                            }
+
+                            StyledText {
+                                visible: ShellUpdates.managedExternally
+                                text: ShellUpdates.unavailableHint
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colSubtext
+                                wrapMode: Text.WordWrap
                             }
                         }
                     }
@@ -616,7 +626,7 @@ ContentPage {
                     colBackground: Appearance.colors.colSurfaceContainerLow
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     colRipple: Appearance.colors.colLayer1Active
-                    enabled: !ShellUpdates.isChecking && !ShellUpdates.isUpdating
+                    enabled: !ShellUpdates.isChecking && !ShellUpdates.isUpdating && !ShellUpdates.managedExternally
                     opacity: enabled ? 1.0 : 0.5
                     onClicked: ShellUpdates.check()
 
@@ -651,7 +661,7 @@ ContentPage {
                             // Separate window mode (default): settings.qml is a separate qs process.
                             // Singletons are isolated per-process, so we must use IPC to reach
                             // the main shell's ShellUpdates.openOverlay() instead.
-                            Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "shellUpdate", "open"])
+                            Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "shellUpdate", "open"])
                         }
                     }
 
@@ -674,7 +684,7 @@ ContentPage {
                 RippleButton {
                     Layout.fillWidth: true
                     implicitHeight: 36
-                    visible: ShellUpdates.hasUpdate
+                    visible: ShellUpdates.hasUpdate && ShellUpdates.selfUpdateSupported
                     buttonRadius: Appearance.rounding.small
                     colBackground: Appearance.m3colors.m3primary
                     colBackgroundHover: Appearance.colors.colPrimaryHover
@@ -775,6 +785,14 @@ ContentPage {
                 text: Translation.tr("Show in top bar")
                 checked: Config.options?.bar?.modules?.weather ?? false
                 onCheckedChanged: Config.setNestedValue("bar.modules.weather", checked)
+                enabled: Config.options?.bar?.weather?.enable ?? false
+            }
+
+            SettingsSwitch {
+                buttonIcon: "visibility_off"
+                text: Translation.tr("Hide weather location")
+                checked: Config.options?.waffles?.widgetsPanel?.weatherHideLocation ?? false
+                onCheckedChanged: Config.setNestedValue("waffles.widgetsPanel.weatherHideLocation", checked)
                 enabled: Config.options?.bar?.weather?.enable ?? false
             }
 
@@ -913,4 +931,5 @@ ContentPage {
             }
         }
     }
+
 }

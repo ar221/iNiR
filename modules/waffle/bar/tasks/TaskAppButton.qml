@@ -13,7 +13,7 @@ AppButton {
     required property var appEntry
     property var tasksParent: null  // Reference to Tasks for closing other menus
     readonly property bool isSeparator: appEntry.appId === "SEPARATOR"
-    readonly property var desktopEntry: DesktopEntries.heuristicLookup(appEntry.appId)
+    readonly property var desktopEntry: AppSearch.lookupDesktopEntry(appEntry.appId)
     property bool active: root.appEntry.toplevels.some(t => t.activated)
     property bool hasWindows: appEntry.toplevels.length > 0
 
@@ -187,10 +187,10 @@ AppButton {
                 color: isFocused ? Looks.colors.accent : Looks.colors.accentUnfocused
 
                 Behavior on implicitWidth {
-                    animation: Looks.transition.enter.createObject(this)
+                    animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.panel : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.decelerate }
                 }
                 Behavior on color {
-                    animation: Looks.transition.color.createObject(this)
+                    animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
                 }
             }
         }
@@ -208,7 +208,7 @@ AppButton {
         }
 
         Behavior on opacity {
-            animation: Looks.transition.opacity.createObject(this)
+            animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.normal : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
         }
     }
 

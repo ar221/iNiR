@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import QtMultimedia
 import Qt5Compat.GraphicalEffects
 import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
@@ -25,14 +26,6 @@ MouseArea {
     // Track if we've attempted unlock at least once (to prevent shake on load)
     property bool hasAttemptedUnlock: false
     
-    // Emergency fallback - 5 rapid right-clicks to force unlock (safety net)
-    property int emergencyClickCount: 0
-    Timer {
-        id: emergencyClickTimer
-        interval: 1000
-        onTriggered: root.emergencyClickCount = 0
-    }
-    
     // Windows 11 Lock Screen Design Tokens (from Looks.qml)
     readonly property color textColor: Looks.colors.fg
     readonly property color textShadowColor: Looks.colors.shadow
@@ -42,6 +35,7 @@ MouseArea {
     readonly property bool blurEnabled: Config.options?.lock?.blur?.enable ?? true
 
     readonly property bool effectsSafe: !CompositorService.isNiri
+    readonly property bool enableAnimation: Config.options?.lock?.enableAnimation ?? false
     
     // Smoke material (Windows 11 - dimming overlay)
     readonly property color smokeColor: ColorUtils.transparentize(Looks.colors.bg0Opaque, 0.5)
@@ -82,12 +76,12 @@ MouseArea {
     }
     
     readonly property bool wallpaperIsVideo: {
-        const lowerPath = _wallpaperPath.toLowerCase();
+        const lowerPath = _wallpaperSource.toLowerCase();
         return lowerPath.endsWith(".mp4") || lowerPath.endsWith(".webm") || lowerPath.endsWith(".mkv") || lowerPath.endsWith(".avi") || lowerPath.endsWith(".mov");
     }
     
     readonly property bool wallpaperIsGif: {
-        return _wallpaperPath.toLowerCase().endsWith(".gif");
+        return _wallpaperSource.toLowerCase().endsWith(".gif");
     }
 
     // Background wallpaper with Acrylic blur effect
@@ -114,15 +108,15 @@ MouseArea {
         }
     }
     
-    // Animated GIF support
+    // Animated GIF support — shows first frame when enableAnimation is false
     AnimatedImage {
         id: gifBackgroundWallpaper
         anchors.fill: parent
-        source: root.wallpaperIsGif ? root._wallpaperPath : ""
+        source: root.wallpaperIsGif ? root._wallpaperSource : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         visible: root.wallpaperIsGif
-        playing: visible
+        playing: visible && root.enableAnimation
         
         layer.enabled: root.blurEnabled && root.effectsSafe
         layer.effect: FastBlur {
@@ -138,6 +132,64 @@ MouseArea {
         }
     }
     
+    // Video wallpaper — shows first frame (paused) when enableAnimation is false
+    Video {
+        id: videoWallpaper
+        anchors.fill: parent
+        visible: root.wallpaperIsVideo
+        source: {
+            if (!root.wallpaperIsVideo || !root._wallpaperSource) return "";
+            const path = root._wallpaperSource;
+            return path.startsWith("file://") ? path : ("file://" + path);
+        }
+        fillMode: VideoOutput.PreserveAspectCrop
+        loops: MediaPlayer.Infinite
+        muted: true
+        autoPlay: true
+
+        readonly property bool shouldPlay: root.enableAnimation
+
+        function pauseAndShowFirstFrame() {
+            pause()
+            seek(0)
+        }
+
+        onPlaybackStateChanged: {
+            if (playbackState === MediaPlayer.PlayingState && !shouldPlay)
+                pauseAndShowFirstFrame()
+            if (playbackState === MediaPlayer.StoppedState && visible && shouldPlay)
+                play()
+        }
+
+        onShouldPlayChanged: {
+            if (visible && root.wallpaperIsVideo) {
+                if (shouldPlay) play()
+                else pauseAndShowFirstFrame()
+            }
+        }
+        
+        onVisibleChanged: {
+            if (visible && root.wallpaperIsVideo) {
+                if (shouldPlay) play()
+                else pauseAndShowFirstFrame()
+            } else {
+                pause()
+            }
+        }
+        
+        layer.enabled: root.blurEnabled && root.effectsSafe
+        layer.effect: FastBlur {
+            radius: root.blurRadius
+        }
+        
+        transform: Scale {
+            origin.x: videoWallpaper.width / 2
+            origin.y: videoWallpaper.height / 2
+            xScale: root.blurEnabled ? 1.1 : 1
+            yScale: root.blurEnabled ? 1.1 : 1
+        }
+    }
+    
     // Smoke overlay for login view (Windows 11 modal dimming - always black per Fluent spec)
     Rectangle {
         id: smokeOverlay
@@ -145,7 +197,7 @@ MouseArea {
         color: root.smokeColor
         opacity: root.showLoginView ? 1 : 0
         Behavior on opacity {
-            animation: Looks.transition.enter.createObject(this)
+            animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.panel : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.decelerate }
         }
     }
 
@@ -156,9 +208,9 @@ MouseArea {
         opacity: root.showLoginView ? 0 : 1
         visible: opacity > 0
         scale: root.showLoginView ? 0.95 : 1
-        
+
         Behavior on opacity {
-            animation: Looks.transition.enter.createObject(this)
+            animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.panel : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.decelerate }
         }
         Behavior on scale {
             NumberAnimation {
@@ -284,7 +336,8 @@ MouseArea {
                         }
                         
                         Text {
-                            text: Weather.data?.city ?? ""
+                            text: Weather.visibleCity
+                            visible: Weather.showVisibleCity
                             font.pixelSize: Looks.font.pixelSize.small
                             font.family: Looks.font.family.ui
                             color: Looks.colors.subfg
@@ -477,7 +530,7 @@ MouseArea {
             }
             
             Behavior on hintOpacity {
-                animation: Looks.transition.opacity.createObject(this)
+                animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.normal : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
             }
         }
     }
@@ -491,7 +544,7 @@ MouseArea {
         scale: root.showLoginView ? 1 : 1.05
         
         Behavior on opacity {
-            animation: Looks.transition.enter.createObject(this)
+            animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.panel : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.decelerate }
         }
         Behavior on scale {
             NumberAnimation {
@@ -548,8 +601,7 @@ MouseArea {
                     Image {
                         id: avatarImage
                         anchors.fill: parent
-                        // Try .face first, then AccountsService
-                        source: `file://${Directories.userAvatarPathRicersAndWeirdSystems}`
+                        source: waffleLockAvatarResolver.resolvedSource
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: true
@@ -557,7 +609,7 @@ MouseArea {
                         mipmap: true
                         sourceSize.width: avatarCircle.width * 2
                         sourceSize.height: avatarCircle.height * 2
-                        visible: status === Image.Ready || avatarImageFallback.status === Image.Ready
+                        visible: status === Image.Ready
                         
                         layer.enabled: root.effectsSafe
                         layer.effect: OpacityMask {
@@ -568,29 +620,19 @@ MouseArea {
                             }
                         }
                     }
-                    
-                    // Fallback to AccountsService path
-                    Image {
-                        id: avatarImageFallback
-                        anchors.fill: parent
-                        source: avatarImage.status !== Image.Ready 
-                            ? `file://${Directories.userAvatarPathAccountsService}` 
-                            : ""
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        cache: true
-                        smooth: true
-                        mipmap: true
-                        sourceSize.width: avatarCircle.width * 2
-                        sourceSize.height: avatarCircle.height * 2
-                        visible: status === Image.Ready && avatarImage.status !== Image.Ready
-                        
-                        layer.enabled: root.effectsSafe
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: avatarCircle.width
-                                height: avatarCircle.height
-                                radius: width / 2
+
+                    QtObject {
+                        id: waffleLockAvatarResolver
+                        property int avatarIndex: 0
+                        readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
+                        readonly property string primaryWatch: Directories.userAvatarSourcePrimary
+                        onPrimaryWatchChanged: avatarIndex = 0
+                        readonly property int imgStatus: avatarImage.status
+                        onImgStatusChanged: {
+                            if (imgStatus === Image.Error) {
+                                const nextIdx = avatarIndex + 1
+                                if (nextIdx < Directories.userAvatarPaths.length)
+                                    avatarIndex = nextIdx
                             }
                         }
                     }
@@ -598,12 +640,12 @@ MouseArea {
                     // Fallback: initial letter
                     Text {
                         anchors.centerIn: parent
-                        text: SystemInfo.username.charAt(0).toUpperCase()
+                        text: (SystemInfo.displayName || SystemInfo.username || "?").charAt(0).toUpperCase()
                         font.pixelSize: 48 * Looks.fontScale
                         font.weight: Looks.font.weight.regular
                         font.family: Looks.font.family.ui
                         color: Looks.colors.accentFg
-                        visible: avatarImage.status !== Image.Ready && avatarImageFallback.status !== Image.Ready
+                        visible: avatarImage.status !== Image.Ready
                     }
                 }
             }
@@ -642,10 +684,10 @@ MouseArea {
                 border.width: passwordField.activeFocus ? 2 : 1
                 
                 Behavior on border.color {
-                    animation: Looks.transition.color.createObject(this)
+                    animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
                 }
                 Behavior on border.width {
-                    animation: Looks.transition.resize.createObject(this)
+                    animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.medium : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
                 }
                 
                 // Bottom accent line when focused (Windows 11 style)
@@ -658,7 +700,7 @@ MouseArea {
                     color: Looks.colors.accent
                     
                     Behavior on width {
-                        animation: Looks.transition.resize.createObject(this)
+                        animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.medium : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
                     }
                 }
                 
@@ -751,7 +793,7 @@ MouseArea {
                                 : Looks.colors.accent
                         
                         Behavior on color {
-                            animation: Looks.transition.color.createObject(this)
+                            animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
                         }
                         
                         FluentIcon {
@@ -1004,7 +1046,7 @@ MouseArea {
     // ===== INPUT HANDLING =====
     
     hoverEnabled: true
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    acceptedButtons: Qt.LeftButton
     focus: true
     activeFocusOnTab: true
     
@@ -1030,18 +1072,6 @@ MouseArea {
     }
     
     onClicked: mouse => {
-        // Emergency fallback: 5 rapid right-clicks to force unlock
-        if (mouse.button === Qt.RightButton) {
-            root.emergencyClickCount++
-            emergencyClickTimer.restart()
-            if (root.emergencyClickCount >= 5) {
-                console.warn("[WaffleLockSurface] Emergency unlock triggered!")
-                root.emergencyClickCount = 0
-                GlobalStates.screenLocked = false
-            }
-            return
-        }
-        
         if (!root.showLoginView) {
             root.switchToLogin()
         } else {
@@ -1178,7 +1208,7 @@ MouseArea {
         border.width: 1
         
         Behavior on color {
-            animation: Looks.transition.color.createObject(this)
+            animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
         }
         
         FluentIcon {
@@ -1227,7 +1257,7 @@ MouseArea {
         }
         
         Behavior on color {
-            animation: Looks.transition.color.createObject(this)
+            animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
         }
         
         FluentIcon {

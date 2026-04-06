@@ -283,6 +283,13 @@ Scope {
                     easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                 }
             }
+            Behavior on height {
+                NumberAnimation {
+                    duration: Appearance.animation.elementMoveEnter.duration
+                    easing.type: Appearance.animation.elementMoveEnter.type
+                    easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                }
+            }
 
             ColumnLayout {
                 id: contentColumn
@@ -416,6 +423,14 @@ Scope {
                         : Appearance.colors.colLayer2
                     clip: true
 
+                    Behavior on implicitHeight {
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMoveEnter.duration
+                            easing.type: Appearance.animation.elementMoveEnter.type
+                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                        }
+                    }
+
                     ListView {
                         id: listView
                         anchors.fill: parent
@@ -508,7 +523,7 @@ Scope {
                     clip: true
 
                     Behavior on Layout.preferredHeight {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                     }
 
                     Rectangle {
@@ -526,7 +541,7 @@ Scope {
                         opacity: root.showKeyboardHints ? 1 : 0
 
                         Behavior on opacity {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         ColumnLayout {

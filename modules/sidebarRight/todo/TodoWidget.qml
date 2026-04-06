@@ -1,9 +1,10 @@
-import qs.services
-import qs.modules.common
-import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
+import qs.modules.common
+import qs.modules.common.widgets
+import qs.services
 
 Item {
     id: root
@@ -98,12 +99,12 @@ Item {
 
                 Behavior on x {
                     enabled: tabIndicator.enableIndicatorAnimation
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
 
                 Behavior on implicitWidth {
                     enabled: tabIndicator.enableIndicatorAnimation
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
             }
         }
@@ -148,6 +149,22 @@ Item {
             }
 
         }
+    }
+
+    // Open txt in editor
+    StyledRectangularShadow {
+        target: editButton
+        radius: editButton.buttonRadius
+        blur: 0.6 * Appearance.sizes.elevationMargin
+    }
+    FloatingActionButton {
+        id: editButton
+        anchors.horizontalCenter: fabButton.horizontalCenter
+        anchors.bottom: fabButton.top
+        anchors.bottomMargin: 8
+        baseSize: 40
+        onClicked: Quickshell.execDetached(["xdg-open", Directories.todoTxtPath])
+        iconText: "edit_note"
     }
 
     // + FAB

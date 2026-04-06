@@ -18,6 +18,30 @@ Singleton {
     readonly property bool isStandaloneSettingsWindow: (Quickshell.env("QS_NO_RELOAD_POPUP") ?? "") === "1"
     readonly property bool defaultApplyExternal: !isStandaloneSettingsWindow
     readonly property bool vesktopEnabled: (Config.options?.appearance?.wallpaperTheming?.enableVesktop ?? true) !== false
+    readonly property var wallpaperThemingCfg: Config.options?.appearance?.wallpaperTheming ?? null
+    readonly property var terminalAdjCfg: wallpaperThemingCfg?.terminalColorAdjustments ?? null
+    readonly property string liveRegenSignature: JSON.stringify({
+        theme: currentTheme,
+        paletteType: Config.options?.appearance?.palette?.type ?? "auto",
+        themingWallpaperPath: Wallpapers.effectiveWallpaperPath ?? "",
+        enableAppsAndShell: wallpaperThemingCfg?.enableAppsAndShell ?? true,
+        enableTerminal: wallpaperThemingCfg?.enableTerminal ?? true,
+        enableVesktop: wallpaperThemingCfg?.enableVesktop ?? true,
+        enableChrome: wallpaperThemingCfg?.enableChrome ?? true,
+        enableZed: wallpaperThemingCfg?.enableZed ?? true,
+        enableVSCode: wallpaperThemingCfg?.enableVSCode ?? true,
+        useBackdropForColors: wallpaperThemingCfg?.useBackdropForColors ?? false,
+        forceTerminalDarkMode: wallpaperThemingCfg?.terminalGenerationProps?.forceDarkMode ?? false,
+        termSaturation: terminalAdjCfg?.saturation ?? 0.65,
+        termBrightness: terminalAdjCfg?.brightness ?? 0.6,
+        termHarmony: terminalAdjCfg?.harmony ?? 0.4,
+        termBackgroundBrightness: terminalAdjCfg?.backgroundBrightness ?? 0.5,
+        softenColors: Config.options?.appearance?.softenColors ?? true,
+    })
+    property string _lastLiveRegenSignature: ""
+    property real _lastRegenTimestamp: 0
+    property bool _regenPending: false
+    readonly property int _regenCooldownMs: 700
 
     onCurrentThemeChanged: {
         if (Config.ready) {
@@ -28,8 +52,6 @@ Singleton {
 
     function setTheme(themeId, applyExternal = true): void {
         root._log("[ThemeService] setTheme called with:", themeId);
-        if (Config.options?.sounds?.themeSwitch ?? false)
-            Audio.playSystemSound("complete")
         Config.setNestedValue(["appearance", "theme"], themeId)
         
         // Update recent themes (max 4, no duplicates)
@@ -41,14 +63,39 @@ Singleton {
         
         root._log("[ThemeService] Config updated, now applying theme");
         if (themeId === "auto") {
-            root._log("[ThemeService] Auto theme, regenerating from wallpaper");
-            // Force regeneration of colors from wallpaper
-            Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch"]);
+            root._log("[ThemeService] Auto theme, scheduling wallpaper regeneration");
+            // Delay switchwall.sh so Config.setNestedValue flushes to disk first
+            // (50ms FileView timer). Without this, switchwall.sh reads the OLD
+            // theme from config.json and may erroneously use the accent color.
+            setAutoRegenTimer.restart()
         } else {
             root._log("[ThemeService] Manual theme, calling ThemePresets.applyPreset");
-            ThemePresets.applyPreset(themeId, applyExternal);
+            const paletteType = Config.options?.appearance?.palette?.type ?? "auto"
+            if (paletteType !== "auto") {
+                // Variant active: apply preset instantly, then regenerate variant colors
+                ThemePresets.applyPreset(themeId, false, true);
+                const seedColor = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                root._log("[ThemeService] setTheme with variant", paletteType, "seed", seedColor);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+            } else {
+                ThemePresets.applyPreset(themeId, applyExternal);
+                if (applyExternal && vesktopEnabled) {
+                    root._log("[ThemeService] Manual setTheme requesting Vesktop regeneration")
+                    root._triggerVesktopThemeGeneration()
+                }
+            }
         }
         root._log("[ThemeService] setTheme completed");
+    }
+
+    function _triggerVesktopThemeGeneration(): void {
+        root._log("[ThemeService] Triggering Vesktop theme generation wrapper")
+        Qt.callLater(() => {
+            Quickshell.execDetached([
+                "/usr/bin/bash",
+                Directories.scriptsPath + "/colors/system24_palette.sh"
+            ]);
+        });
     }
 
     function applyCurrentTheme(applyExternal = defaultApplyExternal): void {
@@ -62,34 +109,137 @@ Singleton {
                 Qt.callLater(() => {
                     Quickshell.execDetached([
                         "/usr/bin/bash",
-                        Directories.scriptPath + "/colors/applycolor.sh"
+                        Directories.scriptsPath + "/colors/applycolor.sh"
                     ]);
                 });
             }
 
             if (applyExternal && vesktopEnabled) {
-                Qt.callLater(() => {
-                    Quickshell.execDetached([
-                        "/usr/bin/python3",
-                        Directories.scriptPath + "/colors/system24_palette.py"
-                    ]);
-                });
+                root._triggerVesktopThemeGeneration()
             }
         } else {
-            root._log("[ThemeService] Applying manual theme:", currentTheme);
-            ThemePresets.applyPreset(currentTheme, applyExternal);
+            const paletteType = Config.options?.appearance?.palette?.type ?? "auto"
+            root._log("[ThemeService] Applying manual theme:", currentTheme, "paletteType:", paletteType);
+            if (paletteType !== "auto") {
+                // Variant active: apply preset colors instantly (skip colors.json — variant will overwrite)
+                ThemePresets.applyPreset(currentTheme, false, true);
+                const configAccent = Config.options?.appearance?.palette?.accentColor ?? ""
+                const seedColor = configAccent.length > 0
+                    ? configAccent
+                    : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                root._log("[ThemeService] Re-applying variant", paletteType, "with seed", seedColor);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+                if (applyExternal && vesktopEnabled) {
+                    root._triggerVesktopThemeGeneration()
+                }
+            } else {
+                ThemePresets.applyPreset(currentTheme, applyExternal);
+                if (applyExternal && vesktopEnabled) {
+                    root._log("[ThemeService] applyCurrentTheme manual branch requesting Vesktop regeneration")
+                    root._triggerVesktopThemeGeneration()
+                }
+            }
         }
         root.ready = true;
     }
 
     function regenerateAutoTheme(): void {
         root._log("[ThemeService] regenerateAutoTheme called");
+        const now = Date.now()
+        const elapsed = now - root._lastRegenTimestamp
+        if (elapsed < root._regenCooldownMs) {
+            root._regenPending = true
+            regenCooldownTimer.interval = Math.max(80, root._regenCooldownMs - elapsed)
+            regenCooldownTimer.restart()
+            root._log("[ThemeService] regenerateAutoTheme deferred — cooldown active");
+            return
+        }
+
+        root._regenPending = false
+        regenCooldownTimer.stop()
+        root._lastRegenTimestamp = now
         if (isAutoTheme) {
             // Force full regeneration from wallpaper (includes terminals, GTK, etc)
-            Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch"]);
+            const themingPath = Wallpapers.currentThemingWallpaperPath()
+            const paletteType = Config.options?.appearance?.palette?.type ?? "auto"
+            const command = [Directories.wallpaperSwitchScriptPath, "--noswitch"]
+            if (paletteType !== "auto")
+                command.push("--type", paletteType)
+            if (themingPath && themingPath.length > 0)
+                command.push("--image", themingPath)
+            Quickshell.execDetached(command);
         } else {
-            // For manual presets, just re-apply with external apps
-            ThemePresets.applyPreset(currentTheme, true);
+            // For manual presets, re-apply (variant-aware)
+            const paletteType = Config.options?.appearance?.palette?.type ?? "auto"
+            if (paletteType !== "auto") {
+                ThemePresets.applyPreset(currentTheme, false, true);
+                const configAccent = Config.options?.appearance?.palette?.accentColor ?? ""
+                const seedColor = configAccent.length > 0
+                    ? configAccent
+                    : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+            } else {
+                ThemePresets.applyPreset(currentTheme, true);
+            }
+        }
+    }
+
+    function _tryLiveRegenerateFromConfig(): void {
+        if (!Config.ready) return
+        if (root.liveRegenSignature === root._lastLiveRegenSignature) return
+        // Always track the signature — even when not on auto theme.
+        // Otherwise switching manual→auto sees the stale auto signature
+        // and skips regeneration.
+        root._lastLiveRegenSignature = root.liveRegenSignature
+        if (!isAutoTheme) return
+        // Skip if a direct Wallpapers.apply() already launched switchwall.sh
+        if (Wallpapers._applyInProgress) return
+        root.regenerateAutoTheme()
+    }
+
+    Connections {
+        target: Config
+        function onConfigChanged() {
+            liveRegenerateDebounce.restart()
+        }
+        function onReadyChanged() {
+            if (Config.ready) {
+                root._lastLiveRegenSignature = ""
+                liveRegenerateDebounce.restart()
+            }
+        }
+    }
+
+    Timer {
+        id: liveRegenerateDebounce
+        interval: 260
+        repeat: false
+        running: false
+        onTriggered: root._tryLiveRegenerateFromConfig()
+    }
+
+    Timer {
+        id: regenCooldownTimer
+        interval: root._regenCooldownMs
+        repeat: false
+        running: false
+        onTriggered: {
+            if (root._regenPending)
+                root.regenerateAutoTheme()
+        }
+    }
+
+    Timer {
+        id: setAutoRegenTimer
+        interval: 100  // > Config FileView 50ms flush timer
+        repeat: false
+        running: false
+        onTriggered: {
+            const paletteType = Config.options?.appearance?.palette?.type ?? "auto"
+            const command = [Directories.wallpaperSwitchScriptPath, "--noswitch"]
+            if (paletteType !== "auto")
+                command.push("--type", paletteType)
+            Quickshell.execDetached(command)
         }
     }
 

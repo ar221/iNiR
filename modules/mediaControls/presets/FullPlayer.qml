@@ -69,11 +69,13 @@ Item {
             source: Wallpapers.effectiveWallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Quickshell.screens[0]?.width ?? 1920
+            sourceSize.height: Quickshell.screens[0]?.height ?? 1080
             smooth: true
             mipmap: true
             asynchronous: true
             
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere && !Appearance.inirEverywhere
             layer.effect: MultiEffect {
                 source: auroraWallpaper
                 anchors.fill: source

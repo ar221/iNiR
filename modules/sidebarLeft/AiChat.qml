@@ -308,7 +308,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 opacity: messageListView.atYBeginning ? 0 : 1
                 visible: opacity > 0
                 Behavior on opacity {
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
             }
             Rectangle {
@@ -400,12 +400,12 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 }
             }
 
-            PagePlaceholder {
+            MaterialPlaceholderMessage {
                 z: 2
                 shown: Ai.messageIDs.length === 0
                 icon: "neurology"
-                title: Translation.tr("Large language models")
-                description: Translation.tr("Type /key to get started with online models\nCtrl+O to expand the sidebar\nCtrl+P to detach sidebar into a window")
+                text: Translation.tr("Large language models")
+                explanation: Translation.tr("Type /key to get started with online models\nCtrl+O to expand the sidebar\nCtrl+P to detach sidebar into a window")
                 shape: MaterialShape.Shape.PixelCircle
             }
 
@@ -516,7 +516,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             clip: true
 
             Behavior on implicitHeight {
-                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 
             AttachedFileIndicator {

@@ -2,9 +2,7 @@
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
-
-// Adjust this to make the app smaller or larger
-//@ pragma Env QT_SCALE_FACTOR=1
+// Launcher keeps QT_SCALE_FACTOR=1; shell scaling lives in appearance.typography.sizeScale
 
 import QtQuick
 import QtQuick.Controls
@@ -32,7 +30,7 @@ ApplicationWindow {
         },
         {
             name: Translation.tr("System"),
-            icon: "tune",
+            icon: "browse",
             component: "modules/settings/GeneralConfig.qml"
         },
         {
@@ -52,14 +50,14 @@ ApplicationWindow {
             component: "modules/settings/ThemesConfig.qml"
         },
         {
-            name: Translation.tr("Interface"),
+            name: Translation.tr("Panels"),
             icon: "bottom_app_bar",
             component: "modules/settings/InterfaceConfig.qml"
         },
         {
-            name: Translation.tr("Displays"),
-            icon: "monitor",
-            component: "modules/settings/DisplayConfig.qml"
+            name: Translation.tr("Tools"),
+            icon: "build",
+            component: "modules/settings/ToolsConfig.qml"
         },
         {
             name: Translation.tr("Services"),
@@ -67,9 +65,9 @@ ApplicationWindow {
             component: "modules/settings/ServicesConfig.qml"
         },
         {
-            name: Translation.tr("Autostart & Services"),
-            icon: "rocket_launch",
-            component: "modules/settings/AutostartConfig.qml"
+            name: Translation.tr("Advanced"),
+            icon: "construction",
+            component: "modules/settings/AdvancedConfig.qml"
         },
         {
             name: Translation.tr("Shortcuts"),
@@ -87,9 +85,24 @@ ApplicationWindow {
             component: "modules/settings/WaffleConfig.qml"
         },
         {
+            name: Translation.tr("Compositor"),
+            icon: "desktop_windows",
+            component: "modules/settings/NiriConfig.qml"
+        },
+        {
             name: Translation.tr("About"),
             icon: "info",
             component: "modules/settings/About.qml"
+        },
+        {
+            name: Translation.tr("Displays"),
+            icon: "monitor",
+            component: "modules/settings/DisplayConfig.qml"
+        },
+        {
+            name: Translation.tr("Autostart & Services"),
+            icon: "rocket_launch",
+            component: "modules/settings/AutostartConfig.qml"
         },
         {
             name: Translation.tr("Input Devices"),
@@ -118,19 +131,16 @@ ApplicationWindow {
         }
     ]
     property int currentPage: 0
-    property bool uiReady: Config.ready && ThemeService.ready
+    property bool uiReady: Config.ready
 
     // Global settings search
     property string settingsSearchText: ""
     property var settingsSearchResults: []
 
-    // Spotlight effect for search results
-    property var spotlightTarget: null
-    property rect spotlightRect: Qt.rect(0, 0, 0, 0)
-    property bool spotlightActive: false
+    // Search navigation focus state
+    property var searchTargetControl: null
 
     // Índice de secciones y opciones individuales para el buscador.
-    // Cada entrada con targetLabel permite spotlight scroll-to en la página destino.
     property var settingsSearchIndex: [
         // =====================================================================
         // Quick (page 0)
@@ -151,7 +161,7 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // System (page 1) — per-option entries
+        // General (page 1) — per-option entries
         // =====================================================================
         {
             pageIndex: 1, pageName: pages[1].name,
@@ -201,6 +211,13 @@ ApplicationWindow {
             label: Translation.tr("Auto suspend"),
             description: Translation.tr("Automatically suspend on critical battery"),
             keywords: ["battery", "suspend", "sleep", "auto", "critical"]
+        },
+        {
+            pageIndex: 1, pageName: pages[1].name,
+            section: Translation.tr("Battery"),
+            label: Translation.tr("Charge limit"),
+            description: Translation.tr("Limit maximum charge to preserve battery health"),
+            keywords: ["battery", "charge", "limit", "health", "threshold", "conservation", "sysfs"]
         },
         {
             pageIndex: 1, pageName: pages[1].name,
@@ -271,20 +288,6 @@ ApplicationWindow {
             label: Translation.tr("Work Safety"),
             description: Translation.tr("Hide sensitive content on public networks"),
             keywords: ["work", "safety", "nsfw", "public", "network", "hide", "clipboard", "wallpaper"]
-        },
-        {
-            pageIndex: 1, pageName: pages[1].name,
-            section: Translation.tr("Color generation"),
-            label: Translation.tr("Color generation"),
-            description: Translation.tr("Wallpaper color generation for apps, terminal and Discord"),
-            keywords: ["color", "generation", "matugen", "terminal", "gtk", "qt", "vesktop", "discord", "harmony", "theme"]
-        },
-        {
-            pageIndex: 1, pageName: pages[1].name,
-            section: Translation.tr("Color generation"),
-            label: Translation.tr("Terminal color tuning"),
-            description: Translation.tr("Harmony, threshold and foreground boost for terminal colors"),
-            keywords: ["terminal", "color", "harmony", "threshold", "foreground", "boost", "dark", "mode", "contrast"]
         },
 
         // =====================================================================
@@ -556,7 +559,7 @@ ApplicationWindow {
             section: Translation.tr("Auto Theme"),
             label: Translation.tr("Auto Theme"),
             description: Translation.tr("Automatic colors from wallpaper"),
-            keywords: ["auto", "wallpaper", "dynamic", "colors", "matugen", "generate"]
+            keywords: ["auto", "wallpaper", "dynamic", "colors", "material you", "generate"]
         },
         {
             pageIndex: 4, pageName: pages[4].name,
@@ -625,6 +628,13 @@ ApplicationWindow {
         // =====================================================================
         // Interface (page 5) — per-option entries
         // =====================================================================
+        {
+            pageIndex: 5, pageName: pages[5].name,
+            section: Translation.tr("Display scaling"),
+            label: Translation.tr("UI scale (%)"),
+            description: Translation.tr("Scale the entire shell UI for HiDPI / 4K monitors"),
+            keywords: ["scale", "dpi", "hidpi", "4k", "zoom", "size", "display", "monitor", "resolution"]
+        },
         {
             pageIndex: 5, pageName: pages[5].name,
             section: Translation.tr("Crosshair overlay"),
@@ -858,115 +868,161 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Services (page 6) — per-option entries
+        // Tools (page 6)
         // =====================================================================
         {
             pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("Screen Recording"),
+            label: Translation.tr("Screen recording"),
+            description: Translation.tr("Screen recording settings and shortcuts"),
+            keywords: ["screen", "record", "recording", "video", "capture", "wf-recorder"]
+        },
+        {
+            pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("Region Selector"),
+            label: Translation.tr("Region selector"),
+            description: Translation.tr("Screenshot region selector tool"),
+            keywords: ["region", "selector", "screenshot", "snip", "area", "capture"]
+        },
+        {
+            pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("Crosshair"),
+            label: Translation.tr("Crosshair overlay"),
+            description: Translation.tr("Screen crosshair overlay for aiming"),
+            keywords: ["crosshair", "overlay", "aim", "center", "screen"]
+        },
+        {
+            pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("Discord"),
+            label: Translation.tr("Discord overlay"),
+            description: Translation.tr("Discord rich presence overlay widget"),
+            keywords: ["discord", "overlay", "rich", "presence", "widget"]
+        },
+        {
+            pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("Overlay"),
+            label: Translation.tr("Overlay widgets"),
+            description: Translation.tr("Floating desktop overlay widgets"),
+            keywords: ["overlay", "widgets", "floating", "desktop", "notes", "mixer", "fps"]
+        },
+        {
+            pageIndex: 6, pageName: pages[6].name,
+            section: Translation.tr("On-Screen Display"),
+            label: Translation.tr("On-screen display"),
+            description: Translation.tr("Volume and brightness OSD settings"),
+            keywords: ["osd", "on", "screen", "display", "volume", "brightness"]
+        },
+
+        // =====================================================================
+        // Services (page 7) — per-option entries
+        // =====================================================================
+        {
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("AI"),
             label: Translation.tr("AI"),
             description: Translation.tr("System prompt for sidebar AI"),
             keywords: ["ai", "prompt", "system", "sidebar", "chat"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("AI"),
             label: Translation.tr("AI system prompt"),
             description: Translation.tr("Custom instructions for the AI assistant"),
             keywords: ["ai", "prompt", "system", "instructions", "custom", "assistant"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Music Recognition"),
             label: Translation.tr("Music Recognition"),
             description: Translation.tr("Song recognition timeout and interval"),
             keywords: ["music", "recognition", "song", "timeout", "shazam", "songrec"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Networking"),
             label: Translation.tr("User agent"),
             description: Translation.tr("Custom user agent string for web requests"),
             keywords: ["network", "user", "agent", "http", "web", "request"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Resources"),
             label: Translation.tr("Resource monitor interval"),
             description: Translation.tr("Polling interval for CPU/RAM/disk monitor"),
             keywords: ["resources", "cpu", "memory", "ram", "disk", "interval", "poll", "monitor"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search"),
             description: Translation.tr("Search engine, prefix configuration"),
             keywords: ["search", "prefix", "engine", "web", "google", "app", "launcher"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search engine"),
             description: Translation.tr("Default search engine URL"),
             keywords: ["search", "engine", "url", "google", "duckduckgo", "web"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search prefixes"),
             description: Translation.tr("Type shortcuts: / for actions, > for apps, = for math"),
             keywords: ["search", "prefix", "shortcut", "action", "app", "math", "emoji", "clipboard"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Weather"),
             label: Translation.tr("Weather"),
             description: Translation.tr("Weather units, GPS and city"),
             keywords: ["weather", "gps", "city", "fahrenheit", "celsius", "temperature", "units"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Idle & Power"),
             description: Translation.tr("Screen off, lock and suspend timeouts"),
             keywords: ["idle", "power", "screen", "off", "lock", "suspend", "sleep", "timeout"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Screen off timeout"),
             description: Translation.tr("Time before screen turns off"),
             keywords: ["screen", "off", "timeout", "idle", "dpms", "blank"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Lock timeout"),
             description: Translation.tr("Time before screen locks"),
             keywords: ["lock", "timeout", "idle", "auto", "security"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Night Light"),
             label: Translation.tr("Night light"),
             description: Translation.tr("Blue light filter / color temperature"),
             keywords: ["night", "light", "blue", "filter", "color", "temperature", "warm", "redshift"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Night Light"),
             label: Translation.tr("Night light schedule"),
             description: Translation.tr("Automatic night light based on time"),
             keywords: ["night", "light", "schedule", "auto", "time", "sunset", "sunrise"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("GameMode"),
             label: Translation.tr("GameMode"),
             description: Translation.tr("Auto-detect fullscreen games and reduce effects"),
             keywords: ["game", "mode", "fullscreen", "performance", "fps", "auto", "detect", "animations", "effects"]
         },
         {
-            pageIndex: 6, pageName: pages[6].name,
+            pageIndex: 7, pageName: pages[7].name,
             section: Translation.tr("Applications"),
             label: Translation.tr("Default applications"),
             description: Translation.tr("Terminal, file manager, browser commands"),
@@ -974,74 +1030,42 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Advanced (page 7)
+        // Advanced (page 8)
         // =====================================================================
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Color generation"),
             label: Translation.tr("Color generation"),
             description: Translation.tr("Wallpaper-based color theming and palette type"),
-            keywords: ["color", "generation", "theming", "wallpaper", "matugen", "palette"]
+            keywords: ["color", "generation", "theming", "wallpaper", "material you", "palette"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Color generation"),
             label: Translation.tr("Palette type"),
             description: Translation.tr("Material You palette algorithm variant"),
             keywords: ["palette", "type", "scheme", "content", "expressive", "fidelity", "tonal", "spot", "monochrome"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Terminal Colors"),
             label: Translation.tr("Terminal color adjustments"),
             description: Translation.tr("Fine-tune terminal theme colors"),
             keywords: ["terminal", "color", "saturation", "brightness", "harmony", "adjustment"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Performance"),
             label: Translation.tr("Low power mode"),
             description: Translation.tr("Reduce resource usage for low-end hardware"),
             keywords: ["performance", "low", "power", "mode", "reduce", "battery", "laptop"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Interactions"),
             label: Translation.tr("Scrolling"),
             description: Translation.tr("Touchpad and mouse scroll speed"),
             keywords: ["scroll", "touchpad", "mouse", "speed", "fast", "slow", "sensitivity"]
-        },
-
-        // =====================================================================
-        // Autostart & Services (page 8)
-        // =====================================================================
-        {
-            pageIndex: 8, pageName: pages[8].name,
-            section: Translation.tr("Shell Autostart"),
-            label: Translation.tr("Shell Autostart"),
-            description: Translation.tr("Commands and apps that launch with the shell"),
-            keywords: ["autostart", "startup", "launch", "command", "desktop", "boot", "login"]
-        },
-        {
-            pageIndex: 8, pageName: pages[8].name,
-            section: Translation.tr("User Services"),
-            label: Translation.tr("User Services"),
-            description: Translation.tr("Manage systemd user services — start, stop, enable, disable"),
-            keywords: ["service", "systemd", "user", "start", "stop", "enable", "disable", "daemon", "unit"]
-        },
-        {
-            pageIndex: 8, pageName: pages[8].name,
-            section: Translation.tr("System Services"),
-            label: Translation.tr("System Services"),
-            description: Translation.tr("View and control system-level services (requires admin)"),
-            keywords: ["system", "service", "systemd", "root", "admin", "pkexec", "privileged"]
-        },
-        {
-            pageIndex: 8, pageName: pages[8].name,
-            section: Translation.tr("User Scripts"),
-            label: Translation.tr("User Scripts"),
-            description: Translation.tr("Run or autostart scripts from ~/.local/bin"),
-            keywords: ["script", "bin", "local", "run", "execute", "bash", "custom"]
         },
 
         // =====================================================================
@@ -1151,10 +1175,126 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // About (page 12)
+        // Compositor (page 12)
         // =====================================================================
         {
             pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Displays"),
+            label: Translation.tr("Displays"),
+            description: Translation.tr("Monitor configuration and display outputs"),
+            keywords: ["display", "monitor", "output", "screen", "resolution", "refresh", "rate"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Keyboard"),
+            label: Translation.tr("Keyboard"),
+            description: Translation.tr("Keyboard layout and repeat settings"),
+            keywords: ["keyboard", "layout", "repeat", "delay", "rate", "xkb", "input"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Touchpad"),
+            label: Translation.tr("Touchpad"),
+            description: Translation.tr("Touchpad gestures, tap and scroll"),
+            keywords: ["touchpad", "tap", "scroll", "gesture", "natural", "click", "input"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Mouse"),
+            label: Translation.tr("Mouse"),
+            description: Translation.tr("Mouse acceleration and speed"),
+            keywords: ["mouse", "acceleration", "speed", "pointer", "input"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Trackpoint"),
+            label: Translation.tr("Trackpoint"),
+            description: Translation.tr("Trackpoint speed and acceleration"),
+            keywords: ["trackpoint", "speed", "acceleration", "thinkpad", "input"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("General Input"),
+            label: Translation.tr("General Input"),
+            description: Translation.tr("Focus follows mouse, workspace auto-back-and-forth"),
+            keywords: ["input", "focus", "mouse", "workspace", "auto", "back", "forth"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Cursor"),
+            label: Translation.tr("Cursor"),
+            description: Translation.tr("Cursor theme, size, and hide on typing"),
+            keywords: ["cursor", "theme", "size", "hide", "typing", "pointer"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Window Gaps"),
+            label: Translation.tr("Window gaps"),
+            description: Translation.tr("Inner and outer gap size between windows"),
+            keywords: ["gap", "gaps", "window", "inner", "outer", "spacing"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Window Border"),
+            label: Translation.tr("Window border"),
+            description: Translation.tr("Active and inactive window border width and color"),
+            keywords: ["border", "window", "active", "inactive", "color", "width"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Focus Ring"),
+            label: Translation.tr("Focus ring"),
+            description: Translation.tr("Focus ring width and color"),
+            keywords: ["focus", "ring", "color", "width", "active", "inactive"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Layout"),
+            label: Translation.tr("Default column display"),
+            description: Translation.tr("Default column width for new windows"),
+            keywords: ["column", "display", "width", "default", "layout", "proportion"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Window Shadow"),
+            label: Translation.tr("Window shadow"),
+            description: Translation.tr("Window shadow softness, spread, offset, color"),
+            keywords: ["shadow", "window", "softness", "spread", "offset", "color"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Struts"),
+            label: Translation.tr("Struts"),
+            description: Translation.tr("Reserved screen edge space for panels"),
+            keywords: ["struts", "edge", "space", "panel", "reserved", "left", "right", "top", "bottom"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Misc"),
+            label: Translation.tr("Clip windows"),
+            description: Translation.tr("Clip windows to their workspace bounds"),
+            keywords: ["clip", "window", "workspace", "bounds", "hotspot"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Animations"),
+            label: Translation.tr("Per-animation toggles"),
+            description: Translation.tr("Enable or disable individual compositor animations"),
+            keywords: ["animation", "toggle", "enable", "disable", "compositor", "transition"]
+        },
+        {
+            pageIndex: 12, pageName: pages[12].name,
+            section: Translation.tr("Niri config status"),
+            label: Translation.tr("Managed overrides status"),
+            description: Translation.tr("Actionable managed overrides and extra files in Niri config"),
+            keywords: ["niri", "status", "managed", "override", "extra", "config", "kdl"]
+        },
+
+        // =====================================================================
+        // About (page 13)
+        // =====================================================================
+        {
+            pageIndex: 13, pageName: pages[13].name,
             section: Translation.tr("About"),
             label: Translation.tr("About ii"),
             description: Translation.tr("Version info, credits and links"),
@@ -1162,24 +1302,67 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Input Devices (page 14)
+        // Displays (page 14)
         // =====================================================================
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 14, pageName: pages[14].name,
+            section: Translation.tr("Displays"),
+            label: Translation.tr("Display Configuration"),
+            description: Translation.tr("Monitor arrangement, resolution, scale and transform"),
+            keywords: ["display", "monitor", "screen", "resolution", "scale", "transform", "arrangement"]
+        },
+
+        // =====================================================================
+        // Autostart & Services (page 15)
+        // =====================================================================
+        {
+            pageIndex: 15, pageName: pages[15].name,
+            section: Translation.tr("Shell Autostart"),
+            label: Translation.tr("Shell Autostart"),
+            description: Translation.tr("Commands and apps that launch with the shell"),
+            keywords: ["autostart", "startup", "launch", "command", "desktop", "boot", "login"]
+        },
+        {
+            pageIndex: 15, pageName: pages[15].name,
+            section: Translation.tr("User Services"),
+            label: Translation.tr("User Services"),
+            description: Translation.tr("Manage systemd user services — start, stop, enable, disable"),
+            keywords: ["service", "systemd", "user", "start", "stop", "enable", "disable", "daemon", "unit"]
+        },
+        {
+            pageIndex: 15, pageName: pages[15].name,
+            section: Translation.tr("System Services"),
+            label: Translation.tr("System Services"),
+            description: Translation.tr("View and control system-level services (requires admin)"),
+            keywords: ["system", "service", "systemd", "root", "admin", "pkexec", "privileged"]
+        },
+        {
+            pageIndex: 15, pageName: pages[15].name,
+            section: Translation.tr("User Scripts"),
+            label: Translation.tr("User Scripts"),
+            description: Translation.tr("Run or autostart scripts from ~/.local/bin"),
+            keywords: ["script", "bin", "local", "run", "execute", "bash", "custom"]
+        },
+
+        // =====================================================================
+        // Input Devices (page 16)
+        // =====================================================================
+        {
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Keyboard"),
             label: Translation.tr("Keyboard"),
             description: Translation.tr("Keyboard layout, repeat rate and numlock"),
             keywords: ["keyboard", "layout", "repeat", "delay", "rate", "numlock", "xkb", "input"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Touchpad"),
             label: Translation.tr("Touchpad"),
             description: Translation.tr("Tap to click, natural scroll, pointer speed"),
             keywords: ["touchpad", "tap", "click", "natural", "scroll", "speed", "dwt", "gesture", "input"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Mouse"),
             label: Translation.tr("Mouse"),
             description: Translation.tr("Acceleration profile and pointer speed"),
@@ -1187,24 +1370,24 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Power (page 14)
+        // Power (page 17)
         // =====================================================================
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 17, pageName: pages[17].name,
             section: Translation.tr("Battery"),
             label: Translation.tr("Battery"),
             description: Translation.tr("Battery thresholds, auto-suspend, and notifications"),
             keywords: ["battery", "low", "critical", "suspend", "full", "charge", "threshold", "power"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 17, pageName: pages[17].name,
             section: Translation.tr("Power Profile"),
             label: Translation.tr("Power Profile"),
             description: Translation.tr("Switch between power saver, balanced, and performance"),
             keywords: ["power", "profile", "saver", "balanced", "performance", "energy", "cpu"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 17, pageName: pages[17].name,
             section: Translation.tr("Idle & Sleep"),
             label: Translation.tr("Idle & Sleep"),
             description: Translation.tr("Screen off, lock, and suspend timeouts"),
@@ -1212,10 +1395,10 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Keybinds (page 15)
+        // Keybinds (page 18)
         // =====================================================================
         {
-            pageIndex: 15, pageName: pages[15].name,
+            pageIndex: 18, pageName: pages[18].name,
             section: Translation.tr("Keybinds"),
             label: Translation.tr("Keybinds"),
             description: Translation.tr("View and edit keyboard shortcuts for Niri and ii"),
@@ -1223,17 +1406,17 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Default Apps (page 16)
+        // Default Apps (page 19)
         // =====================================================================
         {
-            pageIndex: 16, pageName: pages[16].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("System Defaults"),
             label: Translation.tr("System Defaults"),
             description: Translation.tr("Default browser, file manager, editor, image and video apps"),
             keywords: ["default", "apps", "browser", "file", "manager", "editor", "image", "video", "xdg", "mime"]
         },
         {
-            pageIndex: 16, pageName: pages[16].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("Shell Apps"),
             label: Translation.tr("Shell Apps"),
             description: Translation.tr("Terminal, task manager, volume mixer, and other shell app preferences"),
@@ -1241,51 +1424,45 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Notification Rules (page 17)
+        // Notification Rules (page 20)
         // =====================================================================
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Per-App Rules"),
             label: Translation.tr("Per-App Rules"),
             description: Translation.tr("Configure notification behavior for each application"),
             keywords: ["notification", "rules", "app", "per-app", "allow", "block", "silent", "sound"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Per-App Rules"),
             label: Translation.tr("Block app notifications"),
             description: Translation.tr("Block or silence notifications from specific apps"),
             keywords: ["notification", "block", "silence", "mute", "app", "filter", "hide"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Global Settings"),
             label: Translation.tr("Notification position"),
             description: Translation.tr("Where popup notifications appear on screen"),
             keywords: ["notification", "position", "popup", "corner", "top", "bottom", "left", "right"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Global Settings"),
             label: Translation.tr("Notification timeouts"),
             description: Translation.tr("Default timeouts for low, normal and critical notifications"),
             keywords: ["notification", "timeout", "duration", "auto", "dismiss", "low", "normal", "critical"]
-        },
-        {
-            pageIndex: 17, pageName: pages[17].name,
-            section: Translation.tr("Global Settings"),
-            label: Translation.tr("Undo on dismiss"),
-            description: Translation.tr("Show undo bar when swiping away notifications"),
-            keywords: ["notification", "undo", "dismiss", "swipe", "restore"]
-        },
-        {
-            pageIndex: 17, pageName: pages[17].name,
-            section: Translation.tr("Global Settings"),
-            label: Translation.tr("Notification sounds"),
-            description: Translation.tr("Play sounds when notifications arrive"),
-            keywords: ["notification", "sounds", "audio", "alert", "chime"]
         }
     ]
+
+    function getWaffleSettingsPageIndex() {
+        for (var i = 0; i < pages.length; i++) {
+            if ((pages[i].component || "").indexOf("modules/settings/WaffleConfig.qml") >= 0)
+                return i;
+        }
+        return -1;
+    }
 
     function recomputeSettingsSearchResults() {
         var q = String(settingsSearchText || "").toLowerCase().trim();
@@ -1299,14 +1476,14 @@ ApplicationWindow {
 
         // Check if waffle family is active
         var isWaffleActive = Config.options?.panelFamily === "waffle";
-        var wafflePageIndex = 12; // "Waffle Style" page index
+        var wafflePageIndex = getWaffleSettingsPageIndex();
 
         // 1. Buscar en el índice estático de secciones (para navegación rápida a secciones)
         for (var i = 0; i < settingsSearchIndex.length; i++) {
             var entry = settingsSearchIndex[i];
 
             // Skip Waffle Style page if waffle family is not active
-            if (entry.pageIndex === wafflePageIndex && !isWaffleActive) {
+            if (wafflePageIndex >= 0 && entry.pageIndex === wafflePageIndex && !isWaffleActive) {
                 continue;
             }
 
@@ -1381,13 +1558,13 @@ ApplicationWindow {
         settingsSearchResults = unique.slice(0, 50);
     }
 
-    // Pending spotlight data
+    // Pending search navigation target data
     property int pendingSpotlightOptionId: -1
     property string pendingSpotlightLabel: ""
     property string pendingSpotlightSection: ""
     property int pendingSpotlightPageIndex: -1
     property bool pendingSpotlightIsSection: false
-    property var spotlightFlickable: null
+    property var searchTargetFlickable: null
 
     function openSearchResult(entry) {
         // Clear search immediately
@@ -1396,14 +1573,14 @@ ApplicationWindow {
             settingsSearchField.text = "";
         }
 
-        // Deactivate any existing spotlight
-        deactivateSpotlight();
+        // Reset existing search target state
+        resetSearchTarget();
 
         if (!entry || entry.pageIndex === undefined || entry.pageIndex < 0) {
             return;
         }
 
-        // Store spotlight target info
+        // Store navigation target info
         pendingSpotlightOptionId = (entry.optionId !== undefined) ? entry.optionId : -1;
         pendingSpotlightLabel = entry.label || "";
         pendingSpotlightSection = entry.section || "";
@@ -1415,7 +1592,7 @@ ApplicationWindow {
             currentPage = entry.pageIndex;
         }
 
-        // Always try spotlight (with retry for lazy-loaded widgets)
+        // Always try to resolve and navigate target (with retry for lazy-loaded widgets)
         if (pendingSpotlightOptionId >= 0 || pendingSpotlightLabel.length > 0) {
             spotlightRetryCount = 0;
             spotlightPageLoadTimer.restart();
@@ -1494,7 +1671,7 @@ ApplicationWindow {
         }
 
         if (control) {
-            doSpotlightForControl(control);
+            navigateToSearchControl(control);
         } else if (spotlightRetryCount < spotlightMaxRetries) {
             spotlightRetryCount++;
             spotlightPageLoadTimer.restart();
@@ -1508,7 +1685,7 @@ ApplicationWindow {
         }
     }
 
-    function doSpotlightForControl(control) {
+    function navigateToSearchControl(control) {
         if (!control) return;
 
         // Expand the section containing the control and collapse others
@@ -1545,70 +1722,19 @@ ApplicationWindow {
         // Scroll to position - set directly to bypass animation
         flick.contentY = targetScrollY;
 
-        // Store references for spotlight calculation
-        spotlightTarget = control;
-        spotlightFlickable = flick;
+        // Store references for optional focus retries
+        searchTargetControl = control;
+        searchTargetFlickable = flick;
 
-        // Wait for layout to update after scroll
-        spotlightShowTimer.restart();
+        // Clear pending data after successful navigation
+        pendingSpotlightOptionId = -1;
+        pendingSpotlightLabel = "";
+        pendingSpotlightSection = "";
+        pendingSpotlightPageIndex = -1;
+        pendingSpotlightIsSection = false;
     }
 
     property real spotlightTargetScrollY: 0
-
-    Timer {
-        id: spotlightShowTimer
-        interval: 250  // Must be longer than scroll animation (200ms) + layout time
-        onTriggered: root.showSpotlight()
-    }
-
-    function showSpotlight() {
-        if (!spotlightTarget || !spotlightFlickable) {
-            deactivateSpotlight();
-            return;
-        }
-
-        var control = spotlightTarget;
-        var flick = spotlightFlickable;
-
-        // Check if scroll animation is still running (contentY hasn't reached target)
-        var scrollDiff = Math.abs(flick.contentY - spotlightTargetScrollY);
-        if (scrollDiff > 2) {
-            // Animation still in progress, wait a bit more
-            spotlightShowTimer.restart();
-            return;
-        }
-
-        // Use mapToItem directly to get the control's visual position in contentContainer
-        // This is the most reliable method as it accounts for all transformations
-        var pos = control.mapToItem(contentContainer, 0, 0);
-
-        // Sanity check: control should be roughly centered vertically
-        var expectedY = (contentContainer.height - control.height) / 2;
-        var yDiff = Math.abs(pos.y - expectedY);
-
-        // If position is way off from center, something went wrong
-        if (yDiff > contentContainer.height / 2) {
-            // Fallback: recalculate scroll position
-            var posInContent = control.mapToItem(flick.contentItem, 0, 0);
-            var targetScrollY = posInContent.y - (flick.height / 2) + (control.height / 2);
-            var maxScroll = Math.max(0, flick.contentHeight - flick.height);
-            targetScrollY = Math.max(0, Math.min(targetScrollY, maxScroll));
-            spotlightTargetScrollY = targetScrollY;
-            flick.contentY = targetScrollY;
-            spotlightShowTimer.restart();
-            return;
-        }
-
-        var padding = 8;
-        spotlightRect = Qt.rect(
-            Math.max(0, pos.x - padding),
-            Math.max(0, pos.y - padding),
-            control.width + padding * 2,
-            control.height + padding * 2
-        );
-        spotlightActive = true;
-        pendingSpotlightOptionId = -1;
-    }
 
     function findParentFlickable(item) {
         var p = item ? item.parent : null;
@@ -1624,12 +1750,15 @@ ApplicationWindow {
         return null;
     }
 
-    function deactivateSpotlight() {
-        spotlightActive = false;
-        spotlightTarget = null;
-        spotlightFlickable = null;
+    function resetSearchTarget() {
+        searchTargetControl = null;
+        searchTargetFlickable = null;
         spotlightTargetScrollY = 0;
         pendingSpotlightOptionId = -1;
+        pendingSpotlightLabel = "";
+        pendingSpotlightSection = "";
+        pendingSpotlightPageIndex = -1;
+        pendingSpotlightIsSection = false;
     }
 
     visible: true
@@ -1662,11 +1791,20 @@ ApplicationWindow {
     minimumHeight: 500
     width: 1100
     height: 750
-    color: root.uiReady ? Appearance.m3colors.m3background : "transparent"
+    color: root.uiReady
+        ? (Appearance.inirEverywhere ? Appearance.inir.colLayer0
+          : Appearance.m3colors.m3background)
+        : "transparent"
 
     Shortcut {
         sequences: [StandardKey.Find]
-        onActivated: settingsSearchField.forceActiveFocus()
+        onActivated: {
+            settingsSearchField.forceActiveFocus()
+            if (!pagesStack.preloadRequested) {
+                pagesStack.preloadRequested = true
+                preloadTimer.start()
+            }
+        }
     }
 
     ColumnLayout {
@@ -1699,67 +1837,132 @@ ApplicationWindow {
             }
         }
 
-        Item { // Titlebar
+        RowLayout { // Titlebar with integrated search
             visible: Config.options?.windows?.showTitlebar ?? true
             Layout.fillWidth: true
-            Layout.fillHeight: false
-            implicitHeight: Math.max(titleText.implicitHeight, windowControlsRow.implicitHeight)
-            StyledText {
-                id: titleText
-                anchors {
-                    left: (Config.options?.windows?.centerTitle ?? false) ? undefined : parent.left
-                    horizontalCenter: (Config.options?.windows?.centerTitle ?? false) ? parent.horizontalCenter : undefined
-                    verticalCenter: parent.verticalCenter
-                    leftMargin: 12
-                }
-                color: Appearance.colors.colOnLayer0
-                text: Translation.tr("Settings")
-                font {
-                    family: Appearance.font.family.title
-                    pixelSize: Appearance.font.pixelSize.title
-                    variableAxes: Appearance.font.variableAxes.title
-                }
-            }
-            RowLayout { // Window controls row
-                id: windowControlsRow
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                RippleButton {
-                    buttonRadius: Appearance.rounding.full
-                    implicitWidth: 35
-                    implicitHeight: 35
-                    onClicked: root.close()
-                    contentItem: MaterialSymbol {
+            Layout.preferredHeight: 52
+            Layout.leftMargin: 12
+            Layout.rightMargin: 6
+            spacing: 12
+
+                Item {
+                    implicitWidth: 36
+                    implicitHeight: 36
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: Appearance.colors.colLayer1
+                        border.width: 1
+                        border.color: Appearance.colors.colPrimary
+                    }
+
+                    Rectangle {
+                        id: settingsAvatarMask
                         anchors.centerIn: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        text: "close"
-                        iconSize: 20
+                        width: 32
+                        height: 32
+                        radius: width / 2
+                        visible: false
+                    }
+
+                    Image {
+                        id: settingsAvatarImage
+                        anchors.centerIn: parent
+                        width: 32
+                        height: 32
+                        source: settingsAvatarResolver.resolvedSource
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        cache: true
+                        smooth: true
+                        mipmap: true
+                        sourceSize.width: 64
+                        sourceSize.height: 64
+                        visible: status === Image.Ready
+                        layer.enabled: visible
+                        layer.effect: OpacityMask {
+                            maskSource: settingsAvatarMask
+                        }
+                    }
+
+                    // Reactive avatar resolver — retries fallback paths without breaking bindings
+                    QtObject {
+                        id: settingsAvatarResolver
+                        property int avatarIndex: 0
+                        readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
+
+                        // Reset to primary whenever Directories re-resolves (e.g. username changes)
+                        readonly property string primaryWatch: Directories.userAvatarSourcePrimary
+                        onPrimaryWatchChanged: avatarIndex = 0
+
+                        readonly property int imgStatus: settingsAvatarImage.status
+                        onImgStatusChanged: {
+                            if (imgStatus === Image.Error) {
+                                const nextIdx = avatarIndex + 1
+                                if (nextIdx < Directories.userAvatarPaths.length)
+                                    avatarIndex = nextIdx
+                            }
+                        }
+                    }
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        visible: settingsAvatarImage.status !== Image.Ready
+                        text: "person"
+                        iconSize: 18
+                        color: Appearance.colors.colPrimary
                     }
                 }
-            }
-        }
 
-        // Global settings search bar - Material Design style
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 12
-            Layout.bottomMargin: 8
+                ColumnLayout {
+                    spacing: 0
 
-            Item { Layout.fillWidth: true }
+                    StyledText {
+                        color: Appearance.colors.colOnLayer0
+                        text: Translation.tr("Settings")
+                        font {
+                            family: Appearance.font.family.title
+                            pixelSize: Appearance.font.pixelSize.title
+                            variableAxes: Appearance.font.variableAxes.title
+                        }
+                    }
 
-            // Search container with visual feedback
+                    StyledText {
+                        text: SystemInfo.displayName || SystemInfo.username
+                        color: Appearance.colors.colSubtext
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        elide: Text.ElideRight
+                    }
+                }
+
+                Item { Layout.fillWidth: true; Layout.minimumWidth: 8 }
+
+                // Search container with visual feedback
             Rectangle {
                 id: searchContainer
-                Layout.preferredWidth: Math.min(560, root.width - 200)
-                Layout.preferredHeight: 48
+                Layout.fillWidth: true
+                Layout.maximumWidth: 480
+                Layout.minimumWidth: 200
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignVCenter
                 radius: Appearance.rounding.full
                 color: settingsSearchField.activeFocus
-                    ? Appearance.colors.colLayer1
-                    : Appearance.colors.colLayer0
-                border.width: settingsSearchField.activeFocus ? 2 : 1
+                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                      : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                      : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                      : Appearance.colors.colLayer1)
+                    : (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                      : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                      : Appearance.inirEverywhere ? Appearance.inir.colLayer0
+                      : Appearance.colors.colLayer0)
+                border.width: settingsSearchField.activeFocus ? 2
+                    : (Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1)
                 border.color: settingsSearchField.activeFocus
                     ? Appearance.colors.colPrimary
-                    : Appearance.m3colors.m3outlineVariant
+                    : (Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                      : Appearance.inirEverywhere ? Appearance.inir.colBorderMuted
+                      : Appearance.m3colors.m3outlineVariant)
 
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -1833,6 +2036,10 @@ ApplicationWindow {
                             text: root.settingsSearchText
                             onTextChanged: {
                                 root.settingsSearchText = text;
+                                if (text.length > 0 && !pagesStack.preloadRequested) {
+                                    pagesStack.preloadRequested = true
+                                    preloadTimer.start()
+                                }
                                 root.recomputeSettingsSearchResults();
                             }
 
@@ -1903,7 +2110,32 @@ ApplicationWindow {
                 }
             }
 
-            Item { Layout.fillWidth: true }
+                Item { Layout.fillWidth: true; Layout.minimumWidth: 8 }
+
+                RippleButton {
+                    buttonRadius: Appearance.rounding.full
+                    implicitWidth: 35
+                    implicitHeight: 35
+                    onClicked: Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "lock", "activate"])
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "lock"
+                        iconSize: 20
+                    }
+                }
+                RippleButton {
+                    buttonRadius: Appearance.rounding.full
+                    implicitWidth: 35
+                    implicitHeight: 35
+                    onClicked: root.close()
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "close"
+                        iconSize: 20
+                    }
+                }
         }
 
         RowLayout { // Window content with navigation rail and content pane
@@ -1916,21 +2148,26 @@ ApplicationWindow {
                 Layout.margins: 5
                 implicitWidth: navRail.expanded ? 150 : fab.baseSize
                 Behavior on implicitWidth {
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
                 Flickable {
                     id: navRailFlickable
                     anchors.fill: parent
+                    anchors.bottomMargin: overlayToggleBtn.height + 4
                     contentWidth: navRail.width
                     contentHeight: navRail.implicitHeight
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
+                    interactive: contentHeight > height
+                    ScrollBar.vertical: StyledScrollBar {
+                        policy: ScrollBar.AlwaysOff
+                    }
 
                     NavigationRail {
                         id: navRail
                         width: navRailWrapper.implicitWidth
                         spacing: 10
-                        expanded: true  // Default expanded for DE-style navigation
+                        expanded: false  // Default collapsed, user can expand with button
 
                         NavigationRailExpandButton {
                             focus: root.visible
@@ -1984,13 +2221,128 @@ ApplicationWindow {
                         }
                     }
                 }
+
+                // Overlay mode toggle at bottom of nav rail
+                RippleButton {
+                    id: overlayToggleBtn
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottomMargin: 0
+                    height: 36
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: "transparent"
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+
+                    onClicked: {
+                        Config.setNestedValue("settingsUi.overlayMode", true)
+                        settingsRestartTimer.restart()
+                    }
+
+                    contentItem: RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: navRail.expanded ? 10 : 0
+                        anchors.rightMargin: navRail.expanded ? 8 : 0
+                        spacing: navRail.expanded ? 8 : 0
+
+                        MaterialSymbol {
+                            Layout.alignment: navRail.expanded ? Qt.AlignVCenter : Qt.AlignCenter
+                            text: "layers"
+                            iconSize: 18
+                            color: Appearance.colors.colOnSurfaceVariant
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: navRail.expanded
+                            text: Translation.tr("Overlay")
+                            font {
+                                family: Appearance.font.family.main
+                                pixelSize: Appearance.font.pixelSize.smaller
+                            }
+                            color: Appearance.colors.colOnSurfaceVariant
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    PopupToolTip {
+                        id: overlayToggleHoverBubble
+                        delay: 0
+                        extraVisibleCondition: !navRail.expanded
+                        anchorEdges: Edges.Right
+                        contentItem: Item {
+                            id: overlayBubbleContent
+                            property bool shown: false
+                            implicitWidth: overlayBubbleBackground.implicitWidth
+                            implicitHeight: overlayBubbleBackground.implicitHeight
+                            opacity: shown ? 1 : 0
+                            scale: shown ? 1 : 0.92
+
+                            Behavior on opacity {
+                                enabled: Appearance.animationsEnabled
+                                NumberAnimation {
+                                    duration: Appearance.animation.elementMoveFast.duration
+                                    easing.type: Appearance.animation.elementMoveFast.type
+                                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                                }
+                            }
+
+                            Behavior on scale {
+                                enabled: Appearance.animationsEnabled
+                                NumberAnimation {
+                                    duration: Appearance.animation.elementMoveFast.duration
+                                    easing.type: Appearance.animation.elementMoveFast.type
+                                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                                }
+                            }
+
+                            Rectangle {
+                                id: overlayBubbleBackground
+                                color: Appearance.colors.colPrimary
+                                radius: Appearance.rounding.full
+                                implicitWidth: overlayBubbleText.implicitWidth + 24
+                                implicitHeight: 32
+
+                                StyledText {
+                                    id: overlayBubbleText
+                                    anchors.centerIn: parent
+                                    text: Translation.tr("Switch to overlay mode")
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.weight: Font.Medium
+                                    color: Appearance.colors.colOnPrimary
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Timer {
+                    id: settingsRestartTimer
+                    interval: 500
+                    onTriggered: {
+                        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"])
+                        Qt.quit()
+                    }
+                }
             }
             Rectangle { // Content container
                 id: contentContainer
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Appearance.m3colors.m3surfaceContainerLow
-                radius: Appearance.rounding.windowRounding - root.contentPadding
+                color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                     : Appearance.m3colors.m3surfaceContainerLow
+                radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                      : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
+                      : Appearance.rounding.windowRounding - root.contentPadding
+                border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                            : Appearance.inirEverywhere ? 1 : 0
+                border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                            : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
+                            : "transparent"
 
                 Item {
                     id: pagesStack
@@ -1999,6 +2351,7 @@ ApplicationWindow {
                     // Track which pages have been visited (for lazy loading with cache)
                     property var visitedPages: ({})
                     property int preloadIndex: 0
+                    property bool preloadRequested: false
 
                     Connections {
                         target: root
@@ -2011,8 +2364,6 @@ ApplicationWindow {
                     Component.onCompleted: {
                         // Mark initial page as visited
                         visitedPages[root.currentPage] = true
-                        // Start preloading other pages after a short delay
-                        preloadTimer.start()
                     }
 
                     // Preload all pages for search - faster interval
@@ -2074,6 +2425,9 @@ ApplicationWindow {
                     }
 
                     // Results card
+                    StyledRectangularShadow {
+                        target: searchResultsCard
+                    }
                     Rectangle {
                         id: searchResultsCard
                         width: Math.min(parent.width - 40, 500)
@@ -2081,15 +2435,31 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: 8
-                        radius: Appearance.rounding.normal
-                        color: Appearance.auroraEverywhere ? Appearance.colors.colLayer1Base
-                            : Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                            : Appearance.colors.colLayer1
-                        border.width: 1
-                        border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder
+                        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                             : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
+                             : Appearance.rounding.normal
+                        color: "transparent"
+                        border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                                    : Appearance.inirEverywhere ? 1 : 1
+                        border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                            : Appearance.inirEverywhere ? Appearance.inir.colBorder
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colPopupBorder
                             : Appearance.m3colors.m3outlineVariant
 
-                        layer.enabled: Appearance.effectsEnabled
+                        GlassBackground {
+                            anchors.fill: parent
+                            radius: searchResultsCard.radius
+                            screenX: searchResultsCard.mapToGlobal(0, 0).x
+                            screenY: searchResultsCard.mapToGlobal(0, 0).y
+                            screenWidth: Quickshell.screens[0]?.width ?? root.width
+                            screenHeight: Quickshell.screens[0]?.height ?? root.height
+                            hovered: false
+                            fallbackColor: Appearance.colors.colLayer1
+                            inirColor: Appearance.inir.colLayer2
+                            auroraTransparency: Math.max(0.22, Appearance.aurora.popupTransparentize - 0.12)
+                        }
+
+                        layer.enabled: Appearance.effectsEnabled && !Appearance.auroraEverywhere
                         layer.effect: DropShadow {
                             color: Qt.rgba(0, 0, 0, 0.3)
                             radius: 12
@@ -2139,10 +2509,20 @@ ApplicationWindow {
 
                                 width: resultsListView.width
                                 implicitHeight: 52
-                                buttonRadius: Appearance.rounding.small
+                                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
+                                            : Appearance.rounding.small
 
-                                colBackground: ListView.isCurrentItem ? Appearance.colors.colPrimaryContainer : "transparent"
-                                colBackgroundHover: Appearance.colors.colLayer2
+                                colBackground: ListView.isCurrentItem
+                                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                      : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                                      : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface
+                                      : Appearance.colors.colPrimaryContainer)
+                                    : "transparent"
+                                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                                  : Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover
+                                                  : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                                                  : Appearance.colors.colLayer2
 
                                 Keys.forwardTo: [resultsListView]
                                 onClicked: root.openSearchResult(modelData)
@@ -2157,8 +2537,8 @@ ApplicationWindow {
                                     MaterialSymbol {
                                         text: {
                                             var icons = ["instant_mix", "browse", "toast", "texture", "palette",
-                                                        "bottom_app_bar", "settings", "construction", "keyboard",
-                                                        "extension", "window", "info"];
+                                                        "bottom_app_bar", "build", "settings", "construction", "keyboard",
+                                                        "extension", "window", "desktop_windows", "info"];
                                             return icons[resultItem.modelData.pageIndex] || "settings";
                                         }
                                         iconSize: 20
@@ -2239,6 +2619,7 @@ ApplicationWindow {
 
                 // No results indicator (inline, not overlay)
                 Rectangle {
+                    id: noResultsCard
                     visible: root.settingsSearchText.length > 0 && root.settingsSearchResults.length === 0
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -2246,8 +2627,21 @@ ApplicationWindow {
                     width: noResultsRow.implicitWidth + 24
                     height: 36
                     radius: Appearance.rounding.full
-                    color: Appearance.colors.colLayer1
+                    color: "transparent"
                     z: 100
+
+                    GlassBackground {
+                        anchors.fill: parent
+                        radius: noResultsCard.radius
+                        screenX: noResultsCard.mapToGlobal(0, 0).x
+                        screenY: noResultsCard.mapToGlobal(0, 0).y
+                        screenWidth: Quickshell.screens[0]?.width ?? root.width
+                        screenHeight: Quickshell.screens[0]?.height ?? root.height
+                        hovered: false
+                        fallbackColor: Appearance.colors.colLayer1
+                        inirColor: Appearance.inir.colLayer2
+                        auroraTransparency: Math.max(0.22, Appearance.aurora.popupTransparentize - 0.12)
+                    }
 
                     RowLayout {
                         id: noResultsRow
@@ -2268,97 +2662,6 @@ ApplicationWindow {
                     }
                 }
 
-                // Spotlight overlay - scrim with cutout for focused option
-                Item {
-                    id: spotlightOverlay
-                    anchors.fill: parent
-                    visible: root.spotlightActive
-                    z: 200
-
-                    // Click anywhere to dismiss
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.deactivateSpotlight()
-                    }
-
-                    // Dark scrim with cutout using Canvas
-                    Canvas {
-                        id: spotlightCanvas
-                        anchors.fill: parent
-
-                        onPaint: {
-                            var ctx = getContext("2d");
-                            ctx.reset();
-
-                            // Fill entire area with semi-transparent dark
-                            ctx.fillStyle = Qt.rgba(0, 0, 0, 0.5);
-                            ctx.fillRect(0, 0, width, height);
-
-                            // Cut out the spotlight area (clear it)
-                            if (root.spotlightActive && root.spotlightRect.width > 0) {
-                                ctx.globalCompositeOperation = "destination-out";
-
-                                var r = root.spotlightRect;
-                                var radius = Appearance.rounding.normal;
-
-                                // Draw rounded rectangle cutout
-                                ctx.beginPath();
-                                ctx.moveTo(r.x + radius, r.y);
-                                ctx.lineTo(r.x + r.width - radius, r.y);
-                                ctx.quadraticCurveTo(r.x + r.width, r.y, r.x + r.width, r.y + radius);
-                                ctx.lineTo(r.x + r.width, r.y + r.height - radius);
-                                ctx.quadraticCurveTo(r.x + r.width, r.y + r.height, r.x + r.width - radius, r.y + r.height);
-                                ctx.lineTo(r.x + radius, r.y + r.height);
-                                ctx.quadraticCurveTo(r.x, r.y + r.height, r.x, r.y + r.height - radius);
-                                ctx.lineTo(r.x, r.y + radius);
-                                ctx.quadraticCurveTo(r.x, r.y, r.x + radius, r.y);
-                                ctx.closePath();
-                                ctx.fill();
-                            }
-                        }
-
-                        Connections {
-                            target: root
-                            function onSpotlightRectChanged() {
-                                spotlightCanvas.requestPaint();
-                            }
-                            function onSpotlightActiveChanged() {
-                                spotlightCanvas.requestPaint();
-                            }
-                        }
-                    }
-
-                    // Subtle border around the cutout
-                    Rectangle {
-                        visible: root.spotlightActive && root.spotlightRect.width > 0
-                        x: root.spotlightRect.x - 1
-                        y: root.spotlightRect.y - 1
-                        width: root.spotlightRect.width + 2
-                        height: root.spotlightRect.height + 2
-                        radius: Appearance.rounding.normal + 1
-                        color: "transparent"
-                        border.width: 1
-                        border.color: Appearance.colors.colPrimary
-                        opacity: 0.8
-                    }
-
-                    // Auto-dismiss after 2.5 seconds
-                    Timer {
-                        running: root.spotlightActive
-                        interval: 2500
-                        onTriggered: root.deactivateSpotlight()
-                    }
-
-                    // Keyboard dismiss
-                    Keys.onPressed: event => {
-                        if (event.key === Qt.Key_Escape || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                            root.deactivateSpotlight();
-                            event.accepted = true;
-                        }
-                    }
-
-                    Component.onCompleted: forceActiveFocus()
-                }
             }
         }
     }

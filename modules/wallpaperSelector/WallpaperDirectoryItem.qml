@@ -11,8 +11,8 @@ MouseArea {
     required property var fileModelData
     property bool isDirectory: fileModelData.fileIsDir
     property bool useThumbnail: Images.isValidMediaByName(fileModelData.fileName)
-    property bool isFavorite: false
-    signal favoriteToggled()
+
+    readonly property real _dpr: root.window ? root.window.devicePixelRatio : 1
 
     property alias colBackground: background.color
     property alias colText: wallpaperItemName.color
@@ -32,7 +32,8 @@ MouseArea {
         anchors.fill: parent
         radius: Appearance.rounding.normal
         Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+            enabled: Appearance.animationsEnabled
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
         ColumnLayout {
@@ -64,12 +65,29 @@ MouseArea {
                         id: thumbnailImage
                         generateThumbnail: true
                         sourcePath: fileModelData.filePath
+                        // Force x-large (512px) minimum for crisp grid thumbnails.
+                        // The default auto-detect can pick "large" (256px) for small cells,
+                        // producing visible blur on 300-400px wide grid items.
+                        thumbnailSizeName: {
+                            const auto = Images.thumbnailSizeNameForDimensions(
+                                Math.round(wallpaperItemImageContainer.width * root._dpr),
+                                Math.round(wallpaperItemImageContainer.height * root._dpr)
+                            )
+                            return (auto === "normal" || auto === "large") ? "x-large" : auto
+                        }
 
-                        cache: false
+                        cache: true
                         fillMode: Image.PreserveAspectCrop
                         clip: true
-                        sourceSize.width: wallpaperItemColumnLayout.width
-                        sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
+                        smooth: true
+                        sourceSize.width: Math.max(
+                            Math.round(wallpaperItemImageContainer.width * root._dpr),
+                            Images.thumbnailSizes[thumbnailSizeName] ?? 512
+                        )
+                        sourceSize.height: Math.max(
+                            Math.round(wallpaperItemImageContainer.height * root._dpr),
+                            Images.thumbnailSizes[thumbnailSizeName] ?? 512
+                        )
 
                         Connections {
                             target: Wallpapers
@@ -108,40 +126,6 @@ MouseArea {
                         sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
                     }
                 }
-
-                // Favorite heart overlay
-                MouseArea {
-                    id: heartButton
-                    visible: !root.isDirectory && (root.containsMouse || root.isFavorite)
-                    anchors {
-                        top: parent.top
-                        right: parent.right
-                        margins: 4
-                    }
-                    width: 24
-                    height: 24
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    z: 10
-
-                    onClicked: root.favoriteToggled()
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: width / 2
-                        color: heartButton.containsMouse
-                            ? ColorUtils.transparentize(Appearance.colors.colSurface, 0.2)
-                            : ColorUtils.transparentize(Appearance.colors.colSurface, 0.4)
-                    }
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        iconSize: 18
-                        text: root.isFavorite ? "favorite" : "favorite_border"
-                        color: root.isFavorite ? Appearance.colors.colError : Appearance.colors.colOnSurface
-                        fill: root.isFavorite ? 1 : 0
-                    }
-                }
             }
 
             StyledText {
@@ -154,7 +138,8 @@ MouseArea {
                 elide: Text.ElideRight
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 Behavior on color {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    enabled: Appearance.animationsEnabled
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
                 text: fileModelData.fileName
             }

@@ -35,6 +35,49 @@
                 "harmonizeThreshold": 100,
                 "harmony": 0.8,
                 "termFgBoost": 0.5
+            },
+            "enableSpicetify": false,
+            "enableAdwSteam": false,
+            "enableOpenCode": false,
+            "vscodeEditors": {
+                "code": true,
+                "codium": true,
+                "codeOss": true,
+                "codeInsiders": true,
+                "cursor": true,
+                "windsurf": true,
+                "windsurfNext": true,
+                "qoder": true,
+                "antigravity": true,
+                "positron": true,
+                "voidEditor": true,
+                "melty": true,
+                "pearai": true,
+                "aide": true
+            },
+            "terminals": {
+                "omp": true,
+                "kitty": true,
+                "alacritty": true,
+                "foot": true,
+                "wezterm": true,
+                "ghostty": true,
+                "konsole": true,
+                "starship": true,
+                "btop": true,
+                "lazygit": true,
+                "yazi": true
+            },
+            "enableVesktop": true,
+            "enableZed": true,
+            "enableVSCode": true,
+            "enableChrome": true,
+            "useBackdropForColors": false,
+            "terminalColorAdjustments": {
+                "saturation": 0.65,
+                "brightness": 0.6,
+                "harmony": 0.4,
+                "backgroundBrightness": 0.5
             }
         }
     },
@@ -69,11 +112,11 @@
         },
         "effects": {
             "blurRadius": 22,
-            "blurStatic": 0,
             "dim": 30,
             "dynamicDim": 20,
             "enableBlur": true,
-            "videoBlurStrength": 70
+            "thumbnailBlurStrength": 70,
+            "enableAnimatedBlur": false
         },
         "hideWhenFullscreen": true,
         "parallax": {
@@ -138,8 +181,15 @@
         "bottom": false,
         "cornerStyle": 2,
         "edgeModulesLayout": {
-            "leftOrder": ["leftSidebarButton", "activeWindow"],
-            "rightOrder": ["rightSidebarButton", "sysTray", "weather"]
+            "leftOrder": [
+                "leftSidebarButton",
+                "activeWindow"
+            ],
+            "rightOrder": [
+                "rightSidebarButton",
+                "sysTray",
+                "weather"
+            ]
         },
         "floatStyleShadow": true,
         "indicators": {
@@ -161,7 +211,14 @@
             "workspaces": true
         },
         "modulesLayout": {
-            "order": ["media", "resources", "utilButtons", "workspaces", "clock", "battery"]
+            "order": [
+                "media",
+                "resources",
+                "utilButtons",
+                "workspaces",
+                "clock",
+                "battery"
+            ]
         },
         "modulesPlacement": {
             "battery": "end",
@@ -210,7 +267,18 @@
         "workspaces": {
             "alwaysShowNumbers": true,
             "monochromeIcons": true,
-            "numberMap": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+            "numberMap": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10"
+            ],
             "showAppIcons": false,
             "showNumberDelay": 300,
             "shown": 5,
@@ -389,7 +457,9 @@
     },
     "search": {
         "engineBaseUrl": "https://www.google.com/search?q=",
-        "excludedSites": ["quora.com"],
+        "excludedSites": [
+            "quora.com"
+        ],
         "imageSearch": {
             "imageSearchEngineBaseUrl": "https://lens.google.com/uploadbyurl?url=",
             "useCircleSelection": false
@@ -441,11 +511,26 @@
             "android": {
                 "columns": 4,
                 "toggles": [
-                    {"size": 2, "type": "audio"},
-                    {"size": 2, "type": "mic"},
-                    {"size": 2, "type": "easyEffects"},
-                    {"size": 1, "type": "onScreenKeyboard"},
-                    {"size": 1, "type": "idleInhibitor"}
+                    {
+                        "size": 2,
+                        "type": "audio"
+                    },
+                    {
+                        "size": 2,
+                        "type": "mic"
+                    },
+                    {
+                        "size": 2,
+                        "type": "easyEffects"
+                    },
+                    {
+                        "size": 1,
+                        "type": "onScreenKeyboard"
+                    },
+                    {
+                        "size": 1,
+                        "type": "idleInhibitor"
+                    }
                 ]
             },
             "style": "android"

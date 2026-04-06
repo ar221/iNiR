@@ -17,11 +17,20 @@ Singleton {
 
     readonly property bool _debugWallpaperUrls: (Quickshell.env("INIR_DEBUG_WALLPAPER_URLS") ?? "") === "1"
 
+    // Suppression flag: prevents ThemeService from firing a duplicate
+    // switchwall.sh run while a direct apply() is already in progress.
+    property bool _applyInProgress: false
+    property string _queuedApplyPath: ""
+    property bool _queuedApplyDarkMode: Appearance.m3colors.darkmode
+    property bool _queuedApplyNoSwitch: false
+    readonly property string backendProvider: "awww"
+    readonly property bool awwwBackendEnabled: true
+
     // Wallpaper path resolution for aurora/backdrop
     readonly property bool isWaffleFamily: (Config.options?.panelFamily ?? "ii") === "waffle"
     readonly property bool useBackdropWallpaper: isWaffleFamily
-        ? (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false)
-        : (Config.options?.background?.backdrop?.hideWallpaper ?? false)
+        ? ((Config.options?.waffles?.background?.backdrop?.enable ?? false) && (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false))
+        : ((Config.options?.background?.backdrop?.enable ?? false) && (Config.options?.background?.backdrop?.hideWallpaper ?? false))
 
     // Resolve the "main" wallpaper path — multi-monitor aware
     // When multi-monitor is enabled, uses the focused monitor's wallpaper
@@ -39,28 +48,39 @@ Singleton {
 
     readonly property bool useBackdropForColors: Config.options?.appearance?.wallpaperTheming?.useBackdropForColors ?? false
 
-    readonly property string effectiveWallpaperPath: {
-        if (useBackdropWallpaper || useBackdropForColors) {
-            if (isWaffleFamily) {
-                const wBackdrop = Config.options?.waffles?.background?.backdrop ?? {}
-                const useBackdropOwn = !(wBackdrop.useMainWallpaper ?? true)
-                if (useBackdropOwn && wBackdrop.wallpaperPath) return wBackdrop.wallpaperPath
-                const wBg = Config.options?.waffles?.background ?? {}
-                const useMainForWaffle = wBg.useMainWallpaper ?? true
-                return useMainForWaffle ? _resolvedMainWallpaperPath : (wBg.wallpaperPath || _resolvedMainWallpaperPath)
+    function currentThemingWallpaperPath(monitorName = ""): string {
+        const targetMonitor = monitorName || (WallpaperListener.multiMonitorEnabled ? WallpaperListener.getFocusedMonitor() : "")
+        const mainPath = currentMainWallpaperPath(targetMonitor)
+
+        if (root.useBackdropWallpaper || root.useBackdropForColors) {
+            if (root.isWaffleFamily) {
+                const waffleBackdrop = Config.options?.waffles?.background?.backdrop ?? {}
+                const waffleBackground = Config.options?.waffles?.background ?? {}
+                const waffleMain = (waffleBackground.useMainWallpaper ?? true) ? mainPath : (waffleBackground.wallpaperPath || mainPath)
+                return (waffleBackdrop.useMainWallpaper ?? true) ? waffleMain : (waffleBackdrop.wallpaperPath || waffleMain)
             }
+
             const iiBackdrop = Config.options?.background?.backdrop ?? {}
-            const useMain = iiBackdrop.useMainWallpaper ?? true
-            const mainPath = _resolvedMainWallpaperPath
-            return useMain ? mainPath : (iiBackdrop.wallpaperPath || mainPath)
+            if (iiBackdrop.useMainWallpaper ?? true)
+                return mainPath
+            if (WallpaperListener.multiMonitorEnabled && targetMonitor) {
+                const monitorData = WallpaperListener.effectivePerMonitor[targetMonitor] ?? null
+                if (monitorData && monitorData.backdropPath)
+                    return monitorData.backdropPath
+            }
+            return iiBackdrop.wallpaperPath || mainPath
         }
-        if (isWaffleFamily) {
-            const wBg = Config.options?.waffles?.background ?? {}
-            const useMain = wBg.useMainWallpaper ?? true
-            if (useMain) return _resolvedMainWallpaperPath
-            return wBg.wallpaperPath || _resolvedMainWallpaperPath
+
+        if (root.isWaffleFamily) {
+            const waffleBackground = Config.options?.waffles?.background ?? {}
+            return (waffleBackground.useMainWallpaper ?? true) ? mainPath : (waffleBackground.wallpaperPath || mainPath)
         }
-        return _resolvedMainWallpaperPath
+
+        return mainPath
+    }
+
+    readonly property string effectiveWallpaperPath: {
+        return root.currentThemingWallpaperPath()
     }
 
     readonly property string effectiveWallpaperUrl: {
@@ -84,13 +104,23 @@ Singleton {
             console.log("[Wallpapers] effectiveWallpaperPath=", root.effectiveWallpaperPath)
             console.log("[Wallpapers] effectiveWallpaperUrl=", root.effectiveWallpaperUrl)
         }
+        // Schedule a deferred GC pass to reclaim orphaned pixmaps/textures
+        // from the previous wallpaper.  The delay gives the scene graph one
+        // frame to drop references before we collect.
+        _gcTimer.restart()
+    }
+
+    Timer {
+        id: _gcTimer
+        interval: 2000
+        onTriggered: gc()
     }
 
     // ── Video first-frame system ──────────────────────────────────────────
-    // Generates and caches first-frame JPGs for video wallpapers (same dir as switchwall.sh)
+    // Generates and caches first-frame JPGs for video wallpapers
     readonly property string _videoThumbDir: {
-        const xdg = Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
-        return xdg + "/hypr/custom/scripts/mpvpaper_thumbnails"
+        const xdgCache = Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+        return xdgCache + "/quickshell/video_thumbnails"
     }
 
     property var videoFirstFrames: ({})
@@ -222,21 +252,9 @@ Singleton {
     property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
     property alias folderModel: folderModel
     property string searchQuery: ""
-    property string typeFilter: "all" // "all", "images", "video"
-    property bool showFavoritesOnly: false
-    property var favoritePaths: ({}) // { "/path/to/file": true }
-    property string colorFilter: "" // empty = no filter, or bucket name
-    property var colorCache: ({}) // { "/path/to/file": { bucket: "blue", ... } }
-    property var tagCache: ({}) // { "/path/to/file": ["tag1", "tag2", ...] }
-    readonly property list<string> imageExtensions: ["jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", "gif"]
-    readonly property list<string> videoExtensions: ["mp4", "webm", "mkv", "avi", "mov"]
-    readonly property list<string> extensions: imageExtensions.concat(videoExtensions)
-    readonly property list<string> _activeExtensions: {
-        if (root.typeFilter === "images") return root.imageExtensions
-        if (root.typeFilter === "video") return root.videoExtensions
-        return root.extensions
-    }
+    readonly property list<string> extensions: ["jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", "gif", "mp4", "webm", "mkv", "avi", "mov"]
     property list<string> wallpapers: []
+    property int _wallpaperCacheIndex: 0
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
     property real thumbnailGenerationProgress: 0
 
@@ -248,40 +266,257 @@ Singleton {
     function load() {}
     function refresh() {} // Compatibility - FolderListModel auto-refreshes
 
-    Process { id: applyProc }
-    
+    function rebuildWallpapersCache(): void {
+        root.wallpapers = []
+        root._wallpaperCacheIndex = 0
+        wallpaperCacheTimer.restart()
+    }
+
+    function appendWallpapersCacheBatch(): void {
+        const nextBatch = root.wallpapers.slice()
+        const batchEnd = Math.min(folderModel.count, root._wallpaperCacheIndex + 64)
+        for (let i = root._wallpaperCacheIndex; i < batchEnd; i++) {
+            const path = folderModel.get(i, "filePath") || FileUtils.trimFileProtocol(folderModel.get(i, "fileURL"))
+            if (path && path.length)
+                nextBatch.push(path)
+        }
+        root.wallpapers = nextBatch
+        root._wallpaperCacheIndex = batchEnd
+        if (root._wallpaperCacheIndex < folderModel.count)
+            wallpaperCacheTimer.restart()
+    }
+
+    function currentMainWallpaperPath(monitorName = ""): string {
+        const targetMonitor = monitorName || (WallpaperListener.multiMonitorEnabled ? WallpaperListener.getFocusedMonitor() : "")
+        if (WallpaperListener.multiMonitorEnabled && targetMonitor) {
+            const data = WallpaperListener.effectivePerMonitor[targetMonitor] ?? null
+            if (data && data.path)
+                return data.path
+        }
+        return Config.options?.background?.wallpaperPath ?? ""
+    }
+
+    function currentWallpaperPathForTarget(target = "main", monitorName = ""): string {
+        const normalizedTarget = target && target.length > 0 ? target : "main"
+        const mainPath = currentMainWallpaperPath(monitorName)
+
+        switch (normalizedTarget) {
+        case "backdrop": {
+            const iiBackdrop = Config.options?.background?.backdrop ?? {}
+            const useMainWallpaper = iiBackdrop.useMainWallpaper ?? true
+            if (useMainWallpaper)
+                return mainPath
+            if (WallpaperListener.multiMonitorEnabled && monitorName) {
+                const monitorData = WallpaperListener.effectivePerMonitor[monitorName] ?? null
+                if (monitorData && monitorData.backdropPath)
+                    return monitorData.backdropPath
+            }
+            return iiBackdrop.wallpaperPath || mainPath
+        }
+        case "waffle": {
+            const waffleBackground = Config.options?.waffles?.background ?? {}
+            return (waffleBackground.useMainWallpaper ?? true) ? mainPath : (waffleBackground.wallpaperPath || mainPath)
+        }
+        case "waffle-backdrop": {
+            const waffleBackdrop = Config.options?.waffles?.background?.backdrop ?? {}
+            const waffleBackground = Config.options?.waffles?.background ?? {}
+            const waffleMain = (waffleBackground.useMainWallpaper ?? true) ? mainPath : (waffleBackground.wallpaperPath || mainPath)
+            return (waffleBackdrop.useMainWallpaper ?? true) ? waffleMain : (waffleBackdrop.wallpaperPath || waffleMain)
+        }
+        default:
+            return mainPath
+        }
+    }
+
+    function isCurrentWallpaperPath(path: string, target = "main", monitorName = ""): bool {
+        const currentPath = FileUtils.trimFileProtocol(String(currentWallpaperPathForTarget(target, monitorName) ?? ""))
+        const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
+        return currentPath.length > 0 && currentPath === normalizedPath
+    }
+
+    function _applyRequestKey(path: string, darkMode: bool, noSwitch: bool): string {
+        return [noSwitch ? "noswitch" : "switch", FileUtils.trimFileProtocol(String(path ?? "")), darkMode ? "dark" : "light"].join("|")
+    }
+
+    function _runWallpaperScript(path: string, darkMode: bool, noSwitch: bool): void {
+        const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0)
+            return
+
+        root._applyInProgress = true
+        _applySuppressTimer.restart()
+        applyProc.activeRequestKey = root._applyRequestKey(normalizedPath, darkMode, noSwitch)
+        const command = [
+            Directories.wallpaperSwitchScriptPath,
+            "--image", normalizedPath,
+            "--mode", (darkMode ? "dark" : "light"),
+            "--skip-config-write"
+        ]
+        if (noSwitch)
+            command.splice(command.length - 1, 0, "--noswitch")
+        applyProc.exec(command)
+    }
+
+    function _queueWallpaperScript(path: string, darkMode: bool, noSwitch: bool): void {
+        const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0)
+            return
+
+        const requestKey = root._applyRequestKey(normalizedPath, darkMode, noSwitch)
+        if (applyProc.running) {
+            if (applyProc.activeRequestKey === requestKey || applyProc.pendingRequestKey === requestKey)
+                return
+
+            root._queuedApplyPath = normalizedPath
+            root._queuedApplyDarkMode = darkMode
+            root._queuedApplyNoSwitch = noSwitch
+            applyProc.pendingRequestKey = requestKey
+            root._applyInProgress = true
+            _applySuppressTimer.restart()
+            return
+        }
+
+        root._queuedApplyPath = ""
+        applyProc.pendingRequestKey = ""
+        root._runWallpaperScript(normalizedPath, darkMode, noSwitch)
+    }
+
+    Process {
+        id: applyProc
+        property string activeRequestKey: ""
+        property string pendingRequestKey: ""
+
+        onExited: {
+            const nextKey = pendingRequestKey
+            const nextPath = root._queuedApplyPath
+            const nextDarkMode = root._queuedApplyDarkMode
+            const nextNoSwitch = root._queuedApplyNoSwitch
+
+            activeRequestKey = ""
+            pendingRequestKey = ""
+            root._queuedApplyPath = ""
+
+            if (nextKey !== "" && nextPath !== "") {
+                root._runWallpaperScript(nextPath, nextDarkMode, nextNoSwitch)
+                return
+            }
+
+            root._applyInProgress = false
+        }
+    }
+
+    // Clears _applyInProgress after switchwall.sh has had time to start.
+    // 3 seconds is enough for the script to begin; ThemeService debounce is 260ms.
+    Timer {
+        id: _applySuppressTimer
+        interval: 3000
+        onTriggered: {
+            if (!applyProc.running && applyProc.pendingRequestKey === "")
+                root._applyInProgress = false
+        }
+    }
+
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode) {
         applyProc.exec([Directories.wallpaperSwitchScriptPath, "--mode", (darkMode ? "dark" : "light")])
     }
 
+    function applySelectionTarget(path, target = "main", darkMode = Appearance.m3colors.darkmode, monitorName = "") {
+        const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0) return
+
+        const normalizedTarget = target && target.length > 0 ? target : "main"
+        const lowerPath = normalizedPath.toLowerCase()
+        const isVideo = lowerPath.endsWith(".mp4") || lowerPath.endsWith(".webm") || lowerPath.endsWith(".mkv")
+            || lowerPath.endsWith(".avi") || lowerPath.endsWith(".mov")
+        const isGif = lowerPath.endsWith(".gif")
+        const needsThumbnail = isVideo || isGif
+        const thumbnailPath = needsThumbnail ? root.getExpectedThumbnailPath(normalizedPath, "large") : ""
+
+        switch (normalizedTarget) {
+        case "backdrop":
+            Config.setNestedValue("background.backdrop.useMainWallpaper", false)
+            Config.setNestedValue("background.backdrop.wallpaperPath", normalizedPath)
+            Config.setNestedValue("background.backdrop.thumbnailPath", thumbnailPath)
+            if (needsThumbnail)
+                root.ensureThumbnailForPath(normalizedPath, "large")
+            if (Config.options?.appearance?.wallpaperTheming?.useBackdropForColors)
+                Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch"])
+            root.changed()
+            return
+        case "waffle":
+            Config.setNestedValue("waffles.background.useMainWallpaper", false)
+            Config.setNestedValue("waffles.background.wallpaperPath", normalizedPath)
+            Config.setNestedValue("waffles.background.thumbnailPath", thumbnailPath)
+            if (needsThumbnail)
+                root.ensureThumbnailForPath(normalizedPath, "large")
+            root.changed()
+            return
+        case "waffle-backdrop":
+            Config.setNestedValue("waffles.background.backdrop.useMainWallpaper", false)
+            Config.setNestedValue("waffles.background.backdrop.wallpaperPath", normalizedPath)
+            Config.setNestedValue("waffles.background.backdrop.thumbnailPath", thumbnailPath)
+            if (needsThumbnail)
+                root.ensureThumbnailForPath(normalizedPath, "large")
+            root.changed()
+            return
+        default:
+            root.select(normalizedPath, darkMode, monitorName)
+            return
+        }
+    }
+
     function apply(path, darkMode = Appearance.m3colors.darkmode, monitorName = "") {
-        if (!path || path.length === 0) return
+        const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0) return
 
         if (monitorName !== "") {
             // Per-monitor: update config directly in QML to avoid race condition
             // (switchwall.sh and QML both write config.json — the 50ms write timer causes data loss)
-            updatePerMonitorConfig(path, monitorName)
+            updatePerMonitorConfig(normalizedPath, monitorName)
             root.changed()
             return
         }
 
-        // Global wallpaper: use switchwall.sh for color generation + system theming
-        // Kill any previous switchwall process to prevent race conditions
-        // (old process finishing after new one would overwrite colors)
-        if (applyProc.running) applyProc.kill()
-        applyProc.exec([
-            Directories.wallpaperSwitchScriptPath,
-            "--image", path,
-            "--mode", (darkMode ? "dark" : "light")
-        ])
+        // Suppress ThemeService duplicate regeneration while switchwall.sh runs
+        root._applyInProgress = true
+        _applySuppressTimer.restart()
+
+        if (root.awwwBackendEnabled && AwwwBackend.supportsMainWallpaper(normalizedPath)) {
+            Config.setNestedValue("background.wallpaperPath", normalizedPath)
+            Config.setNestedValue("background.thumbnailPath", "")
+            root._queueWallpaperScript(normalizedPath, darkMode, false)
+            root.changed()
+            return
+        }
+
+        // Always set wallpaper path from QML to avoid race condition with Config write timer
+        Config.setNestedValue("background.wallpaperPath", normalizedPath)
+        Config.setNestedValue("background.thumbnailPath", "")
+        root._queueWallpaperScript(normalizedPath, darkMode, false)
         root.changed()
+    }
+
+    // Apply only the color scheme from an image without changing the active wallpaper
+    function applyColorsOnly(imagePath, darkMode = Appearance.m3colors.darkmode) {
+        const normalizedPath = FileUtils.trimFileProtocol(String(imagePath ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0) return
+
+        Config.setNestedValue("appearance.wallpaperTheming.previewSourcePath", normalizedPath)
+
+        root._applyInProgress = true
+        _applySuppressTimer.restart()
+
+        root._queueWallpaperScript(normalizedPath, darkMode, true)
     }
 
     function updatePerMonitorConfig(path: string, monitorName: string) {
         const currentArray = Config.options?.background?.wallpapersByMonitor ?? []
         const newArray = []
+        let currentEntry = null
         for (const entry of currentArray) {
-            if (entry && entry.monitor !== monitorName) {
+            if (entry && entry.monitor === monitorName) {
+                currentEntry = entry
+            } else if (entry) {
                 newArray.push(entry)
             }
         }
@@ -292,12 +527,12 @@ Singleton {
             if (range) { wsFirst = range.first; wsLast = range.last }
         }
 
-        newArray.push({
+        newArray.push(Object.assign({}, currentEntry ?? {}, {
             monitor: monitorName,
             path: path,
             workspaceFirst: wsFirst,
             workspaceLast: wsLast
-        })
+        }))
 
         Config.setNestedValue("background.wallpapersByMonitor", newArray)
     }
@@ -338,10 +573,12 @@ Singleton {
         property string filePath: ""
         property bool darkMode: Appearance.m3colors.darkmode
         property string monitorName: ""
-        function select(filePath, darkMode = Appearance.m3colors.darkmode, monitorName = "") {
+        property string target: ""
+        function select(filePath, darkMode = Appearance.m3colors.darkmode, monitorName = "", target = "") {
             selectProc.filePath = filePath
             selectProc.darkMode = darkMode
             selectProc.monitorName = monitorName
+            selectProc.target = target
             selectProc.exec(["test", "-d", FileUtils.trimFileProtocol(filePath)])
         }
         onExited: (exitCode, exitStatus) => {
@@ -349,19 +586,48 @@ Singleton {
                 setDirectory(selectProc.filePath)
                 return
             }
+            const target = root.resolveSelectionTarget(selectProc.target, selectProc.monitorName)
+            if (target !== "main") {
+                root.applySelectionTarget(selectProc.filePath, target, selectProc.darkMode, selectProc.monitorName)
+                return
+            }
             root.apply(selectProc.filePath, selectProc.darkMode, selectProc.monitorName)
         }
     }
 
-    function select(filePath, darkMode = Appearance.m3colors.darkmode, monitorName = "") {
-        selectProc.select(filePath, darkMode, monitorName)
+    function resolveSelectionTarget(target = "", monitorName = ""): string {
+        const normalizedTarget = String(target ?? "")
+        if (normalizedTarget.length > 0)
+            return normalizedTarget
+        if (monitorName && monitorName.length > 0)
+            return "main"
+        return currentSelectionTarget()
     }
 
-    function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode, monitorName = "") {
+    function currentSelectionTarget(): string {
+        const configTarget = Config.options?.wallpaperSelector?.selectionTarget ?? "main"
+        if (configTarget && configTarget !== "main")
+            return configTarget
+
+        const globalTarget = GlobalStates.wallpaperSelectionTarget ?? "main"
+        if (globalTarget && globalTarget !== "main")
+            return globalTarget
+
+        if ((Config.options?.panelFamily ?? "ii") === "waffle")
+            return (Config.options?.waffles?.background?.useMainWallpaper ?? true) ? "main" : "waffle"
+
+        return "main"
+    }
+
+    function select(filePath, darkMode = Appearance.m3colors.darkmode, monitorName = "", target = "") {
+        selectProc.select(filePath, darkMode, monitorName, target)
+    }
+
+    function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode, monitorName = "", target = "") {
         if (folderModel.count === 0) return
         const randomIndex = Math.floor(Math.random() * folderModel.count)
         const filePath = folderModel.get(randomIndex, "filePath")
-        root.select(filePath, darkMode, monitorName)
+        root.select(filePath, darkMode, monitorName, target)
     }
 
     // Detect workspace range for a monitor (Niri-specific)
@@ -431,118 +697,89 @@ Singleton {
         folder: Qt.resolvedUrl(root.defaultFolder)
         caseSensitive: false
         nameFilters: {
-            const currentDir = FileUtils.trimFileProtocol(folderModel.folder.toString()).replace(/\/+$/, "")
-            const exts = root._activeExtensions
             const query = root.searchQuery.trim().toLowerCase()
-            const hasColorFilter = root.colorFilter.length > 0
-            const hasFavFilter = root.showFavoritesOnly
-
-            // If we need path-level filtering (favorites or color), build explicit filename list
-            if (hasFavFilter || hasColorFilter) {
-                // Start with all files we know about
-                let candidates = []
-
-                if (hasFavFilter) {
-                    // Only favorited files in this directory
-                    candidates = Object.keys(root.favoritePaths)
-                        .filter(p => p.substring(0, p.lastIndexOf("/")) === currentDir)
-                } else {
-                    // All files in this directory (from color cache or extension match)
-                    // For color filter, we need the cache entries for this dir
-                    candidates = Object.keys(root.colorCache)
-                        .filter(p => p.substring(0, p.lastIndexOf("/")) === currentDir)
-                }
-
-                // Apply color filter
-                if (hasColorFilter) {
-                    candidates = candidates.filter(p => {
-                        const entry = root.colorCache[p]
-                        return entry && entry.bucket === root.colorFilter
-                    })
-                }
-
-                // Apply favorites filter (if both active)
-                if (hasFavFilter && hasColorFilter) {
-                    candidates = candidates.filter(p => root.favoritePaths[p])
-                }
-
-                // Extract filenames and apply type + search filters (including tag match)
-                const names = candidates
-                    .filter(p => {
-                        const name = p.substring(p.lastIndexOf("/") + 1)
-                        const ext = name.substring(name.lastIndexOf(".") + 1).toLowerCase()
-                        if (!exts.includes(ext)) return false
-                        if (query.length > 0) {
-                            const nameMatch = name.toLowerCase().includes(query)
-                            const tags = root.tagCache[p] ?? []
-                            const tagMatch = tags.some(t => t.includes(query))
-                            if (!nameMatch && !tagMatch) return false
-                        }
-                        return true
-                    })
-                    .map(p => p.substring(p.lastIndexOf("/") + 1))
-
-                return names.length > 0 ? names : ["__NO_MATCH__"]
-            }
-
-            // Standard filtering (no favorites or color filter)
-            const hasTagCache = Object.keys(root.tagCache).length > 0
-
             // Check if query is an extension filter (e.g., ".gif", ".mp4")
             if (query.startsWith(".")) {
                 const ext = query.slice(1)
-                if (exts.includes(ext)) return [`*.${ext}`]
+                if (root.extensions.includes(ext)) return [`*.${ext}`]
             }
-
-            // If there's a search query and we have tags, do tag-aware filtering
-            if (query.length > 0 && hasTagCache) {
-                // Find files in current directory matching by tag
-                const tagMatchFiles = Object.keys(root.tagCache)
-                    .filter(p => {
-                        if (p.substring(0, p.lastIndexOf("/")) !== currentDir) return false
-                        const tags = root.tagCache[p]
-                        return tags && tags.some(t => t.includes(query))
-                    })
-                    .map(p => p.substring(p.lastIndexOf("/") + 1))
-                    .filter(name => {
-                        const ext = name.substring(name.lastIndexOf(".") + 1).toLowerCase()
-                        return exts.includes(ext)
-                    })
-
-                // Combine with filename glob matches
-                const searchParts = query.split(" ").filter(s => s.length > 0).map(s => `*${s}*`).join("")
-                const globPatterns = exts.map(ext => `*${searchParts}*.${ext}`)
-                // Merge: glob patterns for filename match + explicit names for tag match
-                return [...globPatterns, ...tagMatchFiles]
-            }
-
-            // Normal search: apply query to active extensions (filtered by type)
+            // Normal search: apply query to all extensions
             const searchParts = query.split(" ").filter(s => s.length > 0).map(s => `*${s}*`).join("")
-            return exts.map(ext => `*${searchParts}*.${ext}`)
+            return root.extensions.map(ext => `*${searchParts}*.${ext}`)
         }
         showDirs: true
         showDotAndDotDot: false
         showOnlyReadable: true
         sortField: FolderListModel.Time
         sortReversed: false
-        onCountChanged: {
-            root.wallpapers = []
-            for (let i = 0; i < folderModel.count; i++) {
-                const path = folderModel.get(i, "filePath") || FileUtils.trimFileProtocol(folderModel.get(i, "fileURL"))
-                if (path && path.length) root.wallpapers.push(path)
-            }
-        }
+        onCountChanged: root.rebuildWallpapersCache()
         onFolderChanged: root.folderChanged()
+    }
+
+    Timer {
+        id: wallpaperCacheTimer
+        interval: 0
+        repeat: false
+        onTriggered: root.appendWallpapersCacheBatch()
     }
 
     property string _pendingThumbnailSize: ""
     property string _pendingThumbnailDir: ""
+    property var _singleThumbPending: ({})
+    property var _singleThumbQueue: []
     
     function generateThumbnail(size: string) {
         if (!["normal", "large", "x-large", "xx-large"].includes(size)) throw new Error("Invalid thumbnail size")
         root._pendingThumbnailSize = size
         root._pendingThumbnailDir = FileUtils.trimFileProtocol(root.directory)
         thumbgenDebounce.restart()
+    }
+
+    function ensureThumbnailForPath(filePath: string, size = "large") {
+        const normalizedPath = FileUtils.trimFileProtocol(String(filePath ?? ""))
+        if (!normalizedPath || normalizedPath.length === 0) return
+        if (!["normal", "large", "x-large", "xx-large"].includes(size)) return
+
+        const outputPath = root.getExpectedThumbnailPath(normalizedPath, size)
+        if (!outputPath || outputPath.length === 0) return
+
+        const key = `${size}:${normalizedPath}`
+        if (root._singleThumbPending[key]) return
+
+        const pending = Object.assign({}, root._singleThumbPending)
+        pending[key] = true
+        root._singleThumbPending = pending
+        root._singleThumbQueue.push({ key: key, filePath: normalizedPath, size: size, outputPath: outputPath })
+
+        if (!_singleThumbProc.running)
+            _processNextSingleThumb()
+    }
+
+    function _processNextSingleThumb() {
+        if (root._singleThumbQueue.length === 0) return
+
+        const item = root._singleThumbQueue.shift()
+        const maxSize = Images.thumbnailSizes[item.size] ?? 256
+        const outputDir = FileUtils.parentDirectory(item.outputPath)
+        const commandBody = root.isVideoFile(item.filePath)
+            ? "mkdir -p " + JSON.stringify(outputDir)
+                + " && [ -f " + JSON.stringify(item.outputPath) + " ] && exit 0 || { ffmpeg -y -i " + JSON.stringify(item.filePath)
+                + " -vframes 1 -vf " + JSON.stringify(`scale='min(${maxSize},iw)':'min(${maxSize},ih)':force_original_aspect_ratio=decrease`)
+                + " " + JSON.stringify(item.outputPath) + " >/dev/null 2>&1 && exit 1; }"
+            : "mkdir -p " + JSON.stringify(outputDir)
+                + " && [ -f " + JSON.stringify(item.outputPath) + " ] && exit 0 || { magick " + JSON.stringify(item.filePath + "[0]")
+                + " -resize " + `${maxSize}x${maxSize}` + " " + JSON.stringify(item.outputPath) + " >/dev/null 2>&1 && exit 1; }"
+
+        _singleThumbProc._key = item.key
+        _singleThumbProc._filePath = item.filePath
+        _singleThumbProc.command = ["bash", "-c", commandBody]
+        _singleThumbProc.running = true
+    }
+
+    function _finishSingleThumb(key: string) {
+        const pending = Object.assign({}, root._singleThumbPending)
+        delete pending[key]
+        root._singleThumbPending = pending
     }
     
     Timer {
@@ -563,7 +800,8 @@ Singleton {
         property string directory
         property string _size: ""
         environment: ({
-            "ILLOGICAL_IMPULSE_VIRTUAL_ENV": Quickshell.env("HOME") + "/.local/state/quickshell/.venv"
+            "INIR_VENV": Quickshell.env("INIR_VENV") || Quickshell.env("HOME") + "/.local/state/quickshell/.venv",
+            "ILLOGICAL_IMPULSE_VIRTUAL_ENV": Quickshell.env("INIR_VENV") || Quickshell.env("HOME") + "/.local/state/quickshell/.venv"
         })
         stdout: SplitParser {
             onRead: data => {
@@ -586,6 +824,18 @@ Singleton {
     Process {
         id: thumbgenFallbackProc
         onExited: root.thumbnailGenerated(thumbgenProc.directory)
+    }
+
+    Process {
+        id: _singleThumbProc
+        property string _key: ""
+        property string _filePath: ""
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 1)
+                root.thumbnailGeneratedFile(_singleThumbProc._filePath)
+            root._finishSingleThumb(_singleThumbProc._key)
+            root._processNextSingleThumb()
+        }
     }
 
     // ── Auto wallpaper cycling ──────────────────────────────────────────

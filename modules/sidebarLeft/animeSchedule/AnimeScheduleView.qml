@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import org.kde.kirigami as Kirigami
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -160,6 +161,7 @@ Item {
             
             ButtonGroup {
                 id: dayGroup
+                anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 2
                 property int clickIndex: -1
                 
@@ -319,21 +321,37 @@ Item {
             }
             
             // Error message
-            PagePlaceholder {
+            MaterialPlaceholderMessage {
+                anchors.centerIn: parent
                 shown: AnimeService.lastError.length > 0 && root.getCurrentData().length === 0
+                maximumWidth: 360
                 icon: "error"
-                title: Translation.tr("Error")
-                description: AnimeService.lastError
+                actionIcon: "refresh"
+                text: Translation.tr("Error")
+                explanation: AnimeService.lastError
                 shape: MaterialShape.Shape.Diamond
+                helpfulAction: Kirigami.Action {
+                    icon.name: "refresh"
+                    text: Translation.tr("Retry")
+                    onTriggered: root.refreshCurrentTab()
+                }
             }
             
             // Empty state
-            PagePlaceholder {
+            MaterialPlaceholderMessage {
+                anchors.centerIn: parent
                 shown: !AnimeService.loading && AnimeService.lastError.length === 0 && root.getCurrentData().length === 0
+                maximumWidth: 360
                 icon: "calendar_month"
-                title: Translation.tr("No anime found")
-                description: Translation.tr("Try a different day or refresh")
+                actionIcon: "refresh"
+                text: Translation.tr("No anime found")
+                explanation: Translation.tr("Try a different day or refresh")
                 shape: MaterialShape.Shape.Clover4Leaf
+                helpfulAction: Kirigami.Action {
+                    icon.name: "refresh"
+                    text: Translation.tr("Refresh")
+                    onTriggered: root.refreshCurrentTab()
+                }
             }
             
             // Anime list scroll fade - softer and rounded

@@ -26,6 +26,16 @@ Item {
         return Translation.tr("Good Evening")
     }
 
+    function openAccountSettings(): void {
+        AppLauncher.launch("manageUser")
+        GlobalStates.controlPanelOpen = false
+    }
+
+    function lockScreen(): void {
+        GlobalStates.controlPanelOpen = false
+        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "lock", "activate"])
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 12
@@ -64,7 +74,7 @@ Item {
                 Image {
                     id: avatarImg
                     anchors.fill: parent
-                    source: `file://${Directories.userAvatarPathRicersAndWeirdSystems}`
+                    source: profileAvatarResolver.resolvedSource
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
@@ -72,20 +82,30 @@ Item {
                     mipmap: true
                     sourceSize.width: 84
                     sourceSize.height: 84
-                    visible: false
-                    
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            source = `file://${Directories.userAvatarPathAccountsService}`
-                        }
+                    visible: status === Image.Ready
+                    layer.enabled: visible
+                    layer.effect: GE.OpacityMask {
+                        maskSource: avatarMask
                     }
                 }
 
-                GE.OpacityMask {
-                    anchors.fill: parent
-                    source: avatarImg
-                    maskSource: avatarMask
-                    visible: avatarImg.status === Image.Ready
+                // Reactive avatar resolver — retries fallback paths without breaking bindings
+                QtObject {
+                    id: profileAvatarResolver
+                    property int avatarIndex: 0
+                    readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
+
+                    readonly property string primaryWatch: Directories.userAvatarSourcePrimary
+                    onPrimaryWatchChanged: avatarIndex = 0
+
+                    readonly property int imgStatus: avatarImg.status
+                    onImgStatusChanged: {
+                        if (imgStatus === Image.Error) {
+                            const nextIdx = avatarIndex + 1
+                            if (nextIdx < Directories.userAvatarPaths.length)
+                                avatarIndex = nextIdx
+                        }
+                    }
                 }
                 
                 // Fallback
@@ -123,7 +143,7 @@ Item {
                      : Appearance.colors.colSubtext
             }
             StyledText {
-                text: SystemInfo.username
+                text: SystemInfo.displayName || SystemInfo.username
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.Medium
                 font.capitalization: Font.Capitalize
@@ -150,10 +170,7 @@ Item {
                                   : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
                                   : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
                                   : Appearance.colors.colLayer2Hover
-                onClicked: {
-                    GlobalStates.controlPanelOpen = false
-                    lockProc.running = true
-                }
+                onClicked: root.lockScreen()
                 contentItem: MaterialSymbol { 
                     anchors.centerIn: parent
                     text: "lock"
@@ -165,7 +182,30 @@ Item {
                 }
                 StyledToolTip { text: Translation.tr("Lock") }
             }
-            
+
+            RippleButton {
+                implicitWidth: 32
+                implicitHeight: 32
+                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                  : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
+                                  : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
+                                  : Appearance.colors.colLayer2Hover
+                onClicked: root.openAccountSettings()
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "manage_accounts"
+                    iconSize: 18
+                    color: Appearance.angelEverywhere ? Appearance.angel.colText
+                         : root.inirEverywhere ? Appearance.inir.colText
+                         : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
+                         : Appearance.colors.colOnLayer0
+                }
+                StyledToolTip { text: Translation.tr("Manage my account") }
+            }
+
             RippleButton {
                 implicitWidth: 32
                 implicitHeight: 32
@@ -216,8 +256,4 @@ Item {
         }
     }
 
-    Process {
-        id: lockProc
-        command: ["/usr/bin/qs", "-c", "ii", "ipc", "call", "lock", "activate"]
-    }
 }

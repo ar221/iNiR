@@ -27,11 +27,11 @@ Item {
     // Highlight animation for search focus
     Behavior on opacity {
         enabled: Looks.transition?.opacity !== undefined
-        animation: Looks.transition.opacity.createObject(this)
+        animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.normal : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
     }
     Behavior on scale {
         enabled: Looks.transition?.resize !== undefined
-        animation: Looks.transition.resize.createObject(this)
+        animation: NumberAnimation { duration: Looks.transition.enabled ? Looks.transition.duration.medium : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
     }
     
     function focusFromSettingsSearch(): void {
@@ -137,7 +137,7 @@ Item {
                         anchors.centerIn: parent
                         text: root.keySubstitutions[modelData] ?? modelData
                         font.pixelSize: Looks.font.pixelSize.small
-                        font.family: Looks.font.family.mono
+                        font.family: Looks.font.family.monospace
                     }
                 }
             }
@@ -164,7 +164,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.keySubstitutions[root.keyName] ?? root.keyName
                     font.pixelSize: Looks.font.pixelSize.small
-                    font.family: Looks.font.family.mono
+                    font.family: Looks.font.family.monospace
                 }
             }
         }

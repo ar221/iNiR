@@ -6,11 +6,12 @@
 
 SNAPSHOTS_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/snapshots"
 MAX_SNAPSHOTS=10
+INIR_CONFIG_DIR="${DOTS_CORE_CONFDIR:-${XDG_CONFIG_HOME}/illogical-impulse}"
 
 # Paths to snapshot
 SNAPSHOT_PATHS=(
-    "${XDG_CONFIG_HOME}/quickshell/ii"
-    "${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+    "${XDG_CONFIG_HOME}/quickshell/inir"
+    "${INIR_CONFIG_DIR}/config.json"
     "${XDG_CONFIG_HOME}/niri/config.kdl"
 )
 
@@ -31,13 +32,17 @@ create_snapshot() {
     mkdir -p "$snapshot_dir"
     
     # Copy QML code
+    if [[ -d "${XDG_CONFIG_HOME}/quickshell/inir" ]]; then
+        rsync -a --exclude='.inir-manifest' "${XDG_CONFIG_HOME}/quickshell/inir/" "${snapshot_dir}/inir/"
+    fi
+
     if [[ -d "${XDG_CONFIG_HOME}/quickshell/ii" ]]; then
         rsync -a --exclude='.ii-manifest' "${XDG_CONFIG_HOME}/quickshell/ii/" "${snapshot_dir}/ii/"
     fi
     
     # Copy user config
-    if [[ -f "${XDG_CONFIG_HOME}/illogical-impulse/config.json" ]]; then
-        cp "${XDG_CONFIG_HOME}/illogical-impulse/config.json" "${snapshot_dir}/"
+    if [[ -f "${INIR_CONFIG_DIR}/config.json" ]]; then
+        cp "${INIR_CONFIG_DIR}/config.json" "${snapshot_dir}/"
     fi
     
     # Copy niri config
@@ -46,8 +51,8 @@ create_snapshot() {
     fi
     
     # Copy migrations state
-    if [[ -f "${XDG_CONFIG_HOME}/illogical-impulse/migrations.json" ]]; then
-        cp "${XDG_CONFIG_HOME}/illogical-impulse/migrations.json" "${snapshot_dir}/"
+    if [[ -f "${INIR_CONFIG_DIR}/migrations.json" ]]; then
+        cp "${INIR_CONFIG_DIR}/migrations.json" "${snapshot_dir}/"
     fi
     
     # Create metadata
@@ -116,6 +121,16 @@ show_snapshots() {
 restore_snapshot() {
     local snapshot_id="$1"
     local snapshot_dir="${SNAPSHOTS_DIR}/${snapshot_id}"
+    local installed_strategy
+    installed_strategy=$(get_installed_update_strategy)
+
+    if [[ "$installed_strategy" == "package-manager" ]]; then
+        log_error "Snapshot rollback is unavailable for package-managed installs"
+        local update_hint
+        update_hint=$(get_installed_package_update_hint)
+        [[ -n "$update_hint" ]] && tui_info "Use your package manager for shell payload changes: $update_hint"
+        return 1
+    fi
     
     if [[ ! -d "$snapshot_dir" ]]; then
         log_error "Snapshot not found: $snapshot_id"
@@ -131,18 +146,23 @@ restore_snapshot() {
     echo -e "${STY_CYAN}Restoring snapshot: ${snapshot_id}${STY_RST}"
     
     # Stop shell
-    qs kill -c ii &>/dev/null || true
+    local runtime_target="${XDG_CONFIG_HOME}/quickshell/inir"
+    qs -p "$runtime_target" kill &>/dev/null || true
     
     # Restore QML code
-    if [[ -d "${snapshot_dir}/ii" ]]; then
+    if [[ -d "${snapshot_dir}/inir" ]]; then
         log_info "Restoring QML code..."
-        rsync -a --delete "${snapshot_dir}/ii/" "${XDG_CONFIG_HOME}/quickshell/ii/"
+        rsync -a --delete "${snapshot_dir}/inir/" "${XDG_CONFIG_HOME}/quickshell/inir/"
+    elif [[ -d "${snapshot_dir}/ii" ]]; then
+        log_info "Restoring QML code..."
+        rsync -a --delete "${snapshot_dir}/ii/" "${XDG_CONFIG_HOME}/quickshell/inir/"
     fi
     
     # Restore user config
     if [[ -f "${snapshot_dir}/config.json" ]]; then
         log_info "Restoring user config..."
-        cp "${snapshot_dir}/config.json" "${XDG_CONFIG_HOME}/illogical-impulse/"
+        mkdir -p "${INIR_CONFIG_DIR}"
+        cp "${snapshot_dir}/config.json" "${INIR_CONFIG_DIR}/"
     fi
     
     # Restore niri config
@@ -153,7 +173,8 @@ restore_snapshot() {
     
     # Restore migrations state
     if [[ -f "${snapshot_dir}/migrations.json" ]]; then
-        cp "${snapshot_dir}/migrations.json" "${XDG_CONFIG_HOME}/illogical-impulse/"
+        mkdir -p "${INIR_CONFIG_DIR}"
+        cp "${snapshot_dir}/migrations.json" "${INIR_CONFIG_DIR}/"
     fi
     
     # Checkout git to that commit (stay on branch if possible)
@@ -176,12 +197,12 @@ restore_snapshot() {
     # Restart shell (only if we have access to the session)
     if [[ -n "$NIRI_SOCKET" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
         log_info "Starting shell..."
-        nohup qs -c ii >/dev/null 2>&1 &
+        nohup qs -p "$runtime_target" >/dev/null 2>&1 &
         disown
         tui_success "Snapshot restored and shell restarted"
     else
         tui_warn "Not in graphical session - shell restart skipped"
-        tui_info "Run: qs -c ii (in your Niri session)"
+        tui_info "Run: inir start (in your Niri session)"
         tui_success "Snapshot restored"
     fi
 }
@@ -190,6 +211,18 @@ restore_snapshot() {
 # Interactive rollback
 ###############################################################################
 run_rollback() {
+    local installed_strategy
+    installed_strategy=$(get_installed_update_strategy)
+
+    if [[ "$installed_strategy" == "package-manager" ]]; then
+        echo ""
+        tui_warn "Rollback snapshots are only available for repo-managed update flows"
+        local update_hint
+        update_hint=$(get_installed_package_update_hint)
+        [[ -n "$update_hint" ]] && tui_info "Use your package manager for shell payload changes: $update_hint"
+        return 1
+    fi
+
     local snapshots=($(list_snapshots))
     
     if [[ ${#snapshots[@]} -eq 0 ]]; then
@@ -286,12 +319,15 @@ cleanup_old_snapshots() {
 # Check remote for updates
 ###############################################################################
 check_remote_updates() {
+    # Returns: 0 = updates available, 1 = no updates, 2 = error (offline/no git)
     if [[ ! -d "${REPO_ROOT}/.git" ]]; then
-        return 1
+        return 2
     fi
     
-    # Fetch silently
-    git -C "$REPO_ROOT" fetch origin --quiet 2>/dev/null || return 1
+    # Fetch silently — distinguish network failure from no-updates
+    if ! git -C "$REPO_ROOT" fetch origin --quiet 2>/dev/null; then
+        return 2
+    fi
     
     local branch=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ -z "$branch" || "$branch" == "HEAD" ]] && branch="main"

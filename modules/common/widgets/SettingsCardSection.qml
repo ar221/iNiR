@@ -12,7 +12,7 @@ Item {
     property bool expanded: true
     property bool collapsible: true
     property int animationDuration: Appearance.animation.elementMove.duration
-    default property alias data: sectionContent.data
+    default property alias contentData: sectionContent.data
 
     property bool enableSettingsSearch: true
     property int settingsSearchOptionId: -1
@@ -71,14 +71,18 @@ Item {
         }
     }
 
-    // Shadow — standard for material, escalonado for angel
-    Loader {
-        active: !Appearance.angelEverywhere
-        anchors.fill: card
-        sourceComponent: StyledRectangularShadow {
-            anchors.fill: undefined
-            target: card
-        }
+    // Shadow — lightweight offset for material/aurora, escalonado for angel
+    // Material/aurora: simple offset rectangle instead of GPU-blurred RectangularShadow
+    // for much better performance (especially with many cards visible at once).
+    Rectangle {
+        visible: !Appearance.angelEverywhere && Appearance.effectsEnabled
+        x: card.x + 0.5
+        y: card.y + 1.5
+        width: card.width
+        height: card.height
+        radius: card.radius
+        color: Appearance.colors.colShadow
+        z: -1
     }
     Loader {
         active: Appearance.angelEverywhere
@@ -88,7 +92,7 @@ Item {
         }
     }
 
-    // Subtle left accent bar when expanded (non-angel)
+    // Subtle left accent bar when expanded
     Rectangle {
         id: accentBar
         visible: !Appearance.angelEverywhere
@@ -102,12 +106,12 @@ Item {
         }
         width: 2
         radius: 1
-        color: Appearance.m3colors.m3primary
+        color: SettingsMaterialPreset.accentColor
         opacity: root.expanded ? 0.6 : 0
         z: 1
 
         Behavior on opacity {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
     }
 
@@ -118,7 +122,9 @@ Item {
         implicitHeight: cardColumn.implicitHeight + SettingsMaterialPreset.cardPadding * 2
         radius: SettingsMaterialPreset.cardRadius
         color: SettingsMaterialPreset.cardColor
-        border.width: Appearance.angelEverywhere ? 0 : 1
+        border.width: Appearance.angelEverywhere ? 0
+                     : (Appearance.inirEverywhere ? 1
+                     : (Appearance.auroraEverywhere ? 1 : 1))
         border.color: Appearance.angelEverywhere ? "transparent" : SettingsMaterialPreset.cardBorderColor
 
         // Angel partial border
@@ -143,11 +149,11 @@ Item {
                 implicitHeight: headerRow.implicitHeight + SettingsMaterialPreset.headerPaddingY * 2
                 radius: SettingsMaterialPreset.headerRadius
                 color: headerMouseArea.containsMouse && root.collapsible
-                    ? Appearance.colors.colLayer1Hover
+                    ? SettingsMaterialPreset.headerHoverColor
                     : "transparent"
 
                 Behavior on color {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 RowLayout {
@@ -164,8 +170,8 @@ Item {
                         Layout.alignment: Qt.AlignVCenter
 
                         readonly property color _iconColor: root.expanded
-                            ? Appearance.m3colors.m3primary
-                            : Appearance.colors.colOnSurfaceVariant
+                            ? SettingsMaterialPreset.iconExpandedColor
+                            : SettingsMaterialPreset.iconCollapsedColor
 
                         sourceComponent: MaterialSymbol {
                             text: root.icon
@@ -173,7 +179,7 @@ Item {
                             color: parent._iconColor
 
                             Behavior on color {
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
                     }
@@ -183,12 +189,12 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
                         color: root.expanded
-                            ? Appearance.colors.colOnSecondaryContainer
-                            : Appearance.colors.colOnSurfaceVariant
+                            ? SettingsMaterialPreset.titleExpandedColor
+                            : SettingsMaterialPreset.titleCollapsedColor
                         Layout.fillWidth: true
 
                         Behavior on color {
-                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                     }
 
@@ -196,7 +202,9 @@ Item {
                         visible: root.collapsible
                         text: root.expanded ? "expand_less" : "expand_more"
                         iconSize: Appearance.font.pixelSize.large
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.angelEverywhere
+                            ? Appearance.angel.colTextMuted
+                            : Appearance.colors.colSubtext
                         Behavior on text {
                             enabled: false
                         }
@@ -223,7 +231,7 @@ Item {
                 clip: true
 
                 Behavior on implicitHeight {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
 
                 ColumnLayout {
@@ -233,7 +241,7 @@ Item {
                     opacity: root.expanded ? 1 : 0
 
                     Behavior on opacity {
-                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                     }
                 }
             }

@@ -28,7 +28,6 @@ if [[ -n "${ONLY_MISSING_DEPS:-}" ]]; then
     [curl]="curl"
     [git]="git"
     [python3]="python"
-    [matugen]="matugen"
     [wlsunset]="wlsunset"
     [dunstify]="dunst"
     [fish]="fish"
@@ -190,8 +189,30 @@ for qs_conflict in quickshell-git quickshell-bin; do
 done
 
 #####################################################################################
-# Install official repo packages (NO COMPILATION NEEDED)
+# Pre-install: resolve Noctalia shell package conflicts (CachyOS)
+# CachyOS ships noctalia-qs / noctalia-shell / cachyos-niri-noctalia which own
+# overlapping Quickshell configs and compositor integration files.
 #####################################################################################
+for noctalia_pkg in noctalia-qs noctalia-shell cachyos-niri-noctalia; do
+  if pacman -Qi "$noctalia_pkg" &>/dev/null 2>&1; then
+    log_warning "$noctalia_pkg is installed and conflicts with iNiR"
+    if $ask; then
+      if tui_confirm "Remove $noctalia_pkg? (required for iNiR)"; then
+        log_info "Removing $noctalia_pkg..."
+        v pkg_sudo pacman -Rdd --noconfirm "$noctalia_pkg" 2>/dev/null \
+          || v pkg_sudo pacman -R --noconfirm "$noctalia_pkg" \
+          || log_warning "Could not remove $noctalia_pkg — install may fail"
+      else
+        log_warning "Keeping $noctalia_pkg — iNiR may not work correctly"
+      fi
+    else
+      log_info "Non-interactive: removing $noctalia_pkg"
+      pkg_sudo pacman -Rdd --noconfirm "$noctalia_pkg" 2>/dev/null \
+        || pkg_sudo pacman -R --noconfirm "$noctalia_pkg" 2>/dev/null \
+        || log_warning "Could not remove $noctalia_pkg — install may fail"
+    fi
+  fi
+done
 tui_info "Installing official repo packages..."
 
 # These packages are now in official Arch repos (extra) - NO AUR, NO COMPILATION!
@@ -210,9 +231,6 @@ OFFICIAL_PACKAGES=(
   gum
   starship
   xwayland-satellite
-  
-  # Theming
-  matugen
   
   # Emoji font (CRITICAL — overview search, notifications, etc.)
   noto-fonts-emoji
@@ -376,5 +394,103 @@ fi
 #####################################################################################
 showfun install-python-packages
 v install-python-packages
+
+#####################################################################################
+# Register dependencies with pacman via meta-package
+# This prevents "clean orphans" from removing iNiR's deps.
+# The meta-package contains no files — only dependency declarations.
+#####################################################################################
+tui_info "Registering dependencies with pacman..."
+
+_meta_dir="./sdata/dist-arch/inir-deps"
+if [[ -f "$_meta_dir/PKGBUILD" ]]; then
+  # Update pkgver from VERSION file
+  _inir_ver="$(cat ./VERSION 2>/dev/null || echo '2.17.4')"
+  sed -i "s/^pkgver=.*/pkgver=${_inir_ver}/" "$_meta_dir/PKGBUILD"
+
+  (
+    cd "$_meta_dir"
+    # -d: skip dependency checks during build (they're already installed)
+    # -f: force rebuild if .pkg.tar.zst already exists
+    # -C: clean build dir first
+    if makepkg -dfC 2>/dev/null; then
+      # Install the meta-package (overwrite if already installed)
+      local_pkg=(*.pkg.tar.zst)
+      if [[ -f "${local_pkg[0]}" ]]; then
+        if pkg_sudo pacman -U --noconfirm --needed "${local_pkg[0]}" 2>/dev/null; then
+          log_success "Meta-package inir-deps registered — orphan cleaner will skip iNiR deps"
+        else
+          # Some deps might be AUR-only and not satisfy pacman's check.
+          # Fall back to installing without dep verification.
+          pkg_sudo pacman -Udd --noconfirm "${local_pkg[0]}" 2>/dev/null && \
+            log_success "Meta-package inir-deps registered (forced)" || \
+            log_warning "Could not register meta-package — orphan protection unavailable"
+        fi
+        rm -f "${local_pkg[@]}" 2>/dev/null
+      fi
+    else
+      log_warning "Could not build meta-package — orphan protection unavailable"
+    fi
+  )
+else
+  log_warning "Meta-package PKGBUILD not found at $_meta_dir"
+fi
+unset _meta_dir _inir_ver
+
+#####################################################################################
+# Post-install: Check for Qt/Quickshell ABI mismatch
+# pacman -Syu may update Qt while quickshell-git/quickshell-bin (AUR) was built
+# against the old Qt. Quickshell uses Qt private APIs, so minor bumps break ABI.
+# See: https://github.com/snowarch/iNiR/issues/93
+#####################################################################################
+if command -v qs >/dev/null 2>&1; then
+  qs_abi_output="$(qs --version 2>&1 || true)"
+  if echo "$qs_abi_output" | grep -qiE "built against Qt|Qt.*mismatch|incompatible Qt"; then
+    log_warning "Qt/Quickshell ABI mismatch detected!"
+    log_warning "Quickshell was built against a different Qt version than what is installed."
+    log_warning "The shell will crash until quickshell is rebuilt."
+
+    qs_rebuild_pkg=""
+    if pacman -Qi quickshell-git &>/dev/null; then
+      qs_rebuild_pkg="quickshell-git"
+    elif pacman -Qi quickshell-bin &>/dev/null; then
+      qs_rebuild_pkg="quickshell-bin"
+    fi
+
+    if [[ -n "$qs_rebuild_pkg" && -n "${AUR_HELPER:-}" ]]; then
+      # Determine correct rebuild method:
+      # - Foreign/AUR package: --rebuild triggers source compilation
+      # - Binary repo (CachyOS, chaotic-aur): -Sa forces AUR source build
+      qs_rebuild_cmd=""
+      if pacman -Qm "$qs_rebuild_pkg" &>/dev/null; then
+        qs_rebuild_cmd="$AUR_HELPER -S --rebuild --noconfirm $qs_rebuild_pkg"
+      else
+        qs_rebuild_cmd="$AUR_HELPER -Sa --noconfirm $qs_rebuild_pkg"
+      fi
+
+      do_rebuild=false
+      if ! $ask; then
+        do_rebuild=true
+      elif tui_confirm "Rebuild $qs_rebuild_pkg for current Qt version?"; then
+        do_rebuild=true
+      fi
+
+      if $do_rebuild; then
+        log_info "Running: $qs_rebuild_cmd"
+        if eval "$qs_rebuild_cmd"; then
+          log_success "Rebuilt $qs_rebuild_pkg — ABI mismatch resolved"
+        else
+          log_error "Rebuild failed. Try manually: ${qs_rebuild_cmd/--noconfirm /}"
+        fi
+      else
+        log_warning "To fix: ${qs_rebuild_cmd/--noconfirm /}"
+      fi
+    elif [[ -n "$qs_rebuild_pkg" ]]; then
+      log_warning "To fix: yay -Sa $qs_rebuild_pkg  (forces AUR source build; or use paru)"
+    else
+      log_warning "Reinstall quickshell from official repos: sudo pacman -S quickshell"
+    fi
+  fi
+fi
 
 log_success "Dependencies installed"

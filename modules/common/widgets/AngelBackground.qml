@@ -52,14 +52,15 @@ Rectangle {
         y: -root.screenY
         width: root.screenWidth
         height: root.screenHeight
-        // Avoid showing a stale cached pixmap while the new source is still loading.
         visible: (root.auroraEverywhere || root.angelEverywhere) && !root.inirEverywhere && status === Image.Ready
-        source: root.wallpaperUrl
+        source: ((root.auroraEverywhere || root.angelEverywhere) && !root.inirEverywhere) ? root.wallpaperUrl : ""
         fillMode: Image.PreserveAspectCrop
         cache: true
+        sourceSize.width: root.screenWidth
+        sourceSize.height: root.screenHeight
         asynchronous: true
 
-        layer.enabled: Appearance.effectsEnabled
+        layer.enabled: Appearance.effectsEnabled && (Appearance.auroraEverywhere || Appearance.angelEverywhere) && !Appearance.inirEverywhere
         layer.effect: MultiEffect {
             source: blurredWallpaper
             anchors.fill: source
@@ -67,7 +68,7 @@ Rectangle {
                 ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                 : (Appearance.effectsEnabled ? 0.2 : 0)
             blurEnabled: Appearance.effectsEnabled
-            blurMax: 100
+            blurMax: 64
             blur: Appearance.effectsEnabled
                 ? (root.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                 : 0

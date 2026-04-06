@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -8,13 +9,13 @@ import qs.modules.common.widgets
 ContentPage {
     id: root
     settingsPageIndex: 5
-    settingsPageName: Translation.tr("Interface")
+    settingsPageName: Translation.tr("Panels")
     settingsPageIcon: "bottom_app_bar"
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
 
     SettingsCardSection {
-        expanded: true
+        expanded: false
         icon: "point_scan"
         title: Translation.tr("Crosshair overlay")
 
@@ -56,7 +57,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: true
+        expanded: false
         icon: "layers"
         title: Translation.tr("Overlay widgets")
 
@@ -157,7 +158,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: true
+        expanded: false
         icon: "forum"
         title: Translation.tr("Overlay: Discord")
 
@@ -176,15 +177,18 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "keyboard_tab"
         title: Translation.tr("Alt-Tab switcher (Material ii)")
 
         SettingsGroup {
             SettingsSwitch {
+                enabled: (Config.options?.altSwitcher?.preset ?? "default") !== "skew"
                 buttonIcon: "visibility_off"
                 text: Translation.tr("No visual UI (cycle windows only)")
-                checked: Config.options?.altSwitcher?.noVisualUi ?? false
+                checked: (Config.options?.altSwitcher?.preset ?? "default") === "skew"
+                    ? false
+                    : (Config.options?.altSwitcher?.noVisualUi ?? false)
                 onCheckedChanged: Config.setNestedValue("altSwitcher.noVisualUi", checked)
                 StyledToolTip {
                     text: Translation.tr("Use Alt+Tab to switch windows without showing the switcher overlay")
@@ -299,17 +303,22 @@ ContentPage {
             ConfigSelectionArray {
                 options: [
                     { displayName: Translation.tr("Default (sidebar)"), icon: "side_navigation", value: "default" },
-                    { displayName: Translation.tr("List (centered)"), icon: "list", value: "list" }
+                    { displayName: Translation.tr("List (centered)"), icon: "list", value: "list" },
+                    { displayName: Translation.tr("Skew previews"), icon: "view_in_ar", value: "skew" }
                 ]
                 currentValue: Config.options?.altSwitcher?.preset ?? "default"
-                onSelected: (newValue) => Config.options.altSwitcher.preset = newValue
+                onSelected: (newValue) => {
+                    Config.setNestedValue("altSwitcher.preset", newValue)
+                    Config.setNestedValue("altSwitcher.noVisualUi", false)
+                }
             }
 
             ContentSubsection {
                 title: Translation.tr("Layout & alignment")
 
                 SettingsSwitch {
-                    enabled: Config.options?.altSwitcher?.preset !== "list"
+                    enabled: (Config.options?.altSwitcher?.preset ?? "default") !== "list"
+                        && (Config.options?.altSwitcher?.preset ?? "default") !== "skew"
                     buttonIcon: "view_compact"
                     text: Translation.tr("Compact horizontal style (icons only)")
                     checked: Config.options?.altSwitcher?.compactStyle ?? false
@@ -320,7 +329,9 @@ ContentPage {
                 }
 
                 ConfigSelectionArray {
-                    enabled: !Config.options?.altSwitcher?.compactStyle && Config.options?.altSwitcher?.preset !== "list"
+                    enabled: !(Config.options?.altSwitcher?.compactStyle ?? false)
+                        && (Config.options?.altSwitcher?.preset ?? "default") !== "list"
+                        && (Config.options?.altSwitcher?.preset ?? "default") !== "skew"
                     currentValue: Config.options?.altSwitcher?.panelAlignment ?? "right"
                     onSelected: newValue => Config.setNestedValue("altSwitcher.panelAlignment", newValue)
                     options: [
@@ -330,7 +341,9 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    enabled: !Config.options?.altSwitcher?.compactStyle && Config.options?.altSwitcher?.preset !== "list"
+                    enabled: !(Config.options?.altSwitcher?.compactStyle ?? false)
+                        && (Config.options?.altSwitcher?.preset ?? "default") !== "list"
+                        && (Config.options?.altSwitcher?.preset ?? "default") !== "skew"
                     buttonIcon: "styler"
                     text: Translation.tr("Use Material 3 card layout")
                     checked: Config.options?.altSwitcher?.useM3Layout ?? false
@@ -345,7 +358,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "call_to_action"
         title: Translation.tr("Dock")
 
@@ -355,10 +368,27 @@ ContentPage {
                 text: Translation.tr("Enable")
                 checked: Config.options.dock.enable
                 onCheckedChanged: {
-                    Config.options.dock.enable = checked;
+                    Config.setNestedValue("dock.enable", checked);
                 }
                 StyledToolTip {
                     text: Translation.tr("Show the macOS-style dock at the bottom of the screen")
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Dock style")
+                tooltip: Translation.tr("Panel: classic unified background. Pill: each icon floats in its own capsule. macOS: frosted glass shelf with magnify effect.")
+
+                ConfigSelectionArray {
+                    currentValue: Config.options?.dock?.style ?? "panel"
+                    onSelected: newValue => {
+                        Config.setNestedValue("dock.style", newValue)
+                    }
+                    options: [
+                        { displayName: Translation.tr("Panel"), icon: "dock_to_bottom", value: "panel" },
+                        { displayName: Translation.tr("Pill"),  icon: "interests",       value: "pill"  },
+                        { displayName: Translation.tr("macOS"), icon: "desktop_mac",     value: "macos" }
+                    ]
                 }
             }
 
@@ -412,7 +442,7 @@ ContentPage {
                     text: Translation.tr("Pinned on startup")
                     checked: Config.options.dock.pinnedOnStartup
                     onCheckedChanged: {
-                        Config.options.dock.pinnedOnStartup = checked;
+                        Config.setNestedValue("dock.pinnedOnStartup", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Keep dock visible when the shell starts")
@@ -423,7 +453,7 @@ ContentPage {
                     text: Translation.tr("Tint app icons")
                     checked: Config.options.dock.monochromeIcons
                     onCheckedChanged: {
-                        Config.options.dock.monochromeIcons = checked;
+                        Config.setNestedValue("dock.monochromeIcons", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Apply accent color tint to dock app icons")
@@ -434,7 +464,7 @@ ContentPage {
                 buttonIcon: "widgets"
                 text: Translation.tr("Show dock background")
                 checked: Config.options.dock.showBackground
-                onCheckedChanged: Config.options.dock.showBackground = checked
+                onCheckedChanged: Config.setNestedValue("dock.showBackground", checked)
                 StyledToolTip {
                     text: Translation.tr("Show a background behind the dock")
                 }
@@ -468,7 +498,7 @@ ContentPage {
                     text: Translation.tr("Use Card style")
                     checked: Config.options.dock?.cardStyle ?? false
                     onCheckedChanged: {
-                        Config.options.dock.cardStyle = checked;
+                        Config.setNestedValue("dock.cardStyle", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Use the new Card style (lighter background, specific rounding) generic to settings")
@@ -483,7 +513,7 @@ ContentPage {
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.dock.height = value;
+                        Config.setNestedValue("dock.height", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Height of the dock container")
@@ -498,7 +528,7 @@ ContentPage {
                     to: 60
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.dock.iconSize = value;
+                        Config.setNestedValue("dock.iconSize", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Size of application icons in the dock")
@@ -522,7 +552,7 @@ ContentPage {
                     stepSize: 1
                     enabled: Config.options.dock.hoverToReveal
                     onValueChanged: {
-                        Config.options.dock.hoverRegionHeight = value;
+                        Config.setNestedValue("dock.hoverRegionHeight", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Size of the invisible area at screen edge that triggers dock reveal")
@@ -538,7 +568,7 @@ ContentPage {
                     text: Translation.tr("Smart indicator (highlight focused window)")
                     checked: Config.options.dock.smartIndicator !== false
                     onCheckedChanged: {
-                        Config.options.dock.smartIndicator = checked;
+                        Config.setNestedValue("dock.smartIndicator", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("When multiple windows of the same app are open, highlight which one is focused")
@@ -550,7 +580,7 @@ ContentPage {
                     text: Translation.tr("Show dots for inactive apps")
                     checked: Config.options.dock.showAllWindowDots !== false
                     onCheckedChanged: {
-                        Config.options.dock.showAllWindowDots = checked;
+                        Config.setNestedValue("dock.showAllWindowDots", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show a dot per window even for apps that aren't currently focused")
@@ -565,7 +595,7 @@ ContentPage {
                     to: 10
                     stepSize: 1
                     onValueChanged: {
-                        Config.options.dock.maxIndicatorDots = value;
+                        Config.setNestedValue("dock.maxIndicatorDots", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Limit the number of open window dots shown below an app icon")
@@ -581,7 +611,7 @@ ContentPage {
                     text: Translation.tr("Show preview on hover")
                     checked: Config.options.dock.hoverPreview !== false
                     onCheckedChanged: {
-                        Config.options.dock.hoverPreview = checked;
+                        Config.setNestedValue("dock.hoverPreview", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Display a live preview of windows when hovering over dock icons")
@@ -597,156 +627,23 @@ ContentPage {
                     stepSize: 50
                     enabled: Config.options.dock.hoverPreview !== false
                     onValueChanged: {
-                        Config.options.dock.hoverPreviewDelay = value;
+                        Config.setNestedValue("dock.hoverPreviewDelay", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Time to wait before showing window preview")
                     }
                 }
-            }
-        }
-    }
-
-    SettingsCardSection {
-        expanded: true
-        icon: "lock"
-        title: Translation.tr("Lock screen")
-
-        SettingsGroup {
-            SettingsSwitch {
-                visible: CompositorService.isHyprland
-                buttonIcon: "water_drop"
-                text: Translation.tr('Use Hyprlock (instead of Quickshell)')
-                checked: Config.options.lock.useHyprlock
-                onCheckedChanged: {
-                    Config.options.lock.useHyprlock = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("If you want to somehow use fingerprint unlock...")
-                }
-            }
-
-            SettingsSwitch {
-                buttonIcon: "account_circle"
-                text: Translation.tr('Launch on startup')
-                checked: Config.options.lock.launchOnStartup
-                onCheckedChanged: {
-                    Config.options.lock.launchOnStartup = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Enable this if you want to use Quickshell as your lock screen provider")
-                }
-            }
-
-            ContentSubsection {
-                title: Translation.tr("Security")
 
                 SettingsSwitch {
-                    buttonIcon: "settings_power"
-                    text: Translation.tr('Require password to power off/restart')
-                    checked: Config.options.lock.security.requirePasswordToPower
+                    buttonIcon: "keep"
+                    text: Translation.tr("Keep preview on click")
+                    enabled: Config.options.dock.hoverPreview !== false
+                    checked: Config.options?.dock?.keepPreviewOnClick ?? false
                     onCheckedChanged: {
-                        Config.options.lock.security.requirePasswordToPower = checked;
+                        Config.setNestedValue("dock.keepPreviewOnClick", checked)
                     }
                     StyledToolTip {
-                        text: Translation.tr("Remember that on most devices one can always hold the power button to force shutdown\nThis only makes it a tiny bit harder for accidents to happen")
-                    }
-                }
-
-                SettingsSwitch {
-                    buttonIcon: "key_vertical"
-                    text: Translation.tr('Also unlock keyring')
-                    checked: Config.options.lock.security.unlockKeyring
-                    onCheckedChanged: {
-                        Config.options.lock.security.unlockKeyring = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("This is usually safe and needed for your browser and AI sidebar anyway\nMostly useful for those who use lock on startup instead of a display manager that does it (GDM, SDDM, etc.)")
-                    }
-                }
-            }
-
-            ContentSubsection {
-                title: Translation.tr("Style: general")
-
-                SettingsSwitch {
-                    buttonIcon: "center_focus_weak"
-                    text: Translation.tr('Center clock')
-                    checked: Config.options.lock.centerClock
-                    onCheckedChanged: {
-                        Config.options.lock.centerClock = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Align the lock screen clock to the center instead of following layout rules")
-                    }
-                }
-
-                SettingsSwitch {
-                    buttonIcon: "info"
-                    text: Translation.tr('Show "Locked" text')
-                    checked: Config.options.lock.showLockedText
-                    onCheckedChanged: {
-                        Config.options.lock.showLockedText = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Display a 'Locked' label on the lock screen")
-                    }
-                }
-
-                SettingsSwitch {
-                    buttonIcon: "shapes"
-                    text: Translation.tr('Use varying shapes for password characters')
-                    checked: Config.options.lock.materialShapeChars
-                    onCheckedChanged: {
-                        Config.options.lock.materialShapeChars = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Show different geometric shapes instead of bullets for password input")
-                    }
-                }
-            }
-            ContentSubsection {
-                title: Translation.tr("Style: Blurred")
-
-                SettingsSwitch {
-                    buttonIcon: "blur_on"
-                    text: Translation.tr('Enable blur')
-                    checked: Config.options.lock.blur.enable
-                    onCheckedChanged: {
-                        Config.options.lock.blur.enable = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Apply blur effect to the lock screen background")
-                    }
-                }
-
-                ConfigSpinBox {
-                    icon: "blur_linear"
-                    text: Translation.tr("Blur radius")
-                    value: Config.options?.lock?.blur?.radius ?? 100
-                    from: 0
-                    to: 200
-                    stepSize: 10
-                    onValueChanged: {
-                        Config.setNestedValue("lock.blur.radius", value);
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Intensity of the blur effect")
-                    }
-                }
-
-                ConfigSpinBox {
-                    icon: "loupe"
-                    text: Translation.tr("Extra wallpaper zoom (%)")
-                    value: Config.options.lock.blur.extraZoom * 100
-                    from: 1
-                    to: 150
-                    stepSize: 2
-                    onValueChanged: {
-                        Config.options.lock.blur.extraZoom = value / 100;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Zoom level for the background wallpaper when blur is enabled")
+                        text: Translation.tr("Don't close the preview popup when clicking a window thumbnail, so you can navigate between windows")
                     }
                 }
             }
@@ -755,7 +652,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "notifications"
         title: Translation.tr("Notifications")
 
@@ -833,7 +730,96 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: true
+        visible: root.isIiActive
+        expanded: false
+        icon: "tune"
+        title: Translation.tr("Control panel")
+
+        SettingsGroup {
+            SettingsSwitch {
+                buttonIcon: "density_medium"
+                text: Translation.tr("Compact cards")
+                checked: Config.options?.controlPanel?.compactMode ?? true
+                onCheckedChanged: Config.setNestedValue("controlPanel.compactMode", checked)
+                StyledToolTip {
+                    text: Translation.tr("Use tighter spacing and shorter cards in the quick settings panel")
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "wallpaper"
+                text: Translation.tr("Show wallpaper card")
+                checked: Config.options?.controlPanel?.showWallpaperSection ?? true
+                onCheckedChanged: Config.setNestedValue("controlPanel.showWallpaperSection", checked)
+                StyledToolTip {
+                    text: Translation.tr("Show the wallpaper preview card in the quick settings panel")
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "palette"
+                text: Translation.tr("Show wallpaper scheme buttons")
+                enabled: Config.options?.controlPanel?.showWallpaperSection ?? true
+                checked: Config.options?.controlPanel?.showWallpaperSchemeChips ?? false
+                onCheckedChanged: Config.setNestedValue("controlPanel.showWallpaperSchemeChips", checked)
+                StyledToolTip {
+                    text: Translation.tr("Show the scheme variant buttons under the wallpaper preview")
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Visible sections")
+
+                SettingsSwitch {
+                    buttonIcon: "music_note"
+                    text: Translation.tr("Media")
+                    checked: Config.options?.controlPanel?.showMediaSection ?? true
+                    onCheckedChanged: Config.setNestedValue("controlPanel.showMediaSection", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "partly_cloudy_day"
+                    text: Translation.tr("Weather")
+                    checked: Config.options?.controlPanel?.showWeatherSection ?? true
+                    onCheckedChanged: Config.setNestedValue("controlPanel.showWeatherSection", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "monitoring"
+                    text: Translation.tr("System status")
+                    checked: Config.options?.controlPanel?.showSystemSection ?? true
+                    onCheckedChanged: Config.setNestedValue("controlPanel.showSystemSection", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "tune"
+                    text: Translation.tr("Sliders")
+                    checked: Config.options?.controlPanel?.showSlidersSection ?? true
+                    onCheckedChanged: Config.setNestedValue("controlPanel.showSlidersSection", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "apps"
+                    text: Translation.tr("Quick actions")
+                    checked: Config.options?.controlPanel?.showQuickActionsSection ?? true
+                    onCheckedChanged: Config.setNestedValue("controlPanel.showQuickActionsSection", checked)
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "memory"
+                text: Translation.tr("Keep control panel loaded")
+                checked: Config.options?.controlPanel?.keepLoaded ?? false
+                onCheckedChanged: Config.setNestedValue("controlPanel.keepLoaded", checked)
+                StyledToolTip {
+                    text: Translation.tr("Keep the quick settings panel in memory to reduce opening delay")
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
         icon: "screenshot_frame_2"
         title: Translation.tr("Region selector (screen snipping/Google Lens)")
 
@@ -980,7 +966,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "side_navigation"
         title: Translation.tr("Sidebars")
 
@@ -993,7 +979,7 @@ ContentPage {
                     enabled: Appearance.globalStyle === "material" || Appearance.globalStyle === "inir"
                     checked: Config.options.sidebar?.cardStyle ?? false
                     onCheckedChanged: {
-                        Config.options.sidebar.cardStyle = checked;
+                        Config.setNestedValue("sidebar.cardStyle", checked);
                     }
                     StyledToolTip {
                         text: (Appearance.globalStyle === "material" || Appearance.globalStyle === "inir")
@@ -1007,10 +993,61 @@ ContentPage {
                 text: Translation.tr('Keep right sidebar loaded')
                 checked: Config.options.sidebar.keepRightSidebarLoaded
                 onCheckedChanged: {
-                    Config.options.sidebar.keepRightSidebarLoaded = checked;
+                    Config.setNestedValue("sidebar.keepRightSidebarLoaded", checked);
                 }
                 StyledToolTip {
                     text: Translation.tr("When enabled keeps the content of the right sidebar loaded to reduce the delay when opening,\nat the cost of around 15MB of consistent RAM usage. Delay significance depends on your system's performance.\nUsing a custom kernel like linux-cachyos might help")
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "animation"
+                text: Translation.tr("Instant sidebar opening")
+                checked: Config.options.sidebar?.instantOpen ?? false
+                onCheckedChanged: Config.setNestedValue("sidebar.instantOpen", checked)
+                StyledToolTip {
+                    text: Translation.tr("Disable the sidebar slide animation and open or close it instantly to reduce stutter under load")
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: !(Config.options?.sidebar?.instantOpen ?? false)
+                spacing: 4
+
+                RowLayout {
+                    spacing: 8
+                    MaterialSymbol {
+                        text: "swipe_right"
+                        iconSize: Appearance.font.pixelSize.hugeass
+                        color: Appearance.m3colors?.m3OnSurface ?? Appearance.colors.colOnLayer1
+                    }
+                    StyledText {
+                        text: Translation.tr("Sidebar animation")
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        color: Appearance.m3colors?.m3OnSurface ?? Appearance.colors.colOnLayer1
+                    }
+                }
+
+                StyledComboBox {
+                    Layout.fillWidth: true
+                    readonly property var animOptions: [
+                        { displayName: Translation.tr("Slide"), value: "slide" },
+                        { displayName: Translation.tr("Fade"), value: "fade" },
+                        { displayName: Translation.tr("Pop"), value: "pop" },
+                        { displayName: Translation.tr("Reveal"), value: "reveal" }
+                    ]
+                    model: animOptions
+                    textRole: "displayName"
+                    currentIndex: {
+                        const current = Config.options?.sidebar?.animationType ?? "slide"
+                        const idx = animOptions.findIndex(o => o.value === current)
+                        return idx >= 0 ? idx : 0
+                    }
+                    onActivated: index => {
+                        if (index >= 0 && index < animOptions.length)
+                            Config.setNestedValue("sidebar.animationType", animOptions[index].value)
+                    }
                 }
             }
 
@@ -1120,6 +1157,16 @@ ContentPage {
                 }
 
                 SettingsSwitch {
+                    buttonIcon: "store"
+                    text: Translation.tr("Software")
+                    checked: Config.options.sidebar?.software?.enable ?? false
+                    onCheckedChanged: Config.setNestedValue("sidebar.software.enable", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Browse and install curated companion apps")
+                    }
+                }
+
+                SettingsSwitch {
                     buttonIcon: "library_music"
                     text: Translation.tr("YT Music")
                     checked: Config.options.sidebar?.ytmusic?.enable ?? false
@@ -1128,6 +1175,17 @@ ContentPage {
                         text: Translation.tr("Search and play music from YouTube using yt-dlp")
                     }
                 }
+
+                // DISABLED: webapps — requires quickshell-webengine rebuild
+                // SettingsSwitch {
+                //     buttonIcon: "extension"
+                //     text: Translation.tr("Web Apps")
+                //     checked: Config.options?.sidebar?.plugins?.enable ?? false
+                //     onCheckedChanged: Config.setNestedValue("sidebar.plugins.enable", checked)
+                //     StyledToolTip {
+                //         text: Translation.tr("Embed web apps like Discord, YouTube Music and more in the sidebar (requires quickshell-webengine)")
+                //     }
+                // }
             }
 
             ContentSubsection {
@@ -1166,6 +1224,15 @@ ContentPage {
                     onClicked: {
                         // checked ya fue invertido por ConfigSwitch.onClicked
                         rightSidebarWidgets.setWidget("calendar", checked)
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "event_upcoming"
+                    text: Translation.tr("Events")
+                    Component.onCompleted: checked = rightSidebarWidgets.isEnabled("events")
+                    onClicked: {
+                        rightSidebarWidgets.setWidget("events", checked)
                     }
                 }
 
@@ -1257,43 +1324,13 @@ ContentPage {
                         Repeater {
                             model: subredditEditor.subreddits
 
-                            Rectangle {
-                                id: subChip
+                            InputChip {
                                 required property string modelData
                                 required property int index
-                                width: chipRow.implicitWidth + 8
-                                height: 26
-                                radius: 13
-                                color: chipMouse.containsMouse ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainer
-
-                                RowLayout {
-                                    id: chipRow
-                                    anchors.centerIn: parent
-                                    spacing: 2
-
-                                    StyledText {
-                                        text: "r/" + subChip.modelData
-                                        font.pixelSize: Appearance.font.pixelSize.smallest
-                                        color: Appearance.colors.colOnSecondaryContainer
-                                    }
-
-                                    MaterialSymbol {
-                                        text: "close"
-                                        iconSize: 12
-                                        color: Appearance.colors.colOnSecondaryContainer
-                                        opacity: chipMouse.containsMouse ? 1 : 0.5
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: chipMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        const newSubs = subredditEditor.subreddits.filter((_, i) => i !== subChip.index)
-                                        Config.setNestedValue("sidebar.reddit.subreddits", newSubs)
-                                    }
+                                text: "r/" + modelData
+                                onRemoved: {
+                                    const newSubs = subredditEditor.subreddits.filter((_, i) => i !== index)
+                                    Config.setNestedValue("sidebar.reddit.subreddits", newSubs)
                                 }
                             }
                         }
@@ -1379,7 +1416,7 @@ ContentPage {
 
                         MaterialTextField {
                             Layout.fillWidth: true
-                            placeholderText: "https://hianime.to/search?keyword=%s"
+                            placeholderText: "https://9animetv.to/search?keyword=%s"
                             text: Config.options.sidebar?.animeSchedule?.watchSite ?? ""
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: Appearance.m3colors.m3onSurface
@@ -1458,7 +1495,7 @@ ContentPage {
                     Layout.fillWidth: false
                     currentValue: Config.options.sidebar.quickToggles.style
                     onSelected: newValue => {
-                        Config.options.sidebar.quickToggles.style = newValue;
+                        Config.setNestedValue("sidebar.quickToggles.style", newValue);
                     }
                     options: [
                         { displayName: Translation.tr("Classic"), icon: "password_2", value: "classic" },
@@ -1475,7 +1512,7 @@ ContentPage {
                     to: 8
                     stepSize: 1
                     onValueChanged: {
-                        Config.options.sidebar.quickToggles.android.columns = value;
+                        Config.setNestedValue("sidebar.quickToggles.android.columns", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Number of columns for the Android-style quick settings grid")
@@ -1491,7 +1528,7 @@ ContentPage {
                     text: Translation.tr("Enable")
                     checked: Config.options.sidebar.quickSliders.enable
                     onCheckedChanged: {
-                        Config.options.sidebar.quickSliders.enable = checked;
+                        Config.setNestedValue("sidebar.quickSliders.enable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show volume/brightness/mic sliders in the sidebar")
@@ -1504,7 +1541,7 @@ ContentPage {
                     enabled: Config.options.sidebar.quickSliders.enable
                     checked: Config.options.sidebar.quickSliders.showBrightness
                     onCheckedChanged: {
-                        Config.options.sidebar.quickSliders.showBrightness = checked;
+                        Config.setNestedValue("sidebar.quickSliders.showBrightness", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show brightness slider")
@@ -1517,7 +1554,7 @@ ContentPage {
                     enabled: Config.options.sidebar.quickSliders.enable
                     checked: Config.options.sidebar.quickSliders.showVolume
                     onCheckedChanged: {
-                        Config.options.sidebar.quickSliders.showVolume = checked;
+                        Config.setNestedValue("sidebar.quickSliders.showVolume", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show volume slider")
@@ -1530,7 +1567,7 @@ ContentPage {
                     enabled: Config.options.sidebar.quickSliders.enable
                     checked: Config.options.sidebar.quickSliders.showMic
                     onCheckedChanged: {
-                        Config.options.sidebar.quickSliders.showMic = checked;
+                        Config.setNestedValue("sidebar.quickSliders.showMic", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show microphone input level slider")
@@ -1548,7 +1585,7 @@ ContentPage {
                         text: Translation.tr("Enable")
                         checked: Config.options.sidebar.cornerOpen.enable
                         onCheckedChanged: {
-                            Config.options.sidebar.cornerOpen.enable = checked;
+                            Config.setNestedValue("sidebar.cornerOpen.enable", checked);
                         }
                         StyledToolTip {
                             text: Translation.tr("Allow opening sidebars by interacting with screen corners")
@@ -1560,7 +1597,7 @@ ContentPage {
                     text: Translation.tr("Hover to trigger")
                     checked: Config.options.sidebar.cornerOpen.clickless
                     onCheckedChanged: {
-                        Config.options.sidebar.cornerOpen.clickless = checked;
+                        Config.setNestedValue("sidebar.cornerOpen.clickless", checked);
                     }
 
                     StyledToolTip {
@@ -1573,7 +1610,7 @@ ContentPage {
                         text: Translation.tr("Force hover open at absolute corner")
                         checked: Config.options.sidebar.cornerOpen.clicklessCornerEnd
                         onCheckedChanged: {
-                            Config.options.sidebar.cornerOpen.clicklessCornerEnd = checked;
+                            Config.setNestedValue("sidebar.cornerOpen.clicklessCornerEnd", checked);
                         }
 
                         StyledToolTip {
@@ -1588,7 +1625,7 @@ ContentPage {
                         to: 20
                         stepSize: 1
                         onValueChanged: {
-                            Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset = value;
+                            Config.setNestedValue("sidebar.cornerOpen.clicklessCornerVerticalOffset", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Why this is cool:\nFor non-0 values, it won't trigger when you reach the\nscreen corner along the horizontal edge, but it will when\nyou do along the vertical edge")
@@ -1603,7 +1640,7 @@ ContentPage {
                         text: Translation.tr("Place at bottom")
                         checked: Config.options.sidebar.cornerOpen.bottom
                         onCheckedChanged: {
-                            Config.options.sidebar.cornerOpen.bottom = checked;
+                            Config.setNestedValue("sidebar.cornerOpen.bottom", checked);
                         }
 
                         StyledToolTip {
@@ -1615,7 +1652,7 @@ ContentPage {
                         text: Translation.tr("Value scroll")
                         checked: Config.options.sidebar.cornerOpen.valueScroll
                         onCheckedChanged: {
-                            Config.options.sidebar.cornerOpen.valueScroll = checked;
+                            Config.setNestedValue("sidebar.cornerOpen.valueScroll", checked);
                         }
 
                         StyledToolTip {
@@ -1628,7 +1665,7 @@ ContentPage {
                     text: Translation.tr("Visualize region")
                     checked: Config.options.sidebar.cornerOpen.visualize
                     onCheckedChanged: {
-                        Config.options.sidebar.cornerOpen.visualize = checked;
+                        Config.setNestedValue("sidebar.cornerOpen.visualize", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Show a colored overlay indicating the corner trigger areas (debug)")
@@ -1643,7 +1680,7 @@ ContentPage {
                         to: 300
                         stepSize: 1
                         onValueChanged: {
-                            Config.options.sidebar.cornerOpen.cornerRegionWidth = value;
+                            Config.setNestedValue("sidebar.cornerOpen.cornerRegionWidth", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Horizontal size of the active corner area")
@@ -1657,7 +1694,7 @@ ContentPage {
                         to: 300
                         stepSize: 1
                         onValueChanged: {
-                            Config.options.sidebar.cornerOpen.cornerRegionHeight = value;
+                            Config.setNestedValue("sidebar.cornerOpen.cornerRegionHeight", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Vertical size of the active corner area")
@@ -1670,7 +1707,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "widgets"
         title: Translation.tr("Widgets")
 
@@ -1790,7 +1827,7 @@ ContentPage {
                                 color: itemHover.containsMouse ? Appearance.colors.colLayer2Hover : "transparent"
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
-                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                 }
                             }
 
@@ -2103,41 +2140,11 @@ ContentPage {
                     Repeater {
                         model: Config.options?.sidebar?.widgets?.crypto_settings?.coins ?? []
 
-                        Rectangle {
-                            id: coinChip
+                        InputChip {
                             required property string modelData
-                            width: chipRow.implicitWidth + 8
-                            height: 26
-                            radius: 13
-                            color: chipMouse.containsMouse ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainer
-
-                            RowLayout {
-                                id: chipRow
-                                anchors.centerIn: parent
-                                spacing: 2
-
-                                StyledText {
-                                    text: coinChip.modelData
-                                    font.pixelSize: Appearance.font.pixelSize.smallest
-                                    font.family: Appearance.font.family.monospace
-                                    color: Appearance.colors.colOnSecondaryContainer
-                                }
-
-                                MaterialSymbol {
-                                    text: "close"
-                                    iconSize: 12
-                                    color: Appearance.colors.colOnSecondaryContainer
-                                    opacity: chipMouse.containsMouse ? 1 : 0.5
-                                }
-                            }
-
-                            MouseArea {
-                                id: chipMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: cryptoSection.removeCoin(coinChip.modelData)
-                            }
+                            text: modelData
+                            monospace: true
+                            onRemoved: cryptoSection.removeCoin(modelData)
                         }
                     }
                 }
@@ -2306,31 +2313,8 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: true
-        icon: "voting_chip"
-        title: Translation.tr("On-screen display")
-
-        SettingsGroup {
-            ConfigSpinBox {
-                icon: "av_timer"
-                text: Translation.tr("Timeout (ms)")
-                value: Config.options.osd.timeout
-                from: 100
-                to: 3000
-                stepSize: 100
-                onValueChanged: {
-                    Config.options.osd.timeout = value;
-                }
-                StyledToolTip {
-                    text: Translation.tr("How long the volume/brightness indicator stays visible")
-                }
-            }
-        }
-    }
-
-    SettingsCardSection {
         visible: root.isIiActive
-        expanded: true
+        expanded: false
         icon: "overview_key"
         title: Translation.tr("Overview")
 
@@ -2338,20 +2322,65 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "check"
                 text: Translation.tr("Enable")
-                checked: Config.options.overview.enable
-                onCheckedChanged: {
-                    Config.options.overview.enable = checked;
-                }
+                checked: Config.options?.overview?.enable ?? true
+                enabled: !(Config.options?.overview?.dashboard?.enable ?? false)
+                onCheckedChanged: Config.setNestedValue("overview.enable", checked)
                 StyledToolTip {
                     text: Translation.tr("Enable the app launcher and workspace overview (Super+Space)")
                 }
+            }
+            SettingsSwitch {
+                buttonIcon: "dashboard"
+                text: Translation.tr("Dashboard panel")
+                checked: Config.options?.overview?.dashboard?.enable ?? false
+                onCheckedChanged: {
+                    Config.setNestedValue("overview.dashboard.enable", checked)
+                    if (checked)
+                        Config.setNestedValue("overview.enable", false)
+                }
+                StyledToolTip { text: Translation.tr("Show a control center dashboard below workspace previews") }
+            }
+            SettingsSwitch {
+                buttonIcon: "toggle_on"
+                text: Translation.tr("Dashboard: Quick toggles")
+                checked: Config.options?.overview?.dashboard?.showToggles ?? true
+                onCheckedChanged: Config.setNestedValue("overview.dashboard.showToggles", checked)
+                visible: Config.options?.overview?.dashboard?.enable ?? false
+            }
+            SettingsSwitch {
+                buttonIcon: "music_note"
+                text: Translation.tr("Dashboard: Media player")
+                checked: Config.options?.overview?.dashboard?.showMedia ?? true
+                onCheckedChanged: Config.setNestedValue("overview.dashboard.showMedia", checked)
+                visible: Config.options?.overview?.dashboard?.enable ?? false
+            }
+            SettingsSwitch {
+                buttonIcon: "volume_up"
+                text: Translation.tr("Dashboard: Volume slider")
+                checked: Config.options?.overview?.dashboard?.showVolume ?? true
+                onCheckedChanged: Config.setNestedValue("overview.dashboard.showVolume", checked)
+                visible: Config.options?.overview?.dashboard?.enable ?? false
+            }
+            SettingsSwitch {
+                buttonIcon: "cloud"
+                text: Translation.tr("Dashboard: Weather")
+                checked: Config.options?.overview?.dashboard?.showWeather ?? true
+                onCheckedChanged: Config.setNestedValue("overview.dashboard.showWeather", checked)
+                visible: Config.options?.overview?.dashboard?.enable ?? false
+            }
+            SettingsSwitch {
+                buttonIcon: "memory"
+                text: Translation.tr("Dashboard: System stats")
+                checked: Config.options?.overview?.dashboard?.showSystem ?? true
+                onCheckedChanged: Config.setNestedValue("overview.dashboard.showSystem", checked)
+                visible: Config.options?.overview?.dashboard?.enable ?? false
             }
             SettingsSwitch {
                 buttonIcon: "center_focus_strong"
                 text: Translation.tr("Center icons")
                 checked: Config.options.overview.centerIcons
                 onCheckedChanged: {
-                    Config.options.overview.centerIcons = checked;
+                    Config.setNestedValue("overview.centerIcons", checked);
                 }
                 StyledToolTip {
                     text: Translation.tr("Center app icons in the launcher grid")
@@ -2362,9 +2391,7 @@ ContentPage {
                 text: Translation.tr("Show window previews")
                 checked: Config.options?.overview?.showPreviews !== false
                 onCheckedChanged: {
-                    if (!Config.options.overview)
-                        Config.options.overview = ({})
-                    Config.options.overview.showPreviews = checked;
+                    Config.setNestedValue("overview.showPreviews", checked);
                 }
                 StyledToolTip {
                     text: Translation.tr("Display thumbnail previews of windows in the overview")
@@ -2378,7 +2405,7 @@ ContentPage {
                 to: 100
                 stepSize: 1
                 onValueChanged: {
-                    Config.options.overview.scale = value / 100;
+                    Config.setNestedValue("overview.scale", value / 100);
                 }
                 StyledToolTip {
                     text: Translation.tr("Scale of workspace previews in the overview")
@@ -2394,7 +2421,7 @@ ContentPage {
                     to: 20
                     stepSize: 1
                     onValueChanged: {
-                        Config.options.overview.rows = value;
+                        Config.setNestedValue("overview.rows", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Number of rows in the app launcher grid")
@@ -2408,7 +2435,7 @@ ContentPage {
                     to: 20
                     stepSize: 1
                     onValueChanged: {
-                        Config.options.overview.columns = value;
+                        Config.setNestedValue("overview.columns", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Number of columns in the app launcher grid")
@@ -2423,9 +2450,7 @@ ContentPage {
                     text: Translation.tr("Enable wallpaper blur")
                     checked: !Config.options.overview || Config.options.overview.backgroundBlurEnable !== false
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.backgroundBlurEnable = checked;
+                        Config.setNestedValue("overview.backgroundBlurEnable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Apply blur effect to the overview background")
@@ -2443,9 +2468,7 @@ ContentPage {
                     stepSize: 1
                     enabled: !Config.options.overview || Config.options.overview.backgroundBlurEnable !== false
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.backgroundBlurRadius = value;
+                        Config.setNestedValue("overview.backgroundBlurRadius", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Intensity of the wallpaper blur")
@@ -2462,9 +2485,7 @@ ContentPage {
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.backgroundDim = value;
+                        Config.setNestedValue("overview.backgroundDim", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Darkness of the wallpaper behind overview")
@@ -2481,9 +2502,7 @@ ContentPage {
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.scrimDim = value;
+                        Config.setNestedValue("overview.scrimDim", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Additional darkness for better contrast")
@@ -2494,13 +2513,22 @@ ContentPage {
                 title: Translation.tr("Positioning")
 
                 SettingsSwitch {
+                    buttonIcon: "vertical_align_center"
+                    text: Translation.tr("Center launcher panel")
+                    checked: Config.options?.overview?.centerLauncher ?? false
+                    onCheckedChanged: Config.setNestedValue("overview.centerLauncher", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Center the Super+Space launcher vertically. Disables top/bottom margin adjustments while enabled")
+                    }
+                }
+
+                SettingsSwitch {
                     buttonIcon: "dashboard_customize"
                     text: Translation.tr("Respect bar area (never overlap)")
                     checked: !Config.options.overview || Config.options.overview.respectBar !== false
+                    enabled: !(Config.options?.overview?.centerLauncher ?? false)
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.respectBar = checked;
+                        Config.setNestedValue("overview.respectBar", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Prevent overview from covering the system bar area")
@@ -2512,6 +2540,7 @@ ContentPage {
                     ConfigSpinBox {
                         icon: "vertical_align_top"
                         text: Translation.tr("Extra top margin (px)")
+                        enabled: !(Config.options?.overview?.centerLauncher ?? false)
                         value: Config.options.overview && Config.options.overview.topMargin !== undefined
                                ? Config.options.overview.topMargin
                                : 0
@@ -2519,9 +2548,7 @@ ContentPage {
                         to: 400
                         stepSize: 1
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.topMargin = value;
+                            Config.setNestedValue("overview.topMargin", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Space reserved at the top of the screen")
@@ -2530,6 +2557,7 @@ ContentPage {
                     ConfigSpinBox {
                         icon: "vertical_align_bottom"
                         text: Translation.tr("Extra bottom margin (px)")
+                        enabled: !(Config.options?.overview?.centerLauncher ?? false)
                         value: Config.options.overview && Config.options.overview.bottomMargin !== undefined
                                ? Config.options.overview.bottomMargin
                                : 0
@@ -2537,9 +2565,7 @@ ContentPage {
                         to: 400
                         stepSize: 1
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.bottomMargin = value;
+                            Config.setNestedValue("overview.bottomMargin", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Space reserved at the bottom of the screen")
@@ -2560,9 +2586,7 @@ ContentPage {
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.maxPanelWidthRatio = value / 100;
+                        Config.setNestedValue("overview.maxPanelWidthRatio", value / 100);
                     }
                     StyledToolTip {
                         text: Translation.tr("Maximum width of the overview panel as screen percentage")
@@ -2581,9 +2605,7 @@ ContentPage {
                         to: 80
                         stepSize: 1
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.workspaceSpacing = value;
+                            Config.setNestedValue("overview.workspaceSpacing", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Horizontal gap between workspace previews")
@@ -2599,9 +2621,7 @@ ContentPage {
                         to: 80
                         stepSize: 1
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.windowTileMargin = value;
+                            Config.setNestedValue("overview.windowTileMargin", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Gap between windows inside a workspace preview")
@@ -2624,9 +2644,7 @@ ContentPage {
                         to: 512
                         stepSize: 2
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.iconMinSize = value;
+                            Config.setNestedValue("overview.iconMinSize", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Minimum size for app icons")
@@ -2642,9 +2660,7 @@ ContentPage {
                         to: 512
                         stepSize: 2
                         onValueChanged: {
-                            if (!Config.options.overview)
-                                Config.options.overview = ({})
-                            Config.options.overview.iconMaxSize = value;
+                            Config.setNestedValue("overview.iconMaxSize", value);
                         }
                         StyledToolTip {
                             text: Translation.tr("Maximum size for app icons")
@@ -2660,9 +2676,7 @@ ContentPage {
                     text: Translation.tr("Switch to dedicated workspace when opening Overview")
                     checked: Config.options.overview && Config.options.overview.switchToWorkspaceOnOpen
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.switchToWorkspaceOnOpen = checked;
+                        Config.setNestedValue("overview.switchToWorkspaceOnOpen", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Automatically switch to a specific workspace when overview opens")
@@ -2680,9 +2694,7 @@ ContentPage {
                     to: 20
                     stepSize: 1
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.switchWorkspaceIndex = value;
+                        Config.setNestedValue("overview.switchWorkspaceIndex", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Index of the workspace to switch to")
@@ -2698,9 +2710,7 @@ ContentPage {
                     to: 10
                     stepSize: 1
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.scrollWorkspaceSteps = value;
+                        Config.setNestedValue("overview.scrollWorkspaceSteps", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("How many workspaces to scroll per mouse wheel detent")
@@ -2711,9 +2721,7 @@ ContentPage {
                     text: Translation.tr("Keep Overview open when clicking windows")
                     checked: !Config.options.overview || Config.options.overview.keepOverviewOpenOnWindowClick !== false
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.keepOverviewOpenOnWindowClick = checked;
+                        Config.setNestedValue("overview.keepOverviewOpenOnWindowClick", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Don't close overview when clicking on a window preview")
@@ -2724,9 +2732,7 @@ ContentPage {
                     text: Translation.tr("Close Overview after moving window")
                     checked: !Config.options.overview || Config.options.overview.closeAfterWindowMove !== false
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.closeAfterWindowMove = checked;
+                        Config.setNestedValue("overview.closeAfterWindowMove", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Close overview automatically after dropping a window to a new workspace")
@@ -2737,9 +2743,7 @@ ContentPage {
                     text: Translation.tr("Show workspace numbers")
                     checked: !Config.options.overview || Config.options.overview.showWorkspaceNumbers !== false
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.showWorkspaceNumbers = checked;
+                        Config.setNestedValue("overview.showWorkspaceNumbers", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Overlay large numbers on workspace previews")
@@ -2754,9 +2758,7 @@ ContentPage {
                     text: Translation.tr("Enable focus animation")
                     checked: !Config.options.overview || Config.options.overview.focusAnimationEnable !== false
                     onCheckedChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.focusAnimationEnable = checked;
+                        Config.setNestedValue("overview.focusAnimationEnable", checked);
                     }
                     StyledToolTip {
                         text: Translation.tr("Animate the focus rectangle when navigating with keyboard")
@@ -2774,9 +2776,7 @@ ContentPage {
                     to: 1000
                     stepSize: 10
                     onValueChanged: {
-                        if (!Config.options.overview)
-                            Config.options.overview = ({})
-                        Config.options.overview.focusAnimationDurationMs = value;
+                        Config.setNestedValue("overview.focusAnimationDurationMs", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Speed of the focus rectangle animation")
@@ -2786,140 +2786,4 @@ ContentPage {
         }
     }
 
-    SettingsCardSection {
-        expanded: true
-        icon: "wallpaper_slideshow"
-        title: Translation.tr("Wallpaper selector")
-
-        SettingsGroup {
-            SettingsSwitch {
-                buttonIcon: "ad"
-                text: Translation.tr('Use system file picker')
-                checked: Config.options.wallpaperSelector.useSystemFileDialog
-                onCheckedChanged: {
-                    Config.options.wallpaperSelector.useSystemFileDialog = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Use your system's native file picker instead of the built-in one")
-                }
-            }
-        }
-    }
-
-    SettingsCardSection {
-        expanded: true
-        icon: "web_asset"
-        title: Translation.tr("Settings UI")
-
-        SettingsGroup {
-            StyledText {
-                Layout.fillWidth: true
-                text: Translation.tr("Choose how the Settings window opens. Overlay mode renders settings as a layer on top of the shell, so you can see changes to the bar, sidebars, and background in real time.")
-                color: Appearance.colors.colOnSurfaceVariant
-                font.pixelSize: Appearance.font.pixelSize.small
-                wrapMode: Text.WordWrap
-            }
-
-            SettingsSwitch {
-                buttonIcon: "layers"
-                text: Translation.tr("Overlay mode (live preview)")
-                checked: Config.options?.settingsUi?.overlayMode ?? false
-                onCheckedChanged: Config.setNestedValue("settingsUi.overlayMode", checked)
-                StyledToolTip {
-                    text: Translation.tr("When enabled, Settings opens as a floating overlay inside the shell instead of a separate window. This lets you preview changes instantly.\nRequires a shell restart to take effect.")
-                }
-            }
-
-            ContentSubsection {
-                title: Translation.tr("Overlay appearance")
-                visible: Config.options?.settingsUi?.overlayMode ?? false
-
-                ConfigSpinBox {
-                    icon: "water"
-                    text: Translation.tr("Background dim (%)")
-                    value: Config.options?.settingsUi?.overlayAppearance?.scrimDim ?? 35
-                    from: 0
-                    to: 80
-                    stepSize: 5
-                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.scrimDim", value)
-                    StyledToolTip {
-                        text: Translation.tr("How dark the backdrop behind the Settings panel should be (0 = transparent, 80 = very dark)")
-                    }
-                }
-
-                ConfigSpinBox {
-                    icon: "opacity"
-                    text: Translation.tr("Panel background opacity (%)")
-                    value: Math.round((Config.options?.settingsUi?.overlayAppearance?.backgroundOpacity ?? 1.0) * 100)
-                    from: 20
-                    to: 100
-                    stepSize: 5
-                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.backgroundOpacity", value / 100)
-                    StyledToolTip {
-                        text: Translation.tr("Opacity of the Settings panel background. Lower values let the shell show through.")
-                    }
-                }
-
-                ConfigSwitch {
-                    buttonIcon: "blur_on"
-                    text: Translation.tr("Enhanced blur (aurora/angel only)")
-                    checked: Config.options?.settingsUi?.overlayAppearance?.enableBlur ?? false
-                    onCheckedChanged: Config.setNestedValue("settingsUi.overlayAppearance.enableBlur", checked)
-                    StyledToolTip {
-                        text: Translation.tr("Apply extra glass blur behind the Settings panel. Only visible with aurora or angel global style.")
-                    }
-                }
-            }
-
-            // Visual hint showing current mode
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: modeHintRow.implicitHeight + 16
-                radius: Appearance.rounding.small
-                color: Appearance.colors.colSurfaceContainerLow
-                border.width: 1
-                border.color: Appearance.colors.colLayer0Border
-
-                RowLayout {
-                    id: modeHintRow
-                    anchors {
-                        fill: parent
-                        margins: 8
-                    }
-                    spacing: 8
-
-                    MaterialSymbol {
-                        text: (Config.options?.settingsUi?.overlayMode ?? false) ? "layers" : "open_in_new"
-                        iconSize: Appearance.font.pixelSize.huge
-                        color: Appearance.m3colors.m3primary
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        StyledText {
-                            text: (Config.options?.settingsUi?.overlayMode ?? false)
-                                ? Translation.tr("Overlay mode")
-                                : Translation.tr("Window mode")
-                            font {
-                                pixelSize: Appearance.font.pixelSize.small
-                                weight: Font.Medium
-                            }
-                            color: Appearance.colors.colOnSurface
-                        }
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: (Config.options?.settingsUi?.overlayMode ?? false)
-                                ? Translation.tr("Settings will open as a floating panel over the shell. Press Esc or click outside to close.")
-                                : Translation.tr("Settings will open as a separate application window (current behavior).")
-                            font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colSubtext
-                            wrapMode: Text.WordWrap
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

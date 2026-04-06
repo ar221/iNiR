@@ -17,6 +17,9 @@
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 STATE_DIR="$XDG_STATE_HOME/quickshell"
 LOG_FILE="$STATE_DIR/user/generated/chrome_theme.log"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/config-path.sh
+source "$SCRIPT_DIR/../lib/config-path.sh"
 mkdir -p "$STATE_DIR/user/generated" 2>/dev/null
 : > "$LOG_FILE" 2>/dev/null
 
@@ -61,8 +64,9 @@ resolve_color() {
     fi
   fi
 
-  # 3. colors.json fallback (this is the already-generated primary, which might cause double-theming)
-  local colors_json="$STATE_DIR/user/generated/colors.json"
+  # 3. explicit palette contract, then colors.json fallback
+  local colors_json="$STATE_DIR/user/generated/palette.json"
+  [[ -f "$colors_json" ]] || colors_json="$STATE_DIR/user/generated/colors.json"
   if [[ -f "$colors_json" ]] && command -v jq &>/dev/null; then
     local c
     c=$(jq -r '.primary // empty' "$colors_json" 2>/dev/null)
@@ -80,6 +84,16 @@ resolve_color() {
 # we map them directly. However, we'll invert them if needed to match what actually works.
 
 resolve_color_scheme() {
+  local meta_file="$STATE_DIR/user/generated/theme-meta.json"
+  if [[ -f "$meta_file" ]] && command -v jq &>/dev/null; then
+    local mode
+    mode=$(jq -r '.mode // empty' "$meta_file" 2>/dev/null)
+    if [[ "$mode" == "dark" || "$mode" == "light" ]]; then
+      echo "$mode"
+      return
+    fi
+  fi
+
   local scss_file="$STATE_DIR/user/generated/material_colors.scss"
   if [[ -f "$scss_file" ]]; then
     local val
@@ -229,7 +243,8 @@ apply_to_browser() {
 
 resolve_variant() {
   # Read variant from config
-  local config_file="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/config.json"
+  local config_file
+  config_file="$(inir_config_file)"
   if [[ -f "$config_file" ]]; then
     local variant
     variant=$(jq -r '.appearance.palette.type // "auto"' "$config_file" 2>/dev/null)

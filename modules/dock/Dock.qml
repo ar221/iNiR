@@ -21,6 +21,8 @@ Scope {
     readonly property bool isVertical: root.position === "left" || root.position === "right"
     readonly property bool isTop: root.position === "top"
     readonly property bool isLeft: root.position === "left"
+    readonly property bool isPillStyle:   Config.options?.dock?.style === "pill"
+    readonly property bool isMacosStyle:  Config.options?.dock?.style === "macos"
 
     // Track bar position to force dock recreation when bar changes
     readonly property bool barIsVertical: Config.options?.bar?.bottom !== undefined
@@ -59,7 +61,7 @@ Scope {
                 screen: panelLoader.modelData
                 visible: !GlobalStates.screenLocked
 
-                property bool reveal: root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated)
+                property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
                 readonly property real dockHeight: Config.options?.dock?.height ?? 70
 
@@ -112,10 +114,10 @@ Scope {
                     anchors.leftMargin: root.position === "right" ? hideOffsetV : 0
                     anchors.rightMargin: root.isLeft ? hideOffsetV : 0
 
-                    Behavior on anchors.topMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.bottomMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.rightMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+                    Behavior on anchors.topMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
+                    Behavior on anchors.bottomMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
+                    Behavior on anchors.leftMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
+                    Behavior on anchors.rightMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
 
                     Item {
                         id: dockHoverRegion
@@ -144,41 +146,43 @@ Scope {
 
                             StyledRectangularShadow {
                                 target: dockVisualBackground
-                                visible: (Config.options?.dock?.showBackground ?? true) && !Appearance.gameModeMinimal
+                                visible: (Config.options?.dock?.showBackground ?? true) && !Appearance.gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
                             }
 
-                            Rectangle {
-                                id: dockVisualBackground
-                                property bool cardStyle: Config.options?.dock?.cardStyle ?? false
-                                readonly property bool auroraEverywhere: Appearance.auroraEverywhere
-                                readonly property bool inirEverywhere: Appearance.inirEverywhere
-                                readonly property bool gameModeMinimal: Appearance.gameModeMinimal
-                                readonly property string wallpaperUrl: {
-                                    const _dep1 = WallpaperListener.multiMonitorEnabled
-                                    const _dep2 = WallpaperListener.effectivePerMonitor
-                                    const _dep3 = Wallpapers.effectiveWallpaperUrl
-                                    return WallpaperListener.wallpaperUrlForScreen(dockRoot.screen)
-                                }
+                                Rectangle {
+                                    id: dockVisualBackground
+                                    property bool cardStyle: Config.options?.dock?.cardStyle ?? false
+                                    readonly property bool auroraEverywhere: Appearance.auroraEverywhere
+                                    readonly property bool inirEverywhere: Appearance.inirEverywhere
+                                    readonly property bool gameModeMinimal: Appearance.gameModeMinimal
+                                    readonly property string wallpaperUrl: {
+                                        const _dep1 = WallpaperListener.multiMonitorEnabled
+                                        const _dep2 = WallpaperListener.effectivePerMonitor
+                                        const _dep3 = Wallpapers.effectiveWallpaperUrl
+                                        return WallpaperListener.wallpaperUrlForScreen(dockRoot.screen)
+                                    }
 
-                                ColorQuantizer {
-                                    id: dockWallpaperQuantizer
-                                    source: dockVisualBackground.wallpaperUrl
-                                    depth: 0
-                                    rescaleSize: 10
-                                }
+                                    ColorQuantizer {
+                                        id: dockWallpaperQuantizer
+                                        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? dockVisualBackground.wallpaperUrl : ""
+                                        depth: 0
+                                        rescaleSize: 10
+                                    }
 
-                                readonly property color wallpaperDominantColor: dockWallpaperQuantizer?.colors?.[0] ?? Appearance.colors.colPrimary
-                                readonly property QtObject blendedColors: AdaptedMaterialScheme {
-                                    color: ColorUtils.mix(dockVisualBackground.wallpaperDominantColor, Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
-                                }
+                                    readonly property color wallpaperDominantColor: dockWallpaperQuantizer?.colors?.[0] ?? Appearance.colors.colPrimary
+                                    readonly property QtObject blendedColors: AdaptedMaterialScheme {
+                                        color: ColorUtils.mix(dockVisualBackground.wallpaperDominantColor, Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
+                                    }
 
-                                anchors.fill: parent
-                                anchors.topMargin: root.isTop ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
-                                anchors.bottomMargin: root.position === "bottom" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
-                                anchors.leftMargin: root.isLeft ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
-                                anchors.rightMargin: root.position === "right" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
+                                    anchors.fill: parent
+                                    anchors.topMargin: root.isTop ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
+                                    anchors.bottomMargin: root.position === "bottom" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
+                                    anchors.leftMargin: root.isLeft ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
+                                    anchors.rightMargin: root.position === "right" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
 
-                                visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal
+                                // Hide shared background in pill mode — each pill is its own background
+                                // Hide in macOS mode — DockMacBackground is the unified shelf
+                                visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
                                 color: auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
                                     : inirEverywhere ? Appearance.inir.colLayer1
                                     : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
@@ -214,9 +218,11 @@ Scope {
                                     source: dockVisualBackground.wallpaperUrl
                                     fillMode: Image.PreserveAspectCrop
                                     cache: true
+                                    sourceSize.width: dockRoot.screen?.width ?? 1920
+                                    sourceSize.height: dockRoot.screen?.height ?? 1080
                                     asynchronous: true
 
-                                    layer.enabled: Appearance.effectsEnabled && !dockVisualBackground.gameModeMinimal
+                                    layer.enabled: Appearance.effectsEnabled && dockVisualBackground.auroraEverywhere && !dockVisualBackground.inirEverywhere && !dockVisualBackground.gameModeMinimal
                                     layer.effect: MultiEffect {
                                         source: dockBlurredWallpaper
                                         anchors.fill: source
@@ -224,7 +230,7 @@ Scope {
                                             ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
                                             : (Appearance.effectsEnabled ? 0.2 : 0)
                                         blurEnabled: Appearance.effectsEnabled
-                                        blurMax: 100
+                                        blurMax: 64
                                         blur: Appearance.effectsEnabled
                                             ? (Appearance.angelEverywhere ? Appearance.angel.blurIntensity : 1)
                                             : 0
@@ -243,10 +249,27 @@ Scope {
                                 }
                             }
 
+                             // macOS unified shelf background — visible only in macOS style
+                               DockMacBackground {
+                                   id: macBackground
+                                   visible: (Config.options?.dock?.showBackground ?? true)
+                                            && root.isMacosStyle && !Appearance.gameModeMinimal
+                                   anchors.fill: parent
+                                   anchors.topMargin:    root.isTop     ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
+                                   anchors.bottomMargin: root.position === "bottom" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? 0 : Appearance.sizes.elevationMargin)
+                                   anchors.leftMargin:   root.isLeft   ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
+                                   anchors.rightMargin:  root.position === "right" ? Appearance.sizes.hyprlandGapsOut : (root.isVertical ? Appearance.sizes.elevationMargin : 0)
+                                   dockHeight:    dockRoot.dockHeight
+                                   vertical:      root.isVertical
+                                   wallpaperUrl:  dockVisualBackground.wallpaperUrl
+                                   dockScreen:    dockRoot.screen
+                                   blendedLayer0: dockVisualBackground.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0
+                               }
+
                             RowLayout {
                                 id: dockRow
                                 visible: !root.isVertical
-                                anchors.centerIn: dockVisualBackground
+                                anchors.centerIn: root.isMacosStyle ? macBackground : dockVisualBackground
                                 spacing: 2
                                 property real padding: 5
 
@@ -270,10 +293,10 @@ Scope {
                                 }
                             }
 
-                            ColumnLayout {
-                                id: dockColumn
-                                visible: root.isVertical
-                                anchors.centerIn: dockVisualBackground
+                              ColumnLayout {
+                                  id: dockColumn
+                                  visible: root.isVertical
+                                  anchors.centerIn: root.isMacosStyle ? macBackground : dockVisualBackground
                                 spacing: 2
                                 property real padding: 5
 

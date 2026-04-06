@@ -339,7 +339,7 @@ Item {
                                     const v = base + delta
                                     const clamped = Math.max(0, Math.min(100, v))
                                     const a = clamped / 100
-                                    return ColorUtils.transparentize(Appearance.m3colors.m3background, 1 - a)
+                                    return ColorUtils.transparentize(Appearance.colors.colLayer0Base, 1 - a)
                                 }
                                 topLeftRadius: workspace.topLeftRadius
                                 topRightRadius: workspace.topRightRadius
@@ -637,7 +637,7 @@ Item {
                                    : windowItem.hovered
                                        ? ColorUtils.transparentize(Appearance.colors.colLayer2Hover, 0.55)
                                        : "transparent"
-                            border.color: ColorUtils.transparentize(Appearance.m3colors.m3outline, 0.7)
+                            border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.7)
                             border.width: windowItem.hovered || windowItem.pressed ? 1 : 0
                         }
 
@@ -811,7 +811,7 @@ Item {
                 border.color: Appearance.angelEverywhere ? Appearance.angel.colBorder
                     : Appearance.inirEverywhere ? Appearance.inir.colBorder
                     : Appearance.auroraEverywhere ? Appearance.aurora.colTooltipBorder
-                    : ColorUtils.transparentize(Appearance.m3colors.m3outline, 0.5)
+                    : ColorUtils.transparentize(Appearance.colors.colOutline, 0.5)
 
                 Column {
                     id: col

@@ -28,13 +28,13 @@ Column {
             anchors.horizontalCenter: root.horizontalCenter
             color: root.color
             font {
-                family: Appearance.font.family.expressive
+                family: Config.options?.background?.widgets?.clock?.fontFamily ?? "Space Grotesk"
                 weight: Font.Bold
                 pixelSize: numberSize
             }
 
             Behavior on numberSize {
-                animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+                animation: NumberAnimation { duration: Appearance.animation.elementResize.duration; easing.type: Appearance.animation.elementResize.type; easing.bezierCurve: Appearance.animation.elementResize.bezierCurve }
             }
         }
     }

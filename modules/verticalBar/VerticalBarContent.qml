@@ -62,7 +62,7 @@ Item { // Bar content region
                 monochromeIcon: true,
                 text: Translation.tr("Settings"),
                 action: () => {
-                    Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "settings", "open"])
+                    Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"])
                 },
             },
         ]
@@ -77,7 +77,7 @@ Item { // Bar content region
 
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root.wallpaperUrl
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? root.wallpaperUrl : ""
         depth: 0 // 2^0 = 1 color
         rescaleSize: 10
     }
@@ -105,6 +105,7 @@ Item { // Bar content region
             target: barBackground
         }
     }
+
     // Background
     Rectangle {
         id: barBackground
@@ -132,28 +133,62 @@ Item { // Bar content region
 
         clip: true
 
-        layer.enabled: root.auroraEverywhere && !root.inirEverywhere && !root.gameModeMinimal
+        // Angel inset glow — top edge
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: Appearance.angel.insetGlowHeight
+            visible: Appearance.angelEverywhere
+            color: Appearance.angel.colInsetGlow
+        }
+
+        // Angel partial border
+        AngelPartialBorder {
+            targetRadius: barBackground.radius
+        }
+    }
+
+    // Aurora/Angel blur layer — rendered as sibling of barBackground so the blur
+    // is applied over the full screen-sized wallpaper image (not the narrow
+    // clipped bar region). Placed right after barBackground in z-order so it
+    // sits between background and content.
+    Item {
+        id: auroraBlurLayer
+        anchors.fill: barBackground
+        visible: root.auroraEverywhere && !root.inirEverywhere && !root.gameModeMinimal
+            && (Config.options?.bar?.showBackground ?? true)
+
+        // Clip + mask to barBackground shape
+        clip: true
+        layer.enabled: visible
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle {
-                width: barBackground.width
-                height: barBackground.height
+                width: auroraBlurLayer.width
+                height: auroraBlurLayer.height
                 radius: barBackground.radius
             }
         }
 
         Image {
             id: blurredWallpaper
-            x: -barBackground.x
-            y: -barBackground.y
-            width: root.width
-            height: root.height
-            visible: root.auroraEverywhere && !root.inirEverywhere && !root.gameModeMinimal
+            // Position relative to screen — uses screen-sized source so the
+            // wallpaper portion shown matches corner decorators exactly.
+            readonly property real barMargin: barBackground.floatingStyle ? Appearance.sizes.hyprlandGapsOut : 0
+            x: root.barOnRight
+                ? (-(root.screen?.width ?? 1920) + auroraBlurLayer.width + barMargin)
+                : -barMargin
+            y: -barMargin
+            width: root.screen?.width ?? 1920
+            height: root.screen?.height ?? 1080
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screen?.width ?? 1920
+            sourceSize.height: root.screen?.height ?? 1080
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled && !root.gameModeMinimal
+            layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -171,21 +206,6 @@ Item { // Bar content region
                     ? ColorUtils.transparentize((root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base), Appearance.angel.overlayOpacity)
                     : ColorUtils.transparentize((root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base), Appearance.aurora.overlayTransparentize)
             }
-        }
-
-        // Angel inset glow — top edge
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Appearance.angel.insetGlowHeight
-            visible: Appearance.angelEverywhere
-            color: Appearance.angel.colInsetGlow
-        }
-
-        // Angel partial border
-        AngelPartialBorder {
-            targetRadius: barBackground.radius
         }
     }
 
@@ -367,7 +387,7 @@ Item { // Bar content region
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 onPressed: {
@@ -386,7 +406,7 @@ Item { // Bar content region
                         Layout.fillWidth: true
                         Layout.bottomMargin: reveal ? indicatorsColumnLayout.realSpacing : 0
                         Behavior on Layout.bottomMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "volume_off"
@@ -396,11 +416,11 @@ Item { // Bar content region
                     }
                     Revealer {
                         vertical: true
-                        reveal: Audio.source?.audio?.muted ?? false
+                        reveal: Audio.micMuted
                         Layout.fillWidth: true
                         Layout.bottomMargin: reveal ? indicatorsColumnLayout.realSpacing : 0
                         Behavior on Layout.topMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "mic_off"
@@ -422,7 +442,7 @@ Item { // Bar content region
                         implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
                         implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
                         Behavior on Layout.bottomMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Bar.NotificationUnreadCount {
                             id: notificationUnreadCount

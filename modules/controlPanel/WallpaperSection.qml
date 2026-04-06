@@ -12,6 +12,7 @@ Rectangle {
     id: root
     Layout.fillWidth: true
     implicitHeight: wallpaperLayout.implicitHeight + 16
+    readonly property bool showSchemeChips: Config.options?.controlPanel?.showWallpaperSchemeChips ?? false
     
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
@@ -85,7 +86,7 @@ Rectangle {
                 colBackgroundHover: root.inirEverywhere ? Appearance.inir.colLayer2Hover 
                     : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
                     : Appearance.colors.colLayer2Hover
-                onClicked: GlobalStates.wallpaperSelectorOpen = true
+                onClicked: GlobalActions.runLauncher(["wallpaperSelector", "toggle"])
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "folder_open"
@@ -122,13 +123,10 @@ Rectangle {
                 mipmap: true
                 sourceSize.width: previewContainer.width * 2
                 sourceSize.height: previewContainer.height * 2
-                visible: false
-            }
-
-            GE.OpacityMask {
-                anchors.fill: parent
-                source: wallpaperPreview
-                maskSource: previewMask
+                layer.enabled: true
+                layer.effect: GE.OpacityMask {
+                    maskSource: previewMask
+                }
             }
 
             // Dark fade at bottom (masked to match preview corners)
@@ -161,6 +159,35 @@ Rectangle {
                     source: fadeRect
                     maskSource: fadeMask
                 }
+            }
+        }
+
+        Loader {
+            Layout.fillWidth: true
+            active: root.showSchemeChips
+            sourceComponent: ConfigSelectionArray {
+                Layout.fillWidth: true
+                currentValue: Config.options?.appearance?.palette?.type ?? "auto"
+                onSelected: newValue => {
+                    Config.setNestedValue("appearance.palette.type", newValue)
+                    if (ThemeService.isAutoTheme) {
+                        Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`]);
+                    } else {
+                        const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                        MaterialThemeLoader.applySchemeVariant(hex, newValue)
+                    }
+                }
+                options: [
+                    { "value": "auto", "displayName": Translation.tr("Auto") },
+                    { "value": "scheme-content", "displayName": Translation.tr("Content") },
+                    { "value": "scheme-expressive", "displayName": Translation.tr("Expressive") },
+                    { "value": "scheme-fidelity", "displayName": Translation.tr("Fidelity") },
+                    { "value": "scheme-fruit-salad", "displayName": Translation.tr("Fruit Salad") },
+                    { "value": "scheme-monochrome", "displayName": Translation.tr("Monochrome") },
+                    { "value": "scheme-neutral", "displayName": Translation.tr("Neutral") },
+                    { "value": "scheme-rainbow", "displayName": Translation.tr("Rainbow") },
+                    { "value": "scheme-tonal-spot", "displayName": Translation.tr("Tonal Spot") }
+                ]
             }
         }
     }

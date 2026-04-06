@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtMultimedia
 import Qt5Compat.GraphicalEffects
 import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
@@ -26,38 +27,23 @@ MouseArea {
     readonly property bool blurEnabled: Config.options?.lock?.blur?.enable ?? true
     readonly property real blurRadius: Config.options?.lock?.blur?.radius ?? 64
     readonly property real blurZoom: Config.options?.lock?.blur?.extraZoom ?? 1.1
+    readonly property bool enableAnimation: Config.options?.lock?.enableAnimation ?? false
     
-    // Resolve wallpaper path: detect video/gif and use thumbnail
+    // Wallpaper path resolution
     readonly property string _wallpaperSource: Config.options?.background?.wallpaperPath ?? ""
-    readonly property string _wallpaperPath: {
-        const path = _wallpaperSource;
-        if (!path) return "";
-        
-        const lowerPath = path.toLowerCase();
-        const isVideo = lowerPath.endsWith(".mp4") || lowerPath.endsWith(".webm") || lowerPath.endsWith(".mkv") || lowerPath.endsWith(".avi") || lowerPath.endsWith(".mov");
-        const isGif = lowerPath.endsWith(".gif");
-        
-        if (isVideo || isGif) {
-            // Use thumbnail (frozen first frame) for video/gif wallpapers
-            const thumbnail = Config.options?.background?.thumbnailPath ?? "";
-            return thumbnail || path;
-        }
-        return path;
+    readonly property string _wallpaperThumbnail: Config.options?.background?.thumbnailPath ?? ""
+    readonly property bool wallpaperIsVideo: {
+        const lp = _wallpaperSource.toLowerCase();
+        return lp.endsWith(".mp4") || lp.endsWith(".webm") || lp.endsWith(".mkv") || lp.endsWith(".avi") || lp.endsWith(".mov");
     }
-    readonly property bool wallpaperIsAnimated: {
-        const lowerPath = _wallpaperSource.toLowerCase();
-        return lowerPath.endsWith(".mp4") || lowerPath.endsWith(".webm") || lowerPath.endsWith(".mkv") || 
-               lowerPath.endsWith(".avi") || lowerPath.endsWith(".mov") || lowerPath.endsWith(".gif");
+    readonly property bool wallpaperIsGif: _wallpaperSource.toLowerCase().endsWith(".gif")
+    // Static image source: use raw path for normal wallpapers, thumbnail for video/gif
+    readonly property string _staticWallpaperPath: {
+        if (!_wallpaperSource) return "";
+        if (wallpaperIsVideo || wallpaperIsGif) return _wallpaperThumbnail || _wallpaperSource;
+        return _wallpaperSource;
     }
     
-    // Emergency fallback - triple click anywhere to force unlock (safety net)
-    property int emergencyClickCount: 0
-    Timer {
-        id: emergencyClickTimer
-        interval: 1000
-        onTriggered: root.emergencyClickCount = 0
-    }
-
     // Safe fallback background color (prevents red screen on errors)
     Rectangle {
         anchors.fill: parent
@@ -65,13 +51,14 @@ MouseArea {
         z: -1
     }
     
-    // Background wallpaper with blur (uses thumbnail for video/gif)
+    // Static background wallpaper with blur (fallback for video/gif when animation disabled, or primary for static wallpapers)
     Image {
         id: backgroundWallpaper
         anchors.fill: parent
-        source: root._wallpaperPath
+        source: root._staticWallpaperPath
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
+        visible: !root.wallpaperIsGif && !root.wallpaperIsVideo
         
         layer.enabled: root.blurEnabled
         layer.effect: FastBlur {
@@ -81,6 +68,90 @@ MouseArea {
         transform: Scale {
             origin.x: backgroundWallpaper.width / 2
             origin.y: backgroundWallpaper.height / 2
+            xScale: root.blurEnabled ? root.blurZoom : 1
+            yScale: root.blurEnabled ? root.blurZoom : 1
+        }
+    }
+    
+    // Animated GIF wallpaper
+    // Shows first frame when enableAnimation is false, plays when true
+    AnimatedImage {
+        id: gifWallpaper
+        anchors.fill: parent
+        visible: root.wallpaperIsGif
+        source: root.wallpaperIsGif ? root._wallpaperSource : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: false
+        playing: visible && root.enableAnimation
+        
+        layer.enabled: root.blurEnabled
+        layer.effect: FastBlur {
+            radius: root.blurRadius
+        }
+        
+        transform: Scale {
+            origin.x: gifWallpaper.width / 2
+            origin.y: gifWallpaper.height / 2
+            xScale: root.blurEnabled ? root.blurZoom : 1
+            yScale: root.blurEnabled ? root.blurZoom : 1
+        }
+    }
+    
+    // Video wallpaper
+    // Shows first frame (paused) when enableAnimation is false, plays when true
+    Video {
+        id: videoWallpaper
+        anchors.fill: parent
+        visible: root.wallpaperIsVideo
+        source: {
+            if (!root.wallpaperIsVideo || !root._wallpaperSource) return "";
+            const path = root._wallpaperSource;
+            return path.startsWith("file://") ? path : ("file://" + path);
+        }
+        fillMode: VideoOutput.PreserveAspectCrop
+        loops: MediaPlayer.Infinite
+        muted: true
+        autoPlay: true
+
+        readonly property bool shouldPlay: root.enableAnimation
+
+        function pauseAndShowFirstFrame() {
+            pause()
+            seek(0)
+        }
+
+        onPlaybackStateChanged: {
+            if (playbackState === MediaPlayer.PlayingState && !shouldPlay)
+                pauseAndShowFirstFrame()
+            if (playbackState === MediaPlayer.StoppedState && visible && shouldPlay)
+                play()
+        }
+
+        onShouldPlayChanged: {
+            if (visible && root.wallpaperIsVideo) {
+                if (shouldPlay) play()
+                else pauseAndShowFirstFrame()
+            }
+        }
+        
+        onVisibleChanged: {
+            if (visible && root.wallpaperIsVideo) {
+                if (shouldPlay) play()
+                else pauseAndShowFirstFrame()
+            } else {
+                pause()
+            }
+        }
+        
+        layer.enabled: root.blurEnabled
+        layer.effect: FastBlur {
+            radius: root.blurRadius
+        }
+        
+        transform: Scale {
+            origin.x: videoWallpaper.width / 2
+            origin.y: videoWallpaper.height / 2
             xScale: root.blurEnabled ? root.blurZoom : 1
             yScale: root.blurEnabled ? root.blurZoom : 1
         }
@@ -169,8 +240,8 @@ MouseArea {
                 Layout.alignment: Qt.AlignHCenter
                 text: Qt.formatTime(new Date(), "hh:mm")
                 font.pixelSize: Math.round(108 * Appearance.fontSizeScale)
-                font.weight: Font.Light
-                font.family: Appearance.font.family.title
+                font.weight: Font.DemiBold
+                font.family: Appearance.font.family.appearance
                 color: Appearance.colors.colOnSurface
                 
                 layer.enabled: Appearance.effectsEnabled
@@ -319,7 +390,8 @@ MouseArea {
                     }
                     
                     Text {
-                        text: Weather.data?.city ?? ""
+                        text: Weather.visibleCity
+                        visible: Weather.showVisibleCity
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.family: Appearance.font.family.main
                         color: Appearance.colors.colOnSurfaceVariant
@@ -464,7 +536,7 @@ MouseArea {
                     Image {
                         id: avatarImage
                         anchors.fill: parent
-                        source: `file://${Directories.userAvatarPathRicersAndWeirdSystems}`
+                        source: lockAvatarResolver.resolvedSource
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: true
@@ -483,28 +555,19 @@ MouseArea {
                             }
                         }
                     }
-                    
-                    Image {
-                        id: avatarImageFallback
-                        anchors.fill: parent
-                        source: avatarImage.status !== Image.Ready 
-                            ? `file://${Directories.userAvatarPathAccountsService}` 
-                            : ""
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        cache: true
-                        smooth: true
-                        mipmap: true
-                        sourceSize.width: avatarCircle.width * 2
-                        sourceSize.height: avatarCircle.height * 2
-                        visible: status === Image.Ready && avatarImage.status !== Image.Ready
-                        
-                        layer.enabled: Appearance.effectsEnabled
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: avatarCircle.width
-                                height: avatarCircle.height
-                                radius: width / 2
+
+                    QtObject {
+                        id: lockAvatarResolver
+                        property int avatarIndex: 0
+                        readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
+                        readonly property string primaryWatch: Directories.userAvatarSourcePrimary
+                        onPrimaryWatchChanged: avatarIndex = 0
+                        readonly property int imgStatus: avatarImage.status
+                        onImgStatusChanged: {
+                            if (imgStatus === Image.Error) {
+                                const nextIdx = avatarIndex + 1
+                                if (nextIdx < Directories.userAvatarPaths.length)
+                                    avatarIndex = nextIdx
                             }
                         }
                     }
@@ -512,20 +575,20 @@ MouseArea {
                     // Fallback initial
                     Text {
                         anchors.centerIn: parent
-                        text: SystemInfo.username.charAt(0).toUpperCase()
-                        font.pixelSize: 40
+                        text: (SystemInfo.displayName || SystemInfo.username || "?").charAt(0).toUpperCase()
+                        font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnPrimary
-                        visible: avatarImage.status !== Image.Ready && avatarImageFallback.status !== Image.Ready
+                        visible: avatarImage.status !== Image.Ready
                     }
                 }
             }
             
-            // Username
+            // Display name
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 8
-                text: SystemInfo.username
+                text: SystemInfo.displayName || SystemInfo.username
                 font.pixelSize: Math.round(22 * Appearance.fontSizeScale)
                 font.weight: Font.Medium
                 font.family: Appearance.font.family.main
@@ -568,7 +631,7 @@ MouseArea {
                 transform: Translate { x: passwordContainer.shakeOffset; y: passwordContainer.staggerY }
                 
                 Behavior on border.color {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
                 
                 layer.enabled: Appearance.effectsEnabled
@@ -677,7 +740,7 @@ MouseArea {
                                 : Appearance.colors.colPrimary
                         
                         Behavior on color {
-                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         
                         MaterialSymbol {
@@ -924,23 +987,11 @@ MouseArea {
     // ===== INPUT HANDLING =====
     
     hoverEnabled: true
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    acceptedButtons: Qt.LeftButton
     focus: true
     activeFocusOnTab: true
     
     onClicked: mouse => {
-        // Emergency fallback: 5 rapid right-clicks to force unlock
-        if (mouse.button === Qt.RightButton) {
-            root.emergencyClickCount++
-            emergencyClickTimer.restart()
-            if (root.emergencyClickCount >= 5) {
-                console.warn("[LockSurface] Emergency unlock triggered!")
-                root.emergencyClickCount = 0
-                GlobalStates.screenLocked = false
-            }
-            return
-        }
-        
         if (!root.showLoginView) {
             root.switchToLogin()
         } else {
@@ -1097,7 +1148,7 @@ MouseArea {
         }
         
         Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
         
         layer.enabled: Appearance.effectsEnabled

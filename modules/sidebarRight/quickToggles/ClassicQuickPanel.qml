@@ -18,9 +18,10 @@ AbstractQuickPanel {
         id: grid
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        
-        // Approximate width of a toggle (40) + spacing (12)
-        property int itemSlotWidth: 52 
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        // Approximate width of a toggle (40) + spacing
+        property int itemSlotWidth: root.compactMode ? 48 : 52
         columns: Math.max(1, Math.floor(root.width / itemSlotWidth))
         
         spacing: 12

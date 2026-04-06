@@ -90,10 +90,10 @@ function setup_systemd_services(){
 function setup_super_daemon(){
   tui_info "Setting up Super-tap daemon..."
   
-  local daemon_src="${REPO_ROOT}/scripts/daemon/ii_super_overview_daemon.py"
-  local service_src="${REPO_ROOT}/scripts/systemd/ii-super-overview.service"
-  local daemon_dst="${HOME}/.local/bin/ii_super_overview_daemon.py"
-  local service_dst="${XDG_CONFIG_HOME}/systemd/user/ii-super-overview.service"
+  local daemon_src="${REPO_ROOT}/scripts/daemon/inir_super_overview_daemon.py"
+  local service_src="${REPO_ROOT}/scripts/systemd/inir-super-overview.service"
+  local daemon_dst="${HOME}/.local/bin/inir_super_overview_daemon.py"
+  local service_dst="${XDG_CONFIG_HOME}/systemd/user/inir-super-overview.service"
   
   if [[ ! -f "$daemon_src" ]]; then
     log_warning "Super-tap daemon not found in repo, skipping"
@@ -112,10 +112,10 @@ function setup_super_daemon(){
   # Enable service if in graphical session
   if [[ -n "${DBUS_SESSION_BUS_ADDRESS}" ]]; then
     v systemctl --user daemon-reload
-    v systemctl --user enable ii-super-overview.service --now
+    v systemctl --user enable inir-super-overview.service --now
   else
     log_warning "Not in graphical session. Enable later with:"
-    echo "  systemctl --user enable ii-super-overview.service --now"
+    echo "  systemctl --user enable inir-super-overview.service --now"
   fi
   
   log_success "Super-tap daemon installed"
@@ -157,10 +157,13 @@ function setup_desktop_settings(){
   tui_info "Applying desktop settings..."
   
   # gsettings for GNOME/GTK apps (Nautilus, etc.)
+  # Use Adwaita as safe icon theme fallback — always installed on every system.
+  # The real user-chosen theme is applied on first wallpaper color generation
+  # and persisted by IconThemeService at runtime.
   if command -v gsettings &>/dev/null; then
     try gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
     try gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
-    try gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'
+    try gsettings set org.gnome.desktop.interface icon-theme 'Adwaita'
     try gsettings set org.gnome.desktop.interface cursor-theme 'capitaine-cursors-light'
     try gsettings set org.gnome.desktop.interface cursor-size 24
     try gsettings set org.gnome.desktop.interface font-name 'Rubik 11'
@@ -170,10 +173,10 @@ function setup_desktop_settings(){
   if command -v kwriteconfig6 &>/dev/null; then
     # Use Darkly widget style for KDE apps
     try kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Darkly
-    # Set color scheme
-    try kwriteconfig6 --file kdeglobals --group General --key ColorScheme MaterialYouDark
-    # Set icons
-    try kwriteconfig6 --file kdeglobals --group Icons --key Theme breeze-dark
+    # Set color scheme — Darkly matches the generated Darkly.colors
+    try kwriteconfig6 --file kdeglobals --group General --key ColorScheme Darkly
+    # Icons — must match gsettings above
+    try kwriteconfig6 --file kdeglobals --group Icons --key Theme Adwaita
   fi
   
   # Configure Kvantum theme via config file (avoid GUI)
@@ -238,6 +241,6 @@ else
   v disable_super_daemon_if_present
 fi
 
-# NOTE: SDDM theme setup is in 3.files.sh AFTER matugen config is deployed.
+# NOTE: SDDM theme setup is in 3.files.sh AFTER the theming templates are deployed.
 # NOTE: install-python-packages is called in 3.files.sh after requirements.txt
 # is deployed to the target. No need to call it here.

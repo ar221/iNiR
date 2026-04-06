@@ -18,6 +18,13 @@ Item {
     id: root
     property int screenWidth: 1920
     property int screenHeight: 1080
+    readonly property bool compactMode: Config.options?.controlPanel?.compactMode ?? true
+    readonly property bool showMediaSection: Config.options?.controlPanel?.showMediaSection ?? true
+    readonly property bool showWeatherSection: Config.options?.controlPanel?.showWeatherSection ?? true
+    readonly property bool showWallpaperSection: Config.options?.controlPanel?.showWallpaperSection ?? true
+    readonly property bool showSystemSection: Config.options?.controlPanel?.showSystemSection ?? true
+    readonly property bool showSlidersSection: Config.options?.controlPanel?.showSlidersSection ?? true
+    readonly property bool showQuickActionsSection: Config.options?.controlPanel?.showQuickActionsSection ?? true
     
     implicitHeight: background.implicitHeight
     
@@ -26,10 +33,11 @@ Item {
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
     
     readonly property string wallpaperUrl: Wallpapers.effectiveWallpaperUrl
+    readonly property bool useWallpaperBackdrop: root.auroraEverywhere && !root.inirEverywhere && !Appearance.gameModeMinimal && root.wallpaperUrl.length > 0
     
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root.wallpaperUrl
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? root.wallpaperUrl : ""
         depth: 0
         rescaleSize: 10
     }
@@ -68,7 +76,7 @@ Item {
         
         clip: true
 
-        layer.enabled: root.auroraEverywhere && !root.inirEverywhere && !Appearance.gameModeMinimal
+        layer.enabled: root.useWallpaperBackdrop
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle {
                 width: background.width
@@ -83,13 +91,15 @@ Item {
             anchors.centerIn: parent
             width: root.screenWidth
             height: root.screenHeight
-            visible: root.auroraEverywhere && !root.inirEverywhere && !Appearance.gameModeMinimal
-            source: root.wallpaperUrl
+            visible: root.useWallpaperBackdrop
+            source: root.useWallpaperBackdrop ? root.wallpaperUrl : ""
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screenWidth
+            sourceSize.height: root.screenHeight
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -97,7 +107,7 @@ Item {
                     ? Appearance.angel.blurSaturation
                     : (Appearance.effectsEnabled ? 0.2 : 0)
                 blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
+                blurMax: 64
                 blur: Appearance.effectsEnabled ? 1 : 0
             }
 
@@ -124,7 +134,7 @@ Item {
         Flickable {
             id: flickable
             anchors.fill: parent
-            anchors.margins: 12
+            anchors.margins: root.compactMode ? 10 : 12
             clip: true
             contentWidth: width
             contentHeight: contentLayout.implicitHeight
@@ -134,7 +144,7 @@ Item {
             ColumnLayout {
                 id: contentLayout
                 width: flickable.width
-                spacing: 10
+                spacing: root.compactMode ? 8 : 10
 
                 // Header with User Profile
                 ProfileHeader {}
@@ -142,23 +152,47 @@ Item {
                 // Date/Time header
                 DateTimeHeader {}
 
-                // Weather Section
-                WeatherSection {}
-
                 // Media Section
-                MediaSection {}
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showMediaSection
+                    sourceComponent: Component { MediaSection {} }
+                }
 
                 // Wallpaper Section
-                WallpaperSection {}
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showWallpaperSection
+                    sourceComponent: Component { WallpaperSection {} }
+                }
 
-                // System Info Section  
-                SystemSection {}
+                // Weather Section
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showWeatherSection
+                    sourceComponent: Component { WeatherSection {} }
+                }
+
+                // System Info Section
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showSystemSection
+                    sourceComponent: Component { SystemSection {} }
+                }
 
                 // Volume & Brightness Sliders
-                SlidersSection {}
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showSlidersSection
+                    sourceComponent: Component { SlidersSection {} }
+                }
 
                 // Quick actions
-                QuickActionsSection {}
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.showQuickActionsSection
+                    sourceComponent: Component { QuickActionsSection {} }
+                }
 
                 Item { Layout.preferredHeight: 8 }
             }

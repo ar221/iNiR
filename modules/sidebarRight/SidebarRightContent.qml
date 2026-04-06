@@ -86,7 +86,7 @@ Item {
 
         ColorQuantizer {
             id: sidebarRightWallpaperQuantizer
-            source: sidebarRightBackground.wallpaperUrl
+            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? sidebarRightBackground.wallpaperUrl : ""
             depth: 0
             rescaleSize: 10
         }
@@ -110,7 +110,7 @@ Item {
 
         clip: true
 
-        layer.enabled: auroraEverywhere && !inirEverywhere && !gameModeMinimal
+        layer.enabled: !gameModeMinimal
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle {
                 width: sidebarRightBackground.width
@@ -129,9 +129,11 @@ Item {
             source: sidebarRightBackground.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screenWidth ?? 1920
+            sourceSize.height: root.screenHeight ?? 1080
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && sidebarRightBackground.auroraEverywhere && !sidebarRightBackground.inirEverywhere
             layer.effect: MultiEffect {
                 source: sidebarRightBlurredWallpaper
                 anchors.fill: source
@@ -405,7 +407,7 @@ Item {
                     } else if (CompositorService.isNiri) {
                         Quickshell.execDetached(["/usr/bin/niri", "msg", "action", "load-config-file"]);
                     }
-                    Quickshell.reload(true);
+                    Quickshell.execDetached(["/usr/bin/bash", Quickshell.shellPath("scripts/restart-shell.sh")]);
                 }
                 StyledToolTip {
                     text: Translation.tr("Reload Quickshell")
@@ -456,7 +458,7 @@ Item {
                     console.log("[SidebarRight] Opening new settings window via IPC");
                     GlobalStates.sidebarRightOpen = false;
                     Qt.callLater(() => {
-                        Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "settings", "open"]);
+                        Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"]);
                     })
                 }
                 StyledToolTip {

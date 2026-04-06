@@ -59,17 +59,9 @@ ensure_aur_helper(){
   AUR_HELPER="yay"
 }
 
-install-local-pkgbuild() {
-  local location=$1
-  local installflags=$2
-
-  x pushd $location
-
-  source ./PKGBUILD
-  x $AUR_HELPER -S --sudoloop $installflags --asdeps "${depends[@]}"
-  x makepkg -Afsi --noconfirm
-  x popd
-}
+# NOTE: install-local-pkgbuild() removed — was dead code with --asdeps flag
+# that would mark deps as orphan-eligible. Dependency installation now goes
+# through install_pkgbuild_deps() in install-deps.sh (no --asdeps).
 
 #####################################################################################
 # Python Environment (All distros)
@@ -97,7 +89,11 @@ install-python-packages(){
   # Try repo location first (during install), then target location (during doctor)
   local requirements_file="${REPO_ROOT}/sdata/uv/requirements.txt"
   if [[ ! -f "$requirements_file" ]]; then
-    requirements_file="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/ii/sdata/uv/requirements.txt"
+    if declare -F get_runtime_shell_dir >/dev/null; then
+      requirements_file="$(get_runtime_shell_dir)/sdata/uv/requirements.txt"
+    else
+      requirements_file="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/inir/sdata/uv/requirements.txt"
+    fi
   fi
 
   if [[ -f "$requirements_file" ]]; then
@@ -387,10 +383,6 @@ install-cliphist(){
   install-github-binary "cliphist" "sentriz/cliphist" "linux-amd64$"
 }
 
-install-matugen(){
-  install-github-binary "matugen" "InioX/matugen" "x86_64.*tar.gz"
-}
-
 install-starship(){
   if command -v starship &>/dev/null; then
     log_success "Starship already installed"
@@ -528,6 +520,7 @@ QT_STYLE_OVERRIDE=Darkly
 GTK_THEME=adw-gtk3-dark
 ELECTRON_OZONE_PLATFORM_HINT=auto
 ILLOGICAL_IMPULSE_VIRTUAL_ENV=\$HOME/.local/state/quickshell/.venv
+INIR_VENV=\$HOME/.local/state/quickshell/.venv
 EOF
 
   log_success "Environment configuration set"
@@ -707,7 +700,7 @@ if status is-interactive
         alias ls 'eza --icons'
     end
     alias clear "printf '\033[2J\033[3J\033[1;1H'"
-    alias q 'qs -c ii'
+    alias q 'inir run'
 
     # Add local bin to PATH
     fish_add_path ~/.local/bin
@@ -723,12 +716,12 @@ setup-bash-config(){
   log_info "Setting up Bash shell configuration..."
 
   local bashrc="$HOME/.bashrc"
-  local ii_config="$HOME/.config/ii/bashrc"
+  local inir_config="$HOME/.config/inir/bashrc"
 
-  mkdir -p ~/.config/ii
+  mkdir -p ~/.config/inir
 
   # Create ii bash config
-  cat > "$ii_config" << 'EOF'
+  cat > "$inir_config" << 'EOF'
 # ii shell integration - starship prompt and terminal colors
 
 # Load terminal colors from ii theming
@@ -749,7 +742,7 @@ if command -v eza &> /dev/null; then
 elif [[ -x ~/.local/bin/eza ]]; then
     alias ls='~/.local/bin/eza --icons'
 fi
-alias q='qs -c ii'
+alias q='inir run'
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
@@ -757,15 +750,18 @@ EOF
 
   # Add source line to .bashrc if not present
   if [[ -f "$bashrc" ]]; then
-    if ! grep -q "source.*ii/bashrc" "$bashrc" && ! grep -q "\..*ii/bashrc" "$bashrc"; then
-      echo -e "\n# ii shell integration\n[[ -f ~/.config/ii/bashrc ]] && source ~/.config/ii/bashrc" >> "$bashrc"
-      log_success "Added ii integration to .bashrc"
+    if grep -q "source.*ii/bashrc" "$bashrc" || grep -q "\..*ii/bashrc" "$bashrc"; then
+      sed -i 's|~/.config/ii/bashrc|~/.config/inir/bashrc|g' "$bashrc"
+      log_success "Updated Bash integration path in .bashrc"
+    elif ! grep -q "source.*inir/bashrc" "$bashrc" && ! grep -q "\..*inir/bashrc" "$bashrc"; then
+      echo -e "\n# ii shell integration\n[[ -f ~/.config/inir/bashrc ]] && source ~/.config/inir/bashrc" >> "$bashrc"
+      log_success "Added Bash integration to .bashrc"
     else
-      log_info "ii integration already in .bashrc"
+      log_info "Bash integration already in .bashrc"
     fi
   else
-    echo -e "# ii shell integration\n[[ -f ~/.config/ii/bashrc ]] && source ~/.config/ii/bashrc" > "$bashrc"
-    log_success "Created .bashrc with ii integration"
+    echo -e "# ii shell integration\n[[ -f ~/.config/inir/bashrc ]] && source ~/.config/inir/bashrc" > "$bashrc"
+    log_success "Created .bashrc with Bash integration"
   fi
 
   log_success "Bash shell configuration set"
@@ -775,12 +771,12 @@ setup-zsh-config(){
   log_info "Setting up Zsh shell configuration..."
 
   local zshrc="$HOME/.zshrc"
-  local ii_config="$HOME/.config/ii/zshrc"
+  local inir_config="$HOME/.config/inir/zshrc"
 
-  mkdir -p ~/.config/ii
+  mkdir -p ~/.config/inir
 
   # Create ii zsh config
-  cat > "$ii_config" << 'EOF'
+  cat > "$inir_config" << 'EOF'
 # ii shell integration - starship prompt and terminal colors
 
 # Load terminal colors from ii theming
@@ -801,7 +797,7 @@ if command -v eza &> /dev/null; then
 elif [[ -x ~/.local/bin/eza ]]; then
     alias ls='~/.local/bin/eza --icons'
 fi
-alias q='qs -c ii'
+alias q='inir run'
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
@@ -809,11 +805,14 @@ EOF
 
   # Add source line to .zshrc if not present
   if [[ -f "$zshrc" ]]; then
-    if ! grep -q "source.*ii/zshrc" "$zshrc" && ! grep -q "\..*ii/zshrc" "$zshrc"; then
-      echo -e "\n# ii shell integration\n[[ -f ~/.config/ii/zshrc ]] && source ~/.config/ii/zshrc" >> "$zshrc"
-      log_success "Added ii integration to .zshrc"
+    if grep -q "source.*ii/zshrc" "$zshrc" || grep -q "\..*ii/zshrc" "$zshrc"; then
+      sed -i 's|~/.config/ii/zshrc|~/.config/inir/zshrc|g' "$zshrc"
+      log_success "Updated Zsh integration path in .zshrc"
+    elif ! grep -q "source.*inir/zshrc" "$zshrc" && ! grep -q "\..*inir/zshrc" "$zshrc"; then
+      echo -e "\n# ii shell integration\n[[ -f ~/.config/inir/zshrc ]] && source ~/.config/inir/zshrc" >> "$zshrc"
+      log_success "Added Zsh integration to .zshrc"
     else
-      log_info "ii integration already in .zshrc"
+      log_info "Zsh integration already in .zshrc"
     fi
   else
     # Don't create .zshrc if it doesn't exist - user might not use zsh
@@ -888,7 +887,6 @@ install-all-tools(){
   install-eza
   install-uv
   install-cliphist
-  install-matugen
 
   log_success "All tools installed"
 }

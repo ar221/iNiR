@@ -42,7 +42,6 @@ Variants {
         readonly property int backdropBlurRadius: iiBackdrop.blurRadius ?? 32
         readonly property int thumbnailBlurStrength: Config.options?.background?.effects?.thumbnailBlurStrength ?? 50
         readonly property bool enableAnimatedBlur: iiBackdrop.enableAnimatedBlur ?? false
-        readonly property bool externalWallpaperActive: Config.options?.background?.externalWallpaper ?? false
         readonly property int backdropDim: iiBackdrop.dim ?? 35
         readonly property real backdropSaturation: iiBackdrop.saturation ?? 0
         readonly property real backdropContrast: iiBackdrop.contrast ?? 0
@@ -52,6 +51,8 @@ Variants {
         readonly property bool useAuroraStyle: iiBackdrop.useAuroraStyle ?? false
         readonly property real auroraOverlayOpacity: iiBackdrop.auroraOverlayOpacity ?? 0.38
         readonly property bool enableAnimation: iiBackdrop.enableAnimation ?? false
+        // External wallpaper engine (e.g. linux-wallpaperengine) — hide internal wallpaper
+        readonly property bool externalWallpaperActive: Config.options?.background?.externalWallpaper ?? false
 
         // Per-monitor main wallpaper path (resolves per-monitor when multi-monitor enabled)
         readonly property string _perMonitorMainPath: {
@@ -115,10 +116,12 @@ Variants {
         // Color quantizer for aurora-style adaptive colors
         ColorQuantizer {
             id: backdropColorQuantizer
-            source: backdropWindow.colorSourcePath 
-                ? (backdropWindow.colorSourcePath.startsWith("file://") 
-                    ? backdropWindow.colorSourcePath 
-                    : "file://" + backdropWindow.colorSourcePath)
+            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere)
+                ? (backdropWindow.colorSourcePath
+                    ? (backdropWindow.colorSourcePath.startsWith("file://")
+                        ? backdropWindow.colorSourcePath
+                        : "file://" + backdropWindow.colorSourcePath)
+                    : "")
                 : ""
             depth: 0
             rescaleSize: 10
@@ -131,32 +134,41 @@ Variants {
 
         Item {
             anchors.fill: parent
+            clip: true
             visible: !backdropWindow.externalWallpaperActive
 
-            // Static Image (non-GIF, non-video images only)
-            Image {
+            // Blur edge compensation: MultiEffect fades at boundaries because the
+            // Gaussian kernel has no pixels beyond the item edge. To fix this, all
+            // wallpaper source items are oversized by blurMax (64px) on every side,
+            // and this parent clips the result to exact screen bounds.
+            readonly property int blurOverflow: 64
+
+            // Static wallpaper with crossfade transitions (shares workspace transition settings)
+            WallpaperCrossfader {
                 id: wallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.effectiveWallpaperPath && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
-                    ? (backdropWindow.effectiveWallpaperPath.startsWith("file://") 
-                        ? backdropWindow.effectiveWallpaperPath 
+                    ? (backdropWindow.effectiveWallpaperPath.startsWith("file://")
+                        ? backdropWindow.effectiveWallpaperPath
                         : "file://" + backdropWindow.effectiveWallpaperPath)
                     : ""
-                asynchronous: true
-                cache: true
-                smooth: true
-                mipmap: true
                 visible: !backdropWindow.useAuroraStyle && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
+                // Constrain decoded size to monitor resolution — no need for native
+                // resolution since backdrop is always screen-sized with blur.
+                sourceSize: Qt.size(backdropWindow.screen?.width ?? 1920, backdropWindow.screen?.height ?? 1080)
+            }
 
-                layer.enabled: Appearance.effectsEnabled && backdropWindow.backdropBlurRadius > 0 && !backdropWindow.useAuroraStyle
-                layer.effect: MultiEffect {
-                    blurEnabled: true
-                    blur: backdropWindow.backdropBlurRadius / 100.0
-                    blurMax: 64
-                    saturation: backdropWindow.backdropSaturation
-                    contrast: backdropWindow.backdropContrast
-                }
+            MultiEffect {
+                anchors.fill: wallpaper
+                source: wallpaper
+                visible: wallpaper.ready && !backdropWindow.useAuroraStyle && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
+                blurEnabled: backdropWindow.backdropBlurRadius > 0
+                blur: backdropWindow.backdropBlurRadius / 100.0
+                blurMax: 64
+                saturation: backdropWindow.backdropSaturation
+                contrast: backdropWindow.backdropContrast
             }
             
             // Animated GIF wallpaper
@@ -164,6 +176,7 @@ Variants {
             AnimatedImage {
                 id: gifWallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.wallpaperIsGif && backdropWindow.wallpaperPathRaw
                     ? (backdropWindow.wallpaperPathRaw.startsWith("file://")
@@ -171,11 +184,11 @@ Variants {
                         : "file://" + backdropWindow.wallpaperPathRaw)
                     : ""
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: !backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif
-                playing: visible && backdropWindow.enableAnimation
+                playing: visible && backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive
 
                 layer.enabled: Appearance.effectsEnabled && backdropWindow.enableAnimatedBlur && backdropWindow.backdropBlurRadius > 0
                 layer.effect: MultiEffect {
@@ -192,6 +205,7 @@ Variants {
             Video {
                 id: videoWallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 visible: !backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsVideo
                 source: {
                     if (!backdropWindow.wallpaperIsVideo) return "";
@@ -204,7 +218,7 @@ Variants {
                 muted: true
                 autoPlay: true
 
-                readonly property bool shouldPlay: backdropWindow.enableAnimation
+                readonly property bool shouldPlay: backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive && !GlobalStates.overviewOpen
 
                 function pauseAndShowFirstFrame() {
                     pause()
@@ -250,13 +264,17 @@ Variants {
             Image {
                 id: auroraWallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.wallpaperIsGif ? gifWallpaper.source : wallpaper.source
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: backdropWindow.useAuroraStyle && status === Image.Ready && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
+                // Constrain decoded size — aurora is heavily blurred, screen res is enough.
+                sourceSize.width: backdropWindow.screen?.width ?? 1920
+                sourceSize.height: backdropWindow.screen?.height ?? 1080
 
                 layer.enabled: Appearance.effectsEnabled
                 layer.effect: MultiEffect {
@@ -275,14 +293,15 @@ Variants {
             AnimatedImage {
                 id: auroraGifWallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 fillMode: Image.PreserveAspectCrop
                 source: backdropWindow.wallpaperIsGif ? gifWallpaper.source : ""
                 asynchronous: true
-                cache: true
+                cache: false
                 smooth: true
                 mipmap: true
                 visible: backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif
-                playing: visible && backdropWindow.enableAnimation
+                playing: visible && backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive
 
                 layer.enabled: Appearance.effectsEnabled && backdropWindow.enableAnimatedBlur
                 layer.effect: MultiEffect {
@@ -301,6 +320,7 @@ Variants {
             Video {
                 id: auroraVideoWallpaper
                 anchors.fill: parent
+                anchors.margins: -parent.blurOverflow
                 visible: backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsVideo
                 source: videoWallpaper.source
                 fillMode: VideoOutput.PreserveAspectCrop
@@ -308,7 +328,7 @@ Variants {
                 muted: true
                 autoPlay: true
 
-                readonly property bool shouldPlay: backdropWindow.enableAnimation
+                readonly property bool shouldPlay: backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive && !GlobalStates.overviewOpen
 
                 function pauseAndShowFirstFrame() {
                     pause()

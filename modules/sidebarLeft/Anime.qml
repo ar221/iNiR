@@ -225,13 +225,13 @@ Item {
                 }
             }
 
-            PagePlaceholder {
+            MaterialPlaceholderMessage {
                 id: placeholderItem
                 z: 2
                 shown: root.responses.length === 0
                 icon: "bookmark_heart"
-                title: Translation.tr("Anime boorus")
-                description: ""
+                text: Translation.tr("Anime boorus")
+                explanation: ""
                 shape: MaterialShape.Shape.Bun
             }
 
@@ -352,7 +352,7 @@ Item {
             clip: true
 
             Behavior on implicitHeight {
-                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 
             RowLayout { // Input field and send button

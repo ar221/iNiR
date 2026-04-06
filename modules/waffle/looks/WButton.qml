@@ -10,8 +10,8 @@ Button {
     id: root
 
     property color colBackground: ColorUtils.transparentize(Looks.colors.bg1)
-    property color colBackgroundHover: Looks.colors.bg2Hover
-    property color colBackgroundActive: Looks.colors.bg2Active
+    property color colBackgroundHover: Looks.colors.interactiveSurfaceHover
+    property color colBackgroundActive: Looks.colors.interactiveSurfaceActive
     property color colBackgroundToggled: Looks.colors.accent
     property color colBackgroundToggledHover: Looks.colors.accentHover
     property color colBackgroundToggledActive: Looks.colors.accentActive
@@ -99,13 +99,15 @@ Button {
         id: backgroundRect
         radius: Looks.radius.medium
         color: root.color
+        border.width: Looks.glassActive && (root.hovered || root.checked || root.down) ? 1 : 0
+        border.color: Looks.colors.tooltipBorder
         
         // Windows 11 style press feedback - subtle but noticeable
         scale: root.down ? 0.96 : 1.0
         opacity: root.down ? 0.9 : 1.0
         
         Behavior on color {
-            animation: Looks.transition.color.createObject(this)
+            animation: ColorAnimation { duration: Looks.transition.enabled ? 70 : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Looks.transition.easing.bezierCurve.standard }
         }
         Behavior on scale {
             NumberAnimation {

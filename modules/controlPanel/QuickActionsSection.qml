@@ -12,6 +12,7 @@ Rectangle {
     id: root
     Layout.fillWidth: true
     implicitHeight: actionsGrid.implicitHeight + 16
+    readonly property bool compactMode: Config.options?.controlPanel?.compactMode ?? true
     
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
@@ -31,22 +32,22 @@ Rectangle {
     GridLayout {
         id: actionsGrid
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: root.compactMode ? 6 : 8
         columns: 4
-        rowSpacing: 6
-        columnSpacing: 6
+        rowSpacing: root.compactMode ? 4 : 6
+        columnSpacing: root.compactMode ? 4 : 6
 
         // Row 1: Audio
         ActionTile {
             icon: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
             active: !(Audio.sink?.audio?.muted ?? false)
-            onClicked: Audio.sink?.audio?.toggleMute()
+            onClicked: Audio.toggleMute()
         }
 
         ActionTile {
-            icon: Audio.source?.audio?.muted ? "mic_off" : "mic"
-            active: !(Audio.source?.audio?.muted ?? false)
-            onClicked: Audio.source?.audio?.toggleMute()
+            icon: Audio.micMuted ? "mic_off" : "mic"
+            active: !Audio.micMuted
+            onClicked: Audio.toggleMicMute()
         }
 
         ActionTile {
@@ -100,7 +101,7 @@ Rectangle {
             icon: "settings"
             onClicked: {
                 GlobalStates.controlPanelOpen = false
-                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "settings", "open"])
+                Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"])
             }
         }
 
@@ -108,7 +109,7 @@ Rectangle {
             icon: "lock"
             onClicked: {
                 GlobalStates.controlPanelOpen = false
-                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "lock", "activate"])
+                Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "lock", "activate"])
             }
         }
 
@@ -141,7 +142,7 @@ Rectangle {
         signal clicked()
 
         Layout.fillWidth: true
-        implicitHeight: 36
+        implicitHeight: root.compactMode ? 30 : 36
         radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
             : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
         
@@ -173,18 +174,18 @@ Rectangle {
 
         Behavior on color {
             enabled: Appearance.animationsEnabled
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
         MaterialSymbol {
             anchors.centerIn: parent
             text: tile.icon
-            iconSize: 18
+            iconSize: root.compactMode ? 16 : 18
             color: tile.iconColor
 
             Behavior on color {
                 enabled: Appearance.animationsEnabled
-                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
         }
 

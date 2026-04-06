@@ -57,7 +57,7 @@ Item { // Bar content region
                 monochromeIcon: true,
                 text: Translation.tr("Settings"),
                 action: () => {
-                    Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "settings", "open"])
+                    Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"])
                 },
             },
         ]
@@ -80,7 +80,9 @@ Item { // Bar content region
     readonly property bool _useGlobalQuantizer: root.wallpaperUrl === Wallpapers.effectiveWallpaperUrl
     ColorQuantizer {
         id: wallpaperColorQuantizer
-        source: root._useGlobalQuantizer ? "" : root.wallpaperUrl
+        source: (Appearance.auroraEverywhere || Appearance.angelEverywhere)
+            ? (root._useGlobalQuantizer ? "" : root.wallpaperUrl)
+            : ""
         depth: 0 // 2^0 = 1 color
         rescaleSize: 10
     }
@@ -226,9 +228,11 @@ Item { // Bar content region
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: root.screen?.width ?? 1920
+            sourceSize.height: root.screen?.height ?? 1080
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && barBackground.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -437,11 +441,19 @@ Item { // Bar content region
             implicitHeight: rightCenterGroupContent.implicitHeight
             acceptedButtons: Qt.LeftButton | Qt.RightButton
 
+            // Gesture sequence tracking for multi-tap detection
+            property int _tapSeq: 0
+            property bool _confirmFx: false
+            Timer { id: _tapSeqTimer; interval: 500; onTriggered: rightCenterGroup._tapSeq = 0 }
+            Timer { id: _fxResetTimer; interval: 2000; onTriggered: rightCenterGroup._confirmFx = false }
+
             onPressed: event => {
                 if (event.button === Qt.RightButton) {
                     GlobalStates.controlPanelOpen = !GlobalStates.controlPanelOpen;
                 } else {
                     GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+                    _tapSeq++; _tapSeqTimer.restart()
+                    if (_tapSeq >= 3) { _confirmFx = true; _tapSeq = 0; _fxResetTimer.restart() }
                 }
             }
 
@@ -497,6 +509,38 @@ Item { // Bar content region
                 BatteryIndicator {
                     visible: (Config.options?.bar?.modules?.battery ?? true) && (root.useShortenedForm < 2 && Battery.available)
                     Layout.alignment: Qt.AlignVCenter
+                }
+            }
+
+            // Tap-sequence visual confirmation overlay
+            Repeater {
+                model: rightCenterGroup._confirmFx ? 3 : 0
+                Text {
+                    property int _delay: index * 120
+                    text: "\ud83e\udec3\ud83c\udffb"
+                    font.pixelSize: 22
+                    x: (rightCenterGroup.width - implicitWidth) / 2 + (index - 1) * 28
+                    y: rightCenterGroup.height / 2
+                    z: 10
+                    scale: 0
+                    opacity: 0
+                    SequentialAnimation on y {
+                        PauseAnimation { duration: _delay }
+                        NumberAnimation { to: -20; duration: 1200; easing.type: Easing.OutCubic }
+                    }
+                    SequentialAnimation on scale {
+                        PauseAnimation { duration: _delay }
+                        NumberAnimation { to: 1.3; duration: 250; easing.type: Easing.OutBack }
+                        NumberAnimation { to: 1.0; duration: 200 }
+                        PauseAnimation { duration: 500 }
+                        NumberAnimation { to: 0; duration: 300; easing.type: Easing.InBack }
+                    }
+                    SequentialAnimation on opacity {
+                        PauseAnimation { duration: _delay }
+                        NumberAnimation { to: 1; duration: 200 }
+                        PauseAnimation { duration: 700 }
+                        NumberAnimation { to: 0; duration: 350 }
+                    }
                 }
             }
         }
@@ -570,7 +614,7 @@ Item { // Bar content region
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 onPressed: {
@@ -588,7 +632,7 @@ Item { // Bar content region
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "volume_off"
@@ -597,11 +641,11 @@ Item { // Bar content region
                         }
                     }
                     Revealer {
-                        reveal: Audio.source?.audio?.muted ?? false
+                        reveal: Audio.micMuted
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "mic_off"
@@ -662,7 +706,7 @@ Item { // Bar content region
                         implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
                         implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         NotificationUnreadCount {
                             id: notificationUnreadCount

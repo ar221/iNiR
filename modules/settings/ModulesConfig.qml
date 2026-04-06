@@ -11,7 +11,7 @@ ContentPage {
     settingsPageName: Translation.tr("Modules")
     settingsPageIcon: "extension"
 
-    readonly property bool isWaffle: Config.options.panelFamily === "waffle"
+    readonly property bool isWaffle: Config.options?.panelFamily === "waffle"
 
     readonly property var defaultPanels: ({
         "ii": [
@@ -22,18 +22,18 @@ ContentPage {
             "iiWallpaperSelector", "iiAltSwitcher", "iiClipboard"
         ],
         "waffle": [
-            "wBar", "wBackground", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wLock", "wPolkit", "wSessionScreen",
-            "iiBackdrop", "iiCheatsheet", "iiControlPanel", "iiLock", "iiOnScreenKeyboard", "iiOverlay", "iiOverview", "iiPolkit", 
-            "iiRegionSelector", "iiSessionScreen", "iiWallpaperSelector", "iiAltSwitcher", "iiClipboard"
+            "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wTaskView", "wLock", "wPolkit", "wSessionScreen",
+            "iiCheatsheet", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
+            "iiRegionSelector", "iiScreenCorners", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ]
     })
 
     function isPanelEnabled(panelId: string): bool {
-        return Config.options.enabledPanels.includes(panelId)
+        return (Config.options?.enabledPanels ?? []).includes(panelId)
     }
 
     function setPanelEnabled(panelId: string, enabled: bool) {
-        let panels = [...Config.options.enabledPanels]
+        let panels = [...(Config.options?.enabledPanels ?? [])]
         const idx = panels.indexOf(panelId)
         
         if (enabled && idx === -1) {
@@ -42,12 +42,33 @@ ContentPage {
             panels.splice(idx, 1)
         }
         
-        Config.options.enabledPanels = panels
+        Config.setNestedValue("enabledPanels", panels)
+    }
+
+    function isIiBarEnabled(): bool {
+        const panels = Config.options?.enabledPanels ?? []
+        return panels.includes("iiBar") || panels.includes("iiVerticalBar")
+    }
+
+    function setIiBarEnabled(enabled: bool) {
+        let panels = [...(Config.options?.enabledPanels ?? [])]
+
+        const hasBar = panels.includes("iiBar")
+        const hasVerticalBar = panels.includes("iiVerticalBar")
+
+        if (enabled) {
+            if (!hasBar) panels.push("iiBar")
+            if (!hasVerticalBar) panels.push("iiVerticalBar")
+        } else {
+            panels = panels.filter(panel => panel !== "iiBar" && panel !== "iiVerticalBar")
+        }
+
+        Config.setNestedValue("enabledPanels", panels)
     }
 
     function resetToDefaults() {
-        const family = Config.options.panelFamily || "ii"
-        Config.options.enabledPanels = [...defaultPanels[family]]
+        const family = Config.options?.panelFamily ?? "ii"
+        Config.setNestedValue("enabledPanels", [...(defaultPanels[family] ?? [])])
     }
 
     SettingsCardSection {
@@ -132,8 +153,8 @@ ContentPage {
                     }
 
                     onClicked: {
-                        Config.options.panelFamily = "ii"
-                        Config.options.enabledPanels = [...modulesPage.defaultPanels["ii"]]
+                        Config.setNestedValue("panelFamily", "ii")
+                        Config.setNestedValue("enabledPanels", [...modulesPage.defaultPanels["ii"]])
                     }
                 }
 
@@ -163,8 +184,8 @@ ContentPage {
                     }
 
                     onClicked: {
-                        Config.options.panelFamily = "waffle"
-                        Config.options.enabledPanels = [...modulesPage.defaultPanels["waffle"]]
+                        Config.setNestedValue("panelFamily", "waffle")
+                        Config.setNestedValue("enabledPanels", [...modulesPage.defaultPanels["waffle"]])
                     }
                 }
             }
@@ -181,7 +202,7 @@ ContentPage {
         SettingsGroup {
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Terminal used by shell actions, tools, keybinds, and update commands.")
+                text: Translation.tr("Terminal used by shell actions, tools, keybinds, and package commands.")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 wrapMode: Text.WordWrap
@@ -226,8 +247,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "foot")
-                        Config.setNestedValue("apps.update", "foot -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "foot")
                     }
                 }
 
@@ -257,8 +277,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "kitty")
-                        Config.setNestedValue("apps.update", "kitty -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "kitty")
                     }
                 }
 
@@ -288,8 +307,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "ghostty")
-                        Config.setNestedValue("apps.update", "ghostty -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "ghostty")
                     }
                 }
 
@@ -319,8 +337,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "alacritty")
-                        Config.setNestedValue("apps.update", "alacritty -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "alacritty")
                     }
                 }
 
@@ -350,8 +367,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "wezterm")
-                        Config.setNestedValue("apps.update", "wezterm -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "wezterm")
                     }
                 }
 
@@ -381,8 +397,7 @@ ContentPage {
                         }
                     }
                     onClicked: {
-                        Config.setNestedValue("apps.terminal", "konsole")
-                        Config.setNestedValue("apps.update", "konsole -e sudo pacman -Syu")
+                        AppLauncher.applyPreset("terminal", "konsole")
                     }
                 }
             }
@@ -410,17 +425,9 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "toolbar"
                 text: Translation.tr("Bar")
-                checked: modulesPage.isPanelEnabled("iiBar")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiBar", checked)
-                StyledToolTip { text: Translation.tr("Horizontal bar with clock, workspaces, system tray and utilities") }
-            }
-
-            SettingsSwitch {
-                buttonIcon: "view_column"
-                text: Translation.tr("Vertical Bar")
-                checked: modulesPage.isPanelEnabled("iiVerticalBar")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiVerticalBar", checked)
-                StyledToolTip { text: Translation.tr("Vertical bar layout (alternative to horizontal bar)") }
+                checked: modulesPage.isIiBarEnabled()
+                onCheckedChanged: modulesPage.setIiBarEnabled(checked)
+                StyledToolTip { text: Translation.tr("Main bar module. Orientation (horizontal/vertical) is configured in Bar settings.") }
             }
 
             SettingsSwitch {
@@ -703,7 +710,7 @@ ContentPage {
         SettingsGroup {
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Modules shared with Material ii style")
+                text: Translation.tr("Supporting modules used alongside Waffle")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 wrapMode: Text.WordWrap
@@ -736,24 +743,24 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "lock"
                 text: Translation.tr("Lock Screen")
-                checked: modulesPage.isPanelEnabled("iiLock")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiLock", checked)
+                checked: modulesPage.isPanelEnabled("wLock")
+                onCheckedChanged: modulesPage.setPanelEnabled("wLock", checked)
                 StyledToolTip { text: Translation.tr("Custom lock screen with clock and password input") }
             }
 
             SettingsSwitch {
                 buttonIcon: "power_settings_new"
                 text: Translation.tr("Session Screen")
-                checked: modulesPage.isPanelEnabled("iiSessionScreen")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiSessionScreen", checked)
+                checked: modulesPage.isPanelEnabled("wSessionScreen")
+                onCheckedChanged: modulesPage.setPanelEnabled("wSessionScreen", checked)
                 StyledToolTip { text: Translation.tr("Power menu: lock, logout, suspend, reboot, shutdown") }
             }
 
             SettingsSwitch {
                 buttonIcon: "admin_panel_settings"
                 text: Translation.tr("Polkit Agent")
-                checked: modulesPage.isPanelEnabled("iiPolkit")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiPolkit", checked)
+                checked: modulesPage.isPanelEnabled("wPolkit")
+                onCheckedChanged: modulesPage.setPanelEnabled("wPolkit", checked)
                 StyledToolTip { text: Translation.tr("Password prompt for administrative actions") }
             }
 
@@ -811,6 +818,216 @@ ContentPage {
                 checked: modulesPage.isPanelEnabled("iiCrosshair")
                 onCheckedChanged: modulesPage.setPanelEnabled("iiCrosshair", checked)
                 StyledToolTip { text: Translation.tr("Gaming crosshair overlay") }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
+        icon: "aspect_ratio"
+        title: Translation.tr("Display scaling")
+
+        SettingsGroup {
+            ConfigRow {
+                uniform: true
+                ConfigSpinBox {
+                    icon: "zoom_in"
+                    text: Translation.tr("UI scale (%)")
+                    value: Math.round((Config.options?.appearance?.typography?.sizeScale ?? 1.0) * 100)
+                    from: 50
+                    to: 200
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("appearance.typography.sizeScale", value / 100)
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Scale fonts and spacing throughout the shell. Takes effect immediately.")
+                    }
+                }
+            }
+
+            StyledText {
+                Layout.leftMargin: 16
+                text: Translation.tr("Current: %1%. Takes effect immediately.").arg(
+                    Math.round((Config.options?.appearance?.typography?.sizeScale ?? 1.0) * 100))
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+
+            RowLayout {
+                Layout.topMargin: 4
+                visible: Math.abs((Config.options?.appearance?.typography?.sizeScale ?? 1.0) - 1.0) > 0.01
+
+                RippleButtonWithIcon {
+                    materialIcon: "zoom_out"
+                    mainText: Translation.tr("Reset to 100%")
+                    onClicked: {
+                        Config.setNestedValue("appearance.typography.sizeScale", 1.0)
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
+        icon: "wallpaper_slideshow"
+        title: Translation.tr("Wallpaper selector")
+
+        SettingsGroup {
+            ContentSubsection {
+                title: Translation.tr("Selector style")
+
+                SettingsSwitch {
+                    buttonIcon: "view_carousel"
+                    text: Translation.tr("Coverflow mode")
+                    checked: (Config.options?.wallpaperSelector?.style ?? "grid") === "coverflow"
+                    onCheckedChanged: Config.setNestedValue("wallpaperSelector.style", checked ? "coverflow" : "grid")
+                    StyledToolTip {
+                        text: Translation.tr("Use a fullscreen coverflow carousel instead of the grid picker.\nNavigate with arrow keys or mouse wheel.")
+                    }
+                }
+
+                SettingsSwitch {
+                    visible: (Config.options?.wallpaperSelector?.style ?? "grid") === "coverflow"
+                    buttonIcon: "view_array"
+                    text: Translation.tr("Skew view (parallelogram cards)")
+                    checked: (Config.options?.wallpaperSelector?.coverflowView ?? "gallery") === "skew"
+                    onCheckedChanged: Config.setNestedValue("wallpaperSelector.coverflowView", checked ? "skew" : "gallery")
+                    StyledToolTip {
+                        text: Translation.tr("Use tilted parallelogram cards instead of the hero + filmstrip layout.\nYou can also switch between views from the toolbar inside the coverflow.")
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Behavior")
+
+                SettingsSwitch {
+                    buttonIcon: "open_in_new"
+                    text: Translation.tr("Use system file picker")
+                    checked: Config.options?.wallpaperSelector?.useSystemFileDialog ?? false
+                    onCheckedChanged: Config.setNestedValue("wallpaperSelector.useSystemFileDialog", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Use your system's native file picker instead of the built-in one")
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
+        icon: "web_asset"
+        title: Translation.tr("Settings UI")
+
+        SettingsGroup {
+            StyledText {
+                Layout.fillWidth: true
+                text: Translation.tr("Choose how the Settings window opens. Overlay mode renders settings as a layer on top of the shell, so you can see changes to the bar, sidebars, and background in real time.")
+                color: Appearance.colors.colOnSurfaceVariant
+                font.pixelSize: Appearance.font.pixelSize.small
+                wrapMode: Text.WordWrap
+            }
+
+            SettingsSwitch {
+                buttonIcon: "layers"
+                text: Translation.tr("Overlay mode (live preview)")
+                checked: Config.options?.settingsUi?.overlayMode ?? false
+                onCheckedChanged: Config.setNestedValue("settingsUi.overlayMode", checked)
+                StyledToolTip {
+                    text: Translation.tr("When enabled, Settings opens as a floating overlay inside the shell instead of a separate window. This lets you preview changes instantly.\nRequires a shell restart to take effect.")
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Overlay appearance")
+                visible: Config.options?.settingsUi?.overlayMode ?? false
+
+                ConfigSpinBox {
+                    icon: "water"
+                    text: Translation.tr("Background dim (%)")
+                    value: Config.options?.settingsUi?.overlayAppearance?.scrimDim ?? 35
+                    from: 0
+                    to: 80
+                    stepSize: 5
+                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.scrimDim", value)
+                    StyledToolTip {
+                        text: Translation.tr("How dark the backdrop behind the Settings panel should be (0 = transparent, 80 = very dark)")
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Panel background opacity (%)")
+                    value: Math.round((Config.options?.settingsUi?.overlayAppearance?.backgroundOpacity ?? 1.0) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: Config.setNestedValue("settingsUi.overlayAppearance.backgroundOpacity", value / 100)
+                    StyledToolTip {
+                        text: Translation.tr("Opacity of the Settings panel background. Lower values let the shell show through.")
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "blur_on"
+                    text: Translation.tr("Enhanced blur (aurora/angel only)")
+                    checked: Config.options?.settingsUi?.overlayAppearance?.enableBlur ?? false
+                    onCheckedChanged: Config.setNestedValue("settingsUi.overlayAppearance.enableBlur", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Apply extra glass blur behind the Settings panel. Only visible with aurora or angel global style.")
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: modeHintRow.implicitHeight + 16
+                radius: Appearance.rounding.small
+                color: Appearance.colors.colSurfaceContainerLow
+                border.width: 1
+                border.color: Appearance.colors.colLayer0Border
+
+                RowLayout {
+                    id: modeHintRow
+                    anchors {
+                        fill: parent
+                        margins: 8
+                    }
+                    spacing: 8
+
+                    MaterialSymbol {
+                        text: (Config.options?.settingsUi?.overlayMode ?? false) ? "layers" : "open_in_new"
+                        iconSize: Appearance.font.pixelSize.huge
+                        color: Appearance.m3colors.m3primary
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        StyledText {
+                            text: (Config.options?.settingsUi?.overlayMode ?? false)
+                                ? Translation.tr("Overlay mode")
+                                : Translation.tr("Window mode")
+                            font {
+                                pixelSize: Appearance.font.pixelSize.small
+                                weight: Font.Medium
+                            }
+                            color: Appearance.colors.colOnSurface
+                        }
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: (Config.options?.settingsUi?.overlayMode ?? false)
+                                ? Translation.tr("Settings will open as a floating panel over the shell. Press Esc or click outside to close.")
+                                : Translation.tr("Settings will open as a separate application window (current behavior).")
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colSubtext
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
             }
         }
     }

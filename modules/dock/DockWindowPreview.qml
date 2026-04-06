@@ -15,12 +15,39 @@ Button {
     id: root
 
     required property var toplevel
+    property bool closing: false
     property real previewWidthConstraint: 200
     property real previewHeightConstraint: 110
     padding: 6
     Layout.fillHeight: true
+    opacity: closing ? 0 : 1
+    scale: closing ? 0.92 : 1
+    Layout.preferredWidth: closing ? 0 : implicitWidth
+    Layout.maximumWidth: closing ? 0 : implicitWidth
+    Layout.preferredHeight: implicitHeight
+    Layout.maximumHeight: implicitHeight
+
+    Behavior on opacity {
+        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+    }
+
+    Behavior on scale {
+        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+    }
+
+    Behavior on Layout.preferredWidth {
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+
+    Behavior on Layout.maximumWidth {
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+
+    // Emitted BEFORE focus IPC so the popup can close instantly (no flash)
+    signal windowActivated()
 
     onClicked: {
+        root.windowActivated()
         if (CompositorService.isNiri && root.toplevel?.niriWindowId) {
             NiriService.focusWindow(root.toplevel.niriWindowId)
         } else {
@@ -56,7 +83,14 @@ Button {
             IconImage {
                 id: appIcon
                 Layout.alignment: Qt.AlignVCenter
-                source: Quickshell.iconPath(AppSearch.guessIcon(root.toplevel?.appId ?? ""), "application-x-executable")
+                // Use desktop entry icon (same resolution as dock button) instead of weak guessIcon
+                source: {
+                    const appId = root.toplevel?.appId ?? "";
+                    const de = AppSearch.lookupDesktopEntry(appId);
+                    const icon = de?.icon || AppSearch.guessIcon(appId);
+                    const resolved = IconThemeService.smartIconName(icon, appId);
+                    return Quickshell.iconPath(resolved, "application-x-executable");
+                }
                 implicitSize: 16
                 mipmap: true
                 smooth: true
@@ -92,7 +126,10 @@ Button {
                 colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.8)
                 colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                 
-                onClicked: root.toplevel?.close()
+                onClicked: {
+                    root.closing = true
+                    closeWindowTimer.restart()
+                }
 
                 contentItem: MaterialSymbol {
                     text: "close"
@@ -113,7 +150,10 @@ Button {
             implicitWidth: 140
             implicitHeight: 90
 
-            readonly property int windowId: root.toplevel?.id ?? root.toplevel?.niriWindowId ?? 0
+            // Prefer niriWindowId for Niri compositor — WindowPreviewService captures by niri IDs
+            readonly property int windowId: CompositorService.isNiri
+                ? (root.toplevel?.niriWindowId ?? root.toplevel?.id ?? 0)
+                : (root.toplevel?.id ?? 0)
             property string previewUrl: ""
 
             // Loading shimmer effect
@@ -152,11 +192,11 @@ Button {
                 }
             }
 
-            // Fallback icon - shown until preview loads
+            // Fallback icon - shown until preview loads (uses same resolution as header icon)
             IconImage {
                 id: fallbackIcon
                 anchors.centerIn: parent
-                source: Quickshell.iconPath(AppSearch.guessIcon(root.toplevel?.appId ?? ""), "application-x-executable")
+                source: appIcon.source
                 implicitSize: Math.min(48, parent.width * 0.4)
                 opacity: windowPreview.status === Image.Ready ? 0 : 0.7
                 mipmap: true
@@ -215,5 +255,11 @@ Button {
                 })
             }
         }
+    }
+
+    Timer {
+        id: closeWindowTimer
+        interval: 150
+        onTriggered: root.toplevel?.close()
     }
 }

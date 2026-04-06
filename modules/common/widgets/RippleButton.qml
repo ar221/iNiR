@@ -139,7 +139,7 @@ Button {
         ParallelAnimation {
             RippleAnim {
                 target: ripple
-                properties: "implicitWidth,implicitHeight"
+                properties: "rippleWidth,rippleHeight"
                 from: 0
                 to: rippleAnim.radius * 2
             }
@@ -161,7 +161,7 @@ Button {
             ColorAnimation { duration: 150 }
         }
         Behavior on color {
-            animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
         layer.enabled: true
@@ -175,16 +175,16 @@ Button {
 
         Item {
             id: ripple
-            width: ripple.implicitWidth
-            height: ripple.implicitHeight
+            width: ripple.rippleWidth
+            height: ripple.rippleHeight
             opacity: 0
             visible: width > 0 && height > 0
 
-            property real implicitWidth: 0
-            property real implicitHeight: 0
+            property real rippleWidth: 0
+            property real rippleHeight: 0
 
             Behavior on opacity {
-                animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
+                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             RadialGradient {
