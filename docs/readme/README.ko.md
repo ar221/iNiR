@@ -34,6 +34,56 @@
 
 ---
 
+<details>
+<summary><b>🤔 처음이신가요? 이게 뭔지 모르겠으면 클릭</b></summary>
+
+### 이게 뭔가요?
+
+iNiR은 데스크톱 전체입니다. 위의 바, 독, 알림, 설정, 배경화면, 전부. 테마가 아니고, 복붙하는 dotfiles도 아닙니다. Linux에서 돌아가는 완전한 셸이에요.
+
+### 실행하려면 뭐가 필요해요?
+
+컴포지터. 창을 관리하고 화면에 픽셀을 그리는 거예요. iNiR은 [Niri](https://github.com/YaLTeR/niri) (타일링 Wayland 컴포지터)용으로 만들어졌어요. end-4의 dots에서 포크했을 때의 오래된 Hyprland 코드가 있지만, 실제로 테스트하고 쓰는 건 Niri입니다.
+
+셸은 [Quickshell](https://quickshell.outfoxxed.me/) 위에서 돌아가요. QML(Qt의 UI 언어)로 셸을 만드는 프레임워크. 이걸 몰라도 쓸 수 있어요, 모든 설정은 GUI나 JSON 파일로 가능합니다.
+
+### 어떻게 연결되어 있나요
+
+```
+당신의 앱
+   ↓
+iNiR (셸: 바, 사이드바, 독, 알림, 설정...)
+   ↓
+Quickshell (QML 셸 실행)
+   ↓
+Niri (컴포지터: 창, 렌더링)
+   ↓
+Wayland → GPU
+```
+
+### 안정적인가요?
+
+손을 벗어난 개인 프로젝트예요. 매일 쓰고 있고, Discord의 많은 사람들도 그래요. 근데 가끔 망가지고, 코드가 지저분한 곳도 있고, 하면서 배우는 중이에요.
+
+뭔가 안 되면 `inir doctor`가 대부분 고쳐요. 그래도 안 되면 Discord가 활발해요. 완성된 소프트웨어를 기대하지 마세요, 이건 다른 사람들이 좋아하게 된 한 사람의 rice입니다.
+
+### 왜 존재하나요?
+
+데스크톱이 특정한 모양과 동작을 하길 원했는데, 다른 건 정확히 그걸 못 했어요. end-4의 Hyprland dots로 시작해서 Niri용 완전 재작성이 되었고 기능도 많이 늘었어요.
+
+### 보게 될 용어들
+
+- **Shell**: UI 레이어 (바, 패널, 오버레이)
+- **Compositor**: 창 관리, 화면에 그림 (Niri, Hyprland, Sway...)
+- **Wayland**: Linux 디스플레이 프로토콜 (새것, X11 대체)
+- **QML**: Qt의 선언적 UI 언어, iNiR은 이걸로 작성됨
+- **Material You**: 이미지에서 팔레트 생성하는 Google 색상 시스템 (자동 테마가 이렇게 작동함)
+- **ii / waffle**: 두 패널 스타일. ii = Material Design 느낌, waffle = Windows 11 느낌. `Super+Shift+W`로 전환
+
+</details>
+
+---
+
 ## 스크린샷
 
 <details open>

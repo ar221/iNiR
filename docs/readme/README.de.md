@@ -34,6 +34,56 @@
 
 ---
 
+<details>
+<summary><b>🤔 Neu hier? Klick wenn du keine Ahnung hast was das ist</b></summary>
+
+### Was ist das?
+
+iNiR ist dein kompletter Desktop. Die Leiste oben, das Dock, Benachrichtigungen, Einstellungen, Hintergründe, alles. Kein Theme, keine Dotfiles zum Kopieren. Eine vollständige Shell die auf Linux läuft.
+
+### Was brauche ich?
+
+Einen Compositor. Das ist das Ding das deine Fenster verwaltet und Pixel auf den Bildschirm bringt. iNiR ist für [Niri](https://github.com/YaLTeR/niri) gebaut (ein Tiling Wayland Compositor). Es gibt alten Hyprland-Code von als das noch ein Fork von end-4s dots war, aber Niri ist was ich wirklich teste und benutze.
+
+Die Shell läuft auf [Quickshell](https://quickshell.outfoxxed.me/), ein Framework um Shells in QML zu bauen (Qts UI-Sprache). Du musst das nicht kennen um es zu nutzen, alles wird über GUI oder JSON konfiguriert.
+
+### Wie alles zusammenhängt
+
+```
+deine Apps
+   ↓
+iNiR (Shell: Leiste, Sidebars, Dock, Benachrichtigungen, Einstellungen...)
+   ↓
+Quickshell (führt QML Shells aus)
+   ↓
+Niri (Compositor: Fenster, Rendering)
+   ↓
+Wayland → GPU
+```
+
+### Ist es stabil?
+
+Ein persönliches Projekt das außer Kontrolle geraten ist. Ich benutze es täglich, viele Leute im Discord auch. Aber manchmal geht was kaputt, der Code ist stellenweise unordentlich, ich lerne während ich mache.
+
+Wenn was nicht funktioniert, `inir doctor` behebt das meiste. Discord ist aktiv wenn das nicht hilft. Erwarte keine polierte Software, das ist der Rice einer Person den andere mochten.
+
+### Warum existiert das?
+
+Ich wollte dass mein Desktop auf eine bestimmte Art aussieht und funktioniert, und nichts anderes machte das genau so. Hat als end-4s Hyprland dots angefangen, wurde ein komplettes Rewrite für Niri mit viel mehr Features.
+
+### Wörter die du sehen wirst
+
+- **Shell**: die UI-Ebene (Leiste, Panels, Overlays)
+- **Compositor**: verwaltet Fenster, zeichnet auf Bildschirm (Niri, Hyprland, Sway...)
+- **Wayland**: Linux Display-Protokoll (das neue, ersetzt X11)
+- **QML**: Qts deklarative UI-Sprache, iNiR ist darin geschrieben
+- **Material You**: Googles Farbsystem das Paletten aus Bildern generiert (so funktioniert das Auto-Theming)
+- **ii / waffle**: die zwei Panel-Stile. ii = Material Design Vibes, waffle = Windows 11 Vibes. `Super+Shift+W` wechselt
+
+</details>
+
+---
+
 ## Screenshots
 
 <details open>

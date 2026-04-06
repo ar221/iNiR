@@ -34,6 +34,56 @@
 
 ---
 
+<details>
+<summary><b>🤔 第一次来？如果不知道这是什么，点这里</b></summary>
+
+### 这是什么？
+
+iNiR 是你的整个桌面。顶部的栏、Dock、通知、设置、壁纸，全部。不是主题，不是复制粘贴的配置文件。是一个运行在 Linux 上的完整 Shell。
+
+### 运行需要什么？
+
+一个合成器。就是管理窗口、把像素画到屏幕上的东西。iNiR 是为 [Niri](https://github.com/YaLTeR/niri)（一个平铺式 Wayland 合成器）做的。有一些从 end-4 的 dots fork 过来的 Hyprland 旧代码，但真正在测试和使用的是 Niri。
+
+Shell 运行在 [Quickshell](https://quickshell.outfoxxed.me/) 上，一个用 QML（Qt 的 UI 语言）构建 Shell 的框架。不需要懂这些也能用，所有配置都可以通过 GUI 或 JSON 文件完成。
+
+### 各部分如何连接
+
+```
+你的应用
+   ↓
+iNiR（Shell：栏、侧边栏、Dock、通知、设置...）
+   ↓
+Quickshell（运行 QML Shell）
+   ↓
+Niri（合成器：窗口、渲染）
+   ↓
+Wayland → GPU
+```
+
+### 稳定吗？
+
+这是一个失控的个人项目。我每天都在用，Discord 里很多人也是。但有时候会出问题，代码有些地方很乱，边做边学。
+
+如果出了问题，`inir doctor` 能修大部分。Discord 很活跃，那个不行就问那边。别指望精雕细琢的软件——这是一个人的 rice，碰巧其他人也喜欢。
+
+### 为什么存在？
+
+我想让桌面看起来和用起来是某种样子，没有其他东西能完全做到。从 end-4 的 Hyprland dots 开始，最后变成了为 Niri 完全重写，加了很多功能。
+
+### 会看到的术语
+
+- **Shell**：UI 层（栏、面板、覆盖层）
+- **Compositor**：管理窗口，画到屏幕上（Niri、Hyprland、Sway...）
+- **Wayland**：Linux 的显示协议（新的，替代 X11）
+- **QML**：Qt 的声明式 UI 语言，iNiR 就是用这个写的
+- **Material You**：Google 的配色系统，从图片生成调色板（自动主题就是这么工作的）
+- **ii / waffle**：两种面板风格。ii = Material Design 风，waffle = Windows 11 风。`Super+Shift+W` 切换
+
+</details>
+
+---
+
 ## 截图
 
 <details open>
