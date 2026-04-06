@@ -99,7 +99,9 @@ adjust_color() {
 # Break a symlink, replacing it with a regular file slot.
 # Prevents writing through symlinks to external themes.
 break_symlink() {
-    [[ -L "$1" ]] && rm -f "$1"
+    if [[ -L "$1" ]]; then
+        rm -f "$1"
+    fi
 }
 
 # Derive missing surface variants from BG — fallback when palette.json is incomplete
@@ -751,9 +753,10 @@ EOF
 # qt6ct is the platform theme (QT_QPA_PLATFORMTHEME=qt6ct) — it needs a color scheme
 QT6CT_CONF="$HOME/.config/qt6ct/qt6ct.conf"
 mkdir -p "$(dirname "$QT6CT_CONF")"
-CURRENT_ICON_THEME=$(grep '^icon_theme=' "$QT6CT_CONF" 2>/dev/null | cut -d= -f2)
+touch "$QT6CT_CONF"
+CURRENT_ICON_THEME=$(grep '^icon_theme=' "$QT6CT_CONF" 2>/dev/null | cut -d= -f2 || true)
 [[ -z "$CURRENT_ICON_THEME" ]] && CURRENT_ICON_THEME="Adwaita"
-CURRENT_QT_STYLE=$(grep '^style=' "$QT6CT_CONF" 2>/dev/null | cut -d= -f2)
+CURRENT_QT_STYLE=$(grep '^style=' "$QT6CT_CONF" 2>/dev/null | cut -d= -f2 || true)
 [[ -z "$CURRENT_QT_STYLE" ]] && CURRENT_QT_STYLE="Darkly"
 cat > "$QT6CT_CONF" << EOF
 [Appearance]
@@ -766,9 +769,10 @@ EOF
 # Configure qt5ct to use the Darkly color scheme (mirrors qt6ct setup above)
 QT5CT_CONF="$HOME/.config/qt5ct/qt5ct.conf"
 mkdir -p "$(dirname "$QT5CT_CONF")"
-CURRENT_QT5_ICON_THEME=$(grep '^icon_theme=' "$QT5CT_CONF" 2>/dev/null | cut -d= -f2)
+touch "$QT5CT_CONF"
+CURRENT_QT5_ICON_THEME=$(grep '^icon_theme=' "$QT5CT_CONF" 2>/dev/null | cut -d= -f2 || true)
 [[ -z "$CURRENT_QT5_ICON_THEME" ]] && CURRENT_QT5_ICON_THEME="$CURRENT_ICON_THEME"
-CURRENT_QT5_STYLE=$(grep '^style=' "$QT5CT_CONF" 2>/dev/null | cut -d= -f2)
+CURRENT_QT5_STYLE=$(grep '^style=' "$QT5CT_CONF" 2>/dev/null | cut -d= -f2 || true)
 [[ -z "$CURRENT_QT5_STYLE" ]] && CURRENT_QT5_STYLE="Darkly"
 cat > "$QT5CT_CONF" << EOF
 [Appearance]

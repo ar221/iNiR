@@ -136,12 +136,18 @@ ContentPage {
             ConfigSpinBox {
                 icon: "invert_colors"
                 text: Translation.tr("Terminal: Harmony (%)")
-                value: Math.round((Config.options?.appearance?.wallpaperTheming?.terminalGenerationProps?.harmony ?? 0.4) * 100)
+                value: Math.round(((Config.options?.appearance?.wallpaperTheming?.terminalColorAdjustments?.harmony
+                    ?? Config.options?.appearance?.wallpaperTheming?.terminalGenerationProps?.harmony
+                    ?? 0.4) * 100))
                 from: 0
                 to: 100
                 stepSize: 10
                 onValueChanged: {
-                    Config.setNestedValue("appearance.wallpaperTheming.terminalGenerationProps.harmony", value / 100)
+                    const nextValue = value / 100
+                    // Keep both keys in sync: terminalColorAdjustments is the active runtime source,
+                    // terminalGenerationProps is retained for backwards-compatibility surfaces.
+                    Config.setNestedValue("appearance.wallpaperTheming.terminalColorAdjustments.harmony", nextValue)
+                    Config.setNestedValue("appearance.wallpaperTheming.terminalGenerationProps.harmony", nextValue)
                     colorRegenTimer.restart()
                 }
                 StyledToolTip {
@@ -175,7 +181,7 @@ ContentPage {
                     colorRegenTimer.restart()
                 }
                 StyledToolTip {
-                    text: Translation.tr("Increase contrast of terminal foreground colors")
+                    text: Translation.tr("Increase terminal ANSI foreground lightness/contrast (use moderate values to avoid washed colors)")
                 }
             }
 

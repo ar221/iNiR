@@ -404,6 +404,10 @@ if args.termscheme is not None:
             # Apply user saturation and brightness
             # Brightness affects tone: higher = lighter in dark mode, darker in light mode
             tone_mult = 1 + ((user_brightness - 0.5) * 0.8 * (1 if darkmode else -1))
+            # Foreground boost gently pushes ANSI colors away from background tone.
+            # Keep this bounded so high values don't collapse colors to white/black.
+            fg_boost_delta = args.term_fg_boost * 0.25 * (1 if darkmode else -1)
+            tone_mult = max(0.60, min(1.45, tone_mult + fg_boost_delta))
             harmonized = boost_chroma_tone(harmonized, user_saturation * 2.0, tone_mult)
             # Ensure minimum chroma for visual distinctiveness
             harmonized = ensure_min_chroma(harmonized, 40)
@@ -553,6 +557,8 @@ theme_meta = {
     "term_saturation": args.term_saturation,
     "term_brightness": args.term_brightness,
     "term_bg_brightness": args.term_bg_brightness,
+    "term_fg_boost": args.term_fg_boost,
+    "harmonize_threshold": args.harmonize_threshold,
     "color_strength": args.color_strength,
     "blend_bg_fg": args.blend_bg_fg,
     "generated_by": "generate_colors_material.py",
