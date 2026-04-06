@@ -2173,7 +2173,7 @@ ContentPage {
                     onActivated: {
                         const selected = model[currentIndex].value
                         if (selected !== "__custom__")
-                            root.setConfig("input", "keyboard.xkb.layout", selected)
+                            root.setConfig("input", "keyboard.layout", selected)
                     }
                 }
 
@@ -2185,7 +2185,7 @@ ContentPage {
                     onEditingFinished: {
                         const val = text.trim()
                         if (val.length > 0)
-                            root.setConfig("input", "keyboard.xkb.layout", val)
+                            root.setConfig("input", "keyboard.layout", val)
                     }
                 }
             }
