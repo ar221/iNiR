@@ -9,11 +9,12 @@ ContentPage {
     id: root
     settingsPageIndex: 5
     settingsPageName: Translation.tr("Interface")
+    settingsPageIcon: "bottom_app_bar"
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "point_scan"
         title: Translation.tr("Crosshair overlay")
 
@@ -55,7 +56,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "layers"
         title: Translation.tr("Overlay widgets")
 
@@ -156,7 +157,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "forum"
         title: Translation.tr("Overlay: Discord")
 
@@ -175,7 +176,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "keyboard_tab"
         title: Translation.tr("Alt-Tab switcher (Material ii)")
 
@@ -344,7 +345,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "call_to_action"
         title: Translation.tr("Dock")
 
@@ -607,7 +608,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "lock"
         title: Translation.tr("Lock screen")
 
@@ -754,7 +755,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "notifications"
         title: Translation.tr("Notifications")
 
@@ -832,7 +833,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "screenshot_frame_2"
         title: Translation.tr("Region selector (screen snipping/Google Lens)")
 
@@ -979,7 +980,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "side_navigation"
         title: Translation.tr("Sidebars")
 
@@ -1669,7 +1670,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "widgets"
         title: Translation.tr("Widgets")
 
@@ -2305,7 +2306,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "voting_chip"
         title: Translation.tr("On-screen display")
 
@@ -2329,7 +2330,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "overview_key"
         title: Translation.tr("Overview")
 
@@ -2786,7 +2787,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "wallpaper_slideshow"
         title: Translation.tr("Wallpaper selector")
 
@@ -2806,7 +2807,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "web_asset"
         title: Translation.tr("Settings UI")
 

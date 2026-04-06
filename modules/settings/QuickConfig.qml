@@ -12,6 +12,7 @@ import qs.modules.common.functions
 ContentPage {
     settingsPageIndex: 0
     settingsPageName: Translation.tr("Quick")
+    settingsPageIcon: "instant_mix"
 
     Component.onCompleted: {
         Wallpapers.load()
@@ -1314,7 +1315,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "screenshot_monitor"
         title: Translation.tr("Bar & screen")
 
@@ -1445,7 +1446,7 @@ ContentPage {
 
     // Game Mode
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "sports_esports"
         title: Translation.tr("Game Mode")
 
@@ -1514,7 +1515,7 @@ ContentPage {
 
     // Quick Actions
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "bolt"
         title: Translation.tr("Quick Actions")
 

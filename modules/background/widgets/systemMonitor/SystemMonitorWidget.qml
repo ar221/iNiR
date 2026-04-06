@@ -217,7 +217,18 @@ AbstractBackgroundWidget {
             configEntry: root.monitorConfig
         }
 
-        // Footer removed — was getting cut off and not adding value
+        // ── Separator ──
+        SectionSeparator {
+            visible: (root.monitorConfig.showNetwork ?? true)
+                && (root.monitorConfig.showAppShortcuts ?? true)
+        }
+
+        // ── App Shortcuts ──
+        AppShortcutsSection {
+            Layout.fillWidth: true
+            visible: root.monitorConfig.showAppShortcuts ?? true
+            configEntry: root.monitorConfig
+        }
     }
 
     // Reusable separator component

@@ -114,6 +114,19 @@ Singleton {
         }
     }
 
+    // Per-app notification rules
+    readonly property var _rules: Config.options?.notifications?.rules ?? {}
+
+    // Known apps from notification history (for settings page auto-discovery)
+    readonly property var knownApps: {
+        const apps = new Set()
+        for (let i = 0; i < root.list.length; ++i) {
+            const name = root.list[i]?.appName ?? ""
+            if (name.length > 0) apps.add(name)
+        }
+        return Array.from(apps).sort()
+    }
+
     // Unread count: computed from popupList (new) or manual counter (legacy)
     property int _manualUnreadCounter: 0
     readonly property int unread: (Config.options?.notifications?.useLegacyCounter ?? false)
@@ -294,6 +307,12 @@ Singleton {
     }
 
     function _timeoutForNotification(notification) {
+        // Per-app rule timeout override
+        const rule = root.getRuleForApp(notification.appName)
+        if (rule.timeout !== null && rule.timeout !== undefined) {
+            return rule.timeout
+        }
+
         const ignoreApp = Config.options?.notifications?.ignoreAppTimeout ?? false;
 
         // 1) La app define un timeout explícito (> 0): respetarlo solo si no ignoramos
@@ -348,6 +367,13 @@ Singleton {
                 return;
             }
 
+            // Per-app rule check
+            const rule = root.getRuleForApp(notification.appName)
+            if (rule.mode === "block") {
+                console.log("[Notifications] Blocked notification from", notification.appName)
+                return
+            }
+
             notification.tracked = true
             // Resolve phone app icon for KDE Connect notifications
             const createProps = {
@@ -362,7 +388,8 @@ Singleton {
 			root.list = [...root.list, newNotifObject];
 
             // Sonido de notificación opcional
-            if ((Config.options?.sounds?.notifications ?? true) && !root.silent) {
+            const ruleBlocksSound = rule.sound === false || rule.mode === "silent"
+            if ((Config.options?.sounds?.notifications ?? true) && !root.silent && !ruleBlocksSound) {
                 var soundName = "message-new-instant";
                 if (notification.urgency === NotificationUrgency.Critical) {
                     soundName = "dialog-warning";
@@ -373,7 +400,12 @@ Singleton {
             // Popup — focus mode can override DND for critical/allowlisted apps
             const focusBypass = root.silent && FocusMode.active && FocusMode.shouldAllowPopup(notification)
             if (!root.popupInhibited || focusBypass) {
-                newNotifObject.popup = true;
+                // Per-app rule: suppress popup for silent/soundOnly modes
+                if (rule.mode === "silent" || rule.mode === "soundOnly" || rule.popup === false) {
+                    newNotifObject.popup = false
+                } else {
+                    newNotifObject.popup = true;
+                }
 
                 const timeout = _timeoutForNotification(notification);
                 if (timeout !== 0) {
@@ -610,6 +642,69 @@ Singleton {
                 t.body,
             ]);
         }
+    }
+
+    function _normalizeAppName(appName) {
+        return String(appName ?? "").trim().toLowerCase()
+    }
+
+    function getRuleForApp(appName) {
+        const key = _normalizeAppName(appName)
+        if (key.length === 0) return { mode: "allow" }
+        const rules = root._rules
+        // Try exact match first, then partial match
+        if (rules[key]) return rules[key]
+        // Check if any rule key is contained in the app name or vice versa
+        for (const ruleKey of Object.keys(rules)) {
+            if (key.includes(ruleKey) || ruleKey.includes(key))
+                return rules[ruleKey]
+        }
+        return { mode: "allow" }
+    }
+
+    function setRuleForApp(appName, rule) {
+        const key = _normalizeAppName(appName)
+        if (key.length === 0) return
+        Config.setNestedValue("notifications.rules." + key, rule)
+        console.log("[Notifications] Set rule for", key, ":", JSON.stringify(rule))
+    }
+
+    function removeRuleForApp(appName) {
+        const key = _normalizeAppName(appName)
+        if (key.length === 0) return
+        // Remove by setting the rules object without this key
+        const rules = JSON.parse(JSON.stringify(root._rules))
+        delete rules[key]
+        Config.setNestedValue("notifications.rules", rules)
+        console.log("[Notifications] Removed rule for", key)
+    }
+
+    // Soft dismiss for undo support
+    property var _softDismissedIds: ({})
+
+    function softDismissNotification(id) {
+        const ids = Object.assign({}, root._softDismissedIds)
+        ids[id] = true
+        root._softDismissedIds = ids
+        console.log("[Notifications] Soft-dismissed notification", id)
+    }
+
+    function undoSoftDismiss(id) {
+        const ids = Object.assign({}, root._softDismissedIds)
+        delete ids[id]
+        root._softDismissedIds = ids
+        console.log("[Notifications] Undo soft-dismiss for", id)
+    }
+
+    function isSoftDismissed(id) {
+        return root._softDismissedIds[id] === true
+    }
+
+    function commitDismiss(id) {
+        const ids = Object.assign({}, root._softDismissedIds)
+        delete ids[id]
+        root._softDismissedIds = ids
+        root.discardNotification(id)
     }
 
     IpcHandler {

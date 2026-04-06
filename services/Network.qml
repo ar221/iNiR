@@ -6,6 +6,8 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import qs.services
+import qs.modules.common
 import qs.services.network
 
 /**
@@ -24,6 +26,7 @@ Singleton {
     readonly property list<WifiAccessPoint> wifiNetworks: []
     readonly property WifiAccessPoint active: wifiNetworks.find(n => n.active) ?? null
     property string wifiStatus: "disconnected"
+    property string _previousWifiStatus: "disconnected"
 
     property string networkName: ""
     property int networkStrength
@@ -209,6 +212,17 @@ Singleton {
                     }
                 }
             });
+            // Play network sounds on actual connection state transitions
+            if (wifiStatus !== root._previousWifiStatus) {
+                if (wifiStatus === "connected" && root._previousWifiStatus !== "connected") {
+                    if (Config.options?.sounds?.network ?? true)
+                        Audio.playSystemSound("network-connectivity-established")
+                } else if (root._previousWifiStatus === "connected" && wifiStatus !== "connected") {
+                    if (Config.options?.sounds?.network ?? true)
+                        Audio.playSystemSound("network-connectivity-lost")
+                }
+                root._previousWifiStatus = wifiStatus;
+            }
             root.wifiStatus = wifiStatus;
             root.ethernet = hasEthernet;
             root.wifi = hasWifi;

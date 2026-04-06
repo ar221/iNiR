@@ -28,8 +28,8 @@ Rectangle {
     border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
     border.color: Appearance.angelEverywhere ? "transparent"
         : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
-    property real verticalPadding: 4
-    property real horizontalPadding: 12
+    property real verticalPadding: 10
+    property real horizontalPadding: 14
 
     AngelPartialBorder {
         targetRadius: root.radius
@@ -45,7 +45,7 @@ Rectangle {
             topMargin: root.verticalPadding
             bottomMargin: root.verticalPadding
         }
-        spacing: 10
+        spacing: 12
 
         Loader {
             Layout.fillWidth: true
@@ -115,7 +115,7 @@ Rectangle {
                 right: nearFull ? quickSlider.handle.right : parent.right
                 rightMargin: nearFull ? 14 : 8
             }
-            iconSize: 20
+            iconSize: 22
             color: nearFull
                 ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
                  : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary

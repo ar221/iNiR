@@ -11,6 +11,7 @@ ContentPage {
     id: root
     settingsPageIndex: 4
     settingsPageName: Translation.tr("Themes")
+    settingsPageIcon: "palette"
 
     function isFontInstalled(fontName) {
         if (!fontName || fontName.trim() === "") return false
@@ -532,7 +533,7 @@ ContentPage {
 
     // Theme Scheduling Section
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "schedule"
         title: Translation.tr("Theme Scheduling")
 
@@ -766,7 +767,7 @@ ContentPage {
     // Terminal Colors Section
     SettingsCardSection {
         id: terminalColorsSection
-        expanded: false
+        expanded: true
         icon: "terminal"
         title: Translation.tr("Terminal Colors")
 
@@ -1336,7 +1337,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: Appearance.angelEverywhere
-        expanded: false
+        expanded: true
         icon: "raven"
         title: Translation.tr("Angel Style Editor")
 
@@ -1365,7 +1366,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "text_format"
         title: Translation.tr("Typography")
 
@@ -1597,7 +1598,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "tune"
         title: Translation.tr("Interface Scale")
 
@@ -1681,7 +1682,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "folder"
         title: Translation.tr("Icon Theme")
 
@@ -1715,7 +1716,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "info"
         title: Translation.tr("About Themes")
 

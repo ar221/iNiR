@@ -7,8 +7,9 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: modulesPage
-    settingsPageIndex: 9
+    settingsPageIndex: 10
     settingsPageName: Translation.tr("Modules")
+    settingsPageIcon: "extension"
 
     readonly property bool isWaffle: Config.options.panelFamily === "waffle"
 
@@ -474,7 +475,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: !modulesPage.isWaffle
-        expanded: false
+        expanded: true
         icon: "notifications"
         title: Translation.tr("Feedback")
 
@@ -507,7 +508,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: !modulesPage.isWaffle
-        expanded: false
+        expanded: true
         icon: "build"
         title: Translation.tr("Utilities")
 
@@ -588,7 +589,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: !modulesPage.isWaffle
-        expanded: false
+        expanded: true
         icon: "more_horiz"
         title: Translation.tr("Optional")
 
@@ -695,7 +696,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: modulesPage.isWaffle
-        expanded: false
+        expanded: true
         icon: "share"
         title: Translation.tr("Shared Modules")
 

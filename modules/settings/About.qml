@@ -8,8 +8,9 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 ContentPage {
-    settingsPageIndex: 11
+    settingsPageIndex: 12
     settingsPageName: Translation.tr("About")
+    settingsPageIcon: "info"
 
     SettingsCardSection {
         expanded: true
@@ -97,7 +98,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "deployed_code"
         title: "iNiR"
 
@@ -183,7 +184,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "favorite"
         title: Translation.tr("Based on")
 

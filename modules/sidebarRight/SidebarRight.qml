@@ -12,6 +12,19 @@ Scope {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
 
+    // Play subtle sound on sidebar open
+    property bool _sidebarSoundReady: false
+    Timer { interval: 2000; running: true; onTriggered: root._sidebarSoundReady = true }
+    Connections {
+        target: GlobalStates
+        function onSidebarRightOpenChanged() {
+            if (root._sidebarSoundReady && GlobalStates.sidebarRightOpen) {
+                if (Config.options?.sounds?.sidebar ?? false)
+                    Audio.playSystemSound("dialog-information")
+            }
+        }
+    }
+
     PanelWindow {
         id: sidebarRoot
         visible: GlobalStates.sidebarRightOpen

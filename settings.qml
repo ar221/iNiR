@@ -31,8 +31,8 @@ ApplicationWindow {
             component: "modules/settings/QuickConfig.qml"
         },
         {
-            name: Translation.tr("General"),
-            icon: "browse",
+            name: Translation.tr("System"),
+            icon: "tune",
             component: "modules/settings/GeneralConfig.qml"
         },
         {
@@ -57,14 +57,19 @@ ApplicationWindow {
             component: "modules/settings/InterfaceConfig.qml"
         },
         {
+            name: Translation.tr("Displays"),
+            icon: "monitor",
+            component: "modules/settings/DisplayConfig.qml"
+        },
+        {
             name: Translation.tr("Services"),
             icon: "settings",
             component: "modules/settings/ServicesConfig.qml"
         },
         {
-            name: Translation.tr("Advanced"),
-            icon: "construction",
-            component: "modules/settings/AdvancedConfig.qml"
+            name: Translation.tr("Autostart & Services"),
+            icon: "rocket_launch",
+            component: "modules/settings/AutostartConfig.qml"
         },
         {
             name: Translation.tr("Shortcuts"),
@@ -85,6 +90,31 @@ ApplicationWindow {
             name: Translation.tr("About"),
             icon: "info",
             component: "modules/settings/About.qml"
+        },
+        {
+            name: Translation.tr("Input Devices"),
+            icon: "keyboard",
+            component: "modules/settings/InputConfig.qml"
+        },
+        {
+            name: Translation.tr("Power"),
+            icon: "battery_full",
+            component: "modules/settings/PowerConfig.qml"
+        },
+        {
+            name: Translation.tr("Keybinds"),
+            icon: "keyboard",
+            component: "modules/settings/KeybindsConfig.qml"
+        },
+        {
+            name: Translation.tr("Default Apps"),
+            icon: "open_in_new",
+            component: "modules/settings/DefaultAppsConfig.qml"
+        },
+        {
+            name: Translation.tr("Notification Rules"),
+            icon: "notifications_active",
+            component: "modules/settings/NotificationRulesConfig.qml"
         }
     ]
     property int currentPage: 0
@@ -121,7 +151,7 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // General (page 1) — per-option entries
+        // System (page 1) — per-option entries
         // =====================================================================
         {
             pageIndex: 1, pageName: pages[1].name,
@@ -241,6 +271,20 @@ ApplicationWindow {
             label: Translation.tr("Work Safety"),
             description: Translation.tr("Hide sensitive content on public networks"),
             keywords: ["work", "safety", "nsfw", "public", "network", "hide", "clipboard", "wallpaper"]
+        },
+        {
+            pageIndex: 1, pageName: pages[1].name,
+            section: Translation.tr("Color generation"),
+            label: Translation.tr("Color generation"),
+            description: Translation.tr("Wallpaper color generation for apps, terminal and Discord"),
+            keywords: ["color", "generation", "matugen", "terminal", "gtk", "qt", "vesktop", "discord", "harmony", "theme"]
+        },
+        {
+            pageIndex: 1, pageName: pages[1].name,
+            section: Translation.tr("Color generation"),
+            label: Translation.tr("Terminal color tuning"),
+            description: Translation.tr("Harmony, threshold and foreground boost for terminal colors"),
+            keywords: ["terminal", "color", "harmony", "threshold", "foreground", "boost", "dark", "mode", "contrast"]
         },
 
         // =====================================================================
@@ -969,10 +1013,42 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Shortcuts (page 8)
+        // Autostart & Services (page 8)
         // =====================================================================
         {
             pageIndex: 8, pageName: pages[8].name,
+            section: Translation.tr("Shell Autostart"),
+            label: Translation.tr("Shell Autostart"),
+            description: Translation.tr("Commands and apps that launch with the shell"),
+            keywords: ["autostart", "startup", "launch", "command", "desktop", "boot", "login"]
+        },
+        {
+            pageIndex: 8, pageName: pages[8].name,
+            section: Translation.tr("User Services"),
+            label: Translation.tr("User Services"),
+            description: Translation.tr("Manage systemd user services — start, stop, enable, disable"),
+            keywords: ["service", "systemd", "user", "start", "stop", "enable", "disable", "daemon", "unit"]
+        },
+        {
+            pageIndex: 8, pageName: pages[8].name,
+            section: Translation.tr("System Services"),
+            label: Translation.tr("System Services"),
+            description: Translation.tr("View and control system-level services (requires admin)"),
+            keywords: ["system", "service", "systemd", "root", "admin", "pkexec", "privileged"]
+        },
+        {
+            pageIndex: 8, pageName: pages[8].name,
+            section: Translation.tr("User Scripts"),
+            label: Translation.tr("User Scripts"),
+            description: Translation.tr("Run or autostart scripts from ~/.local/bin"),
+            keywords: ["script", "bin", "local", "run", "execute", "bash", "custom"]
+        },
+
+        // =====================================================================
+        // Shortcuts (page 9)
+        // =====================================================================
+        {
+            pageIndex: 9, pageName: pages[9].name,
             section: Translation.tr("Keyboard Shortcuts"),
             label: Translation.tr("Keyboard Shortcuts"),
             description: Translation.tr("Niri and ii keybindings reference"),
@@ -983,45 +1059,45 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Modules (page 9)
+        // Modules (page 10)
         // =====================================================================
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Panel Modules"),
             description: Translation.tr("Enable or disable shell modules"),
             keywords: ["modules", "panels", "enable", "disable", "bar", "sidebar", "overview"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable notification popups"),
             description: Translation.tr("Toggle notification toast popups"),
             keywords: ["module", "notification", "popup", "toast", "enable", "disable"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable dock"),
             description: Translation.tr("Toggle dock panel"),
             keywords: ["module", "dock", "enable", "disable", "panel"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable overview"),
             description: Translation.tr("Toggle workspace overview"),
             keywords: ["module", "overview", "enable", "disable", "workspace"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable sidebars"),
             description: Translation.tr("Toggle left and right sidebars"),
             keywords: ["module", "sidebar", "left", "right", "enable", "disable"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Alt+Tab Switcher"),
             label: Translation.tr("Alt+Tab Switcher"),
             description: Translation.tr("Window switcher style and behavior"),
@@ -1029,45 +1105,45 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Waffle Style (page 10)
+        // Waffle Style (page 11)
         // =====================================================================
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Taskbar"),
             label: Translation.tr("Waffle Taskbar"),
             description: Translation.tr("Windows 11 style taskbar settings"),
             keywords: ["waffle", "taskbar", "windows", "bottom", "tray"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Start Menu"),
             label: Translation.tr("Waffle Start Menu"),
             description: Translation.tr("Start menu size and behavior"),
             keywords: ["waffle", "start", "menu", "apps", "pinned"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Action Center"),
             label: Translation.tr("Waffle Action Center"),
             description: Translation.tr("Quick toggles and action center"),
             keywords: ["waffle", "action", "center", "toggles", "quick"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Widgets"),
             label: Translation.tr("Waffle Widgets"),
             description: Translation.tr("Widgets panel settings"),
             keywords: ["waffle", "widgets", "panel", "weather", "calendar"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Alt+Tab"),
             label: Translation.tr("Waffle Alt+Tab"),
             description: Translation.tr("Waffle window switcher with thumbnails"),
             keywords: ["waffle", "alt", "tab", "switcher", "thumbnails", "carousel"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Waffle Background"),
             label: Translation.tr("Waffle Background"),
             description: Translation.tr("Waffle-specific wallpaper and backdrop settings"),
@@ -1075,14 +1151,139 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // About (page 11)
+        // About (page 12)
         // =====================================================================
         {
-            pageIndex: 11, pageName: pages[11].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("About"),
             label: Translation.tr("About ii"),
             description: Translation.tr("Version info, credits and links"),
             keywords: ["about", "version", "credits", "github", "info"]
+        },
+
+        // =====================================================================
+        // Input Devices (page 14)
+        // =====================================================================
+        {
+            pageIndex: 13, pageName: pages[13].name,
+            section: Translation.tr("Keyboard"),
+            label: Translation.tr("Keyboard"),
+            description: Translation.tr("Keyboard layout, repeat rate and numlock"),
+            keywords: ["keyboard", "layout", "repeat", "delay", "rate", "numlock", "xkb", "input"]
+        },
+        {
+            pageIndex: 13, pageName: pages[13].name,
+            section: Translation.tr("Touchpad"),
+            label: Translation.tr("Touchpad"),
+            description: Translation.tr("Tap to click, natural scroll, pointer speed"),
+            keywords: ["touchpad", "tap", "click", "natural", "scroll", "speed", "dwt", "gesture", "input"]
+        },
+        {
+            pageIndex: 13, pageName: pages[13].name,
+            section: Translation.tr("Mouse"),
+            label: Translation.tr("Mouse"),
+            description: Translation.tr("Acceleration profile and pointer speed"),
+            keywords: ["mouse", "acceleration", "flat", "adaptive", "speed", "pointer", "input"]
+        },
+
+        // =====================================================================
+        // Power (page 14)
+        // =====================================================================
+        {
+            pageIndex: 14, pageName: pages[14].name,
+            section: Translation.tr("Battery"),
+            label: Translation.tr("Battery"),
+            description: Translation.tr("Battery thresholds, auto-suspend, and notifications"),
+            keywords: ["battery", "low", "critical", "suspend", "full", "charge", "threshold", "power"]
+        },
+        {
+            pageIndex: 14, pageName: pages[14].name,
+            section: Translation.tr("Power Profile"),
+            label: Translation.tr("Power Profile"),
+            description: Translation.tr("Switch between power saver, balanced, and performance"),
+            keywords: ["power", "profile", "saver", "balanced", "performance", "energy", "cpu"]
+        },
+        {
+            pageIndex: 14, pageName: pages[14].name,
+            section: Translation.tr("Idle & Sleep"),
+            label: Translation.tr("Idle & Sleep"),
+            description: Translation.tr("Screen off, lock, and suspend timeouts"),
+            keywords: ["idle", "sleep", "suspend", "lock", "screen", "timeout", "caffeine", "awake"]
+        },
+
+        // =====================================================================
+        // Keybinds (page 15)
+        // =====================================================================
+        {
+            pageIndex: 15, pageName: pages[15].name,
+            section: Translation.tr("Keybinds"),
+            label: Translation.tr("Keybinds"),
+            description: Translation.tr("View and edit keyboard shortcuts for Niri and ii"),
+            keywords: ["keybinds", "shortcuts", "hotkeys", "keyboard", "key", "bind", "remap", "shortcut", "editor"]
+        },
+
+        // =====================================================================
+        // Default Apps (page 16)
+        // =====================================================================
+        {
+            pageIndex: 16, pageName: pages[16].name,
+            section: Translation.tr("System Defaults"),
+            label: Translation.tr("System Defaults"),
+            description: Translation.tr("Default browser, file manager, editor, image and video apps"),
+            keywords: ["default", "apps", "browser", "file", "manager", "editor", "image", "video", "xdg", "mime"]
+        },
+        {
+            pageIndex: 16, pageName: pages[16].name,
+            section: Translation.tr("Shell Apps"),
+            label: Translation.tr("Shell Apps"),
+            description: Translation.tr("Terminal, task manager, volume mixer, and other shell app preferences"),
+            keywords: ["terminal", "task", "manager", "volume", "mixer", "bluetooth", "network", "discord", "apps"]
+        },
+
+        // =====================================================================
+        // Notification Rules (page 17)
+        // =====================================================================
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Per-App Rules"),
+            label: Translation.tr("Per-App Rules"),
+            description: Translation.tr("Configure notification behavior for each application"),
+            keywords: ["notification", "rules", "app", "per-app", "allow", "block", "silent", "sound"]
+        },
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Per-App Rules"),
+            label: Translation.tr("Block app notifications"),
+            description: Translation.tr("Block or silence notifications from specific apps"),
+            keywords: ["notification", "block", "silence", "mute", "app", "filter", "hide"]
+        },
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Global Settings"),
+            label: Translation.tr("Notification position"),
+            description: Translation.tr("Where popup notifications appear on screen"),
+            keywords: ["notification", "position", "popup", "corner", "top", "bottom", "left", "right"]
+        },
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Global Settings"),
+            label: Translation.tr("Notification timeouts"),
+            description: Translation.tr("Default timeouts for low, normal and critical notifications"),
+            keywords: ["notification", "timeout", "duration", "auto", "dismiss", "low", "normal", "critical"]
+        },
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Global Settings"),
+            label: Translation.tr("Undo on dismiss"),
+            description: Translation.tr("Show undo bar when swiping away notifications"),
+            keywords: ["notification", "undo", "dismiss", "swipe", "restore"]
+        },
+        {
+            pageIndex: 17, pageName: pages[17].name,
+            section: Translation.tr("Global Settings"),
+            label: Translation.tr("Notification sounds"),
+            description: Translation.tr("Play sounds when notifications arrive"),
+            keywords: ["notification", "sounds", "audio", "alert", "chime"]
         }
     ]
 
@@ -1098,7 +1299,7 @@ ApplicationWindow {
 
         // Check if waffle family is active
         var isWaffleActive = Config.options?.panelFamily === "waffle";
-        var wafflePageIndex = 10; // "Waffle Style" page index
+        var wafflePageIndex = 12; // "Waffle Style" page index
 
         // 1. Buscar en el índice estático de secciones (para navegación rápida a secciones)
         for (var i = 0; i < settingsSearchIndex.length; i++) {
@@ -1729,7 +1930,7 @@ ApplicationWindow {
                         id: navRail
                         width: navRailWrapper.implicitWidth
                         spacing: 10
-                        expanded: false  // Default collapsed, user can expand with button
+                        expanded: true  // Default expanded for DE-style navigation
 
                         NavigationRailExpandButton {
                             focus: root.visible

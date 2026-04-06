@@ -18,7 +18,21 @@ LazyLoader {
 
     signal requestClose()
 
-    active: root.hoverActivates && hoverTarget && (hoverTarget.containsMouse ?? hoverTarget.buttonHovered ?? false)
+    // Decouple hover from active to allow exit animations
+    property bool _shouldBeActive: root.hoverActivates && hoverTarget && (hoverTarget.containsMouse ?? hoverTarget.buttonHovered ?? false)
+    property bool _animatingClose: false
+
+    active: _shouldBeActive || _animatingClose
+
+    on_ShouldBeActiveChanged: {
+        if (_shouldBeActive) {
+            _animatingClose = false;
+        } else if (active && !_shouldBeActive) {
+            // Start exit animation, keep loader active until it finishes
+            _animatingClose = true;
+        }
+    }
+
     onActiveChanged: {
         if (!root.active)
             root.popupHovered = false;
@@ -108,18 +122,65 @@ LazyLoader {
             implicitWidth: root.contentItem.implicitWidth + margin * 2
             implicitHeight: root.contentItem.implicitHeight + margin * 2
             color: Appearance.angelEverywhere ? Appearance.angel.colGlassPopup
-                : Appearance.inirEverywhere ? Appearance.inir.colLayer2 
+                : Appearance.inirEverywhere ? Appearance.inir.colLayer2
                 : Appearance.m3colors.m3surfaceContainer
             radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                 : Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.small
-            children: [root.contentItem]
 
             border.width: 1
             border.color: Appearance.angelEverywhere ? Appearance.angel.colBorder
-                : Appearance.inirEverywhere ? Appearance.inir.colBorder 
+                : Appearance.inirEverywhere ? Appearance.inir.colBorder
                 : Appearance.colors.colLayer0Border
+
+            // Animation wrapper
+            opacity: 0
+            scale: 0.92
+            transformOrigin: {
+                const isVertical = Config.options?.bar?.vertical ?? false;
+                if (isVertical) {
+                    return (Config.options?.bar?.bottom ?? false) ? Item.Right : Item.Left;
+                }
+                return (Config.options?.bar?.bottom ?? false) ? Item.Bottom : Item.Top;
+            }
+
+            Component.onCompleted: {
+                if (Appearance.animationsEnabled)
+                    entryAnim.start()
+                else {
+                    popupBackground.opacity = 1;
+                    popupBackground.scale = 1;
+                }
+            }
+
+            ParallelAnimation {
+                id: entryAnim
+                NumberAnimation { target: popupBackground; property: "opacity"; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation { target: popupBackground; property: "scale"; to: 1; duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+            }
+
+            ParallelAnimation {
+                id: exitAnim
+                NumberAnimation { target: popupBackground; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
+                NumberAnimation { target: popupBackground; property: "scale"; to: 0.95; duration: 150; easing.type: Easing.InCubic }
+                onFinished: root._animatingClose = false
+            }
+
+            // Watch for exit trigger
+            Connections {
+                target: root
+                function on_AnimatingCloseChanged() {
+                    if (root._animatingClose) {
+                        if (Appearance.animationsEnabled)
+                            exitAnim.start()
+                        else
+                            root._animatingClose = false;
+                    }
+                }
+            }
+
+            children: [root.contentItem]
         }
 
-        
+
     }
 }

@@ -66,11 +66,25 @@ def parse_keybinds_from_block(binds_content: str) -> list[dict]:
                 i += 1
             action = ' '.join(action_lines)
         
+        # Parse keybind options from the options string
+        parsed_options = {}
+        # Strip hotkey-overlay-title from options before parsing other options
+        opts_clean = re.sub(r'hotkey-overlay-title="[^"]*"', '', options).strip()
+        if opts_clean:
+            if re.search(r'repeat\s*=\s*false', opts_clean):
+                parsed_options['repeat'] = False
+            if re.search(r'allow-when-locked\s*=\s*true', opts_clean):
+                parsed_options['allowWhenLocked'] = True
+            cooldown_match = re.search(r'cooldown-ms\s*=\s*(\d+)', opts_clean)
+            if cooldown_match:
+                parsed_options['cooldownMs'] = int(cooldown_match.group(1))
+
         # Parse key combo
         parts = key_combo.split('+')
         mods = []
         key = parts[-1]
-        
+        rawKey = key  # preserve original before XF86 shortening
+
         for part in parts[:-1]:
             if part in ('Mod', 'Super'):
                 mods.append('Super')
@@ -78,7 +92,7 @@ def parse_keybinds_from_block(binds_content: str) -> list[dict]:
                 mods.append(part)
             else:
                 mods.append(part)
-        
+
         # Handle XF86 keys
         if key.startswith('XF86Audio'):
             key = key.replace('XF86Audio', '').replace('RaiseVolume', 'Vol+').replace('LowerVolume', 'Vol-')
@@ -93,8 +107,10 @@ def parse_keybinds_from_block(binds_content: str) -> list[dict]:
         keybinds.append({
             'mods': mods,
             'key': key,
+            'rawKey': rawKey,
             'action': action,
-            'comment': comment
+            'comment': comment,
+            'options': parsed_options
         })
         
         i += 1
@@ -356,7 +372,10 @@ def parse_niri_config(config_path: Path) -> dict:
         keybinds_by_category[category].append({
             'mods': kb['mods'],
             'key': kb['key'],
-            'comment': kb['comment']
+            'rawKey': kb['rawKey'],
+            'action': kb['action'],
+            'comment': kb['comment'],
+            'options': kb['options']
         })
     
     category_order = [

@@ -19,6 +19,9 @@ Singleton {
         : []
 
     property var systemdUnits: []
+    property var allUserServices: []
+    property var systemServices: []
+    property var userScripts: []
 
     function load() {
         if (hasRun)
@@ -288,10 +291,262 @@ Singleton {
         systemdDeleteProc.remove(name)
     }
 
+    // ── All user services (systemctl --user list-units) ─────────────
+    Process {
+        id: allUserServicesProc
+        property var buffer: []
+        command: ["/usr/bin/systemctl", "--user", "list-units", "--type=service", "--all", "--no-pager", "--plain", "--no-legend"]
+        stdout: SplitParser {
+            onRead: (line) => {
+                allUserServicesProc.buffer.push(line)
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const units = []
+            if (exitCode !== 0) {
+                console.log("[Autostart] allUserServicesProc exited with", exitCode, exitStatus)
+                root.allUserServices = units
+                allUserServicesProc.buffer = []
+                return
+            }
+            for (let i = 0; i < allUserServicesProc.buffer.length; ++i) {
+                const raw = allUserServicesProc.buffer[i].trim()
+                if (raw.length === 0)
+                    continue
+                // Format: UNIT LOAD ACTIVE SUB DESCRIPTION...
+                const parts = raw.split(/\s+/)
+                if (parts.length < 4)
+                    continue
+                const name = parts[0]
+                const loadState = parts[1]
+                const activeState = parts[2]
+                const subState = parts[3]
+                const description = parts.slice(4).join(" ")
+                units.push({
+                    name: name,
+                    loadState: loadState,
+                    activeState: activeState,
+                    subState: subState,
+                    description: description
+                })
+            }
+            console.log("[Autostart] Loaded", units.length, "user services (all)")
+            root.allUserServices = units
+            allUserServicesProc.buffer = []
+        }
+    }
+
+    function refreshAllUserServices() {
+        allUserServicesProc.buffer = []
+        allUserServicesProc.running = true
+    }
+
+    // ── Start / Stop / Restart user services ────────────────────────
+    Process {
+        id: userServiceControlProc
+        property string pendingAction: ""
+        onExited: (exitCode, exitStatus) => {
+            console.log("[Autostart] userServiceControlProc (" + pendingAction + ") exited with", exitCode, exitStatus)
+            pendingAction = ""
+            refreshAllUserServices()
+            refreshSystemdUnits()
+        }
+    }
+
+    function startService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Starting user service", name)
+        userServiceControlProc.pendingAction = "start " + name
+        userServiceControlProc.command = ["/usr/bin/systemctl", "--user", "start", name]
+        userServiceControlProc.running = true
+    }
+
+    function stopService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Stopping user service", name)
+        userServiceControlProc.pendingAction = "stop " + name
+        userServiceControlProc.command = ["/usr/bin/systemctl", "--user", "stop", name]
+        userServiceControlProc.running = true
+    }
+
+    function restartService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Restarting user service", name)
+        userServiceControlProc.pendingAction = "restart " + name
+        userServiceControlProc.command = ["/usr/bin/systemctl", "--user", "restart", name]
+        userServiceControlProc.running = true
+    }
+
+    // ── System services (running only, read-only overview) ──────────
+    Process {
+        id: systemServicesProc
+        property var buffer: []
+        command: ["/usr/bin/systemctl", "list-units", "--type=service", "--state=running", "--no-pager", "--plain", "--no-legend"]
+        stdout: SplitParser {
+            onRead: (line) => {
+                systemServicesProc.buffer.push(line)
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const units = []
+            if (exitCode !== 0) {
+                console.log("[Autostart] systemServicesProc exited with", exitCode, exitStatus)
+                root.systemServices = units
+                systemServicesProc.buffer = []
+                return
+            }
+            for (let i = 0; i < systemServicesProc.buffer.length; ++i) {
+                const raw = systemServicesProc.buffer[i].trim()
+                if (raw.length === 0)
+                    continue
+                const parts = raw.split(/\s+/)
+                if (parts.length < 4)
+                    continue
+                const name = parts[0]
+                const loadState = parts[1]
+                const activeState = parts[2]
+                const subState = parts[3]
+                const description = parts.slice(4).join(" ")
+                units.push({
+                    name: name,
+                    loadState: loadState,
+                    activeState: activeState,
+                    subState: subState,
+                    description: description
+                })
+            }
+            console.log("[Autostart] Loaded", units.length, "system services (running)")
+            root.systemServices = units
+            systemServicesProc.buffer = []
+        }
+    }
+
+    function refreshSystemServices() {
+        systemServicesProc.buffer = []
+        systemServicesProc.running = true
+    }
+
+    // ── System service control (via pkexec) ─────────────────────────
+    Process {
+        id: systemServiceControlProc
+        property string pendingAction: ""
+        onExited: (exitCode, exitStatus) => {
+            console.log("[Autostart] systemServiceControlProc (" + pendingAction + ") exited with", exitCode, exitStatus)
+            pendingAction = ""
+            refreshSystemServices()
+        }
+    }
+
+    function startSystemService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Starting system service", name)
+        systemServiceControlProc.pendingAction = "start " + name
+        systemServiceControlProc.command = ["/usr/bin/pkexec", "/usr/bin/systemctl", "start", name]
+        systemServiceControlProc.running = true
+    }
+
+    function stopSystemService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Stopping system service", name)
+        systemServiceControlProc.pendingAction = "stop " + name
+        systemServiceControlProc.command = ["/usr/bin/pkexec", "/usr/bin/systemctl", "stop", name]
+        systemServiceControlProc.running = true
+    }
+
+    function restartSystemService(name) {
+        if (!name || name.length === 0) return
+        console.log("[Autostart] Restarting system service", name)
+        systemServiceControlProc.pendingAction = "restart " + name
+        systemServiceControlProc.command = ["/usr/bin/pkexec", "/usr/bin/systemctl", "restart", name]
+        systemServiceControlProc.running = true
+    }
+
+    // ── Config entry management (for GUI) ───────────────────────────
+    function addConfigEntry(type, value, enabled) {
+        const entries = root.entries.slice()
+        const entry = { type: type, enabled: enabled ?? true }
+        if (type === "command") {
+            entry.command = value
+        } else if (type === "desktop") {
+            entry.desktopId = value
+        }
+        entries.push(entry)
+        Config.setNestedValue("autostart.entries", entries)
+        console.log("[Autostart] Added config entry:", type, value)
+    }
+
+    function removeConfigEntry(index) {
+        const entries = root.entries.slice()
+        if (index < 0 || index >= entries.length) return
+        const removed = entries.splice(index, 1)
+        Config.setNestedValue("autostart.entries", entries)
+        console.log("[Autostart] Removed config entry at index", index, removed[0]?.command || removed[0]?.desktopId)
+    }
+
+    function toggleConfigEntry(index, enabled) {
+        const entries = root.entries.slice()
+        if (index < 0 || index >= entries.length) return
+        entries[index] = Object.assign({}, entries[index], { enabled: enabled })
+        Config.setNestedValue("autostart.entries", entries)
+        console.log("[Autostart] Toggled config entry", index, "->", enabled)
+    }
+
+    function setGlobalEnabled(enabled) {
+        Config.setNestedValue("autostart.enable", enabled)
+        console.log("[Autostart] Global enabled ->", enabled)
+    }
+
+    // ── User scripts listing (~/.local/bin/) ────────────────────────
+    Process {
+        id: userScriptsProc
+        property var buffer: []
+        command: ["/usr/bin/bash", "-lc",
+            "dir=\"$HOME/.local/bin\"; "
+            + "[ -d \"$dir\" ] || exit 0; "
+            + "for f in \"$dir\"/*; do "
+            + "[ -f \"$f\" ] && [ -x \"$f\" ] || continue; "
+            + "echo \"$(basename \"$f\")\"; "
+            + "done | sort"
+        ]
+        stdout: SplitParser {
+            onRead: (line) => {
+                userScriptsProc.buffer.push(line)
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const scripts = []
+            for (let i = 0; i < userScriptsProc.buffer.length; ++i) {
+                const name = userScriptsProc.buffer[i].trim()
+                if (name.length > 0)
+                    scripts.push(name)
+            }
+            console.log("[Autostart] Found", scripts.length, "user scripts in ~/.local/bin/")
+            root.userScripts = scripts
+            userScriptsProc.buffer = []
+        }
+    }
+
+    function refreshUserScripts() {
+        userScriptsProc.buffer = []
+        userScriptsProc.running = true
+    }
+
+    Timer {
+        id: deferredRefreshTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            root.refreshAllUserServices()
+            root.refreshSystemServices()
+            root.refreshUserScripts()
+        }
+    }
+
     Component.onCompleted: {
         load()
         // Defer systemd scanning to keep shell startup smooth.
         root.requestRefreshSystemdUnits()
+        deferredRefreshTimer.start()
     }
 
     Connections {

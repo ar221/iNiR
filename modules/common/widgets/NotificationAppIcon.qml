@@ -15,12 +15,12 @@ MaterialShape { // App icon
     property var image: ""
     property real materialIconScale: 0.57
     property real appIconScale: 0.8
-    property real smallAppIconScale: 0.49
+    property real smallAppIconScale: 0.55
     property real materialIconSize: implicitSize * materialIconScale
     property real appIconSize: implicitSize * appIconScale
     property real smallAppIconSize: implicitSize * smallAppIconScale
 
-    implicitSize: 42 * scale
+    implicitSize: 48 * scale
     property list<var> urgentShapes: [
         MaterialShape.Shape.VerySunny,
         MaterialShape.Shape.SoftBurst,
@@ -99,6 +99,18 @@ MaterialShape { // App icon
                         radius: Appearance.rounding.full
                     }
                 }
+            }
+            // Circular background behind the badge icon for contrast
+            Rectangle {
+                visible: notifImageAppIconLoader.active
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: root.smallAppIconSize + 4
+                height: root.smallAppIconSize + 4
+                radius: width / 2
+                color: Appearance.colors.colSurfaceContainerLow
+                border.width: 1
+                border.color: Appearance.colors.colLayer0Border
             }
             Loader {
                 id: notifImageAppIconLoader

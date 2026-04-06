@@ -365,6 +365,12 @@ PanelWindow {
                 return;
         }
 
+        // Play screenshot sound for capture actions
+        if (root.action === RegionSelection.SnipAction.Copy || root.action === RegionSelection.SnipAction.Edit) {
+            if (Config.options?.sounds?.screenshot ?? true)
+                Audio.playSystemSound("screen-capture")
+        }
+
         // Image post-processing
         snipProc.startDetached();
         root.dismiss();

@@ -11,6 +11,7 @@ ContentPage {
     id: root
     settingsPageIndex: 3
     settingsPageName: Translation.tr("Background")
+    settingsPageIcon: "texture"
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
 
@@ -33,7 +34,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "sync_alt"
         title: Translation.tr("Parallax")
 
@@ -94,7 +95,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "devices"
         title: Translation.tr("Multi-monitor")
 
@@ -914,7 +915,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "wallpaper"
         title: Translation.tr("Wallpaper backend")
 
@@ -1020,7 +1021,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "transition_fade"
         title: Translation.tr("Wallpaper transitions")
 
@@ -1194,7 +1195,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "aspect_ratio"
         title: Translation.tr("Wallpaper scaling")
 
@@ -1746,7 +1747,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "clock_loader_40"
         title: Translation.tr("Widget: Clock")
 
@@ -2152,7 +2153,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "cloud"
         title: Translation.tr("Widget: Weather")
 
@@ -2215,7 +2216,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "album"
         title: Translation.tr("Widget: Media Controls")
 
@@ -2303,7 +2304,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "monitor_heart"
         title: Translation.tr("Widget: System Monitor")
 
@@ -2515,7 +2516,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "graphic_eq"
         title: Translation.tr("Widget: Audio Visualizer")
 
@@ -2677,7 +2678,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "notifications"
         title: Translation.tr("Notifications")
 

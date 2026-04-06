@@ -8,8 +8,9 @@ import qs.modules.common.functions
 
 ContentPage {
     id: root
-    settingsPageIndex: 10
+    settingsPageIndex: 11
     settingsPageName: Translation.tr("Waffle Style")
+    settingsPageIcon: "window"
 
     property bool isWaffleActive: Config.options?.panelFamily === "waffle"
 
@@ -102,7 +103,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("wBackground")
-        expanded: false
+        expanded: true
         icon: "auto_awesome"
         title: Translation.tr("Wallpaper Effects")
 
@@ -154,7 +155,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive
-        expanded: false
+        expanded: true
         icon: "layers"
         title: Translation.tr("Backdrop (Niri Overview)")
 
@@ -280,7 +281,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("wBar")
-        expanded: false
+        expanded: true
         icon: "toolbar"
         title: Translation.tr("Taskbar")
 
@@ -318,7 +319,7 @@ ContentPage {
     SettingsCardSection {
         id: themingSection
         visible: root.isWaffleActive
-        expanded: false
+        expanded: true
         icon: "palette"
         title: Translation.tr("Theming")
 
@@ -397,7 +398,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive
-        expanded: false
+        expanded: true
         icon: "widgets"
         title: Translation.tr("Behavior")
 
@@ -412,7 +413,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "swap_horiz"
         title: Translation.tr("Family Transition")
 
@@ -437,7 +438,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("wStartMenu")
-        expanded: false
+        expanded: true
         icon: "grid_view"
         title: Translation.tr("Start Menu")
 
@@ -467,7 +468,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive
-        expanded: false
+        expanded: true
         icon: "tune"
         title: Translation.tr("Tweaks")
 
@@ -490,7 +491,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("wNotificationCenter")
-        expanded: false
+        expanded: true
         icon: "calendar_month"
         title: Translation.tr("Calendar")
 
@@ -506,7 +507,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("iiAltSwitcher")
-        expanded: false
+        expanded: true
         icon: "swap_horiz"
         title: Translation.tr("Alt+Tab Switcher")
 
@@ -617,7 +618,7 @@ ContentPage {
 
     SettingsCardSection {
         visible: root.isWaffleActive && root.isPanelEnabled("wWidgets")
-        expanded: false
+        expanded: true
         icon: "widgets"
         title: Translation.tr("Widgets Panel")
 

@@ -15,7 +15,7 @@ Item { // Notification item area
     property bool expanded: false
     property bool popup: false
     property bool onlyNotification: false
-    property real fontSize: Appearance.font.pixelSize.small
+    property real fontSize: popup ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
     property real padding: onlyNotification ? 0 : 8
     property real summaryElideRatio: 0.85
 
@@ -172,6 +172,14 @@ Item { // Notification item area
                     elide: Text.ElideRight
                     text: root.notificationObject.summary || ""
                 }
+                MaterialSymbol {
+                    visible: (notificationObject.hasInlineReply ?? false) && !root.expanded
+                    text: "reply"
+                    iconSize: Appearance.font.pixelSize.small
+                    color: Appearance.m3colors.m3primary
+                    opacity: 0.7
+                    Layout.alignment: Qt.AlignVCenter
+                }
                 StyledText {
                     opacity: !root.expanded ? 1 : 0
                     visible: opacity > 0
@@ -188,6 +196,31 @@ Item { // Notification item area
                     text: {
                         return NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")
                     }
+                }
+            }
+
+            // First action chip (collapsed state only)
+            RippleButton {
+                visible: !root.expanded && (notificationObject.actions?.length ?? 0) > 0
+                implicitHeight: 24
+                implicitWidth: firstActionLabel.implicitWidth + 16
+                buttonRadius: Appearance.rounding.small
+                colBackground: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.88)
+                colBackgroundHover: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.78)
+                colRipple: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.6)
+                Layout.alignment: Qt.AlignRight
+                onClicked: {
+                    const action = notificationObject.actions[0]
+                    if (action) Notifications.attemptInvokeAction(notificationObject.notificationId, action.identifier)
+                }
+
+                contentItem: StyledText {
+                    id: firstActionLabel
+                    anchors.centerIn: parent
+                    text: notificationObject.actions?.[0]?.text ?? ""
+                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    font.weight: Font.Medium
+                    color: Appearance.m3colors.m3primary
                 }
             }
 

@@ -7,12 +7,13 @@ Item {
     id: root
 
     property real value: 0
-    property int ringSize: 72
+    property int ringSize: 80
     property int lineWidth: 5
     property color ringColor: Appearance.colors.colPrimary
-    property color trackColor: ColorUtils.transparentize(ringColor, 0.75)
+    property color trackColor: ColorUtils.transparentize(ringColor, 0.82)
     property string label: ""
-    property string secondaryText: ""
+    property string icon: ""
+    property string valueText: ""
 
     implicitWidth: ringSize
     implicitHeight: contentColumn.implicitHeight
@@ -26,7 +27,7 @@ Item {
     Column {
         id: contentColumn
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 4
+        spacing: 6
 
         Item {
             width: root.ringSize
@@ -73,31 +74,28 @@ Item {
                 function onTrackColorChanged() { canvas.requestPaint() }
             }
 
-            StyledText {
+            // Icon centered in ring
+            MaterialSymbol {
                 anchors.centerIn: parent
-                text: Math.round(root._animatedValue * 100) + "%"
-                font.pixelSize: root.ringSize * 0.22
-                font.family: Appearance.font.family.monospace
-                font.weight: Font.Bold
+                text: root.icon
+                iconSize: root.ringSize * 0.36
                 color: root.ringColor
+                visible: root.icon !== ""
             }
         }
 
+        // Combined label + value text below ring
         StyledText {
-            visible: root.label !== ""
+            visible: root.label !== "" || root.valueText !== ""
             anchors.horizontalCenter: parent.horizontalCenter
-            text: root.label
-            font.pixelSize: Appearance.font.pixelSize.smaller
+            text: {
+                if (root.label !== "" && root.valueText !== "")
+                    return root.label + " " + root.valueText
+                return root.label || root.valueText
+            }
+            font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.Medium
             color: Appearance.colors.colOnLayer0
-        }
-
-        StyledText {
-            visible: root.secondaryText !== ""
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: root.secondaryText
-            font.pixelSize: Appearance.font.pixelSize.smallest
-            color: Appearance.colors.colSubtext
         }
     }
 }

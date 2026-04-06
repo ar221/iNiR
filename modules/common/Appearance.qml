@@ -972,7 +972,7 @@ Singleton {
         property real hyprlandGapsOut: 5
         property real mediaControlsWidth: 380
         property real mediaControlsHeight: 150
-        property real notificationPopupWidth: 410
+        property real notificationPopupWidth: 520
         property real osdWidth: 180
         property real searchWidthCollapsed: 210
         property real searchWidth: 360

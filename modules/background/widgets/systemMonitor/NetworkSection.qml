@@ -6,7 +6,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-RowLayout {
+ColumnLayout {
     id: root
 
     property var configEntry: ({})
@@ -14,6 +14,7 @@ RowLayout {
     // Network data
     property string connectionType: ""
     property string connectionName: ""
+    property string ipAddress: ""
 
     // Speed tracking
     property real lastRxBytes: 0
@@ -22,7 +23,12 @@ RowLayout {
     property real txSpeed: 0
     property string activeInterface: "br0"
 
-    spacing: 10
+    // Sparkline history (last 30 samples)
+    property var rxHistory: []
+    property var txHistory: []
+    readonly property int maxSamples: 30
+
+    spacing: 8
 
     // ── Detect connection ──
     Process {
@@ -49,6 +55,20 @@ RowLayout {
         }
     }
 
+    // ── Get IP address ──
+    Process {
+        id: ipProc
+        command: ["/usr/bin/bash", "-c",
+            "ip -4 addr show " + root.activeInterface + " 2>/dev/null | grep -oP '(?<=inet )\\S+' | cut -d/ -f1 | head -1"
+        ]
+        stdout: SplitParser {
+            splitMarker: ""
+            onRead: data => {
+                root.ipAddress = data.trim() || "—"
+            }
+        }
+    }
+
     // ── Speed measurement ──
     Process {
         id: speedProc
@@ -65,6 +85,16 @@ RowLayout {
                     if (root.lastRxBytes > 0) {
                         root.rxSpeed = Math.max(0, (rx - root.lastRxBytes) / 2)
                         root.txSpeed = Math.max(0, (tx - root.lastTxBytes) / 2)
+
+                        // Push to history
+                        const rxH = root.rxHistory.slice()
+                        const txH = root.txHistory.slice()
+                        rxH.push(root.rxSpeed)
+                        txH.push(root.txSpeed)
+                        if (rxH.length > root.maxSamples) rxH.shift()
+                        if (txH.length > root.maxSamples) txH.shift()
+                        root.rxHistory = rxH
+                        root.txHistory = txH
                     }
                     root.lastRxBytes = rx
                     root.lastTxBytes = tx
@@ -75,6 +105,7 @@ RowLayout {
 
     Component.onCompleted: {
         netProc.running = true
+        ipProc.running = true
         speedProc.running = true
     }
 
@@ -90,61 +121,103 @@ RowLayout {
         interval: 30000
         repeat: true
         triggeredOnStart: true
-        onTriggered: netProc.running = true
-    }
-
-    // ── Icon ──
-    MaterialSymbol {
-        text: {
-            if (root.connectionType === "wifi") return "wifi"
-            if (root.connectionType === "ethernet" || root.connectionType === "bridge") return "lan"
-            return "wifi_off"
+        onTriggered: {
+            netProc.running = true
+            ipProc.running = true
         }
-        iconSize: 16
-        color: root.connectionType === "disconnected"
-            ? Appearance.colors.colError
-            : Appearance.colors.colPrimary
     }
 
-    // ── Connection name ──
+    // ── IP address centered ──
     StyledText {
-        text: {
-            if (root.connectionType === "disconnected") return "Disconnected"
-            if (root.connectionType === "wifi") return root.connectionName
-            if (root.connectionType === "bridge") return "Bridge (" + root.connectionName + ")"
-            return "Ethernet"
-        }
-        font.pixelSize: Appearance.font.pixelSize.small
+        Layout.alignment: Qt.AlignHCenter
+        text: root.ipAddress || "—"
+        font.pixelSize: Appearance.font.pixelSize.normal
+        font.family: Appearance.font.family.monospace
         font.weight: Font.Medium
-        color: Appearance.colors.colOnLayer0
-        elide: Text.ElideRight
-    }
-
-    Item { Layout.fillWidth: true }
-
-    // ── Speed indicators ──
-    MaterialSymbol {
-        text: "arrow_downward"
-        iconSize: 12
         color: Appearance.colors.colPrimary
     }
-    StyledText {
-        text: formatSpeed(root.rxSpeed)
-        font.pixelSize: Appearance.font.pixelSize.smallest
-        font.family: Appearance.font.family.monospace
-        color: Appearance.colors.colSubtext
-    }
 
-    MaterialSymbol {
-        text: "arrow_upward"
-        iconSize: 12
-        color: Appearance.colors.colSecondary
-    }
-    StyledText {
-        text: formatSpeed(root.txSpeed)
-        font.pixelSize: Appearance.font.pixelSize.smallest
-        font.family: Appearance.font.family.monospace
-        color: Appearance.colors.colSubtext
+    // ── Sparkline graph ──
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 60
+
+        Canvas {
+            id: sparkCanvas
+            anchors.fill: parent
+
+            onPaint: {
+                const ctx = getContext("2d")
+                ctx.reset()
+                const w = width
+                const h = height
+                const midY = h / 2
+
+                // Find max for scaling
+                let maxVal = 1024 // minimum scale: 1 KB/s
+                for (const v of root.rxHistory) maxVal = Math.max(maxVal, v)
+                for (const v of root.txHistory) maxVal = Math.max(maxVal, v)
+
+                // Draw RX (download) — top half, line going up
+                drawSparkline(ctx, root.rxHistory, w, midY, 0, maxVal,
+                    Appearance.colors.colPrimary.toString(), true)
+
+                // Draw TX (upload) — bottom half, line going down
+                drawSparkline(ctx, root.txHistory, w, midY, midY, maxVal,
+                    Appearance.colors.colSecondary.toString(), false)
+            }
+
+            function drawSparkline(ctx, data, w, halfH, yOffset, maxVal, color, flipUp) {
+                if (data.length < 2) return
+
+                const stepX = w / (root.maxSamples - 1)
+                const startIdx = root.maxSamples - data.length
+
+                ctx.beginPath()
+                ctx.strokeStyle = color
+                ctx.lineWidth = 1.5
+                ctx.lineJoin = "round"
+                ctx.lineCap = "round"
+
+                for (let i = 0; i < data.length; i++) {
+                    const x = (startIdx + i) * stepX
+                    const norm = Math.min(data[i] / maxVal, 1.0)
+                    const y = flipUp
+                        ? yOffset + halfH - (norm * (halfH - 4))
+                        : yOffset + (norm * (halfH - 4)) + 2
+                    if (i === 0) ctx.moveTo(x, y)
+                    else ctx.lineTo(x, y)
+                }
+                ctx.stroke()
+            }
+        }
+
+        // Repaint when data changes
+        Connections {
+            target: root
+            function onRxHistoryChanged() { sparkCanvas.requestPaint() }
+            function onTxHistoryChanged() { sparkCanvas.requestPaint() }
+        }
+
+        // ↑↓ indicators on the left edge
+        ColumnLayout {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            StyledText {
+                text: "\u2193"
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.Bold
+                color: Appearance.colors.colPrimary
+            }
+            StyledText {
+                text: "\u2191"
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.Bold
+                color: Appearance.colors.colSecondary
+            }
+        }
     }
 
     function formatSpeed(bytesPerSec) {

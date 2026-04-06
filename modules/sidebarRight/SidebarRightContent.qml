@@ -24,7 +24,7 @@ import qs.modules.sidebarRight.wifiNetworks
 Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
-    property int sidebarPadding: 10
+    property int sidebarPadding: 12
     property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property int screenWidth: 1920
     property int screenHeight: 1080
@@ -173,14 +173,14 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: sidebarPadding
-            spacing: sidebarPadding
+            spacing: 14
 
             SystemButtonRow {
                 Layout.fillHeight: false
                 Layout.fillWidth: true
                 // Layout.margins: 10
-                Layout.topMargin: 5
-                Layout.bottomMargin: 0
+                Layout.topMargin: 4
+                Layout.bottomMargin: 4
             }
 
             Loader {

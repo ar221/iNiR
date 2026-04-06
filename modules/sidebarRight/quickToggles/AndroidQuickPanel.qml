@@ -19,15 +19,15 @@ AbstractQuickPanel {
     Behavior on implicitHeight {
         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
     }
-    property real spacing: 6
-    property real padding: 6
+    property real spacing: 8
+    property real padding: 8
     readonly property real baseCellWidth: {
         // This is the wrong calculation, but it looks correct in reality???
         // (theoretically spacing should be multiplied by 1 column less)
         const availableWidth = root.width - (root.padding * 2) - (root.spacing * (root.columns))
         return availableWidth / root.columns
     }
-    readonly property real baseCellHeight: 56
+    readonly property real baseCellHeight: 64
 
     // Toggles
     readonly property list<string> availableToggleTypes: ["network", "bluetooth", "idleInhibitor", "easyEffects", "nightLight", "darkMode", "cloudflareWarp", "claudeCodeProxy", "dictationServer", "gameMode", "screenSnip", "colorPicker", "onScreenKeyboard", "mic", "audio", "notifications", "powerProfile", "musicRecognition", "voiceSearch", "antiFlashbang"]
@@ -60,18 +60,38 @@ AbstractQuickPanel {
         return rows;
     }
 
+    // Card background — gives toggles their own visually distinct section
+    Rectangle {
+        anchors.fill: parent
+        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+            : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
+            : Appearance.rounding.normal
+        color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+             : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+             : Appearance.auroraEverywhere ? "transparent"
+             : Appearance.colors.colLayer1
+        border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
+        border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+        z: -1
+    }
+
+    AngelPartialBorder {
+        targetRadius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal : Appearance.rounding.normal
+        coverage: 0.5
+    }
+
     Column {
         id: contentItem
         anchors {
             fill: parent
             margins: root.padding
         }
-        spacing: 12
+        spacing: 14
         
         ScrollView {
             id: scrollView
             width: parent.width
-            height: (root.editMode) ? usedRows.implicitHeight : Math.min(usedRows.implicitHeight, (root.baseCellHeight * 2.3) + (root.spacing * 2))
+            height: usedRows.implicitHeight
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded

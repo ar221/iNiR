@@ -28,6 +28,8 @@ Singleton {
 
     function setTheme(themeId, applyExternal = true): void {
         root._log("[ThemeService] setTheme called with:", themeId);
+        if (Config.options?.sounds?.themeSwitch ?? false)
+            Audio.playSystemSound("complete")
         Config.setNestedValue(["appearance", "theme"], themeId)
         
         // Update recent themes (max 4, no duplicates)

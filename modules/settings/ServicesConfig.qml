@@ -7,8 +7,9 @@ import qs.modules.common.functions
 import qs.modules.common.widgets
 
 ContentPage {
-    settingsPageIndex: 6
+    settingsPageIndex: 7
     settingsPageName: Translation.tr("Services")
+    settingsPageIcon: "settings"
 
     SettingsCardSection {
         expanded: true
@@ -80,7 +81,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "neurology"
         title: Translation.tr("AI")
 
@@ -100,7 +101,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "music_cast"
         title: Translation.tr("Music Recognition")
 
@@ -137,7 +138,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "cell_tower"
         title: Translation.tr("Networking")
 
@@ -155,7 +156,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "memory"
         title: Translation.tr("Resources")
 
@@ -178,7 +179,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "search"
         title: Translation.tr("Search")
 
@@ -274,7 +275,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "system_update"
         title: Translation.tr("Updates")
 
@@ -329,7 +330,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "deployed_code_update"
         title: Translation.tr("iNiR Shell Updates")
 
@@ -749,7 +750,7 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: false
+        expanded: true
         icon: "cloud"
         title: Translation.tr("Weather")
 

@@ -497,10 +497,12 @@
   "notifications": {
     "edgeMargin": 4,
     "position": "topRight",
+    "rules": {},
     "timeout": 3000,
     "timeoutCritical": 0,
     "timeoutLow": 5000,
-    "timeoutNormal": 7000
+    "timeoutNormal": 7000,
+    "undoOnDismiss": true
   },
   "osd": {
     "timeout": 1000
@@ -782,7 +784,13 @@
     "battery": false,
     "notifications": true,
     "pomodoro": false,
-    "theme": "freedesktop"
+    "theme": "freedesktop",
+    "network": true,
+    "bluetooth": true,
+    "screenshot": true,
+    "themeSwitch": false,
+    "sidebar": false,
+    "volume": 0.5
   },
   "time": {
     "dateFormat": "ddd, dd/MM",

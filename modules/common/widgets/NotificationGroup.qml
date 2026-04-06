@@ -26,11 +26,13 @@ MouseArea { // Notification group area
     property bool multipleNotifications: notificationCount > 1
     property bool expanded: false
     property bool popup: false
-    property real padding: 10
+    property real padding: popup ? 14 : 10
     property bool _expandAnimating: false
     // Extra bottom space for stack depth cards when collapsed with multiple notifications
     implicitHeight: background.implicitHeight + ((!expanded && notificationCount > 1) ? (notificationCount > 2 ? 8 : 4) : 0)
 
+    property bool _showingUndo: false
+    property var _undoNotifIds: []
     property real dragConfirmThreshold: 40 // Drag to discard notification
     property real dismissOvershoot: 20 // Account for gaps and bouncy animations
     property var qmlParent: root?.parent?.parent // There's something between this and the parent ListView
@@ -44,6 +46,42 @@ MouseArea { // Notification group area
         ? Appearance.animation.elementMoveFast
         : Appearance.animation.elementMove
     readonly property QtObject _contentAnim: Appearance.animation.elementMoveFast
+
+    function startUndoDismiss() {
+        if (!(Config.options?.notifications?.undoOnDismiss ?? true)) {
+            // Undo disabled, dismiss immediately
+            root.notifications.forEach((notif) => {
+                Qt.callLater(() => {
+                    Notifications.discardNotification(notif.notificationId);
+                });
+            });
+            return;
+        }
+
+        // Collect all notification IDs in this group and soft-dismiss them
+        const ids = []
+        for (let i = 0; i < root.notifications.length; ++i) {
+            const id = root.notifications[i]?.notificationId
+            if (id !== undefined) {
+                Notifications.softDismissNotification(id)
+                ids.push(id)
+            }
+        }
+        root._undoNotifIds = ids
+        root._showingUndo = true
+        undoTimer.restart()
+    }
+
+    Timer {
+        id: undoTimer
+        interval: 3000
+        onTriggered: {
+            for (const id of root._undoNotifIds)
+                Notifications.commitDismiss(id)
+            root._showingUndo = false
+            root._undoNotifIds = []
+        }
+    }
 
     function destroyWithAnimation(left = false) {
         background.anchors.leftMargin = root.xOffset; // Break binding, capture current position
@@ -77,11 +115,7 @@ MouseArea { // Notification group area
             easing.bezierCurve: root._dismissAnim.bezierCurve
         }
         onFinished: () => {
-            root.notifications.forEach((notif) => {
-                Qt.callLater(() => {
-                    Notifications.discardNotification(notif.notificationId);
-                });
-            });
+            root.startUndoDismiss();
         }
     }
 
@@ -189,7 +223,7 @@ MouseArea { // Notification group area
             : Appearance.inirEverywhere ? (popup ? Appearance.inir.colLayer2
                 : root.containsMouse ? Appearance.inir.colLayer2 : Appearance.inir.colLayer1)
             : Appearance.auroraEverywhere ? "transparent"
-            : (popup ? ColorUtils.applyAlpha(Appearance.colors.colLayer2, 1 - Appearance.backgroundTransparency)
+            : (popup ? ColorUtils.applyAlpha(Appearance.colors.colLayer2, Math.max(0.92, 1 - Appearance.backgroundTransparency))
                      : root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2)
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -227,7 +261,7 @@ MouseArea { // Notification group area
 
         implicitHeight: root.expanded ?
             row.implicitHeight + padding * 2 :
-            Math.min(80, row.implicitHeight + padding * 2)
+            Math.min(root.popup ? 120 : 80, row.implicitHeight + padding * 2)
 
         Behavior on implicitHeight {
             id: implicitHeightAnim
@@ -271,13 +305,25 @@ MouseArea { // Notification group area
             anchors.fill: parent
             visible: root.popup && Appearance.auroraEverywhere && !Appearance.inirEverywhere
             color: Appearance.angelEverywhere
-                ? ColorUtils.transparentize(Appearance.colors.colLayer0Base, Appearance.angel.overlayOpacity)
-                : ColorUtils.transparentize(Appearance.colors.colLayer0Base, Appearance.aurora.popupTransparentize)
+                ? ColorUtils.transparentize(Appearance.colors.colLayer0Base, Math.min(Appearance.angel.overlayOpacity, 0.35))
+                : ColorUtils.transparentize(Appearance.colors.colLayer0Base, Math.min(Appearance.aurora.popupTransparentize, 0.4))
         }
 
         // Angel partial border for popup
         AngelPartialBorder {
             targetRadius: background.radius
+        }
+
+        // Critical glow behind accent strip
+        Rectangle {
+            visible: root.notificationGroup?.hasCritical ?? false
+            width: 10
+            height: accentStrip.height
+            x: accentStrip.x - 3
+            y: accentStrip.y
+            radius: 5
+            color: Appearance.m3colors.m3error
+            opacity: 0.2
         }
 
         // Left accent strip
@@ -287,19 +333,89 @@ MouseArea { // Notification group area
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.margins: 6
-            width: 3
-            radius: 1.5
-            color: root.notificationGroup?.hasCritical
-                ? Appearance.colors.colPrimaryContainer
+            width: 4
+            radius: 2
+            color: (root.notificationGroup?.hasCritical ?? false)
+                ? Appearance.m3colors.m3error
                 : Appearance.m3colors.m3primary
-            opacity: root.containsMouse ? 0.9 : 0.45
+            opacity: root.containsMouse ? 1.0 : 0.65
             Behavior on opacity {
                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
             }
         }
 
+        // Subtle top highlight for popup mode
+        Rectangle {
+            visible: root.popup
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
+        }
+
+        // Undo bar (replaces content during soft-dismiss)
+        Rectangle {
+            id: undoBar
+            visible: root._showingUndo
+            anchors.fill: parent
+            radius: background.radius
+            color: Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                : Appearance.colors.colSurfaceContainerLow
+            border.width: background.border.width
+            border.color: background.border.color
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 8
+
+                MaterialSymbol {
+                    text: "undo"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colSubtext
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: Translation.tr("Dismissed")
+                    font.pixelSize: Appearance.font.pixelSize.normal
+                    color: Appearance.colors.colSubtext
+                }
+
+                RippleButton {
+                    implicitWidth: undoBtnText.implicitWidth + 24
+                    implicitHeight: 32
+                    buttonRadius: Appearance.rounding.small
+                    colBackground: Appearance.m3colors.m3primary
+                    colBackgroundHover: Appearance.colors.colPrimaryHover
+                    colRipple: Appearance.colors.colPrimaryActive
+                    onClicked: {
+                        undoTimer.stop()
+                        for (const id of root._undoNotifIds)
+                            Notifications.undoSoftDismiss(id)
+                        root._showingUndo = false
+                        root._undoNotifIds = []
+                        // Reset position
+                        background.anchors.leftMargin = 0
+                    }
+
+                    contentItem: StyledText {
+                        id: undoBtnText
+                        anchors.centerIn: parent
+                        text: Translation.tr("Undo")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.DemiBold
+                        color: Appearance.m3colors.m3onPrimary
+                    }
+                }
+            }
+        }
+
         RowLayout { // Left column for icon, right column for content
             id: row
+            visible: !root._showingUndo
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
@@ -307,11 +423,12 @@ MouseArea { // Notification group area
             anchors.rightMargin: root.padding
             anchors.topMargin: root.padding
             anchors.bottomMargin: root.padding
-            spacing: 10
+            spacing: root.popup ? 14 : 10
 
             NotificationAppIcon { // Icons
                 Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: false
+                implicitSize: root.popup ? 72 : 48 * scale
                 image: root?.multipleNotifications ? "" : notificationGroup?.notifications[0]?.image ?? ""
                 appIcon: root.notificationGroup?.appIcon
                 summary: root.notificationGroup?.notifications[root.notificationCount - 1]?.summary
@@ -334,7 +451,7 @@ MouseArea { // Notification group area
                 Item { // App name (or summary when there's only 1 notif) and time
                     id: topRow
                     Layout.fillWidth: true
-                    property real fontSize: Appearance.font.pixelSize.smaller
+                    property real fontSize: root.popup ? Appearance.font.pixelSize.small : Appearance.font.pixelSize.smaller
                     property bool showAppName: root.multipleNotifications
                     implicitHeight: Math.max(topTextRow.implicitHeight, expandButton.implicitHeight)
 
@@ -375,6 +492,7 @@ MouseArea { // Notification group area
                         count: root.notificationCount
                         expanded: root.expanded
                         fontSize: topRow.fontSize
+                        iconSize: root.popup ? Appearance.font.pixelSize.larger : Appearance.font.pixelSize.normal
                         onClicked: { root.toggleExpanded() }
                         altAction: () => { root.toggleExpanded() }
                     }

@@ -53,7 +53,7 @@ GroupButton {
         }
     }
 
-    padding: 6
+    padding: 8
     horizontalPadding: padding
     verticalPadding: padding
 
@@ -100,13 +100,23 @@ GroupButton {
         root.mainAction();
     }
 
-    contentItem: Item {
+    contentItem: ColumnLayout {
+        spacing: 2
         MaterialSymbol {
-            anchors.centerIn: parent
+            Layout.alignment: Qt.AlignHCenter
             fill: root.toggled ? 1 : 0
-            iconSize: 24
+            iconSize: 28
             color: root.colIcon
             text: root.buttonIcon
+        }
+        StyledText {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            text: root.name
+            font.pixelSize: Appearance.font.pixelSize.smallest
+            color: root.colText
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
         }
     }
 

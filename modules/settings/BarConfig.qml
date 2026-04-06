@@ -8,6 +8,7 @@ ContentPage {
     id: root
     settingsPageIndex: 2
     settingsPageName: Translation.tr("Bar")
+    settingsPageIcon: "toast"
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
 
@@ -426,7 +427,7 @@ ContentPage {
     // ═══════════════════════════════════════════════════════════════════
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "music_note"
         title: Translation.tr("Media")
 
@@ -460,7 +461,7 @@ ContentPage {
     // ═══════════════════════════════════════════════════════════════════
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "workspaces"
         title: Translation.tr("Workspaces")
 
@@ -608,7 +609,7 @@ ContentPage {
     // ═══════════════════════════════════════════════════════════════════
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "shelf_auto_hide"
         title: Translation.tr("System Tray")
 
@@ -657,7 +658,7 @@ ContentPage {
     // ═══════════════════════════════════════════════════════════════════
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "build"
         title: Translation.tr("Utility Buttons")
 
@@ -786,7 +787,7 @@ ContentPage {
     // ═══════════════════════════════════════════════════════════════════
     SettingsCardSection {
         visible: root.isIiActive
-        expanded: false
+        expanded: true
         icon: "notifications"
         title: Translation.tr("Notifications")
 

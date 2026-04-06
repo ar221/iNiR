@@ -16,6 +16,41 @@ StyledListView { // Scrollable window
     popin: !popup
     animateAppearance: !popup
 
+    // Entry animation for popup mode — slide from anchor side
+    property bool isRightAnchored: {
+        const pos = Config.options?.notifications?.position ?? "topRight"
+        return pos.includes("Right")
+    }
+
+    // Custom add transition for popup (slide-in from edge)
+    add: Transition {
+        enabled: root.popup
+        NumberAnimation {
+            property: "x"
+            from: root.isRightAnchored ? 400 : -400
+            to: 0
+            duration: 400
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    // Smooth displacement when new notifications push existing ones
+    addDisplaced: Transition {
+        enabled: root.popup
+        NumberAnimation {
+            properties: "y"
+            duration: 200
+            easing.type: Easing.OutCubic
+        }
+    }
+
     // Custom removeDisplaced for popup mode: smooth gap-filling when a group is dismissed.
     // Uses elementMoveFast (200ms) for snappy feel without Wayland stair-stepping.
     removeDisplaced: Transition {

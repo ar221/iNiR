@@ -8,8 +8,9 @@ import qs.modules.common.widgets
 
 ContentPage {
     id: root
-    settingsPageIndex: 8
+    settingsPageIndex: 9
     settingsPageName: Translation.tr("Shortcuts")
+    settingsPageIcon: "keyboard"
 
     readonly property var keybinds: CompositorService.isNiri ? NiriKeybinds.keybinds : HyprlandKeybinds.keybinds
     readonly property var categories: keybinds?.children ?? []
@@ -57,7 +58,7 @@ ContentPage {
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
-                expanded: false
+                expanded: true
                 
                 readonly property var categoryKeybinds: modelData.children?.[0]?.keybinds ?? []
                 

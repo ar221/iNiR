@@ -10,8 +10,10 @@ RippleButton { // Expand button
     required property bool expanded
     property real fontSize: Appearance?.font.pixelSize.small ?? 12
     property real iconSize: Appearance?.font.pixelSize.normal ?? 16
-    implicitHeight: fontSize + 4 * 2
-    implicitWidth: Math.max(contentItem.implicitWidth + 5 * 2, 30)
+    property real verticalPad: 6
+    property real horizontalPad: 8
+    implicitHeight: Math.max(fontSize, iconSize) + verticalPad * 2
+    implicitWidth: Math.max(contentItem.implicitWidth + horizontalPad * 2, implicitHeight)
     Layout.alignment: Qt.AlignVCenter
     Layout.fillHeight: false
 
@@ -44,9 +46,9 @@ RippleButton { // Expand button
         RowLayout {
             id: contentRow
             anchors.centerIn: parent
-            spacing: 3
+            spacing: 4
             StyledText {
-                Layout.leftMargin: 4
+                Layout.leftMargin: 2
                 visible: root.count > 1
                 text: root.count
                 font.pixelSize: root.fontSize

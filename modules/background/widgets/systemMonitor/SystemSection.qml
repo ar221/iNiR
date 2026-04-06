@@ -16,30 +16,26 @@ RowLayout {
         Layout.alignment: Qt.AlignTop
         value: ResourceUsage.cpuUsage
         ringColor: Appearance.colors.colPrimary
+        icon: "settings"
         label: "CPU"
-        secondaryText: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp + "°C" : ""
+        valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
     }
 
     CircularProgressRing {
         Layout.alignment: Qt.AlignTop
         value: ResourceUsage.memoryUsedPercentage
         ringColor: Appearance.colors.colSecondary
+        icon: "grid_view"
         label: "RAM"
-        secondaryText: formatMem(ResourceUsage.memoryUsed) + " / " + formatMem(ResourceUsage.memoryTotal)
-
-        function formatMem(kb) {
-            if (kb < 1024) return kb + " KB"
-            if (kb < 1024 * 1024) return (kb / 1024).toFixed(1) + " MB"
-            return (kb / (1024 * 1024)).toFixed(1) + " GB"
-        }
+        valueText: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
     }
 
     CircularProgressRing {
         Layout.alignment: Qt.AlignTop
-        visible: root.showGpu
-        value: ResourceUsage.gpuUsage
+        value: ResourceUsage.cpuTemp > 0 ? Math.min(ResourceUsage.cpuTemp / 100, 1.0) : 0
         ringColor: Appearance.colors.colTertiary
-        label: "GPU"
-        secondaryText: ResourceUsage.gpuTemp > 0 ? ResourceUsage.gpuTemp + "°C" : ""
+        icon: "thermostat"
+        label: "TEMP"
+        valueText: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp + "\u00B0C" : "--"
     }
 }

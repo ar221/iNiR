@@ -151,13 +151,18 @@ Scope {
         { pageIndex: 6, pageName: overlayPages[6].name, section: Translation.tr("Night Light"), label: Translation.tr("Night light"), description: Translation.tr("Blue light filter / color temperature"), keywords: ["night", "light", "blue", "filter", "color", "temperature", "warm", "redshift"] },
         { pageIndex: 6, pageName: overlayPages[6].name, section: Translation.tr("GameMode"), label: Translation.tr("GameMode"), description: Translation.tr("Auto-detect fullscreen games and reduce effects"), keywords: ["game", "mode", "fullscreen", "performance", "fps", "auto", "detect", "animations", "effects"] },
         { pageIndex: 6, pageName: overlayPages[6].name, section: Translation.tr("Applications"), label: Translation.tr("Default applications"), description: Translation.tr("Terminal, file manager, browser commands"), keywords: ["apps", "applications", "terminal", "browser", "file", "manager", "discord", "default"] },
-        // Advanced (page 7)
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Color generation"), label: Translation.tr("Color generation"), description: Translation.tr("Wallpaper-based color theming and palette type"), keywords: ["color", "generation", "theming", "wallpaper", "matugen", "palette"] },
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal saturation"), description: Translation.tr("Saturation intensity of terminal colors from wallpaper"), keywords: ["terminal", "color", "saturation", "vivid", "muted", "intensity"] },
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal brightness"), description: Translation.tr("Brightness/lightness of terminal colors from wallpaper"), keywords: ["terminal", "color", "brightness", "lightness", "dark", "light"] },
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal harmony"), description: Translation.tr("How much to blend terminal colors with the wallpaper palette"), keywords: ["terminal", "color", "harmony", "blend", "palette", "wallpaper"] },
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Performance"), label: Translation.tr("Low power mode"), description: Translation.tr("Reduce resource usage for low-end hardware"), keywords: ["performance", "low", "power", "mode", "reduce", "battery", "laptop"] },
-        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Interactions"), label: Translation.tr("Scrolling"), description: Translation.tr("Touchpad and mouse scroll speed"), keywords: ["scroll", "touchpad", "mouse", "speed", "fast", "slow", "sensitivity"] },
+        // System — Color generation (page 1)
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Color generation"), label: Translation.tr("Color generation"), description: Translation.tr("Wallpaper-based color theming and palette type"), keywords: ["color", "generation", "theming", "wallpaper", "matugen", "palette"] },
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal saturation"), description: Translation.tr("Saturation intensity of terminal colors from wallpaper"), keywords: ["terminal", "color", "saturation", "vivid", "muted", "intensity"] },
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal brightness"), description: Translation.tr("Brightness/lightness of terminal colors from wallpaper"), keywords: ["terminal", "color", "brightness", "lightness", "dark", "light"] },
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal harmony"), description: Translation.tr("How much to blend terminal colors with the wallpaper palette"), keywords: ["terminal", "color", "harmony", "blend", "palette", "wallpaper"] },
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Performance"), label: Translation.tr("Low power mode"), description: Translation.tr("Reduce resource usage for low-end hardware"), keywords: ["performance", "low", "power", "mode", "reduce", "battery", "laptop"] },
+        { pageIndex: 1, pageName: overlayPages[1].name, section: Translation.tr("Interactions"), label: Translation.tr("Scrolling"), description: Translation.tr("Touchpad and mouse scroll speed"), keywords: ["scroll", "touchpad", "mouse", "speed", "fast", "slow", "sensitivity"] },
+        // Autostart & Services (page 7)
+        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Shell Autostart"), label: Translation.tr("Shell Autostart"), description: Translation.tr("Commands and apps that launch with the shell"), keywords: ["autostart", "startup", "launch", "command", "desktop", "boot", "login"] },
+        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("User Services"), label: Translation.tr("User Services"), description: Translation.tr("Manage systemd user services"), keywords: ["service", "systemd", "user", "start", "stop", "enable", "disable", "daemon"] },
+        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("System Services"), label: Translation.tr("System Services"), description: Translation.tr("View and control system-level services"), keywords: ["system", "service", "systemd", "root", "admin", "pkexec"] },
+        { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("User Scripts"), label: Translation.tr("User Scripts"), description: Translation.tr("Run or autostart scripts from ~/.local/bin"), keywords: ["script", "bin", "local", "run", "execute", "bash"] },
         // Shortcuts (page 8)
         { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Keyboard Shortcuts"), label: Translation.tr("Keyboard Shortcuts"), description: Translation.tr("Niri and ii keybindings reference"), keywords: ["shortcuts", "keybindings", "hotkeys", "keyboard", "cheatsheet", "terminal", "clipboard", "volume", "brightness", "screenshot", "lock", "workspace", "window", "focus", "move", "fullscreen", "floating", "overview", "settings", "wallpaper", "media", "play", "pause"] },
         // Modules (page 9)
@@ -166,7 +171,35 @@ Scope {
         { pageIndex: 10, pageName: overlayPages[10].name, section: Translation.tr("Waffle Taskbar"), label: Translation.tr("Waffle Taskbar"), description: Translation.tr("Windows 11 style taskbar settings"), keywords: ["waffle", "taskbar", "windows", "bottom", "tray"] },
         { pageIndex: 10, pageName: overlayPages[10].name, section: Translation.tr("Waffle Start Menu"), label: Translation.tr("Waffle Start Menu"), description: Translation.tr("Start menu size and behavior"), keywords: ["waffle", "start", "menu", "apps", "pinned"] },
         // About (page 11)
-        { pageIndex: 11, pageName: overlayPages[11].name, section: Translation.tr("About"), label: Translation.tr("About ii"), description: Translation.tr("Version info, credits and links"), keywords: ["about", "version", "credits", "github", "info"] }
+        { pageIndex: 11, pageName: overlayPages[11].name, section: Translation.tr("About"), label: Translation.tr("About ii"), description: Translation.tr("Version info, credits and links"), keywords: ["about", "version", "credits", "github", "info"] },
+        // Input Devices (page 12)
+        { pageIndex: 12, pageName: overlayPages[12].name, section: Translation.tr("Keyboard"), label: Translation.tr("Keyboard"), description: Translation.tr("Keyboard layout, repeat rate and numlock"), keywords: ["keyboard", "layout", "repeat", "delay", "rate", "numlock", "input"] },
+        { pageIndex: 12, pageName: overlayPages[12].name, section: Translation.tr("Touchpad"), label: Translation.tr("Touchpad"), description: Translation.tr("Tap to click, natural scroll, pointer speed"), keywords: ["touchpad", "tap", "click", "natural", "scroll", "speed", "input"] },
+        { pageIndex: 12, pageName: overlayPages[12].name, section: Translation.tr("Mouse"), label: Translation.tr("Mouse"), description: Translation.tr("Acceleration profile and pointer speed"), keywords: ["mouse", "acceleration", "flat", "adaptive", "speed", "pointer", "input"] },
+        // Power (page 14)
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Battery"), label: Translation.tr("Battery"), description: Translation.tr("Battery status, thresholds and notifications"), keywords: ["battery", "charge", "low", "critical", "suspend", "full", "power", "laptop"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Battery"), label: Translation.tr("Battery thresholds"), description: Translation.tr("Low, critical and auto-suspend percentage levels"), keywords: ["battery", "threshold", "low", "critical", "suspend", "percentage", "warning"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Battery"), label: Translation.tr("Battery sounds"), description: Translation.tr("Play sounds for battery notifications"), keywords: ["battery", "sounds", "notification", "audio", "alert"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Power Profile"), label: Translation.tr("Power Profile"), description: Translation.tr("Switch between power saver, balanced and performance"), keywords: ["power", "profile", "saver", "balanced", "performance", "energy", "cpu"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Power Profile"), label: Translation.tr("Restore profile on startup"), description: Translation.tr("Restore last power profile when shell starts"), keywords: ["power", "profile", "restore", "startup", "boot", "persist"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Idle & Sleep"), label: Translation.tr("Idle & Sleep"), description: Translation.tr("Screen off, lock and suspend timeouts"), keywords: ["idle", "sleep", "screen", "off", "lock", "suspend", "timeout", "power"] },
+        { pageIndex: 14, pageName: overlayPages[14].name, section: Translation.tr("Idle & Sleep"), label: Translation.tr("Caffeine mode"), description: Translation.tr("Keep the screen awake and prevent sleep"), keywords: ["caffeine", "awake", "keep", "prevent", "sleep", "screen", "inhibit"] },
+        // Keybinds (page 15)
+        { pageIndex: 15, pageName: overlayPages[15].name, section: Translation.tr("Keybinds"), label: Translation.tr("Keybinds"), description: Translation.tr("View and edit keyboard shortcuts"), keywords: ["keybinds", "shortcuts", "hotkeys", "keyboard", "key", "bind", "remap", "editor"] },
+        // Default Apps (page 16)
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("System Defaults"), label: Translation.tr("System Defaults"), description: Translation.tr("Default web browser, file manager, text editor, image viewer, video player"), keywords: ["default", "apps", "browser", "file", "manager", "editor", "viewer", "player", "xdg", "mime"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("System Defaults"), label: Translation.tr("Web Browser"), description: Translation.tr("Default web browser application"), keywords: ["browser", "web", "firefox", "chrome", "chromium", "default"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("System Defaults"), label: Translation.tr("File Manager"), description: Translation.tr("Default file manager application"), keywords: ["file", "manager", "nautilus", "dolphin", "thunar", "directory", "folder"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Shell Apps"), label: Translation.tr("Shell Apps"), description: Translation.tr("Terminal, task manager, volume mixer, bluetooth, network, discord, update command"), keywords: ["shell", "apps", "terminal", "kitty", "task", "monitor", "volume", "mixer", "bluetooth", "network", "discord", "update"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Shell Apps"), label: Translation.tr("Terminal"), description: Translation.tr("Terminal emulator used by the shell"), keywords: ["terminal", "kitty", "alacritty", "foot", "ghostty", "emulator"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Quick Actions"), label: Translation.tr("Reset defaults"), description: Translation.tr("Detect system defaults or reset shell apps"), keywords: ["reset", "detect", "defaults", "refresh", "restore"] },
+        // Notification Rules (page 16)
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Per-App Rules"), label: Translation.tr("Per-App Rules"), description: Translation.tr("Configure notification behavior for each application"), keywords: ["notification", "rules", "app", "per-app", "allow", "block", "silent", "sound"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Per-App Rules"), label: Translation.tr("Block app notifications"), description: Translation.tr("Block or silence notifications from specific apps"), keywords: ["notification", "block", "silence", "mute", "app", "filter", "hide"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Global Settings"), label: Translation.tr("Notification position"), description: Translation.tr("Where popup notifications appear on screen"), keywords: ["notification", "position", "popup", "corner", "top", "bottom", "left", "right"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Global Settings"), label: Translation.tr("Notification timeouts"), description: Translation.tr("Default timeouts for low, normal and critical notifications"), keywords: ["notification", "timeout", "duration", "auto", "dismiss", "low", "normal", "critical"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Global Settings"), label: Translation.tr("Undo on dismiss"), description: Translation.tr("Show undo bar when swiping away notifications"), keywords: ["notification", "undo", "dismiss", "swipe", "restore"] },
+        { pageIndex: 16, pageName: overlayPages[16].name, section: Translation.tr("Global Settings"), label: Translation.tr("Notification sounds"), description: Translation.tr("Play sounds when notifications arrive"), keywords: ["notification", "sounds", "audio", "alert", "chime"] }
     ]
 
     function recomputeOverlaySearchResults() {
@@ -180,7 +213,7 @@ Scope {
         var results = [];
 
         var isWaffleActive = Config.options?.panelFamily === "waffle";
-        var wafflePageIndex = 10;
+        var wafflePageIndex = 11;
 
         // 1. Static index
         for (var i = 0; i < overlaySearchIndex.length; i++) {
@@ -1514,9 +1547,9 @@ Scope {
             component: Quickshell.shellPath("modules/settings/QuickConfig.qml")
         },
         {
-            name: Translation.tr("General"),
+            name: Translation.tr("System"),
             shortName: "",
-            icon: "browse",
+            icon: "tune",
             component: Quickshell.shellPath("modules/settings/GeneralConfig.qml")
         },
         {
@@ -1551,10 +1584,10 @@ Scope {
             component: Quickshell.shellPath("modules/settings/ServicesConfig.qml")
         },
         {
-            name: Translation.tr("Advanced"),
-            shortName: "",
-            icon: "construction",
-            component: Quickshell.shellPath("modules/settings/AdvancedConfig.qml")
+            name: Translation.tr("Autostart & Services"),
+            shortName: "Autostart",
+            icon: "rocket_launch",
+            component: Quickshell.shellPath("modules/settings/AutostartConfig.qml")
         },
         {
             name: Translation.tr("Shortcuts"),
@@ -1579,6 +1612,36 @@ Scope {
             shortName: "",
             icon: "info",
             component: Quickshell.shellPath("modules/settings/About.qml")
+        },
+        {
+            name: Translation.tr("Input Devices"),
+            shortName: "Input",
+            icon: "keyboard",
+            component: Quickshell.shellPath("modules/settings/InputConfig.qml")
+        },
+        {
+            name: Translation.tr("Power"),
+            shortName: "",
+            icon: "bolt",
+            component: Quickshell.shellPath("modules/settings/PowerConfig.qml")
+        },
+        {
+            name: Translation.tr("Keybinds"),
+            shortName: "",
+            icon: "keyboard",
+            component: Quickshell.shellPath("modules/settings/KeybindsConfig.qml")
+        },
+        {
+            name: Translation.tr("Default Apps"),
+            shortName: "",
+            icon: "apps",
+            component: Quickshell.shellPath("modules/settings/DefaultAppsConfig.qml")
+        },
+        {
+            name: Translation.tr("Notification Rules"),
+            shortName: "Notif Rules",
+            icon: "notifications_active",
+            component: Quickshell.shellPath("modules/settings/NotificationRulesConfig.qml")
         }
     ]
 }
