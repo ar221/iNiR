@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Theme regen consistency**: Aligned regeneration across settings, family switch, and external targets.
 - **Preset theme color propagation**: Fixed propagation to external apps and family switch regen.
 - **Fullscreen surface handling**: Unmap all shell surfaces during fullscreen for direct scanout.
+- **Overview search layout without dashboard**: When dashboard panel is disabled, the workspace grid loader stayed visible in the Column layout during search, preventing vertical centering and pushing results to the top of the screen.
+- **Overview wallpaper missing when effects disabled**: Workspace thumbnails showed no wallpaper when `Appearance.effectsEnabled` was false — both the source Image and FastBlur were invisible. Image now renders unblurred with OpacityMask as fallback.
 
 ### Removed
 - **`overview.centerLauncher`**: Config option removed — overview always uses calculated vertical centering.
