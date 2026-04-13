@@ -419,10 +419,10 @@ RippleButton {
                                     : Appearance.colors.colOnLayer0, 0.5)
 
                             Behavior on implicitWidth {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                                NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                             }
                             Behavior on implicitHeight {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                                NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                             }
                         }
                     }

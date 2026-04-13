@@ -104,7 +104,7 @@ Item {
 
                 Behavior on implicitWidth {
                     enabled: Appearance.animationsEnabled
-                    NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                    NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                 }
                 Behavior on color {
                     enabled: Appearance.animationsEnabled

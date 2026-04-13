@@ -138,7 +138,7 @@ Item {
 
                 // Profile picture
                 Rectangle {
-                    width: 48; height: 48; radius: 24
+                    width: 48; height: 48; radius: Appearance.rounding.full
                     color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
                     clip: true
 
@@ -333,7 +333,7 @@ Item {
 
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: 24; height: 24; radius: 12
+                                width: 24; height: 24; radius: Appearance.rounding.full
                                 color: dayCell.modelData.isToday ? Appearance.colors.colPrimary : "transparent"
                             }
 
@@ -391,7 +391,7 @@ Item {
                             // Track background
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 7
+                                radius: Appearance.rounding.normal
                                 color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
                             }
 
@@ -401,7 +401,7 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: parent.width
                                 height: parent.height * barDelegate.modelData.value
-                                radius: 7
+                                radius: Appearance.rounding.normal
                                 color: barDelegate.modelData.col
 
                                 Behavior on height {

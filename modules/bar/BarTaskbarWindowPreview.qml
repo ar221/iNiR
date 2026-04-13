@@ -166,7 +166,7 @@ Button {
                 smooth: true
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
             }
 
@@ -182,7 +182,7 @@ Button {
                 opacity: status === Image.Ready ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
 
                 layer.enabled: true

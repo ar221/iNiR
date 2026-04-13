@@ -248,7 +248,7 @@ Item {
 
                             implicitWidth: 32
                             implicitHeight: 32
-                            radius: 16
+                            radius: Appearance.rounding.full
 
                             color: {
                                 if (cellData.isSelected) return root.colPrimary
