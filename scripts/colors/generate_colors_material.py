@@ -112,6 +112,13 @@ parser.add_argument(
     "--debug", action="store_true", default=False, help="enable debug output"
 )
 parser.add_argument(
+    "--no-palette-cache",
+    action="store_true",
+    default=False,
+    dest="no_palette_cache",
+    help="bypass palette cache (skip both read and write; forces fresh quantization)",
+)
+parser.add_argument(
     "--json-output", type=str, default=None, help="file path to write colors.json"
 )
 parser.add_argument(
@@ -148,6 +155,94 @@ display_color = lambda rgba: "\x1b[38;2;{};{};{}m{}\x1b[0m".format(
     rgba[0], rgba[1], rgba[2], "\x1b[7m   \x1b[7m"
 )
 
+# ---------------------------------------------------------------------------
+# Palette cache — skip QuantizeCelebi on repeat wallpaper switches
+# ---------------------------------------------------------------------------
+import hashlib
+
+_PALETTE_CACHE_MAX = 100  # max entries before pruning oldest
+
+
+def _get_palette_cache_dir() -> str:
+    xdg = os.environ.get("XDG_CACHE_HOME", "")
+    base = xdg if xdg else os.path.expanduser("~/.cache")
+    return os.path.join(base, "quickshell", "palette-cache")
+
+
+def _compute_palette_cache_key(a) -> str:
+    """Hash the inputs that affect material_colors output.
+
+    Excluded intentionally: term_* args, --termscheme, --harmony,
+    --harmonize_threshold, --blend_bg_fg, --transparency, output paths,
+    --render-templates, --debug, --cache — all post-palette.
+    """
+    real_path = os.path.realpath(a.path)
+    try:
+        mtime = os.path.getmtime(real_path)
+        size = os.path.getsize(real_path)
+    except OSError:
+        return None
+
+    key_parts = "|".join([
+        real_path,
+        repr(mtime),
+        str(size),
+        str(a.size),
+        a.scheme,
+        a.mode,
+        str(a.smart),
+        str(a.soften),
+        str(round(a.color_strength, 8)),
+    ])
+    return hashlib.sha256(key_parts.encode()).hexdigest()[:16]
+
+
+def _load_palette_cache(key: str) -> dict | None:
+    if key is None:
+        return None
+    cache_path = os.path.join(_get_palette_cache_dir(), f"{key}.json")
+    try:
+        if os.path.getsize(cache_path) == 0:
+            return None
+        with open(cache_path, "r") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _write_palette_cache(key: str, payload: dict) -> None:
+    if key is None:
+        return
+    cache_dir = _get_palette_cache_dir()
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Prune if over limit (only when writing a new entry)
+    try:
+        entries = list(os.scandir(cache_dir))
+        json_entries = [e for e in entries if e.name.endswith(".json")]
+        if len(json_entries) >= _PALETTE_CACHE_MAX:
+            # Sort by mtime ascending (oldest first), remove excess
+            json_entries.sort(key=lambda e: e.stat().st_mtime)
+            for old in json_entries[:len(json_entries) - _PALETTE_CACHE_MAX + 1]:
+                try:
+                    os.unlink(old.path)
+                except OSError:
+                    pass
+    except OSError:
+        pass
+
+    cache_path = os.path.join(cache_dir, f"{key}.json")
+    tmp_path = cache_path + ".tmp"
+    try:
+        with open(tmp_path, "w") as f:
+            json.dump(payload, f)
+        os.replace(tmp_path, cache_path)
+    except OSError:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
 
 def calculate_optimal_size(width: int, height: int, bitmap_size: int) -> (int, int):
     image_area = width * height
@@ -175,23 +270,9 @@ def harmonize(
     return Hct.from_hct(output_hue, from_hct.chroma, from_hct.tone).to_int()
 
 
-def boost_chroma_tone(
-    argb: int, chroma: float = 1, tone: float = 1, tone_cap: float = 95.0
-) -> int:
-    """Scale chroma and tone of a color.
-
-    Args:
-        argb: Input color in ARGB format
-        chroma: Chroma multiplier (1 = no change)
-        tone: Tone multiplier (1 = no change)
-        tone_cap: Maximum tone value to prevent white-washing bright colors
-
-    Returns:
-        Adjusted color in ARGB format
-    """
+def boost_chroma_tone(argb: int, chroma: float = 1, tone: float = 1) -> int:
     hct = Hct.from_int(argb)
-    new_tone = min(tone_cap, hct.tone * tone)
-    return Hct.from_hct(hct.hue, hct.chroma * chroma, new_tone).to_int()
+    return Hct.from_hct(hct.hue, hct.chroma * chroma, hct.tone * tone).to_int()
 
 
 def ensure_min_chroma(argb: int, min_chroma: float = 40) -> int:
@@ -213,171 +294,51 @@ def scale_chroma(argb: int, factor: float, maximum: float | None = None) -> int:
     return Hct.from_hct(hct.hue, new_chroma, hct.tone).to_int()
 
 
-def relative_luminance(argb: int) -> float:
-    """Calculate relative luminance per WCAG 2.1 spec."""
-    r = ((argb >> 16) & 0xFF) / 255.0
-    g = ((argb >> 8) & 0xFF) / 255.0
-    b = (argb & 0xFF) / 255.0
-
-    def linearize(c):
-        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
-
-    return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
-
-
-def contrast_ratio(fg_argb: int, bg_argb: int) -> float:
-    """Calculate WCAG contrast ratio between two colors."""
-    l1 = relative_luminance(fg_argb)
-    l2 = relative_luminance(bg_argb)
-    lighter = max(l1, l2)
-    darker = min(l1, l2)
-    return (lighter + 0.05) / (darker + 0.05)
-
-
-def find_tone_for_contrast(
-    hue: float,
-    chroma: float,
-    start_tone: float,
-    limit_tone: float,
-    bg_argb: int,
-    min_ratio: float,
-    is_dark: bool,
-    step: float = 0.25,
-) -> tuple[int, float, bool, float]:
-    """Search tone values for contrast.
-
-    Returns:
-        (color_argb, tone, met_min_ratio, achieved_ratio)
-    """
-    direction = 1.0 if is_dark else -1.0
-    tone = start_tone
-    max_steps = max(1, int(math.ceil(abs(limit_tone - start_tone) / step)) + 2)
-
-    initial = Hct.from_hct(hue, chroma, max(0.0, min(100.0, start_tone))).to_int()
-    best_color = initial
-    best_tone = start_tone
-    best_ratio = contrast_ratio(initial, bg_argb)
-
-    for _ in range(max_steps):
-        clamped_tone = max(0.0, min(100.0, tone))
-        candidate = Hct.from_hct(hue, chroma, clamped_tone).to_int()
-        ratio = contrast_ratio(candidate, bg_argb)
-
-        if ratio > best_ratio:
-            best_color = candidate
-            best_tone = clamped_tone
-            best_ratio = ratio
-
-        if ratio >= min_ratio:
-            return candidate, clamped_tone, True, ratio
-
-        if is_dark and clamped_tone >= limit_tone:
-            break
-        if not is_dark and clamped_tone <= limit_tone:
-            break
-
-        tone += direction * step
-        if is_dark and tone > limit_tone:
-            tone = limit_tone
-        if not is_dark and tone < limit_tone:
-            tone = limit_tone
-
-    return best_color, best_tone, False, best_ratio
-
-
-def ensure_contrast(
-    fg_argb: int, bg_argb: int, min_ratio: float = 4.5, is_dark: bool = True
-) -> int:
-    """Adjust foreground tone to ensure minimum contrast ratio against background.
-
-    For dark mode, increases tone (lighter). For light mode, decreases tone (darker).
-    Preserves hue and boosts chroma when tone approaches extremes to prevent washed-out colors.
-    """
-    current_ratio = contrast_ratio(fg_argb, bg_argb)
-    if current_ratio >= min_ratio:
-        return fg_argb
-
-    hct = Hct.from_int(fg_argb)
-    original_tone = hct.tone
-    original_chroma = hct.chroma
-
-    # Tone limits to prevent colors from washing out to pure white/black.
-    # If min ratio is unreachable inside limits, return highest-contrast option.
-    tone_limit = 88.0 if is_dark else 20.0
-
-    best, best_tone, met_min, best_ratio = find_tone_for_contrast(
-        hct.hue,
-        hct.chroma,
-        original_tone,
-        tone_limit,
-        bg_argb,
-        min_ratio,
-        is_dark,
-    )
-
-    # Compensate for tone shift by boosting chroma
-    # When tone moves far from original, colors lose perceptual saturation
-    # Boost chroma proportionally to maintain color identity
-    tone_shift = abs(best_tone - original_tone)
-    if tone_shift > 10:
-        # Boost chroma by up to 40% for large tone shifts
-        # The further we shift, the more we compensate
-        boost_factor = 1.0 + min(0.4, (tone_shift - 10) / 50)
-        boosted_chroma = min(original_chroma * boost_factor, 80.0)
-        boosted_same_tone = Hct.from_hct(hct.hue, boosted_chroma, best_tone).to_int()
-        boosted_ratio = contrast_ratio(boosted_same_tone, bg_argb)
-
-        if met_min and boosted_ratio >= min_ratio:
-            return boosted_same_tone
-
-        boosted_best, _, boosted_met, boosted_best_ratio = find_tone_for_contrast(
-            hct.hue,
-            boosted_chroma,
-            best_tone,
-            tone_limit,
-            bg_argb,
-            min_ratio,
-            is_dark,
-        )
-
-        if met_min:
-            # Keep strict contrast if we already had a valid candidate.
-            if boosted_met:
-                return boosted_best
-            return best
-
-        # If target contrast is unreachable, keep the best achievable ratio.
-        if boosted_best_ratio > best_ratio:
-            return boosted_best
-
-    return best
-
-
 darkmode = args.mode == "dark"
 transparent = args.transparency == "transparent"
 
+_cache_hit = False
+# wsize / hsize / wsize_new / hsize_new only set on cache miss (used by --debug)
+wsize = hsize = wsize_new = hsize_new = 0
+
 if args.path is not None:
-    image = Image.open(args.path)
+    _palette_cache_key = None if args.no_palette_cache else _compute_palette_cache_key(args)
+    _cached = _load_palette_cache(_palette_cache_key)
 
-    if image.format == "GIF":
-        image.seek(1)
+    if _cached is not None:
+        # Cache hit — skip Image.open + QuantizeCelebi + scheme generation
+        argb = _cached["argb"]
+        material_colors = _cached["material_colors"]
+        args.scheme = _cached["effective_scheme"]
+        hct = Hct.from_int(argb)
+        _cache_hit = True
 
-    if image.mode in ["L", "P"]:
-        image = image.convert("RGB")
-    wsize, hsize = image.size
-    wsize_new, hsize_new = calculate_optimal_size(wsize, hsize, args.size)
-    if wsize_new < wsize or hsize_new < hsize:
-        image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
-    colors = QuantizeCelebi(list(image.getdata()), 128)
-    argb = Score.score(colors)[0]
+        # Honour existing --cache flag (writes seed color to file)
+        if args.cache is not None:
+            with open(args.cache, "w") as file:
+                file.write(argb_to_hex(argb))
+    else:
+        image = Image.open(args.path)
 
-    if args.cache is not None:
-        with open(args.cache, "w") as file:
-            file.write(argb_to_hex(argb))
-    hct = Hct.from_int(argb)
-    if args.smart:
-        if hct.chroma < 20:
-            args.scheme = "neutral"
+        if image.format == "GIF":
+            image.seek(1)
+
+        if image.mode in ["L", "P"]:
+            image = image.convert("RGB")
+        wsize, hsize = image.size
+        wsize_new, hsize_new = calculate_optimal_size(wsize, hsize, args.size)
+        if wsize_new < wsize or hsize_new < hsize:
+            image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
+        colors = QuantizeCelebi(list(image.getdata()), 128)
+        argb = Score.score(colors)[0]
+
+        if args.cache is not None:
+            with open(args.cache, "w") as file:
+                file.write(argb_to_hex(argb))
+        hct = Hct.from_int(argb)
+        if args.smart:
+            if hct.chroma < 20:
+                args.scheme = "neutral"
 elif args.color is not None:
     argb = hex_to_argb(args.color)
     hct = Hct.from_int(argb)
@@ -402,50 +363,62 @@ elif args.scheme == "scheme-vibrant":
     from materialyoucolor.scheme.scheme_vibrant import SchemeVibrant as Scheme
 else:
     from materialyoucolor.scheme.scheme_tonal_spot import SchemeTonalSpot as Scheme
-# Generate
-scheme = Scheme(hct, darkmode, 0.0)
-
-material_colors = {}
+# Generate (skipped on palette cache hit)
 term_colors = {}
+if not _cache_hit:
+    scheme = Scheme(hct, darkmode, 0.0)
 
-for color in vars(MaterialDynamicColors).keys():
-    color_name = getattr(MaterialDynamicColors, color)
-    if hasattr(color_name, "get_hct"):
-        generated_hct = color_name.get_hct(scheme)
+    material_colors = {}
 
-        # Apply softening if requested and scheme allows it
-        if args.soften and args.scheme not in [
-            "scheme-tonal-spot",
-            "scheme-neutral",
-            "scheme-monochrome",
-        ]:
-            generated_hct = Hct.from_hct(
-                generated_hct.hue, generated_hct.chroma * 0.60, generated_hct.tone
-            )
+    for color in vars(MaterialDynamicColors).keys():
+        color_name = getattr(MaterialDynamicColors, color)
+        if hasattr(color_name, "get_hct"):
+            generated_hct = color_name.get_hct(scheme)
 
-        # Scale output chroma for color strength — skip near-achromatic tokens
-        # (chroma < 2 means effectively gray/black/white, leave untouched)
-        if abs(args.color_strength - 1.0) > 1e-6 and generated_hct.chroma > 2.0:
-            generated_hct = Hct.from_hct(
-                generated_hct.hue,
-                generated_hct.chroma * args.color_strength,
-                generated_hct.tone,
-            )
+            # Apply softening if requested and scheme allows it
+            if args.soften and args.scheme not in [
+                "scheme-tonal-spot",
+                "scheme-neutral",
+                "scheme-monochrome",
+            ]:
+                generated_hct = Hct.from_hct(
+                    generated_hct.hue, generated_hct.chroma * 0.60, generated_hct.tone
+                )
 
-        rgba = generated_hct.to_rgba()
-        material_colors[color] = rgba_to_hex(rgba)
+            # Scale output chroma for color strength — skip near-achromatic tokens
+            # (chroma < 2 means effectively gray/black/white, leave untouched)
+            if abs(args.color_strength - 1.0) > 1e-6 and generated_hct.chroma > 2.0:
+                generated_hct = Hct.from_hct(
+                    generated_hct.hue,
+                    generated_hct.chroma * args.color_strength,
+                    generated_hct.tone,
+                )
 
-# Extended material
-if darkmode == True:
-    material_colors["success"] = "#B5CCBA"
-    material_colors["onSuccess"] = "#213528"
-    material_colors["successContainer"] = "#374B3E"
-    material_colors["onSuccessContainer"] = "#D1E9D6"
-else:
-    material_colors["success"] = "#4F6354"
-    material_colors["onSuccess"] = "#FFFFFF"
-    material_colors["successContainer"] = "#D1E8D5"
-    material_colors["onSuccessContainer"] = "#0C1F13"
+            rgba = generated_hct.to_rgba()
+            material_colors[color] = rgba_to_hex(rgba)
+
+    # Extended material
+    if darkmode == True:
+        material_colors["success"] = "#B5CCBA"
+        material_colors["onSuccess"] = "#213528"
+        material_colors["successContainer"] = "#374B3E"
+        material_colors["onSuccessContainer"] = "#D1E9D6"
+    else:
+        material_colors["success"] = "#4F6354"
+        material_colors["onSuccess"] = "#FFFFFF"
+        material_colors["successContainer"] = "#D1E8D5"
+        material_colors["onSuccessContainer"] = "#0C1F13"
+
+    # Write palette cache (only on image path; not for --color; not when bypassed)
+    if args.path is not None and not args.no_palette_cache:
+        _write_palette_cache(
+            _palette_cache_key,
+            {
+                "argb": argb,
+                "material_colors": material_colors,
+                "effective_scheme": args.scheme,
+            },
+        )
 
 # Terminal Colors
 if args.termscheme is not None:
@@ -558,10 +531,6 @@ if args.termscheme is not None:
             # Apply user saturation and brightness
             # Brightness affects tone: higher = lighter in dark mode, darker in light mode
             tone_mult = 1 + ((user_brightness - 0.5) * 0.8 * (1 if darkmode else -1))
-            # Foreground boost gently pushes ANSI colors away from background tone.
-            # Keep this bounded so high values don't collapse colors to white/black.
-            fg_boost_delta = args.term_fg_boost * 0.25 * (1 if darkmode else -1)
-            tone_mult = max(0.60, min(1.45, tone_mult + fg_boost_delta))
             harmonized = boost_chroma_tone(harmonized, user_saturation * 2.0, tone_mult)
             # Ensure minimum chroma for visual distinctiveness
             harmonized = ensure_min_chroma(harmonized, 40)
@@ -583,29 +552,6 @@ if args.termscheme is not None:
                 harmonized = Hct.from_hct(h.hue, min_chroma, h.tone).to_int()
 
         term_colors[color] = argb_to_hex(harmonized)
-
-    # Second pass: ensure all foreground colors have sufficient contrast against background
-    # WCAG AA requires 4.5:1 for normal text, 3:1 for large text
-    # Normal colors (term1-6) use 4.5:1, bright colors (term9-14) use 3.5:1 since they're
-    # already intended to be lighter and we don't want to wash them out to white
-    if "term0" in term_colors:
-        bg_argb = hex_to_argb(term_colors["term0"])
-
-        # Normal semantic colors: stricter contrast (4.5:1)
-        normal_colors = ["term1", "term2", "term3", "term4", "term5", "term6"]
-        for color in normal_colors:
-            if color in term_colors:
-                fg_argb = hex_to_argb(term_colors[color])
-                adjusted = ensure_contrast(fg_argb, bg_argb, 4.5, darkmode)
-                term_colors[color] = argb_to_hex(adjusted)
-
-        # Bright semantic colors: lighter contrast requirement (3.5:1) to preserve vibrancy
-        bright_colors = ["term9", "term10", "term11", "term12", "term13", "term14"]
-        for color in bright_colors:
-            if color in term_colors:
-                fg_argb = hex_to_argb(term_colors[color])
-                adjusted = ensure_contrast(fg_argb, bg_argb, 3.5, darkmode)
-                term_colors[color] = argb_to_hex(adjusted)
 
 # Fallback: derive term colors from material colors when no termscheme provided
 if not term_colors and material_colors:
@@ -742,8 +688,6 @@ theme_meta = {
     "term_saturation": args.term_saturation,
     "term_brightness": args.term_brightness,
     "term_bg_brightness": args.term_bg_brightness,
-    "term_fg_boost": args.term_fg_boost,
-    "harmonize_threshold": args.harmonize_threshold,
     "color_strength": args.color_strength,
     "blend_bg_fg": args.blend_bg_fg,
     "generated_by": "generate_colors_material.py",
@@ -879,13 +823,17 @@ if args.render_templates:
     class _Hex:
         """Tiny wrapper so `hex` / `hex_stripped` / `rgb` resolve as attributes."""
 
-        __slots__ = ("hex", "hex_stripped", "rgb")
+        __slots__ = ("hex", "hex_stripped", "rgb", "red", "green", "blue")
 
         def __init__(self, hexval):
             self.hex = hexval
             self.hex_stripped = hexval.lstrip("#")
             h = self.hex_stripped
-            self.rgb = f"{int(h[0:2], 16)}, {int(h[2:4], 16)}, {int(h[4:6], 16)}"
+            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            self.rgb = f"{r}, {g}, {b}"
+            self.red = str(r)
+            self.green = str(g)
+            self.blue = str(b)
 
     class _Token:
         __slots__ = ("dark", "light", "default")
