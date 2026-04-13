@@ -2,6 +2,9 @@
 
 iNiR exposes IPC targets you can call from Niri keybinds, scripts, or your terminal.
 
+> **Quick discovery:** `inir help` lists all targets, `inir <target> --help` shows available functions.
+> Shell completions: `eval "$(inir completions bash)"` (also zsh, fish).
+
 From terminal (for testing, or showing off):
 
 ```bash
@@ -29,6 +32,11 @@ Toggle the workspace overview panel. The one with all your windows looking tiny 
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close overview |
+| `open` | Open overview |
+| `close` | Close overview |
+| `clipboardToggle` | Open clipboard search, or close if already open |
+| `actionOpen` | Open overview in action search mode |
+| `toggleReleaseInterrupt` | Clear the super-key release interrupt flag |
 
 ```kdl
 bind "Mod+Space" { spawn "inir" "overview" "toggle"; }
@@ -93,6 +101,7 @@ Region selection tools. Screenshots, OCR, recording. Draw a box, get stuff done.
 |----------|-------------|
 | `screenshot` | Take a region screenshot |
 | `search` | Image search (Google Lens) |
+| `googleLens` | Start a region capture for Google Lens |
 | `ocr` | OCR text recognition |
 | `record` | Record region (no audio) |
 | `recordWithSound` | Record region with audio |
@@ -128,6 +137,8 @@ Power menu. Logout, suspend, reboot, shutdown. The "I'm done for today" buttons.
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close session menu |
+| `open` | Show session screen |
+| `close` | Hide session screen |
 
 ```kdl
 bind "Super+Shift+E" { spawn "inir" "session" "toggle"; }
@@ -142,6 +153,9 @@ Lock screen. For when you need to pretend you're working.
 | Function | Description |
 |----------|-------------|
 | `activate` | Lock the screen |
+| `deactivate` | Cancel lock and mark screen unlocked |
+| `status` | Return lock state (`locked`, `activating`, or `unlocked`) |
+| `focus` | Refocus the lock screen input |
 
 ```kdl
 bind "Super+Alt+L" allow-when-locked=true { spawn "inir" "lock" "activate"; }
@@ -156,6 +170,8 @@ Keyboard shortcuts reference. For when you forget what you just configured five 
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close cheatsheet |
+| `open` | Show cheatsheet overlay |
+| `close` | Hide cheatsheet overlay |
 
 ```kdl
 bind "Super+Slash" { spawn "inir" "cheatsheet" "toggle"; }
@@ -193,6 +209,7 @@ Open the settings window. GUI config so you don't have to edit JSON like it's 20
 | Function | Description |
 |----------|-------------|
 | `open` | Open settings window |
+| `toggle` | Toggle settings (overlay mode toggles, window mode opens) |
 
 ```kdl
 bind "Super+Comma" { spawn "inir" "settings"; }
@@ -219,6 +236,8 @@ Left sidebar (AI chat, apps).
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close left sidebar |
+| `open` | Show left sidebar |
+| `close` | Hide left sidebar |
 
 ---
 
@@ -229,6 +248,8 @@ Right sidebar (quick toggles, notepad, settings).
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close right sidebar |
+| `open` | Show right sidebar |
+| `close` | Hide right sidebar |
 
 ---
 
@@ -239,6 +260,8 @@ Top bar visibility.
 | Function | Description |
 |----------|-------------|
 | `toggle` | Show/hide bar |
+| `open` | Show bar |
+| `close` | Hide bar |
 
 ---
 
@@ -269,6 +292,10 @@ Wallpaper picker grid.
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close wallpaper selector |
+| `open` | Open wallpaper selector |
+| `close` | Close wallpaper selector |
+| `toggleOnMonitor <name>` | Open wallpaper selector on a specific monitor |
+| `random` | Pick a random wallpaper from the current folder |
 
 ```kdl
 bind "Ctrl+Alt+T" { spawn "inir" "wallpaperSelector" "toggle"; }
@@ -295,6 +322,8 @@ Floating media controls panel.
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close media controls |
+| `open` | Show media controls |
+| `close` | Hide media controls |
 
 ---
 
@@ -305,6 +334,8 @@ On-screen keyboard.
 | Function | Description |
 |----------|-------------|
 | `toggle` | Show/hide on-screen keyboard |
+| `open` | Show on-screen keyboard |
+| `close` | Hide on-screen keyboard |
 
 ---
 
@@ -386,6 +417,8 @@ On-screen volume indicator.
 | Function | Description |
 |----------|-------------|
 | `trigger` | Show volume OSD |
+| `toggle` | Toggle volume OSD |
+| `hide` | Hide volume OSD |
 
 ---
 
@@ -408,6 +441,7 @@ AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support.
 | `ensureInitialized` | Force-load models and API keys |
 | `diagnose` | Dump current AI state (model, keys, config) as JSON |
 | `run <text>` | Send a message or `/command` to the AI chat |
+| `runGet <text>` | Run AI command and return the last response |
 
 ---
 
@@ -422,6 +456,19 @@ Package search service. Searches pacman repos and installed packages.
 
 ---
 
+### appCatalog
+
+App catalog service. Browse, search, and install curated applications.
+
+| Function | Description |
+|----------|-------------|
+| `refresh` | Refresh the installed-state cache |
+| `search <query>` | Filter catalog entries by query |
+| `install <id>` | Install app by catalog ID |
+| `list` | List catalog apps with install status and descriptions |
+
+---
+
 ### gamemode
 
 Performance mode for gaming. Auto-detects fullscreen apps and disables animations/effects. Can also be toggled manually for those stubborn games that don't go fullscreen properly.
@@ -431,7 +478,7 @@ Performance mode for gaming. Auto-detects fullscreen apps and disables animation
 | `toggle` | Toggle gamemode on/off |
 | `activate` | Force enable gamemode |
 | `deactivate` | Force disable gamemode |
-| `status` | Print current status to logs |
+| `status` | Print current gamemode state (e.g. `active (manual)`, `inactive (off)`) |
 
 ```kdl
 bind "Super+F12" { spawn "inir" "gamemode" "toggle"; }
@@ -576,6 +623,8 @@ Waffle task view (Win+Tab style).
 | Function | Description |
 |----------|-------------|
 | `toggle` | Open/close task view |
+| `open` | Show task view |
+| `close` | Hide task view |
 
 ---
 

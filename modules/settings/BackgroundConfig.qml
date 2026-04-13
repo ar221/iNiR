@@ -18,7 +18,7 @@ ContentPage {
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
     readonly property var iiParallax: Config.options?.background?.parallax ?? {}
     readonly property string iiParallaxPreset: ParallaxMath.detectPreset(
-        iiParallax.zoom ?? iiParallax.workspaceZoom ?? 1.07,
+        iiParallax.zoom ?? iiParallax.workspaceZoom ?? 1.0,
         iiParallax.workspaceShift ?? 1,
         iiParallax.panelShift ?? iiParallax.sidebarShift ?? 0.15,
         iiParallax.widgetDepth ?? iiParallax.widgetsFactor ?? 1.2
@@ -139,16 +139,16 @@ ContentPage {
             ConfigSpinBox {
                 icon: "loupe"
                 text: Translation.tr("Wallpaper zoom (%)")
-                value: Math.round((root.iiParallax.zoom ?? root.iiParallax.workspaceZoom ?? 1.07) * 100)
-                from: 100
-                to: 140
+                value: Math.round((root.iiParallax.zoom ?? root.iiParallax.workspaceZoom ?? 1.0) * 100)
+                from: 10
+                to: 200
                 stepSize: 1
                 onValueChanged: {
                     Config.setNestedValue("background.parallax.zoom", value / 100)
                     Config.setNestedValue("background.parallax.workspaceZoom", value / 100)
                 }
                 StyledToolTip {
-                    text: Translation.tr("Extra wallpaper scale reserved for parallax movement")
+                    text: Translation.tr("Extra wallpaper zoom after fit-to-cover. 100% keeps the default parallax headroom; lower values zoom out, higher values zoom in.")
                 }
             }
 

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.17.4-blue?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.21.0-blue?style=flat-square" alt="Version"></a>
   <a href="https://github.com/snowarch/inir/stargazers"><img src="https://img.shields.io/github/stars/snowarch/inir?style=flat-square" alt="Stars"></a>
   <a href="https://discord.gg/pAPTfAhZUJ"><img src="https://img.shields.io/badge/Discord-join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord"></a>
 </p>
@@ -31,6 +31,56 @@
 ---
 
 > **Sobre a tradução:** Tradução da comunidade. Se algo não ficou claro, consulte a [versão em inglês](../../README.md).
+
+---
+
+<details>
+<summary><b>🤔 Chegou agora? Clica aqui se não sabe o que é isso</b></summary>
+
+### O que é isso?
+
+iNiR é o teu desktop inteiro. A barra no topo, o dock, notificações, configurações, wallpapers, tudo. Não é um tema, não são dotfiles pra copiar e colar. É um shell completo que roda no Linux.
+
+### O que preciso pra usar?
+
+Um compositor. É o que gerencia janelas e coloca pixels na tela. iNiR foi feito pro [Niri](https://github.com/YaLTeR/niri) (um compositor Wayland de tiling). Tem código velho do Hyprland de quando isso era um fork dos dots do end-4, mas o que realmente testo e uso é Niri.
+
+O shell roda no [Quickshell](https://quickshell.outfoxxed.me/), um framework pra fazer shells em QML (linguagem de UI do Qt). Não precisa saber nada disso pra usar, tudo se configura pela GUI ou um JSON.
+
+### Como tudo conecta
+
+```
+teus apps
+   ↓
+iNiR (shell: barra, sidebars, dock, notificações, settings...)
+   ↓
+Quickshell (roda shells QML)
+   ↓
+Niri (compositor: janelas, renderização)
+   ↓
+Wayland → GPU
+```
+
+### É estável?
+
+É um projeto pessoal que saiu do controle. Uso todo dia, muita gente no Discord também. Mas às vezes quebra, código tá bagunçado em partes, vou aprendendo enquanto faço.
+
+Se algo não funcionar, `inir doctor` arruma a maioria. Discord tá ativo se isso não resolver. Não espera software polido, isso é o rice de uma pessoa que outros curtiram.
+
+### Por que existe?
+
+Queria que meu desktop tivesse uma cara e funcionasse de um jeito, e nada mais fazia exatamente isso. Começou como os dots do end-4 pro Hyprland, virou uma reescrita completa pro Niri com muito mais features.
+
+### Palavras que vais ver
+
+- **Shell**: a camada de UI (barra, painéis, overlays)
+- **Compositor**: gerencia janelas, desenha na tela (Niri, Hyprland, Sway...)
+- **Wayland**: protocolo de display do Linux (o novo, substitui X11)
+- **QML**: linguagem declarativa de UI do Qt, iNiR é escrito nisso
+- **Material You**: sistema de cores do Google que gera paletas de imagens (assim funciona o auto-theming)
+- **ii / waffle**: os dois estilos de painel. ii = vibe Material Design, waffle = vibe Windows 11. `Super+Shift+W` alterna
+
+</details>
 
 ---
 

@@ -87,13 +87,41 @@ ShellRoot {
         let panels = [...(Config.options?.enabledPanels ?? [])];
         let changed = false;
 
-        // Ensure all base panels for current family are present (adds new panels from updates)
+        // Only add genuinely NEW panels (from updates), not panels the user deliberately disabled.
+        // knownPanels tracks what the user has seen. If a panel is in knownPanels but not in
+        // enabledPanels, the user removed it — don't re-add.
         const basePanels = root.panelFamilies[family] ?? [];
-        for (const panel of basePanels) {
-            if (!panels.includes(panel)) {
-                root._log("[Shell] Adding new panel to enabledPanels: " + panel);
-                panels.push(panel);
-                changed = true;
+        let known = [...(Config.options?.knownPanels ?? [])];
+        const isFirstRun = known.length === 0;
+
+        if (isFirstRun) {
+            // First boot with this logic — seed knownPanels with ALL families' panels.
+            // This prevents re-adding panels that existing users already disabled,
+            // including across family switches.
+            const allPanels = [];
+            for (const fam of root.families) {
+                for (const p of (root.panelFamilies[fam] ?? [])) {
+                    if (!allPanels.includes(p)) allPanels.push(p);
+                }
+            }
+            Config.setNestedValue("knownPanels", allPanels);
+        } else {
+            // Subsequent boots: only add panels that are new (not in knownPanels)
+            let knownChanged = false;
+            for (const panel of basePanels) {
+                if (!known.includes(panel)) {
+                    // Genuinely new panel from an update
+                    if (!panels.includes(panel)) {
+                        root._log("[Shell] Adding new panel to enabledPanels: " + panel);
+                        panels.push(panel);
+                        changed = true;
+                    }
+                    known.push(panel);
+                    knownChanged = true;
+                }
+            }
+            if (knownChanged) {
+                Config.setNestedValue("knownPanels", known);
             }
         }
 
@@ -185,14 +213,14 @@ ShellRoot {
             "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard",
             "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners",
             "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar",
-            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard", "iiShellUpdate"
         ],
         "waffle": [
             "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wTaskView", "wLock", "wPolkit", "wSessionScreen",
             // Shared modules that work with waffle
             // Note: wAltSwitcher is always loaded when waffle is active (not in this list)
-            "iiCheatsheet", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
-            "iiRegionSelector", "iiScreenCorners", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiCheatsheet", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
+            "iiRegionSelector", "iiScreenCorners", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ]
     })
 
@@ -215,6 +243,17 @@ ShellRoot {
             if (!merged.includes(panel)) merged.push(panel)
         }
         Config.setNestedValue("enabledPanels", merged)
+
+        // Update knownPanels so the new family's panels are tracked before the user can disable them
+        const known = [...(Config.options?.knownPanels ?? [])]
+        let knownChanged = false
+        for (const panel of basePanels) {
+            if (!known.includes(panel)) {
+                known.push(panel)
+                knownChanged = true
+            }
+        }
+        if (knownChanged) Config.setNestedValue("knownPanels", known)
     }
 
     function cyclePanelFamily() {

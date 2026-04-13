@@ -20,7 +20,7 @@ Singleton {
         configFileView.writeAdapter();
     }
 
-    function setNestedValue(nestedKey, value) {
+    function _applyNestedKey(nestedKey, value) {
         let keys = [];
         if (Array.isArray(nestedKey)) {
             keys = nestedKey;
@@ -36,15 +36,13 @@ Singleton {
             return;
         }
         let obj = root.options;
-        let parents = [obj];
 
-        // Traverse and collect parent objects
+        // Traverse to parent object
         for (let i = 0; i < keys.length - 1; ++i) {
             if (!obj[keys[i]] || typeof obj[keys[i]] !== "object") {
                 obj[keys[i]] = {};
             }
             obj = obj[keys[i]];
-            parents.push(obj);
         }
 
         // Convert value to correct type using JSON.parse when safe
@@ -61,7 +59,22 @@ Singleton {
         }
 
         obj[keys[keys.length - 1]] = convertedValue;
-        root.configChanged()
+    }
+
+    function setNestedValue(nestedKey, value) {
+        _applyNestedKey(nestedKey, value);
+        root.configChanged();
+    }
+
+    // Batch multiple key-value pairs, emitting configChanged only once.
+    // Usage: Config.setNestedValues({ "a.b.c": 1, "x.y": "hello" })
+    function setNestedValues(updates) {
+        if (!updates || typeof updates !== "object") return;
+        const paths = Object.keys(updates);
+        for (let i = 0; i < paths.length; ++i) {
+            _applyNestedKey(paths[i], updates[paths[i]]);
+        }
+        if (paths.length > 0) root.configChanged();
     }
 
     Timer {
@@ -112,6 +125,7 @@ Singleton {
                 "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", "iiSessionScreen",
                 "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard", "iiShellUpdate"
             ]
+            property list<string> knownPanels: [] // Tracks panels the user has seen; used to distinguish "user disabled" from "new in update"
             property string panelFamily: "ii" // "ii" or "waffle"
             property bool familyTransitionAnimation: true // Show animated overlay when switching families
 
@@ -299,6 +313,7 @@ Singleton {
                     property bool enableChrome: true
                     property bool enableSpicetify: false
                     property bool enableAdwSteam: false
+                    property bool enablePearDesktop: true
                     property bool enableOpenCode: false
                     property real colorStrength: 1.0
                     property JsonObject vscodeEditors: JsonObject {
@@ -362,7 +377,7 @@ Singleton {
                         property int grad: 175
                     }
                 }
-                property string iconTheme: "" // System icon theme (tray, GTK/Qt apps)
+                property string iconTheme: "WhiteSur-dark" // System icon theme (tray, GTK/Qt apps)
                 property string dockIconTheme: "" // Dock icon theme (overrides system for dock only)
                 property real shellScale: 1.0 // Legacy compatibility key. Launcher keeps QT_SCALE_FACTOR=1; use appearance.typography.sizeScale.
             }
@@ -417,6 +432,7 @@ Singleton {
                 property bool disableNiriAnimations: true
                 property bool disableReloadToasts: true
                 property bool disableDiscoverOverlay: true
+                property bool suppressNotifications: true // Hide notification popups during GameMode
                 property bool minimalMode: true // Make panels transparent/minimal during GameMode
                 // Throttle Niri window list updates - 100ms = 10 FPS, sufficient for smooth UI
                 // Lower values increase CPU usage with diminishing returns on perceived smoothness
@@ -593,14 +609,14 @@ Singleton {
                     property real auroraOverlayOpacity: 0.38
                 }
                 property JsonObject parallax: JsonObject {
-                    property bool enable: true
+                    property bool enable: false
                     property string axis: "vertical"
                     property bool vertical: false
                     property bool autoVertical: false
                     property bool enableWorkspace: true
                     property real workspaceShift: 1.0
-                    property real workspaceZoom: 1.07 // Relative to your screen, not wallpaper size
-                    property real zoom: 1.07
+                    property real workspaceZoom: 1.0 // Relative to wallpaper size, with headroom applied internally
+                    property real zoom: 1.0
                     property bool enableSidebar: true
                     property real panelShift: 0.15
                     property real widgetsFactor: 1.2
@@ -909,6 +925,12 @@ Singleton {
                 property string popupMode: "dock"
             }
 
+            property JsonObject hotspot: JsonObject {
+                property string ssid: "iNiR Hotspot"
+                property string password: "inirhotspot"
+                property string band: "bg" // "bg" = 2.4GHz, "a" = 5GHz
+            }
+
             property JsonObject networking: JsonObject {
                 property string userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
             }
@@ -969,7 +991,6 @@ Singleton {
                 property int scrimDim: 35
                 property int topMargin: 0
                 property int bottomMargin: 0
-                property bool centerLauncher: false
                 property bool respectBar: true
                 property real maxPanelWidthRatio: 1.0
                 property int workspaceSpacing: 5
@@ -985,6 +1006,7 @@ Singleton {
                 property bool keepOverviewOpenOnWindowClick: true
                 property bool closeAfterWindowMove: true
                 property bool showPreviews: false // Show window thumbnails in overview
+                property bool activeScreenOnly: false // Show only on active screen (multi-monitor)
                 property JsonObject dashboard: JsonObject {
                     property bool enable: false
                     property bool showToggles: true
@@ -1159,8 +1181,11 @@ Singleton {
                     property bool hideSyncBanner: false
                     property string browser: "firefox"
                     property string cookiesPath: ""
+                    property bool useManualCookies: false
                     property bool connected: false
                     property string resolvedBrowserArg: ""
+                    property string audioQuality: "best"
+                    property bool verbose: false
                     property bool shuffleMode: false
                     property int repeatMode: 0
                     property list<string> recentSearches: []
@@ -1168,6 +1193,9 @@ Singleton {
                     property list<var> playlists: []
                     property list<var> liked: []
                     property string lastLikedSync: ""
+                    property bool upNextNotifications: true
+                    property bool suppressUpNextInFullscreen: true
+                    property int volume: 100
                     property JsonObject profile: JsonObject {
                         property string name: ""
                         property string avatar: ""
@@ -1177,6 +1205,18 @@ Singleton {
                         property list<var> playlists: []
                         property list<var> albums: []
                         property list<var> liked: []
+                    }
+                    property JsonObject resume: JsonObject {
+                        property string videoId: ""
+                        property string title: ""
+                        property string artist: ""
+                        property string thumbnail: ""
+                        property string url: ""
+                        property real position: 0
+                        property bool wasPlaying: false
+                        property list<var> activePlaylist: []
+                        property int currentIndex: -1
+                        property string activePlaylistSource: ""
                     }
                 }
                 // Widgets tab in left sidebar
@@ -1462,8 +1502,8 @@ Singleton {
                         property bool autoVertical: true
                         property bool enableWorkspace: false
                         property real workspaceShift: 1.0
-                        property real workspaceZoom: 1.05
-                        property real zoom: 1.05
+                        property real workspaceZoom: 1.0
+                        property real zoom: 1.0
                         property bool enableSidebar: false
                         property real panelShift: 0.12
                         property real widgetsFactor: 1.0
@@ -1502,6 +1542,9 @@ Singleton {
                     property bool tintTrayIcons: false
                     property int iconSize: 26
                     property int searchIconSize: 24
+                    property JsonObject activationWatermark: JsonObject {
+                        property bool enable: false
+                    }
                     property JsonObject desktopPeek: JsonObject {
                         property bool hoverPeek: false
                         property int hoverDelay: 500
@@ -1514,7 +1557,7 @@ Singleton {
                     property bool showUnreadCount: true
                 }
                 property JsonObject actionCenter: JsonObject {
-                    property list<string> toggles: [ "network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
+                    property list<string> toggles: [ "network", "hotspot", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
                 }
                 property JsonObject calendar: JsonObject {
                     property bool force2CharDayOfWeek: true

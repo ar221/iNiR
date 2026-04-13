@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.17.4-blue?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.21.0-blue?style=flat-square" alt="Version"></a>
   <a href="https://github.com/snowarch/inir/stargazers"><img src="https://img.shields.io/github/stars/snowarch/inir?style=flat-square" alt="Stars"></a>
   <a href="https://discord.gg/pAPTfAhZUJ"><img src="https://img.shields.io/badge/Discord-join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord"></a>
 </p>
@@ -27,6 +27,56 @@
     <a href="README.md">English</a> · <a href="docs/readme/README.es.md">Español</a> · <a href="docs/readme/README.ru.md">Русский</a> · <a href="docs/readme/README.zh.md">中文</a> · <a href="docs/readme/README.ja.md">日本語</a> · <a href="docs/readme/README.pt.md">Português</a> · <a href="docs/readme/README.fr.md">Français</a> · <a href="docs/readme/README.de.md">Deutsch</a> · <a href="docs/readme/README.ko.md">한국어</a> · <a href="docs/readme/README.hi.md">हिन्दी</a> · <a href="docs/readme/README.ar.md">العربية</a> · <a href="docs/readme/README.it.md">Italiano</a>
   </sub>
 </p>
+
+---
+
+<details>
+<summary><b>🤔 New here? Click if you have no idea what any of this is</b></summary>
+
+### What is this?
+
+iNiR is your entire desktop. The bar at the top, the dock, notifications, settings, wallpapers, all of it. Not a theme, not dotfiles you paste. A full shell that runs on Linux.
+
+### What do I need to run it?
+
+A compositor. That's the thing that handles your windows and puts pixels on screen. iNiR is made for [Niri](https://github.com/YaLTeR/niri) (a tiling Wayland compositor). There's some old Hyprland code from when this was a fork of end-4's dots, but Niri is what I actually use and test.
+
+The shell runs on [Quickshell](https://quickshell.outfoxxed.me/), a framework for building shells in QML (Qt's UI language). You don't need to know any of that to use it though, everything is configurable through the GUI or a JSON file.
+
+### How it all connects
+
+```
+your apps
+   ↓
+iNiR (shell: bar, sidebars, dock, notifications, settings...)
+   ↓
+Quickshell (runs QML shells)
+   ↓
+Niri (compositor: windows, rendering)
+   ↓
+Wayland → GPU
+```
+
+### Is it stable?
+
+It's a personal project that got out of hand. I use it daily, lots of people in the Discord do too. But stuff breaks sometimes, code is messy in places, I'm learning as I go.
+
+If something doesn't work, `inir doctor` fixes most things. Discord is active if that doesn't help. Just don't expect polished software, this is one person's rice that others happen to like.
+
+### Why does it exist?
+
+I wanted my desktop to look and work a certain way and nothing else did exactly that. Started as end-4's Hyprland dots, became a full rewrite for Niri with way more features.
+
+### Words you'll see around
+
+- **Shell**: the UI layer (bar, panels, overlays)
+- **Compositor**: manages windows, draws to screen (Niri, Hyprland, Sway...)
+- **Wayland**: Linux display protocol (the new one, replaces X11)
+- **QML**: Qt's declarative UI language, what iNiR is written in
+- **Material You**: Google's color system that makes palettes from images (that's the auto-theming)
+- **ii / waffle**: the two panel styles. ii = Material Design vibes, waffle = Windows 11 vibes. `Super+Shift+W` switches between them
+
+</details>
 
 ---
 
@@ -219,9 +269,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code patterns, and
 
 ## Credits
 
-- [**end-4**](https://github.com/end-4/dots-hyprland) — original illogical-impulse for Hyprland
-- [**Quickshell**](https://quickshell.outfoxxed.me/) — the framework powering this shell
-- [**Niri**](https://github.com/YaLTeR/niri) — the scrolling tiling Wayland compositor
+- [**end-4**](https://github.com/end-4/dots-hyprland): original illogical-impulse for Hyprland
+- [**Quickshell**](https://quickshell.outfoxxed.me/): the framework powering this shell
+- [**Niri**](https://github.com/YaLTeR/niri): the scrolling tiling Wayland compositor
 
 ---
 

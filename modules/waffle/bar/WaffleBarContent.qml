@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects as GE
@@ -49,7 +51,7 @@ Rectangle {
 
         model: [
             {
-                iconName: "monitoring",
+                iconName: "pulse",
                 text: Translation.tr("Task Manager"),
                 action: () => {
                     Session.launchTaskManager()

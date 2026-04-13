@@ -75,14 +75,19 @@ Scope {
             // None otherwise (avoids input capture during GameMode)
             WlrLayershell.keyboardFocus: GlobalStates.overlayOpen
                 ? WlrKeyboardFocus.Exclusive
-                : (OverlayContext.clickableWidgets.length > 0 && !GameMode.active
+                : (OverlayContext.clickableWidgets.length > 0 && !GameMode.shouldHidePanels
                     ? WlrKeyboardFocus.OnDemand
                     : WlrKeyboardFocus.None)
             color: "transparent"
 
+            // Zero-size item ensures an explicit empty input region instead of
+            // ambiguous null (which compositors may treat as "full surface input").
+            // Critical: this is a full-screen overlay surface — a stale null mask
+            // would capture ALL input on the entire screen during gamemode.
+            Item { id: emptyMask; width: 0; height: 0 }
             mask: Region {
-                item: GlobalStates.overlayOpen ? overlayContent : null
-                regions: OverlayContext.clickableWidgets.map((widget) => regionComponent.createObject(this, {
+                item: GlobalStates.overlayOpen ? overlayContent : emptyMask
+                regions: GameMode.shouldHidePanels ? [] : OverlayContext.clickableWidgets.map((widget) => regionComponent.createObject(this, {
                     item: widget
                 }));
             }

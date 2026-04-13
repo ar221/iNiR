@@ -10,12 +10,11 @@ import qs.services
 /**
  * GameMode service - detects fullscreen windows and disables effects for performance.
  * 
- * Activates automatically when:
- * - autoDetect is enabled AND
- * - The focused window covers the full output (fullscreen)
- * 
- * Can also be toggled manually via toggle()/activate()/deactivate()
- * Manual state persists to file.
+ * Two activation modes:
+ * - Manual: user toggle via toggle()/activate()/deactivate(). Persists to file.
+ * - Auto-detect: activates when focused window is fullscreen, deactivates
+ *   immediately when leaving fullscreen. Applies the same performance
+ *   optimizations as manual mode (no panel/background hiding).
  */
 Singleton {
     id: root
@@ -28,12 +27,17 @@ Singleton {
     property bool active: _manualActive || _autoActive
     readonly property bool autoDetect: Config.options?.gameMode?.autoDetect ?? true
     property bool manuallyActivated: _manualActive
+    readonly property bool autoActivated: _autoActive
+
+    // True when panels should hide (slide-out + mask null + exclusiveZone 0).
+    // Always false — auto-detect applies the same effects as manual mode
+    // (performance optimizations only, no panel/background hiding).
+    readonly property bool shouldHidePanels: false
     
     // When autoDetect is disabled, immediately clear auto state
     onAutoDetectChanged: {
         if (!autoDetect) {
             _autoActive = false
-            _fullscreenCount = 0
             root._log("[GameMode] autoDetect disabled, clearing auto state")
         } else {
             // Re-check when enabled
@@ -51,6 +55,7 @@ Singleton {
     property bool _manualActive: false
     property bool _autoActive: false
     property bool _initialized: false
+    property bool _focusedIsFullscreen: false
 
     // Config-driven behavior (reactive bindings - re-evaluated when Config changes)
     readonly property bool disableAnimations: Config.options?.gameMode?.disableAnimations ?? true
@@ -71,14 +76,8 @@ Singleton {
 
     // External process control (optional)
     readonly property bool disableDiscoverOverlay: Config.options?.gameMode?.disableDiscoverOverlay ?? true
+    readonly property bool suppressNotifications: Config.options?.gameMode?.suppressNotifications ?? true
     readonly property string _discoverOverlayServiceName: "discover-overlay.service"
-
-    // Fullscreen detection threshold (allow small margin for bar/gaps)
-    readonly property int _marginThreshold: 60
-    
-    // Hysteresis: require multiple consecutive checks to change auto state
-    property int _fullscreenCount: 0
-    readonly property int _hysteresisThreshold: 2
 
     // State file path
     readonly property string _stateFile: Quickshell.env("HOME") + "/.local/state/quickshell/user/gamemode_active"
@@ -89,8 +88,10 @@ Singleton {
         function toggle(): void { root.toggle() }
         function activate(): void { root.activate() }
         function deactivate(): void { root.deactivate() }
-        function status(): void { 
-            root._log("[GameMode] Status - active:", root.active, "manual:", root._manualActive, "auto:", root._autoActive)
+        function status(): string {
+            const state = root.active ? "active" : "inactive";
+            const detail = root._manualActive ? "manual" : root._autoActive ? "auto" : "off";
+            return state + " (" + detail + ")";
         }
     }
 
@@ -120,47 +121,31 @@ Singleton {
         stateReader.reload()
     }
 
-    // Check if a window is fullscreen by comparing to output size
+    // Check if a window is fullscreen.
+    // Niri 25.11+ doesn't expose is_fullscreen on windows.
+    // We detect fullscreen by comparing window_size to the output's logical
+    // resolution (via workspace → output mapping). A small tolerance (2px)
+    // accounts for sub-pixel rounding differences.
     function isWindowFullscreen(window) {
         if (!window) return false
         if (!CompositorService.isNiri) return false
 
-        // Get window size from layout
-        const layout = window.layout
-        if (!layout) return false
-        
-        const windowSize = layout.window_size
-        if (!windowSize || windowSize.length < 2) return false
-        
-        const windowWidth = windowSize[0]
-        const windowHeight = windowSize[1]
+        // If niri ever adds is_fullscreen back, prefer it
+        if (window.is_fullscreen === true) return true
 
-        // Get output for this window's workspace
-        const workspaceId = window.workspace_id
-        const workspace = NiriService.allWorkspaces?.find(ws => ws.id === workspaceId)
-        if (!workspace || !workspace.output) return false
+        // Fallback: compare window size to output logical size
+        const winSize = window.layout?.window_size
+        if (!winSize || winSize.length < 2) return false
 
-        const output = NiriService.outputs?.[workspace.output]
-        if (!output) return false
-        
-        // Try logical first, then mode
-        let outputWidth, outputHeight
-        if (output.logical) {
-            outputWidth = output.logical.width
-            outputHeight = output.logical.height
-        } else if (output.current_mode !== undefined && output.modes) {
-            const mode = output.modes[output.current_mode]
-            outputWidth = mode?.width
-            outputHeight = mode?.height
-        }
-        
-        if (!outputWidth || !outputHeight) return false
+        const ws = NiriService.workspaces[window.workspace_id]
+        if (!ws) return false
 
-        // Window is fullscreen if it covers most of the output
-        const widthMatch = windowWidth >= (outputWidth - _marginThreshold)
-        const heightMatch = windowHeight >= (outputHeight - _marginThreshold)
+        const output = NiriService.outputs[ws.output]
+        if (!output?.logical) return false
 
-        return widthMatch && heightMatch
+        const tolerance = 2
+        return Math.abs(winSize[0] - output.logical.width) <= tolerance
+            && Math.abs(winSize[1] - output.logical.height) <= tolerance
     }
     
     // Check if ANY window across all workspaces is fullscreen
@@ -178,7 +163,7 @@ Singleton {
     // Debounce timer for fullscreen checks
     Timer {
         id: checkDebounce
-        interval: 300  // Faster response
+        interval: 300
         onTriggered: root._doCheckFullscreen()
     }
 
@@ -190,7 +175,7 @@ Singleton {
     function _doCheckFullscreen() {
         if (!CompositorService.isNiri) {
             _autoActive = false
-            _fullscreenCount = 0
+            _focusedIsFullscreen = false
             hasAnyFullscreenWindow = false
             return
         }
@@ -198,27 +183,28 @@ Singleton {
         // Always update hasAnyFullscreenWindow (for toast suppression)
         hasAnyFullscreenWindow = checkAnyFullscreenWindow()
 
+        // Find focused window from the current windows array, not activeWindow.
+        // activeWindow is only refreshed on focus-change events, so it's stale
+        // when a window changes fullscreen state without changing focus
+        // (e.g. pressing F11 on the already-focused window).
+        const windows = NiriService.windows
+        const focusedWindow = (Array.isArray(windows) && windows.find(w => w.is_focused))
+            || NiriService.activeWindow
+
+        // Track focused window state
+        const isFullscreen = isWindowFullscreen(focusedWindow)
+        _focusedIsFullscreen = isFullscreen
+
         if (!autoDetect) {
             _autoActive = false
-            _fullscreenCount = 0
             return
         }
-
-        const focusedWindow = NiriService.activeWindow
-        const isFullscreen = isWindowFullscreen(focusedWindow)
         
-        // Hysteresis: require consistent state before changing
-        if (isFullscreen) {
-            _fullscreenCount = Math.min(_fullscreenCount + 1, _hysteresisThreshold + 1)
-        } else {
-            _fullscreenCount = Math.max(_fullscreenCount - 1, 0)
-        }
-        
-        const wasActive = _autoActive
-        const shouldBeActive = _fullscreenCount >= _hysteresisThreshold
-        
-        if (shouldBeActive !== wasActive) {
-            _autoActive = shouldBeActive
+        // Auto-detect: activate when focused window is fullscreen,
+        // deactivate immediately when it's not. Same behavior as manual
+        // mode but triggered by fullscreen detection.
+        if (isFullscreen !== _autoActive) {
+            _autoActive = isFullscreen
             root._log("[GameMode] Auto-detect:", _autoActive ? "fullscreen detected" : "no fullscreen")
         }
     }
@@ -226,7 +212,7 @@ Singleton {
     // State persistence - read
     FileView {
         id: stateReader
-        path: Qt.resolvedUrl(root._stateFile)
+        path: root._stateFile
 
         onLoaded: {
             const content = stateReader.text()
@@ -265,10 +251,10 @@ Singleton {
         }
 
         function onWindowsChanged() {
-            // Only update hasAnyFullscreenWindow if not already checking
-            if (!checkDebounce.running) {
-                root.hasAnyFullscreenWindow = root.checkAnyFullscreenWindow()
-            }
+            // A window property changed (incl. is_fullscreen). Trigger full
+            // auto-detection — not just hasAnyFullscreenWindow — so we catch
+            // the focused window going fullscreen without a focus change.
+            root.checkFullscreen()
         }
     }
 
@@ -423,27 +409,13 @@ Singleton {
     Process {
         id: discoverOverlayStopProc
         command: [
-            "/usr/bin/systemctl",
-            "--user",
-            "stop",
-            root._discoverOverlayServiceName
+            "/usr/bin/bash",
+            "-c",
+            "systemctl --user stop " + root._discoverOverlayServiceName + " 2>/dev/null; " +
+            "pkill -x discover-overlay 2>/dev/null; true"
         ]
         onExited: (code, status) => {
-            root._log("[GameMode] systemctl stop exited:", code)
-            // Ensure stray processes are gone even if service was not the parent.
-            discoverOverlayKillProc.running = true
-        }
-    }
-
-    Process {
-        id: discoverOverlayKillProc
-        command: [
-            "/usr/bin/pkill",
-            "-f",
-            "/usr/bin/discover-overlay"
-        ]
-        onExited: (code, status) => {
-            root._log("[GameMode] pkill discover-overlay exited:", code)
+            root._log("[GameMode] discover-overlay stop exited:", code)
         }
     }
 

@@ -195,7 +195,8 @@ Scope {
                 //  because the Loader creates us AFTER coverflowSelectorOpen changed)
                 const wp = root.currentSelectionPath
                 const wpDir = FileUtils.parentDirectory(FileUtils.trimFileProtocol(String(wp)))
-                if (wpDir && wpDir.length > 0)
+                const currentDir = Wallpapers.effectiveDirectory
+                if (wpDir && wpDir.length > 0 && currentDir !== wpDir)
                     Wallpapers.setDirectory(wpDir)
                 Wallpapers.searchQuery = ""
                 // Update thumbnails on the active view
@@ -230,8 +231,13 @@ Scope {
                 // so the source is oversized by blurOverflow on every side.
                 readonly property int blurOverflow: 64
 
+                // Skew view manages its own scrim; disable the expensive
+                // fullscreen blur pipeline to avoid GPU/CPU spike.
+                readonly property bool blurActive: root._viewMode !== "skew"
+
                 Item {
                     id: blurSource
+                    visible: scrim.blurActive
                     anchors.fill: parent
                     anchors.margins: -scrim.blurOverflow
 
@@ -254,13 +260,14 @@ Scope {
 
                 MultiEffect {
                     id: backdropBlur
+                    visible: scrim.blurActive
                     source: blurSource
                     anchors.fill: parent
                     anchors.margins: -scrim.blurOverflow
-                    blurEnabled: Appearance.effectsEnabled
+                    blurEnabled: Appearance.effectsEnabled && scrim.blurActive
                     blurMax: 64
-                    blur: Appearance.effectsEnabled ? 1.0 : 0
-                    saturation: Appearance.effectsEnabled ? 0.15 : 0
+                    blur: (Appearance.effectsEnabled && scrim.blurActive) ? 1.0 : 0
+                    saturation: (Appearance.effectsEnabled && scrim.blurActive) ? 0.15 : 0
                 }
 
                 // Dark scrim over the blur
@@ -355,34 +362,10 @@ Scope {
                     folderModel: Wallpapers.folderModel
                     currentWallpaperPath: root.currentSelectionPath
 
-                    // Staggered entry animation
-                    transformOrigin: Item.Center
-                    scale: panelWindow._contentReady ? 1.0 : 0.92
-                    opacity: panelWindow._contentReady ? 1.0 : 0.0
-                    y: panelWindow._contentReady ? 0 : 18
-                    Behavior on scale {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation {
-                            duration: Appearance.calcEffectiveDuration(420)
-                            easing.type: Appearance.animation.elementMoveEnter.type
-                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                        }
-                    }
-                    Behavior on opacity {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation {
-                            duration: Appearance.calcEffectiveDuration(300)
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                    Behavior on y {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation {
-                            duration: Appearance.calcEffectiveDuration(380)
-                            easing.type: Appearance.animation.elementMoveEnter.type
-                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                        }
-                    }
+                    // SkewView manages its own staggered enter/exit internally
+                    // via _contentVisible. We only feed it the parent's ready signal
+                    // so it knows when to reverse (close animation).
+                    contentReady: panelWindow._contentReady
 
                     onWallpaperSelected: filePath => {
                         root.selectWallpaperPath(filePath, skewContent.useDarkMode)
@@ -414,7 +397,8 @@ Scope {
                         root.captureSelectedMonitor()
                         const wp = root.currentSelectionPath
                         const wpDir = FileUtils.parentDirectory(FileUtils.trimFileProtocol(String(wp)))
-                        if (wpDir && wpDir.length > 0)
+                        const currentDir = Wallpapers.effectiveDirectory
+                        if (wpDir && wpDir.length > 0 && currentDir !== wpDir)
                             Wallpapers.setDirectory(wpDir)
                         Wallpapers.searchQuery = ""
                         // Update thumbnails on the active view

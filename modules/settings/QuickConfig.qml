@@ -236,12 +236,14 @@ ContentPage {
                 currentValue: Config.options?.appearance?.palette?.type ?? "auto"
                 onSelected: newValue => {
                     Config.setNestedValue("appearance.palette.type", newValue)
-                    if (ThemeService.isAutoTheme) {
-                        Quickshell.execDetached(["/usr/bin/bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch --type ${newValue}`]);
-                    } else {
+                    if (!ThemeService.isAutoTheme) {
+                        // Manual preset: apply variant immediately via MaterialThemeLoader
                         const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                        MaterialThemeLoader.applySchemeVariant(hex, newValue)
+                        const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                        MaterialThemeLoader.applySchemeVariant(hex, newValue, mode)
                     }
+                    // Auto theme: ThemeService detects palette type change in
+                    // liveRegenSignature and regenerates automatically.
                 }
                 options: [
                     {
@@ -1640,6 +1642,18 @@ ContentPage {
                 }
                 StyledToolTip {
                     text: Translation.tr("Make panels transparent and hide backgrounds for maximum performance")
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "notifications_off"
+                text: Translation.tr("Suppress notifications")
+                checked: Config.options?.gameMode?.suppressNotifications ?? true
+                onCheckedChanged: {
+                    Config.setNestedValue("gameMode.suppressNotifications", checked)
+                }
+                StyledToolTip {
+                    text: Translation.tr("Hide notification popups while Game Mode is active")
                 }
             }
         }

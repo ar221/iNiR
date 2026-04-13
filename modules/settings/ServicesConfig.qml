@@ -157,7 +157,46 @@ ContentPage {
     }
 
     SettingsCardSection {
-        expanded: true
+        expanded: false
+        icon: "wifi_tethering"
+        title: Translation.tr("Hotspot")
+
+        SettingsGroup {
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Network name (SSID)")
+                text: Config.options?.hotspot?.ssid ?? "iNiR Hotspot"
+                wrapMode: TextEdit.Wrap
+                onTextChanged: Config.setNestedValue("hotspot.ssid", text)
+                StyledToolTip {
+                    text: Translation.tr("The name your hotspot will broadcast")
+                }
+            }
+
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Password")
+                text: Config.options?.hotspot?.password ?? "inirhotspot"
+                wrapMode: TextEdit.Wrap
+                onTextChanged: Config.setNestedValue("hotspot.password", text)
+                StyledToolTip {
+                    text: Translation.tr("WPA2 passphrase for the hotspot")
+                }
+            }
+
+            SettingsSwitch {
+                text: Translation.tr("Use 5 GHz band")
+                checked: (Config.options?.hotspot?.band ?? "bg") === "a"
+                onCheckedChanged: Config.setNestedValue("hotspot.band", checked ? "a" : "bg")
+                StyledToolTip {
+                    text: Translation.tr("Use 5 GHz (802.11a) instead of 2.4 GHz. Requires adapter support.")
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        expanded: false
         icon: "memory"
         title: Translation.tr("Resources")
 
@@ -437,7 +476,12 @@ ContentPage {
 
                             StyledText {
                                 text: {
-                                    if (ShellUpdates.isUpdating) return Translation.tr("Updating…")
+                                    if (ShellUpdates.isUpdating) {
+                                        if (ShellUpdates.updateStepMessage.length > 0) {
+                                            return Translation.tr(ShellUpdates.updateStepMessage) + (ShellUpdates.updateStep > 0 ? " (" + ShellUpdates.updateStep + "/" + ShellUpdates.updateTotalSteps + ")" : "")
+                                        }
+                                        return Translation.tr("Updating…")
+                                    }
                                     if (ShellUpdates.isChecking) return Translation.tr("Checking for updates…")
                                     if (ShellUpdates.hasUpdate) return Translation.tr("Update available")
                                     if (ShellUpdates.managedExternally) return "Managed externally"
@@ -702,7 +746,11 @@ ContentPage {
                             color: Appearance.m3colors.m3onPrimary
                         }
                         StyledText {
-                            text: ShellUpdates.isUpdating ? Translation.tr("Updating…") : Translation.tr("Update Now")
+                            text: ShellUpdates.isUpdating
+                                ? (ShellUpdates.updateStepMessage.length > 0
+                                    ? Translation.tr(ShellUpdates.updateStepMessage) + "…"
+                                    : Translation.tr("Updating…"))
+                                : Translation.tr("Update Now")
                             font {
                                 pixelSize: Appearance.font.pixelSize.smaller
                                 weight: Font.DemiBold

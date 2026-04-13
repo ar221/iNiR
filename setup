@@ -112,6 +112,14 @@ prevent_sudo_or_root
 ask=true
 quiet=false
 
+# Auto-detect non-interactive context (no terminal on stdin).
+# Forces non-interactive mode when launched from QML Process, cron, systemd, etc.
+# This is defense-in-depth alongside the -y flag.
+if ! [ -t 0 ]; then
+    ask=false
+    quiet=true
+fi
+
 # DISABLED: webapps — requires quickshell-webengine rebuild, re-enable when ready
 # _build_install_qs_webengine() {
 #     local build_script="${REPO_ROOT}/scripts/quickshell-webengine/build-quickshell-webengine.sh"
@@ -188,6 +196,56 @@ sync_launcher_from_repo() {
         ensure_launcher_path_in_shells "$XDG_BIN_HOME"
         printf '%s\n' "$launcher_target"
     fi
+}
+
+sync_user_inir_service_from_repo_if_present() {
+    local service_asset="${REPO_ROOT}/assets/systemd/inir.service"
+    local service_target_dir="${XDG_CONFIG_HOME}/systemd/user"
+    local service_target="${service_target_dir}/inir.service"
+    local launcher_target="${XDG_BIN_HOME}/inir"
+    local tmp_file
+    local changed=false
+
+    [[ -f "$service_asset" ]] || return 1
+    [[ -f "$service_target" ]] || return 1
+
+    mkdir -p "$service_target_dir"
+    mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
+    tmp_file="${XDG_CACHE_HOME:-$HOME/.cache}/inir.service.$$"
+
+    sed "s|^ExecStart=.*|ExecStart=${launcher_target//&/\\&} run --session|" "$service_asset" > "$tmp_file"
+
+    if ! cmp -s "$tmp_file" "$service_target"; then
+        changed=true
+        cp -f "$tmp_file" "$service_target"
+    fi
+
+    rm -f "$tmp_file"
+
+    if [[ "$changed" == true ]] && command -v systemctl >/dev/null 2>&1; then
+        systemctl --user daemon-reload >/dev/null 2>&1 || true
+    fi
+
+    if [[ "$changed" == true ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+ensure_user_inir_service_enabled() {
+    if ! command -v systemctl >/dev/null 2>&1; then
+        return 1
+    fi
+
+    local service_path="${XDG_CONFIG_HOME}/systemd/user/inir.service"
+    if [[ ! -f "$service_path" ]]; then
+        return 1
+    fi
+
+    systemctl --user daemon-reload >/dev/null 2>&1 || true
+    systemctl --user enable inir.service >/dev/null 2>&1 || true
+    return 0
 }
 
 ###############################################################################
@@ -1403,6 +1461,19 @@ restore_single_user_mod() {
 ###############################################################################
 # Update
 ###############################################################################
+
+# Progress reporting for shell UI — writes structured markers to the update
+# status file so ShellUpdates.qml can show live progress in the bar indicator.
+# Format: progress:STEP:TOTAL:MESSAGE
+# Called only during automated updates (setup -y -q update from ShellUpdates).
+_update_status_file="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/update-status"
+_update_total_steps=7
+
+_report_progress() {
+    local step="$1" msg="$2"
+    echo "progress:${step}:${_update_total_steps}:${msg}" > "$_update_status_file" 2>/dev/null || true
+}
+
 run_update() {
     echo ""
     tui_title "Checking for updates..."
@@ -1434,6 +1505,12 @@ run_update() {
                     run_migrations_interactive
                 fi
             fi
+        fi
+
+        ensure_user_inir_service_enabled >/dev/null 2>&1 || true
+        if [[ -n "${NIRI_SOCKET:-}" || -n "${WAYLAND_DISPLAY:-}" ]]; then
+            systemctl --user reset-failed inir.service >/dev/null 2>&1 || true
+            systemctl --user start inir.service >/dev/null 2>&1 || true
         fi
 
         echo ""
@@ -1477,6 +1554,7 @@ run_update() {
             tui_success "Snapshot: $snapshot_id"
 
             # Pull changes
+            _report_progress 1 "Pulling changes"
             tui_info "Pulling changes..."
             if ! git -C "$REPO_ROOT" pull --ff-only origin 2>/dev/null; then
                 tui_error "Git pull failed. You may have local changes."
@@ -1488,9 +1566,10 @@ run_update() {
             # Re-exec to pick up updated library code from the pull.
             # Without this, functions sourced at startup (doctor, migrations, etc.)
             # would still be the OLD versions in memory.
-            local reexec_args=("update")
+            local reexec_args=()
             $ask || reexec_args+=("-y")
             $quiet && reexec_args+=("-q")
+            reexec_args+=("update")
             export _II_POST_PULL=1
             exec "$REPO_ROOT/setup" "${reexec_args[@]}"
         elif [[ "$update_rc" -eq 2 ]]; then
@@ -1533,6 +1612,7 @@ run_update() {
     local repo_commit=$(get_repo_commit)
 
     echo ""
+    _report_progress 2 "Syncing files"
     tui_info "Syncing iNiR..."
 
     II_SOURCE="${REPO_ROOT}"
@@ -1665,6 +1745,8 @@ run_update() {
         fi
     fi
 
+    local _service_refresh_status=1
+
     if [[ -f "${REPO_ROOT}/assets/icons/desktop-symbolic.svg" ]]; then
         local icon_target_dir="${XDG_DATA_HOME}/icons/hicolor/scalable/apps"
         mkdir -p "$icon_target_dir"
@@ -1737,6 +1819,7 @@ run_update() {
     fi
 
     # Migrations
+    _report_progress 3 "Running migrations"
     local pending=$(count_pending_migrations)
     if [[ "$pending" -gt 0 ]]; then
         echo ""
@@ -1751,22 +1834,25 @@ run_update() {
         fi
     fi
 
+    _report_progress 4 "Finalizing"
+    _service_refresh_status=1
+    if sync_user_inir_service_from_repo_if_present; then
+        _service_refresh_status=0
+    else
+        _service_refresh_status=$?
+    fi
+    if [[ $_service_refresh_status -eq 0 ]]; then
+        tui_success "Updated existing user inir.service"
+    fi
+
+    ensure_user_inir_service_enabled >/dev/null 2>&1 || true
+
     local niri_config="${XDG_CONFIG_HOME}/niri/config.kdl"
     local niri_startup_cfg="${XDG_CONFIG_HOME}/niri/config.d/50-startup.kdl"
     local niri_binds_cfg="${XDG_CONFIG_HOME}/niri/config.d/70-binds.kdl"
     if [[ -f "$niri_config" && -x "${XDG_BIN_HOME}/inir" ]]; then
         local launcher_target_escaped="${XDG_BIN_HOME}/inir"
         launcher_target_escaped="${launcher_target_escaped//&/\\&}"
-        if [[ -f "$niri_startup_cfg" ]]; then
-            sed -i \
-                -e 's|spawn-at-startup "inir" "start"|spawn-at-startup "'"${launcher_target_escaped}"'" "start"|' \
-                "$niri_startup_cfg"
-        else
-            sed -i \
-                -e 's|spawn-at-startup "inir" "start"|spawn-at-startup "'"${launcher_target_escaped}"'" "start"|' \
-                "$niri_config"
-        fi
-
         if [[ -f "$niri_binds_cfg" ]]; then
             sed -i \
                 -e 's|spawn "bash" "-lc" "exec \"\$(inir path)/scripts/launch-terminal.sh\""|spawn "'"${launcher_target_escaped}"'" "terminal"|' \
@@ -1805,27 +1891,8 @@ run_update() {
     #     [[ $new_plugins -gt 0 ]] && tui_success "Installed $new_plugins default WebApp plugin(s)"
     # fi
 
-    # Restart shell (only if we have access to the session)
-    echo ""
-    if [[ -n "$NIRI_SOCKET" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
-        tui_info "Restarting shell..."
-        if [[ -x "${II_TARGET}/scripts/inir" ]]; then
-            nohup bash "${II_TARGET}/scripts/inir" restart -c "${II_TARGET}" >/dev/null 2>&1 &
-            disown
-        else
-            qs -p "${II_TARGET}" kill 2>/dev/null || true
-            sleep 1
-            nohup qs -p "${II_TARGET}" >/dev/null 2>&1 &
-            disown
-        fi
-        tui_success "Shell restarted"
-    else
-        tui_warn "Not in graphical session - shell restart skipped"
-        tui_info "The shell will use new files on next restart"
-        tui_info "Or run: inir restart"
-    fi
-
     # Post-update: check for missing dependencies and offer to install them
+    _report_progress 5 "Checking dependencies"
     echo ""
     tui_title "Dependency check"
     echo ""
@@ -1916,6 +1983,7 @@ run_update() {
     # fi
 
     # Update Python venv packages
+    _report_progress 6 "Python packages"
     echo ""
     tui_title "Python packages"
     echo ""
@@ -1937,6 +2005,33 @@ run_update() {
         fi
     else
         tui_success "Python packages (skipped - uv not available)"
+    fi
+
+    # Signal success to the shell UI before restart
+    echo "success" > "$_update_status_file" 2>/dev/null || true
+
+    # Restart shell (only if we have access to the session)
+    echo ""
+    if [[ -n "$NIRI_SOCKET" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
+        _report_progress 7 "Restarting shell"
+        tui_info "Restarting shell..."
+        if command -v systemctl >/dev/null 2>&1 && systemctl --user cat inir.service >/dev/null 2>&1; then
+            nohup systemctl --user restart inir.service >/dev/null 2>&1 &
+            disown
+        elif [[ -x "${II_TARGET}/scripts/inir" ]]; then
+            nohup bash "${II_TARGET}/scripts/inir" restart -c "${II_TARGET}" >/dev/null 2>&1 &
+            disown
+        else
+            qs -p "${II_TARGET}" kill 2>/dev/null || true
+            sleep 1
+            nohup qs -p "${II_TARGET}" >/dev/null 2>&1 &
+            disown
+        fi
+        tui_success "Shell restarted"
+    else
+        tui_warn "Not in graphical session - shell restart skipped"
+        tui_info "The shell will use new files on next restart"
+        tui_info "Or run: inir restart"
     fi
 
     echo ""
@@ -1991,6 +2086,8 @@ case "$COMMAND" in
     update)
         for _arg in "${SUBCMD_ARGS[@]}"; do
             case "$_arg" in
+                -y|--yes) ask=false ;;
+                -q|--quiet) quiet=true ;;
                 --local) export _II_POST_PULL=local ;;
             esac
         done

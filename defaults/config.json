@@ -127,6 +127,7 @@
             "enableChrome": true,
             "enableSpicetify": false,
             "enableAdwSteam": false,
+            "enablePearDesktop": true,
             "colorStrength": 1.0,
             "useBackdropForColors": false,
             "colorsOnlyMode": false,
@@ -187,7 +188,7 @@
             }
         },
         "shellScale": 1.0,
-        "iconTheme": "",
+        "iconTheme": "WhiteSur-dark",
         "dockIconTheme": ""
     },
     "apps": {
@@ -257,20 +258,20 @@
         },
         "hideWhenFullscreen": true,
         "parallax": {
-            "enable": true,
+            "enable": false,
             "axis": "vertical",
             "autoVertical": false,
             "enableSidebar": true,
             "enableWorkspace": true,
             "workspaceShift": 1.0,
             "vertical": true,
-            "zoom": 1.07,
+            "zoom": 1.0,
             "panelShift": 0.15,
             "widgetDepth": 1.2,
             "pauseDuringTransitions": true,
             "transitionSettleMs": 220,
             "widgetsFactor": 1.2,
-            "workspaceZoom": 1.07
+            "workspaceZoom": 1.0
         },
         "thumbnailPath": "",
         "wallpaperPath": "",
@@ -295,7 +296,7 @@
         },
         "transition": {
             "enable": true,
-            "type": "crossfade",
+            "type": "random",
             "direction": "right",
             "duration": 800,
             "bezier": [
@@ -569,7 +570,7 @@
         "showWallpaperSchemeChips": false
     },
     "settingsUi": {
-        "overlayMode": false,
+        "overlayMode": true,
         "overlayAppearance": {
             "scrimDim": 35,
             "backgroundOpacity": 1.0,
@@ -667,6 +668,7 @@
         "scrimDim": 100
     },
     "overview": {
+        "activeScreenOnly": false,
         "backgroundBlurEnable": true,
         "backgroundBlurRadius": 50,
         "backgroundDim": 40,
@@ -844,13 +846,21 @@
             "hideSyncBanner": false,
             "browser": "firefox",
             "cookiesPath": "",
+            "useManualCookies": false,
             "connected": false,
             "resolvedBrowserArg": "",
+            "audioQuality": "best",
+            "verbose": false,
+            "shuffleMode": false,
+            "repeatMode": 0,
             "recentSearches": [],
             "queue": [],
             "playlists": [],
             "liked": [],
             "lastLikedSync": "",
+            "upNextNotifications": true,
+            "suppressUpNextInFullscreen": true,
+            "volume": 100,
             "profile": {
                 "name": "",
                 "avatar": "",
@@ -860,6 +870,18 @@
                 "playlists": [],
                 "albums": [],
                 "liked": []
+            },
+            "resume": {
+                "videoId": "",
+                "title": "",
+                "artist": "",
+                "thumbnail": "",
+                "url": "",
+                "position": 0,
+                "wasPlaying": false,
+                "activePlaylist": [],
+                "currentIndex": -1,
+                "activePlaylistSource": ""
             }
         },
         "wallhaven": {
@@ -1035,10 +1057,16 @@
         "disableNiriAnimations": false,
         "disableReloadToasts": true,
         "disableDiscoverOverlay": true,
+        "suppressNotifications": true,
         "checkInterval": 2000,
         "minimalMode": false,
         "niriWindowListUpdateIntervalMs": 100,
         "niriWindowListUpdateIntervalMsGameMode": 500
+    },
+    "hotspot": {
+        "ssid": "iNiR Hotspot",
+        "password": "inirhotspot",
+        "band": "bg"
     },
     "reloadToasts": {
         "enable": true
@@ -1174,8 +1202,8 @@
                 "enableWorkspace": false,
                 "enableSidebar": false,
                 "workspaceShift": 1.0,
-                "workspaceZoom": 1.05,
-                "zoom": 1.05,
+                "workspaceZoom": 1.0,
+                "zoom": 1.0,
                 "autoVertical": true,
                 "vertical": false,
                 "panelShift": 0.12,
@@ -1191,7 +1219,7 @@
                     "x": 100,
                     "y": 100,
                     "dim": 55,
-                    "fontFamily": "Segoe UI Variable Display",
+                    "fontFamily": "Roboto Flex",
                     "style": "hero",
                     "timeFormat": "system",
                     "dateStyle": "long",
@@ -1216,6 +1244,9 @@
             "iconSize": 26,
             "leftAlignApps": false,
             "monochromeIcons": false,
+            "activationWatermark": {
+                "enable": true
+            },
             "desktopPeek": {
                 "hoverPeek": false,
                 "hoverDelay": 500
@@ -1229,6 +1260,7 @@
         "actionCenter": {
             "toggles": [
                 "network",
+                "hotspot",
                 "bluetooth",
                 "audio",
                 "mic",
@@ -1268,9 +1300,9 @@
         "widgetsPanel": {
             "showDateTime": true,
             "showWeather": true,
-            "showSystem": true,
+            "showSystem": false,
             "showMedia": true,
-            "showQuickActions": true,
+            "showQuickActions": false,
             "quickActions": [
                 "files",
                 "terminal",
@@ -1288,7 +1320,7 @@
             "showScreenshot": true,
             "showScreenRecord": true,
             "showSession": true,
-            "showColorScheme": true
+            "showColorScheme": false
         },
         "workspaceNames": {},
         "taskView": {
@@ -1325,6 +1357,7 @@
         "iiClipboard",
         "iiShellUpdate"
     ],
+    "knownPanels": [],
     "powerProfiles": {
         "restoreOnStart": true,
         "preferredProfile": ""

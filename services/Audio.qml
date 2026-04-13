@@ -15,8 +15,15 @@ Singleton {
     // Misc props
     property bool ready: sink?.ready ?? rawSink?.ready ?? false
     readonly property PwNode rawSink: Pipewire.defaultAudioSink
-    property PwNode sink: root.resolveControllableSink(rawSink)
+    property PwNode _pendingSink: null
+    readonly property PwNode defaultSink: root._pendingSink ?? rawSink
+    property PwNode sink: root._pendingSink ?? root.resolveControllableSink(rawSink)
     property PwNode source: Pipewire.defaultAudioSource
+
+    // When QS catches up and rawSink changes, clear the pending override
+    onRawSinkChanged: {
+        if (root._pendingSink) root._pendingSink = null
+    }
     readonly property real hardMaxValue: 2.00
     property string audioTheme: Config.options?.sounds?.theme ?? "freedesktop"
     property real value: sink?.audio?.volume ?? rawSink?.audio?.volume ?? 0
@@ -247,6 +254,7 @@ Singleton {
         if (!node) return
 
         if (isSink) {
+            root._pendingSink = node
             Pipewire.preferredDefaultAudioSink = node;
         } else {
             Pipewire.preferredDefaultAudioSource = node;
@@ -273,7 +281,17 @@ Singleton {
         objects: [rawSink, sink, source]
     }
 
+    // Reset protection state and stop any in-flight ramp when sink changes so
+    // the new sink's initial volume isn't compared against the old sink's level
+    // and we don't apply a stale ramp target to the wrong device.
+    onSinkChanged: {
+        _sinkProtectionConn.lastReady = false
+        _sinkProtectionConn.lastVolume = 0
+        _rampTimerInternal.running = false
+    }
+
     Connections { // Protection against sudden volume changes
+        id: _sinkProtectionConn
         target: sink?.audio ?? null
         property bool lastReady: false
         property real lastVolume: 0

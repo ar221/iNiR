@@ -17,6 +17,8 @@ import qs.modules.sidebarRight.quickToggles
 import qs.modules.sidebarRight.quickToggles.classicStyle
 
 import qs.modules.sidebarRight.bluetoothDevices
+import qs.modules.sidebarRight.events
+import qs.modules.sidebarRight.hotspot
 import qs.modules.sidebarRight.nightLight
 import qs.modules.sidebarRight.volumeMixer
 import qs.modules.sidebarRight.wifiNetworks
@@ -32,6 +34,8 @@ Item {
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
+    property bool showEventsDialog: false
+    property bool showHotspotDialog: false
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
     property bool editMode: false
@@ -55,6 +59,22 @@ Item {
                 root.showAudioOutputDialog = false;
                 root.showAudioInputDialog = false;
                 root.showNightLightDialog = false;
+                root.showHotspotDialog = false;
+                root.eventsDialogEditEvent = null;
+            }
+        }
+        function onRequestWifiDialogChanged() {
+            if (GlobalStates.requestWifiDialog) {
+                GlobalStates.requestWifiDialog = false
+                if (!GlobalStates.sidebarRightOpen) GlobalStates.sidebarRightOpen = true
+                root.showWifiDialog = true
+            }
+        }
+        function onRequestBluetoothDialogChanged() {
+            if (GlobalStates.requestBluetoothDialog) {
+                GlobalStates.requestBluetoothDialog = false
+                if (!GlobalStates.sidebarRightOpen) GlobalStates.sidebarRightOpen = true
+                root.showBluetoothDialog = true
             }
         }
     }
@@ -260,6 +280,11 @@ Item {
     }
 
     ToggleDialog {
+        shownPropertyString: "showHotspotDialog"
+        dialog: HotspotDialog {}
+    }
+
+    ToggleDialog {
         shownPropertyString: "showWifiDialog"
         dialog: WifiDialog {}
         onShownChanged: {
@@ -313,6 +338,9 @@ Item {
             }
             function onOpenNightLightDialog() {
                 root.showNightLightDialog = true;
+            }
+            function onOpenHotspotDialog() {
+                root.showHotspotDialog = true;
             }
             function onOpenWifiDialog() {
                 root.showWifiDialog = true;

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.17.4-blue?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/snowarch/inir/releases"><img src="https://img.shields.io/badge/version-2.21.0-blue?style=flat-square" alt="Version"></a>
   <a href="https://github.com/snowarch/inir/stargazers"><img src="https://img.shields.io/github/stars/snowarch/inir?style=flat-square" alt="Stars"></a>
   <a href="https://discord.gg/pAPTfAhZUJ"><img src="https://img.shields.io/badge/Discord-join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord"></a>
 </p>
@@ -33,6 +33,56 @@
 ---
 
 > **حول الترجمة:** ترجمة مجتمعية. في حال وجود أي غموض، راجع [النسخة الإنجليزية](../../README.md).
+
+---
+
+<details>
+<summary><b>أول مرة هنا؟ اضغط إذا ما تعرف شو هذا 🤔</b></summary>
+
+### شو هذا؟
+
+iNiR هو سطح المكتب كامل. الشريط فوق، الدوك، الإشعارات، الإعدادات، الخلفيات، كل شي. مو ثيم، مو ملفات dotfiles تنسخها. شل كامل يشتغل على لينكس.
+
+### شو أحتاج عشان أشغله؟
+
+كومبوزيتر. هذا اللي يدير النوافذ ويحط البكسلات على الشاشة. iNiR مصمم لـ [Niri](https://github.com/YaLTeR/niri) (كومبوزيتر Wayland تايلنق). في كود قديم من Hyprland من أيام ما كان فورك من dots الـ end-4، بس Niri هو اللي فعلياً أجربه وأستخدمه.
+
+الشل يشتغل على [Quickshell](https://quickshell.outfoxxed.me/)، فريمورك لبناء شلات بـ QML (لغة UI من Qt). ما تحتاج تعرفها عشان تستخدمه، كل شي يتضبط من الـ GUI أو ملف JSON.
+
+### كيف كل شي مرتبط
+
+```
+تطبيقاتك
+   ↓
+iNiR (شل: بار، سايدبار، دوك، إشعارات، إعدادات...)
+   ↓
+Quickshell (يشغل شلات QML)
+   ↓
+Niri (كومبوزيتر: نوافذ، رندرنق)
+   ↓
+Wayland ← GPU
+```
+
+### هل هو مستقر؟
+
+مشروع شخصي طلع عن السيطرة. أستخدمه كل يوم، ناس كثير في الـ Discord بعد. بس أحياناً ينكسر، الكود فوضوي في أماكن، أتعلم وأنا أسوي.
+
+إذا شي ما اشتغل، `inir doctor` يصلح أغلب الأشياء. إذا ما نفع، الـ Discord نشط. لا تتوقع سوفتوير مصقول، هذا rice شخص واحد عجب ناس ثانيين.
+
+### ليش موجود؟
+
+كنت أبي سطح المكتب يطلع ويشتغل بطريقة معينة، وما في شي ثاني يسويها بالظبط. بدأ كـ dots الـ end-4 لـ Hyprland، صار ريرايت كامل لـ Niri مع فيتشرز أكثر بكثير.
+
+### كلمات راح تشوفها
+
+- **Shell**: طبقة الـ UI (بار، بانلز، أوفرليز)
+- **Compositor**: يدير النوافذ، يرسم على الشاشة (Niri، Hyprland، Sway...)
+- **Wayland**: بروتوكول العرض في لينكس (الجديد، بديل X11)
+- **QML**: لغة UI من Qt، iNiR مكتوب فيها
+- **Material You**: نظام ألوان قوقل اللي يسوي باليتات من الصور (كذا يشتغل الـ auto-theming)
+- **ii / waffle**: ستايلين للبانل. ii = فايب Material Design، waffle = فايب Windows 11. `Super+Shift+W` يبدل بينهم
+
+</details>
 
 ---
 

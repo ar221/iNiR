@@ -21,7 +21,7 @@ Scope {
     PanelWindow {
         id: root
         // Hide during GameMode to avoid input interference
-        visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked && !GameMode.active
+        visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked && !(GameMode.active && GameMode.suppressNotifications)
         screen: CompositorService.isNiri
             ? Quickshell.screens.find(s => s.name === NiriService.currentOutput) ?? Quickshell.screens[0]
             : Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null

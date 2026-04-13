@@ -303,7 +303,19 @@ Item {
                                 source: root.wallpaperPath
                                 asynchronous: true
                                 fillMode: Image.PreserveAspectCrop
-                                visible: false
+                                // Visible as unblurred fallback when effects are disabled
+                                visible: !Appearance.effectsEnabled
+                                layer.enabled: !Appearance.effectsEnabled
+                                layer.effect: OpacityMask {
+                                    maskSource: Rectangle {
+                                        width: workspace.width
+                                        height: workspace.height
+                                        topLeftRadius: workspace.topLeftRadius
+                                        topRightRadius: workspace.topRightRadius
+                                        bottomLeftRadius: workspace.bottomLeftRadius
+                                        bottomRightRadius: workspace.bottomRightRadius
+                                    }
+                                }
                             }
 
                             FastBlur {
@@ -389,7 +401,13 @@ Item {
                                     weight: Font.DemiBold
                                     family: Appearance.font.family.expressive
                                 }
-                                color: ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1, 0.8)
+                                color: ColorUtils.transparentize(
+                                    Appearance.angelEverywhere ? Appearance.angel.colText
+                                    : Appearance.inirEverywhere ? Appearance.inir.colText
+                                    : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer1
+                                    : Appearance.colors.colOnLayer1,
+                                    0.7
+                                )
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                                 visible: root.showWorkspaceNumber
