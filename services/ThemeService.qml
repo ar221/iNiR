@@ -1,5 +1,4 @@
 pragma Singleton
-pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
@@ -21,12 +20,8 @@ Singleton {
     readonly property bool vesktopEnabled: (Config.options?.appearance?.wallpaperTheming?.enableVesktop ?? true) !== false
     readonly property var wallpaperThemingCfg: Config.options?.appearance?.wallpaperTheming ?? null
     readonly property var terminalAdjCfg: wallpaperThemingCfg?.terminalColorAdjustments ?? null
-    readonly property string panelFamily: Config.options?.panelFamily ?? "ii"
-    readonly property bool waffleUsesMainWallpaper: Config.options?.waffles?.background?.useMainWallpaper ?? true
     readonly property string liveRegenSignature: JSON.stringify({
         theme: currentTheme,
-        panelFamily: root.panelFamily,
-        waffleUsesMainWallpaper: root.waffleUsesMainWallpaper,
         paletteType: Config.options?.appearance?.palette?.type ?? "auto",
         themingWallpaperPath: Wallpapers.effectiveWallpaperPath ?? "",
         enableAppsAndShell: wallpaperThemingCfg?.enableAppsAndShell ?? true,
@@ -44,7 +39,6 @@ Singleton {
         softenColors: Config.options?.appearance?.softenColors ?? true,
     })
     property string _lastLiveRegenSignature: ""
-    property string _lastPanelFamily: ""
     property real _lastRegenTimestamp: 0
     property bool _regenPending: false
     readonly property int _regenCooldownMs: 700
@@ -81,9 +75,8 @@ Singleton {
                 // Variant active: apply preset instantly, then regenerate variant colors
                 ThemePresets.applyPreset(themeId, false, true);
                 const seedColor = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
-                root._log("[ThemeService] setTheme with variant", paletteType, "seed", seedColor, "mode", mode);
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
+                root._log("[ThemeService] setTheme with variant", paletteType, "seed", seedColor);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
             } else {
                 ThemePresets.applyPreset(themeId, applyExternal);
                 if (applyExternal && vesktopEnabled) {
@@ -134,9 +127,8 @@ Singleton {
                 const seedColor = configAccent.length > 0
                     ? configAccent
                     : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
-                root._log("[ThemeService] Re-applying variant", paletteType, "with seed", seedColor, "mode", mode);
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
+                root._log("[ThemeService] Re-applying variant", paletteType, "with seed", seedColor);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
                 if (applyExternal && vesktopEnabled) {
                     root._triggerVesktopThemeGeneration()
                 }
@@ -185,8 +177,7 @@ Singleton {
                 const seedColor = configAccent.length > 0
                     ? configAccent
                     : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
             } else {
                 ThemePresets.applyPreset(currentTheme, true);
             }
@@ -200,14 +191,7 @@ Singleton {
         // Otherwise switching manual→auto sees the stale auto signature
         // and skips regeneration.
         root._lastLiveRegenSignature = root.liveRegenSignature
-
-        // Detect family change — switchwall.sh is family-aware so the full
-        // pipeline must re-run even for manual themes (different wallpaper
-        // resolution, different external-app color targets).
-        const familyChanged = root.panelFamily !== root._lastPanelFamily
-        root._lastPanelFamily = root.panelFamily
-
-        if (!isAutoTheme && !familyChanged) return
+        if (!isAutoTheme) return
         // Skip if a direct Wallpapers.apply() already launched switchwall.sh
         if (Wallpapers._applyInProgress) return
         root.regenerateAutoTheme()
@@ -221,7 +205,6 @@ Singleton {
         function onReadyChanged() {
             if (Config.ready) {
                 root._lastLiveRegenSignature = ""
-                root._lastPanelFamily = root.panelFamily
                 liveRegenerateDebounce.restart()
             }
         }
@@ -292,11 +275,59 @@ Singleton {
         }
     }
     
+    function _msUntilNextTransition(): int {
+        const now = new Date()
+        const currentMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000
+
+        const dayStart = Config.options?.appearance?.themeSchedule?.dayStart ?? "06:00"
+        const nightStart = Config.options?.appearance?.themeSchedule?.nightStart ?? "18:00"
+
+        const [dayH, dayM] = dayStart.split(":").map(Number)
+        const [nightH, nightM] = nightStart.split(":").map(Number)
+
+        const dayMs = (dayH * 60 + dayM) * 60000
+        const nightMs = (nightH * 60 + nightM) * 60000
+        const dayLenMs = 86400000
+
+        // Find the next boundary ahead of now (wrapping midnight)
+        const candidates = [dayMs, nightMs].map(b => {
+            const delta = b - currentMs
+            return delta > 0 ? delta : delta + dayLenMs
+        })
+        return Math.max(1000, Math.min(...candidates))
+    }
+
+    // One-shot timer: sleeps until the next actual day/night boundary instead of waking every minute
     Timer {
-        interval: 60000  // Check every minute
-        running: root.scheduleEnabled
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.applyScheduledTheme()
+        id: scheduleTimer
+        interval: 60000  // overwritten on start and after each fire
+        running: false
+        repeat: false
+        onTriggered: {
+            root.applyScheduledTheme()
+            interval = root._msUntilNextTransition()
+            restart()
+        }
+    }
+
+    Connections {
+        target: root
+        function onScheduleEnabledChanged() {
+            if (root.scheduleEnabled) {
+                root.applyScheduledTheme()
+                scheduleTimer.interval = root._msUntilNextTransition()
+                scheduleTimer.restart()
+            } else {
+                scheduleTimer.stop()
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.scheduleEnabled) {
+            root.applyScheduledTheme()
+            scheduleTimer.interval = root._msUntilNextTransition()
+            scheduleTimer.start()
+        }
     }
 }

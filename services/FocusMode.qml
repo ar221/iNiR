@@ -238,12 +238,57 @@ Singleton {
     }
 
     // ─── Scheduled focus modes ───────────────────────────────────
+    function _msUntilNextScheduleBoundary(): int {
+        const schedules = Config.options?.focusMode?.schedules ?? {}
+        const now = new Date()
+        const currentMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000
+        const currentDay = now.getDay()
+        const dayLenMs = 86400000
+        const cap = 3600000 // max 1-hour sleep so day-of-week transitions aren't missed
+
+        let minDelta = cap
+
+        for (const mode in schedules) {
+            const sched = schedules[mode]
+            if (!sched.enabled) continue
+            const days = sched.days ?? [0, 1, 2, 3, 4, 5, 6]
+            if (!days.includes(currentDay) && !days.includes((currentDay + 1) % 7)) continue
+
+            for (const timeStr of [sched.start, sched.end]) {
+                if (!timeStr) continue
+                const parts = timeStr.split(":")
+                if (parts.length !== 2) continue
+                const boundaryMs = (parseInt(parts[0]) * 60 + parseInt(parts[1])) * 60000
+                const delta = boundaryMs - currentMs
+                const adjusted = delta > 0 ? delta : delta + dayLenMs
+                if (adjusted < minDelta) minDelta = adjusted
+            }
+        }
+
+        return Math.max(1000, minDelta)
+    }
+
+    // One-shot timer: sleeps until the nearest schedule boundary instead of waking every minute
     Timer {
         id: scheduleTimer
-        interval: 60000 // Check every minute
-        repeat: true
-        running: _hasSchedules
-        onTriggered: root._checkSchedule()
+        interval: 60000  // overwritten on start and after each fire
+        running: false
+        repeat: false
+        onTriggered: {
+            root._checkSchedule()
+            interval = root._msUntilNextScheduleBoundary()
+            restart()
+        }
+    }
+
+    Connections {
+        target: Config
+        function onReadyChanged() {
+            if (Config.ready && root._hasSchedules) {
+                scheduleTimer.interval = root._msUntilNextScheduleBoundary()
+                scheduleTimer.restart()
+            }
+        }
     }
 
     readonly property bool _hasSchedules: {
@@ -298,7 +343,11 @@ Singleton {
                 root.activeMode = saved
                 print("[FocusMode] Restored mode from config: " + saved)
             }
-            if (root._hasSchedules) root._checkSchedule()
+            if (root._hasSchedules) {
+                root._checkSchedule()
+                scheduleTimer.interval = root._msUntilNextScheduleBoundary()
+                scheduleTimer.restart()
+            }
         }
     }
 

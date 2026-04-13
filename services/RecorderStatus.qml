@@ -10,26 +10,40 @@ Singleton {
     id: root
 
     property bool isRecording: false
+    readonly property string _recordScript: Directories.recordScriptPath
 
-    // Poll slightly less frequently - recording status doesn't need sub-second updates
-    Timer {
-        id: pollTimer
-        interval: 3000
-        running: Config.ready
-        repeat: true
-        onTriggered: {
-            if (!checkProcess.running) {
-                checkProcess.running = true
-            }
+    // Read initial state once on startup; maintained locally after that
+    Process {
+        id: initCheck
+        command: ["/usr/bin/pgrep", "-x", "wf-recorder"]
+        onExited: (exitCode, exitStatus) => {
+            root.isRecording = (exitCode === 0)
         }
     }
 
-    Process {
-        id: checkProcess
-        command: ["/usr/bin/pgrep", "-x", "wf-recorder"]
-        onExited: (exitCode, exitStatus) => {
-            // pgrep returns 0 if process found, 1 if not found
-            root.isRecording = (exitCode === 0)
+    function startRecording(args: list<string>): void {
+        root.isRecording = true
+        Quickshell.execDetached([root._recordScript].concat(args))
+    }
+
+    function stopRecording(): void {
+        root.isRecording = false
+        Quickshell.execDetached(["/usr/bin/pkill", "-x", "wf-recorder"])
+    }
+
+    function toggle(args: list<string>): void {
+        if (root.isRecording) root.stopRecording()
+        else root.startRecording(args)
+    }
+
+    Component.onCompleted: {
+        if (Config.ready) initCheck.running = true
+    }
+
+    Connections {
+        target: Config
+        function onReadyChanged() {
+            if (Config.ready) initCheck.running = true
         }
     }
 }
