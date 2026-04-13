@@ -712,17 +712,18 @@ Item { // Bar content region
                             id: notificationUnreadCount
                         }
                     }
+                    // Merged connectivity dot — network + bluetooth collapsed into one
+                    // status symbol colored by the worst state across both.
                     MaterialSymbol {
+                        id: connectivityDot
+                        // "disconnected" if either is off-but-enabled; "warn" if
+                        // bluetooth unavailable but network OK is still normal.
+                        readonly property bool networkBad: !Network.ethernet && (Network.wifiStatus !== "connected")
+                        readonly property bool btBad: BluetoothStatus.available && BluetoothStatus.enabled && !BluetoothStatus.connected
+                        readonly property bool anyBad: networkBad || btBad
                         text: Network.materialSymbol
                         iconSize: Appearance.font.pixelSize.larger
-                        color: rightSidebarButton.colText
-                    }
-                    MaterialSymbol {
-                        Layout.leftMargin: indicatorsRowLayout.realSpacing
-                        visible: BluetoothStatus.available
-                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: rightSidebarButton.colText
+                        color: anyBad ? Appearance.colors.colError : rightSidebarButton.colText
                     }
                 }
             }

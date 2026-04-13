@@ -201,7 +201,7 @@ Scope {
                                     : Appearance.colors.colLayer0Border
                                 radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
-                                    : cardStyle ? Appearance.rounding.normal : Appearance.rounding.large
+                                    : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
 
                                 clip: true
                                 layer.enabled: auroraEverywhere && !inirEverywhere && !gameModeMinimal

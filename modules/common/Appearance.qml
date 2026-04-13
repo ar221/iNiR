@@ -872,7 +872,7 @@ Singleton {
         property real hyprlandGapsOut: 5
         property real mediaControlsWidth: Math.round(380 * root.fontSizeScale)
         property real mediaControlsHeight: Math.round(150 * root.fontSizeScale)
-        property real notificationPopupWidth: Math.round(410 * root.fontSizeScale)
+        property real notificationPopupWidth: Math.round(350 * root.fontSizeScale)
         property real osdWidth: Math.round(180 * root.fontSizeScale)
         property real searchWidthCollapsed: Math.round(210 * root.fontSizeScale)
         property real searchWidth: Math.round(360 * root.fontSizeScale)

@@ -107,9 +107,7 @@ Item { // Notification item area
         id: background
         width: parent.width
         anchors.left: parent.left
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-            : Appearance.rounding.small
+        radius: 4
         anchors.leftMargin: root.xOffset
 
         Behavior on anchors.leftMargin {
@@ -129,11 +127,18 @@ Item { // Notification item area
                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
                     : Appearance.colors.colLayer3) :
             "transparent"
-        border.width: (expanded && !onlyNotification && (Appearance.angelEverywhere || Appearance.auroraEverywhere || Appearance.inirEverywhere)) ? 1 : 0
-        border.color: Appearance.angelEverywhere ? Appearance.angel.colBorder
-            : Appearance.inirEverywhere ? Appearance.inir.colBorder
-            : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
-            : Appearance.colors.colLayer0Border
+        border.width: 0
+
+        // Signature accent bar — 2px, #ff1100, anchored to the left edge
+        Rectangle {
+            id: accentBar
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 2
+            color: "#ff1100"
+            visible: (expanded && !onlyNotification)
+        }
 
         implicitHeight: expanded ? (contentColumn.implicitHeight + padding * 2) : summaryRow.implicitHeight
         Behavior on implicitHeight {

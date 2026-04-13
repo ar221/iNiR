@@ -66,17 +66,13 @@ Scope {
                 right: true
             }
 
-            // Scrim de fondo: oscurece todo detrás del overview mientras está activo
+            // Scrim de fondo: oscurece todo detrás del overview mientras está activo.
+            // Hard colLayer0 at 85% opacity — soft backdrop behind the sharp radii.
+            // (True blur would need compositor-level rules; punted for now.)
             Rectangle {
                 anchors.fill: parent
                 z: -1
-                color: {
-                    const ov = Config.options?.overview ?? null
-                    const v = (ov && ov.scrimDim !== undefined) ? ov.scrimDim : 35
-                    const clamped = Math.max(0, Math.min(100, v))
-                    const a = clamped / 100
-                    return ColorUtils.transparentize(Appearance.colors.colLayer0Base, 1 - a)
-                }
+                color: ColorUtils.transparentize(Appearance.colors.colLayer0Base, 0.15)
                 opacity: GlobalStates.overviewOpen ? 1 : 0
                 visible: opacity > 0.001
 
