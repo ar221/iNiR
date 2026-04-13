@@ -8,34 +8,39 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-Rectangle {
+ColumnLayout {
     id: root
     Layout.fillWidth: true
-    implicitHeight: actionsGrid.implicitHeight + 16
+    spacing: root.compactMode ? 4 : 6
     readonly property bool compactMode: Config.options?.controlPanel?.compactMode ?? true
-    
+
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
 
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : inirEverywhere ? Appearance.inir.colLayer1
-         : auroraEverywhere ? Appearance.aurora.colSubSurface
-         : Appearance.colors.colLayer1
-    border.width: Appearance.angelEverywhere ? 0 : (inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    Rectangle {
+        id: gridCard
+        Layout.fillWidth: true
+        implicitHeight: actionsGrid.implicitHeight + (root.compactMode ? 12 : 16)
 
-    AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
+        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+            : root.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
+        color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+             : root.inirEverywhere ? Appearance.inir.colLayer1
+             : root.auroraEverywhere ? Appearance.aurora.colSubSurface
+             : Appearance.colors.colLayer1
+        border.width: Appearance.angelEverywhere ? 0 : (root.inirEverywhere ? 1 : 0)
+        border.color: Appearance.angelEverywhere ? "transparent"
+            : root.inirEverywhere ? Appearance.inir.colBorder : "transparent"
 
-    GridLayout {
-        id: actionsGrid
-        anchors.fill: parent
-        anchors.margins: root.compactMode ? 6 : 8
-        columns: 4
-        rowSpacing: root.compactMode ? 4 : 6
-        columnSpacing: root.compactMode ? 4 : 6
+        AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
+
+        GridLayout {
+            id: actionsGrid
+            anchors.fill: parent
+            anchors.margins: root.compactMode ? 6 : 8
+            columns: 4
+            rowSpacing: root.compactMode ? 4 : 6
+            columnSpacing: root.compactMode ? 4 : 6
 
         // Row 1: Audio
         ActionTile {
@@ -122,6 +127,98 @@ Rectangle {
             onClicked: {
                 GlobalStates.controlPanelOpen = false
                 GlobalStates.sessionOpen = true
+            }
+        }
+    }
+
+    // ─── Focus Mode chip row ─────────────────────────────────
+    ButtonGroup {
+        Layout.fillWidth: true
+        Layout.preferredHeight: root.compactMode ? 28 : 32
+        spacing: root.compactMode ? 3 : 4
+        color: "transparent"
+
+        Repeater {
+            model: FocusMode._modeOrder
+
+            GroupButton {
+                required property string modelData
+                required property int index
+
+                readonly property var modeProfile: FocusMode._profiles[modelData] ?? ({})
+                readonly property bool isActive: FocusMode.activeMode === modelData
+
+                toggled: isActive
+                buttonText: modeProfile.label ?? modelData
+                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                    : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+
+                implicitHeight: root.compactMode ? 28 : 32
+                horizontalPadding: root.compactMode ? 8 : 12
+                verticalPadding: 0
+                bounce: false
+
+                colBackgroundToggled: {
+                    switch (modelData) {
+                        case "focus": return Appearance.m3colors.m3primary
+                        case "gaming": return Appearance.m3colors.m3tertiary
+                        case "zen": return Appearance.m3colors.m3secondary
+                        default: return Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                            : root.inirEverywhere ? Appearance.inir.colLayer2
+                            : root.auroraEverywhere ? Appearance.aurora.colSubSurface
+                            : Appearance.colors.colLayer2
+                    }
+                }
+                colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.15)
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                    : root.inirEverywhere ? Appearance.inir.colLayer2Hover
+                    : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
+                    : Appearance.colors.colLayer2Hover
+
+                Layout.fillWidth: true
+
+                onClicked: FocusMode.setMode(modelData)
+
+                contentItem: RowLayout {
+                    spacing: 4
+
+                    MaterialSymbol {
+                        visible: modeProfile.icon !== ""
+                        text: modeProfile.icon ?? ""
+                        iconSize: root.compactMode ? 14 : 16
+                        color: isActive
+                            ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
+                                : root.inirEverywhere ? Appearance.inir.colOnPrimary
+                                : Appearance.m3colors.m3onPrimary)
+                            : (Appearance.angelEverywhere ? Appearance.angel.colText
+                                : root.inirEverywhere ? Appearance.inir.colText
+                                : Appearance.colors.colOnLayer1)
+
+                        Behavior on color {
+                            enabled: Appearance.animationsEnabled
+                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                        }
+                    }
+
+                    StyledText {
+                        text: modeProfile.label ?? modelData
+                        font.pixelSize: root.compactMode ? Appearance.font.pixelSize.smallest : Appearance.font.pixelSize.small
+                        font.weight: Font.Medium
+                        color: isActive
+                            ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
+                                : root.inirEverywhere ? Appearance.inir.colOnPrimary
+                                : Appearance.m3colors.m3onPrimary)
+                            : (Appearance.angelEverywhere ? Appearance.angel.colText
+                                : root.inirEverywhere ? Appearance.inir.colText
+                                : Appearance.colors.colOnLayer1)
+
+                        Behavior on color {
+                            enabled: Appearance.animationsEnabled
+                            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                        }
+                    }
+                }
             }
         }
     }
