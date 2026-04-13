@@ -341,8 +341,8 @@ Singleton {
         property int unsharpenmore: Math.max(0, Math.round(6 * scale))
         property int verysmall: Math.max(0, Math.round(8 * scale))
         property int small: Math.max(0, Math.round(12 * scale))
-        property int normal: Math.max(0, Math.round(17 * scale))
-        property int large: Math.max(0, Math.round(23 * scale))
+        property int normal: Math.max(0, Math.round(4 * scale))
+        property int large: Math.max(0, Math.round(8 * scale))
         property int verylarge: Math.max(0, Math.round(30 * scale))
         property int full: 9999
         property int screenRounding: large
@@ -415,7 +415,7 @@ Singleton {
 
     animationCurves: QtObject {
         readonly property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.90, 1, 1] // Default, 350ms
-        readonly property list<real> expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1.00, 1, 1] // Default, 500ms
+        readonly property list<real> expressiveDefaultSpatial: [0.22, 1, 0.36, 1, 1, 1] // Quint-out, 150ms
         readonly property list<real> expressiveSlowSpatial: [0.39, 1.29, 0.35, 0.98, 1, 1] // Default, 650ms
         readonly property list<real> expressiveEffects: [0.34, 0.80, 0.34, 1.00, 1, 1] // Default, 200ms
         readonly property list<real> emphasized: [0.05, 0, 2 / 15, 0.06, 1 / 6, 0.4, 5 / 24, 0.82, 0.25, 1, 1, 1]
@@ -427,7 +427,7 @@ Singleton {
         readonly property list<real> standardAccel: [0.3, 0, 1, 1, 1, 1]
         readonly property list<real> standardDecel: [0, 0, 0, 1, 1, 1]
         readonly property real expressiveFastSpatialDuration: 350
-        readonly property real expressiveDefaultSpatialDuration: 500
+        readonly property real expressiveDefaultSpatialDuration: 150
         readonly property real expressiveSlowSpatialDuration: 650
         readonly property real expressiveEffectsDuration: 200
     }
@@ -448,7 +448,7 @@ Singleton {
         }
 
         property QtObject elementMoveEnter: QtObject {
-            property int duration: root.calcEffectiveDuration(400)
+            property int duration: root.calcEffectiveDuration(120)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedDecel
             property int velocity: 650
@@ -462,7 +462,7 @@ Singleton {
         }
 
         property QtObject elementMoveExit: QtObject {
-            property int duration: root.calcEffectiveDuration(200)
+            property int duration: root.calcEffectiveDuration(80)
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.emphasizedAccel
             property int velocity: 650
