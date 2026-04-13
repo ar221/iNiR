@@ -346,7 +346,7 @@ Singleton {
         property int verylarge: Math.max(0, Math.round(30 * scale))
         property int full: 9999
         property int screenRounding: large
-        property int windowRounding: Math.max(0, Math.round(18 * scale))
+        property int windowRounding: Math.max(0, Math.round(8 * scale))
     }
 
     // Typography scale factor from config
