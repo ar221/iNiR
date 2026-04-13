@@ -7,6 +7,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property bool compactMode: false
+    property bool centerMode: true
     property int currentTab: Persistent.states?.timer?.tab ?? 0
     property var tabButtonList: [
         {"name": Translation.tr("Pomodoro"), "icon": "search_activity"},
