@@ -953,6 +953,21 @@
                     "icon": "code",
                     "name": "Code",
                     "cmd": "/usr/bin/code"
+                },
+                {
+                    "icon": "palette",
+                    "name": "Next Wallpaper",
+                    "cmd": "/usr/bin/qs msg -c inir wallpaper next"
+                },
+                {
+                    "icon": "center_focus_strong",
+                    "name": "Cycle Focus Mode",
+                    "cmd": "/usr/bin/qs msg -c inir focus cycle"
+                },
+                {
+                    "icon": "screenshot_monitor",
+                    "name": "Screenshot",
+                    "cmd": "/usr/bin/qs msg -c inir screenshot region"
                 }
             ]
         }
