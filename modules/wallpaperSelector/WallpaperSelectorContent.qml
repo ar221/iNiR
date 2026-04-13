@@ -113,6 +113,47 @@ MouseArea {
 
     ListModel { id: _filteredModel }
 
+    // ─── Wallpaper Engine mode ─────────────────────────────
+    property bool _weMode: false
+    property var weWallpapers: []
+    property string weCurrentId: ""
+    property bool _weLoaded: false
+
+    Process {
+        id: _weListProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => { _weListProc._buf += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0 && _weListProc._buf.length > 0) {
+                try {
+                    root.weWallpapers = JSON.parse(_weListProc._buf)
+                    const active = root.weWallpapers.find(w => w.active)
+                    root.weCurrentId = active ? active.id : ""
+                    root._weLoaded = true
+                } catch(e) { root.weWallpapers = [] }
+            }
+            _weListProc._buf = ""
+        }
+    }
+
+    function loadWEWallpapers() {
+        _weListProc._buf = ""
+        _weListProc.command = ["we-wall", "--list-json"]
+        _weListProc.running = true
+    }
+
+    function applyWEWallpaper(wallpaperId) {
+        Quickshell.execDetached(["we-wall", wallpaperId])
+        GlobalStates.wallpaperSelectorOpen = false
+    }
+
+    function stopWEWallpaper() {
+        Quickshell.execDetached(["we-wall", "--stop"])
+        root.weCurrentId = ""
+    }
+
     Process {
         id: _colorLoadProc
         property string _buf: ""
@@ -536,7 +577,7 @@ MouseArea {
 
                     GridView {
                         id: grid
-                        visible: Wallpapers.folderModel.count > 0
+                        visible: !root._weMode && Wallpapers.folderModel.count > 0
 
                         readonly property int columns: root.columns
                         readonly property int rows: Math.max(1, Math.ceil(count / columns))
@@ -618,6 +659,64 @@ MouseArea {
                         }
                     }
 
+                    // ─── Wallpaper Engine grid ──────────────────────
+                    GridView {
+                        id: weGrid
+                        visible: root._weMode
+                        anchors.fill: parent
+                        cellWidth: width / root.columns
+                        cellHeight: cellWidth / root.previewCellAspectRatio
+                        interactive: true
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        bottomMargin: extraOptions.implicitHeight
+                        ScrollBar.vertical: StyledScrollBar {}
+
+                        property int currentIndex: 0
+
+                        model: root.weWallpapers
+
+                        delegate: WEWallpaperItem {
+                            required property int index
+                            required property var modelData
+
+                            weData: modelData
+                            width: weGrid.cellWidth
+                            height: weGrid.cellHeight
+                            colBackground: (index === weGrid.currentIndex || containsMouse)
+                                ? Appearance.colors.colPrimary
+                                : (modelData.id === root.weCurrentId)
+                                    ? Appearance.colors.colSecondaryContainer
+                                    : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+                            colText: (index === weGrid.currentIndex || containsMouse)
+                                ? Appearance.colors.colOnPrimary
+                                : (modelData.id === root.weCurrentId)
+                                    ? Appearance.colors.colOnSecondaryContainer
+                                    : Appearance.colors.colOnLayer0
+
+                            onEntered: weGrid.currentIndex = index
+                            onActivated: root.applyWEWallpaper(modelData.id)
+                        }
+
+                        layer.enabled: true
+                        layer.effect: GE.OpacityMask {
+                            maskSource: Rectangle {
+                                width: gridDisplayRegion.width
+                                height: gridDisplayRegion.height
+                                radius: wallpaperGridBackground.radius
+                            }
+                        }
+                    }
+
+                    // Empty-state hint for WE mode
+                    StyledText {
+                        visible: root._weMode && root._weLoaded && root.weWallpapers.length === 0
+                        anchors.centerIn: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        color: Appearance.colors.colOnSurfaceVariant
+                        text: Translation.tr("No Wallpaper Engine wallpapers found.\nSubscribe to some via Steam Workshop, then reload.")
+                    }
+
                     Toolbar {
                         id: extraOptions
                         anchors {
@@ -654,6 +753,7 @@ MouseArea {
                         }
 
                         IconToolbarButton {
+                            visible: !root._weMode
                             implicitWidth: height
                             onClicked: {
                                 Wallpapers.randomFromCurrentFolder(root.useDarkMode);
@@ -661,6 +761,43 @@ MouseArea {
                             text: "ifl"
                             StyledToolTip {
                                 text: Translation.tr("Pick random from this folder")
+                            }
+                        }
+
+                        // ─── Wallpaper Engine toggle ──────────
+                        IconToolbarButton {
+                            implicitWidth: height
+                            toggled: root._weMode
+                            onClicked: {
+                                root._weMode = !root._weMode
+                                if (root._weMode && !root._weLoaded) {
+                                    root.loadWEWallpapers()
+                                }
+                            }
+                            text: "animation"
+                            StyledToolTip {
+                                text: Translation.tr("Toggle Wallpaper Engine library")
+                            }
+                        }
+
+                        // ─── WE mode controls (visible only in WE mode) ──
+                        IconToolbarButton {
+                            visible: root._weMode
+                            implicitWidth: height
+                            onClicked: root.loadWEWallpapers()
+                            text: "refresh"
+                            StyledToolTip {
+                                text: Translation.tr("Reload Wallpaper Engine library")
+                            }
+                        }
+
+                        IconToolbarButton {
+                            visible: root._weMode && root.weCurrentId.length > 0
+                            implicitWidth: height
+                            onClicked: root.stopWEWallpaper()
+                            text: "stop_circle"
+                            StyledToolTip {
+                                text: Translation.tr("Stop Wallpaper Engine and restore normal wallpaper")
                             }
                         }
 
