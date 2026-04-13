@@ -38,4 +38,17 @@ RowLayout {
         label: "TEMP"
         valueText: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp + "\u00B0C" : "--"
     }
+
+    CircularProgressRing {
+        Layout.alignment: Qt.AlignTop
+        visible: root.showGpu && ResourceUsage.vramTotal > 1
+        value: ResourceUsage.vramUsedPercentage
+        ringColor: Appearance.m3colors.m3error
+        icon: "memory"
+        label: "VRAM"
+        valueText: {
+            const gb = ResourceUsage.vramUsed / (1024 * 1024 * 1024)
+            return gb.toFixed(1) + " GB"
+        }
+    }
 }

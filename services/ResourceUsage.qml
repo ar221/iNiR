@@ -42,6 +42,11 @@ Singleton {
     property real diskUsed: 0
     property real diskUsedPercentage: diskTotal > 0 ? diskUsed / diskTotal : 0
 
+    // VRAM usage (bytes from sysfs)
+    property real vramTotal: 1
+    property real vramUsed: 0
+    property real vramUsedPercentage: vramTotal > 0 ? vramUsed / vramTotal : 0
+
     property string maxAvailableMemoryString: kbToGbString(ResourceUsage.memoryTotal)
     property string maxAvailableSwapString: kbToGbString(ResourceUsage.swapTotal)
     property string maxAvailableCpuString: "--"
@@ -149,6 +154,7 @@ Singleton {
 			root._initRequested = true
 			detectTempSensors.running = true
 			detectGpuUsageSource.running = true
+			detectVramPaths.running = true
 			findCpuMaxFreqProc.running = true
 		}
 		autoStopTimer.restart()
@@ -231,8 +237,20 @@ Singleton {
                 gpuUsage = 0
             }
 
+            // Parse VRAM usage (bytes from sysfs)
+            if (root._vramUsedPath && root._vramTotalPath) {
+                fileVramUsed.reload()
+                fileVramTotal.reload()
+                const vramUsedRaw = parseInt(fileVramUsed.text())
+                const vramTotalRaw = parseInt(fileVramTotal.text())
+                if (!isNaN(vramTotalRaw) && vramTotalRaw > 0) {
+                    vramTotal = vramTotalRaw
+                    vramUsed = isNaN(vramUsedRaw) ? 0 : vramUsedRaw
+                }
+            }
+
             root.updateHistories()
-            
+
             // Update disk usage
             diskProc.running = true
 	    }
@@ -251,6 +269,32 @@ Singleton {
     property string _gpuTempPath: ""
     property string _gpuUsagePath: ""
     property string _gpuUsageSource: "none"
+    property string _vramUsedPath: ""
+    property string _vramTotalPath: ""
+
+    FileView { id: fileVramUsed; path: root._vramUsedPath }
+    FileView { id: fileVramTotal; path: root._vramTotalPath }
+
+    Process {
+        id: detectVramPaths
+        command: ["/usr/bin/bash", "-c", `
+            for card in /sys/class/drm/card*; do
+                used="$card/device/mem_info_vram_used"
+                total="$card/device/mem_info_vram_total"
+                if [ -f "$used" ] && [ -f "$total" ]; then
+                    echo "used:$used"
+                    echo "total:$total"
+                    exit 0
+                fi
+            done
+        `]
+        stdout: SplitParser {
+            onRead: line => {
+                if (line.startsWith("used:")) root._vramUsedPath = line.slice(5)
+                else if (line.startsWith("total:")) root._vramTotalPath = line.slice(6)
+            }
+        }
+    }
 
     Component.onCompleted: {
         // Lazy: only start monitoring when a panel/widget requests it.
