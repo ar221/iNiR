@@ -30,20 +30,19 @@ Singleton {
     property real _lastTx: 0
     property bool _firstPoll: true
 
+    FileView {
+        id: netDevView
+        path: "/proc/net/dev"
+    }
+
     Timer {
         id: pollTimer
         interval: 2000
         running: true
         repeat: true
-        onTriggered: netProc.running = true
-    }
-
-    Process {
-        id: netProc
-        command: ["/usr/bin/cat", "/proc/net/dev"]
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => root._parseNetDev(data)
+        onTriggered: {
+            netDevView.reload();
+            root._parseNetDev(netDevView.text());
         }
     }
 
@@ -145,5 +144,8 @@ Singleton {
         return (bytesPerSec / 1073741824).toFixed(2) + " GB/s"
     }
 
-    Component.onCompleted: netProc.running = true
+    Component.onCompleted: {
+        netDevView.reload();
+        root._parseNetDev(netDevView.text());
+    }
 }
