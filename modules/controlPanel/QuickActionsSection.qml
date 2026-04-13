@@ -130,6 +130,7 @@ ColumnLayout {
             }
         }
     }
+    }
 
     // ─── Focus Mode chip row ─────────────────────────────────
     ButtonGroup {

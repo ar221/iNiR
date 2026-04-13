@@ -82,6 +82,7 @@ Singleton {
     property string defaultAiPrompts: Quickshell.shellPath("defaults/ai/prompts")
     property string userAiPrompts: FileUtils.trimFileProtocol(`${Directories.shellConfig}/ai/prompts`)
     property string userActions: FileUtils.trimFileProtocol(`${Directories.shellConfig}/actions`)
+    property string caldavEventsPath: `${Directories.stateUserPath}/caldav-events.json`
     property string aiChats: `${Directories.stateUserPath}/ai/chats`
     property string aiTranslationScriptPath: `${Directories.scriptsPath}/ai/gemini-translate.sh`
     property string recordScriptPath: `${Directories.scriptsPath}/videos/record.sh`

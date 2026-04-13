@@ -13,6 +13,7 @@ singleton Booru 1.0 Booru.qml
 BooruResponseData 1.0 BooruResponseData.qml
 singleton Brightness 1.0 Brightness.qml
 singleton ClaudeCodeProxy 1.0 ClaudeCodeProxy.qml
+singleton CalendarSync 1.0 CalendarSync.qml
 singleton Cliphist 1.0 Cliphist.qml
 singleton Contracts 1.0 Contracts.qml
 singleton CompositorService 1.0 CompositorService.qml

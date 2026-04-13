@@ -14,6 +14,9 @@ Item {
     // Emitted when a day with events is clicked, carrying the date
     signal dayWithEventsClicked(var date)
     
+    // Selected date for inline event display (null = none selected)
+    property var selectedDate: null
+
     // Trigger to force recomputation when events change
     property int _eventsTrigger: 0
     Connections {
@@ -21,6 +24,10 @@ Item {
         function onEventAdded(event) { root._eventsTrigger++ }
         function onEventRemoved(id) { root._eventsTrigger++ }
         function onEventUpdated(event) { root._eventsTrigger++ }
+    }
+    Connections {
+        target: CalendarSync
+        function onEventsChanged() { root._eventsTrigger++ }
     }
 
     // Style tokens (5-style support)
@@ -87,7 +94,7 @@ Item {
         }
         
         const targetDate = new Date(targetYear, targetMonth, day)
-        return Events.getEventsForDate(targetDate).length
+        return Events.getEventsForDate(targetDate).length + CalendarSync.getEventsForDate(targetDate).length
     }
 
     Keys.onPressed: (event) => {
@@ -243,18 +250,209 @@ Item {
                         isToday: root.calendarLayout[modelData][index].today
                         eventCount: root.getEventCountForDay(root.calendarLayout[modelData][index].day, modelData, index)
                         onClicked: {
-                            if (eventCount > 0) {
-                                const cellData = root.calendarLayout[modelData][index]
-                                const year = root.viewingDate.getFullYear()
-                                const month = root.viewingDate.getMonth()
-                                let targetMonth = month
-                                let targetYear = year
-                                if (cellData.today === -1) {
-                                    if (month === 0) { targetMonth = 11; targetYear = year - 1 }
-                                    else targetMonth = month - 1
-                                }
-                                root.dayWithEventsClicked(new Date(targetYear, targetMonth, cellData.day))
+                            const cellData = root.calendarLayout[modelData][index]
+                            const year = root.viewingDate.getFullYear()
+                            const month = root.viewingDate.getMonth()
+                            let targetMonth = month
+                            let targetYear = year
+                            if (cellData.today === -1) {
+                                if (month === 0) { targetMonth = 11; targetYear = year - 1 }
+                                else targetMonth = month - 1
                             }
+                            const clickedDate = new Date(targetYear, targetMonth, cellData.day)
+                            // Toggle: click same date again to collapse
+                            if (root.selectedDate && root.selectedDate.getTime() === clickedDate.getTime())
+                                root.selectedDate = null
+                            else
+                                root.selectedDate = clickedDate
+                            root.dayWithEventsClicked(clickedDate)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Inline events for selected date
+        DayEventsPanel {
+            visible: root.selectedDate !== null
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            date: root.selectedDate ?? new Date()
+        }
+    }
+
+    // Reset selection when navigating months
+    onMonthShiftChanged: selectedDate = null
+
+    // Inline day events panel — appears below grid when a date is clicked
+    component DayEventsPanel: ColumnLayout {
+        id: dayPanel
+        required property var date
+        spacing: 4
+
+        readonly property var localEvents: {
+            const _t = root._eventsTrigger
+            return Events.getAllEventsForDate(date)
+        }
+        readonly property var caldavEvents: {
+            const _t = root._eventsTrigger
+            return CalendarSync.getEventsForDate(date)
+        }
+        readonly property bool hasEvents: localEvents.length > 0 || caldavEvents.length > 0
+
+        // Date header
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 6
+
+            StyledText {
+                text: root.locale.toString(dayPanel.date, "ddd, d MMM")
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.weight: Font.DemiBold
+                color: root.colText
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // CalDAV sync indicator
+            StyledText {
+                visible: CalendarSync.available && CalendarSync.lastSync !== ""
+                text: "synced"
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                color: root.colTextSecondary
+                opacity: 0.6
+            }
+        }
+
+        // No events placeholder
+        StyledText {
+            visible: !dayPanel.hasEvents
+            text: Translation.tr("No events")
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            color: root.colTextSecondary
+        }
+
+        // CalDAV events
+        Repeater {
+            model: dayPanel.caldavEvents
+
+            Rectangle {
+                required property var modelData
+                required property int index
+                Layout.fillWidth: true
+                Layout.preferredHeight: caldavEventRow.implicitHeight + 8
+                radius: root.radius
+                color: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.85)
+                    : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                    : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+
+                RowLayout {
+                    id: caldavEventRow
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 6
+
+                    Rectangle {
+                        Layout.preferredWidth: 3
+                        Layout.fillHeight: true
+                        radius: 1.5
+                        color: index === 0 ? root.colPrimary
+                            : Appearance.angelEverywhere ? Appearance.angel.colSecondary
+                            : Appearance.inirEverywhere ? Appearance.inir.colSecondary
+                            : Appearance.colors.colSecondary
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: modelData.title || ""
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.weight: Font.Medium
+                            color: root.colText
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                        }
+
+                        RowLayout {
+                            spacing: 4
+                            StyledText {
+                                text: {
+                                    const t = modelData.time || ""
+                                    if (modelData.endTime)
+                                        return t + " – " + modelData.endTime
+                                    return t
+                                }
+                                font.pixelSize: Appearance.font.pixelSize.smallest
+                                color: root.colTextSecondary
+                            }
+                            StyledText {
+                                visible: (modelData.location || "") !== ""
+                                text: "· " + (modelData.location || "")
+                                font.pixelSize: Appearance.font.pixelSize.smallest
+                                color: root.colTextSecondary
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Local events
+        Repeater {
+            model: dayPanel.localEvents
+
+            Rectangle {
+                required property var modelData
+                Layout.fillWidth: true
+                Layout.preferredHeight: localEventRow.implicitHeight + 8
+                radius: root.radius
+                color: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.85)
+                    : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                    : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+
+                RowLayout {
+                    id: localEventRow
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 6
+
+                    MaterialSymbol {
+                        text: Events.getCategoryIcon(modelData.category || "general")
+                        iconSize: 14
+                        color: root.colTextSecondary
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: modelData.title || ""
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.weight: Font.Medium
+                            color: root.colText
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                        }
+
+                        StyledText {
+                            visible: (modelData.dateTime || "") !== ""
+                            text: {
+                                const d = new Date(modelData.dateTime)
+                                return d.toLocaleTimeString(root.locale, "HH:mm")
+                            }
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: root.colTextSecondary
                         }
                     }
                 }
