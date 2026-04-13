@@ -5,6 +5,11 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Wallpaper Selector Features**: Restored color filter chips (12 hue-bucket filtering with debounced analysis) and Wallpaper Engine library tab (animation-icon toggle with we-wall integration) that were lost during v2.17.4 upstream merge.
+
 ## [2.17.4] - 2026-04-05
 
 ### Added
