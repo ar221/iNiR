@@ -17,9 +17,20 @@ Singleton {
     signal eventUpdated(var event)
     signal eventTriggered(var event)
 
+    // Lazy-init flag: checkTimer only starts when a consumer calls init()
+    property bool _initialized: false
+
+    function init(): void {
+        if (_initialized) return
+        _initialized = true
+        checkTimer.start()
+        console.log("[Events] init() called, reminder checkTimer started")
+    }
+
     Component.onCompleted: {
         loadFromFile()
-        checkTimer.start()
+        // checkTimer is deferred: consumers (EventsWidget, EventsDialog) call Events.init()
+        // when they become visible for the first time.
     }
 
     FileView {

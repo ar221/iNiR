@@ -1,4 +1,5 @@
 {
+    "schemaVersion": 1,
     "ai": {
         "extraModels": [],
         "systemPrompt": "## Style\n- Use casual tone, don't be formal! Make sure you answer precisely without hallucination and prefer bullet points over walls of text.\n\n## Context (ignore when irrelevant)\n- You are a helpful sidebar assistant on a {DISTRO} Linux system\n- Desktop environment: {DE}\n- Current date & time: {DATETIME}\n- Focused app: {WINDOWCLASS}\n\n## Presentation\n- Use Markdown features in your response\n- **Bold** text to **highlight keywords**\n- Use h2 headers with emojis (e.g. `## 🐧 Linux`)\n- Bullet points preferred over long paragraphs\n",
@@ -127,7 +128,6 @@
             "enableChrome": true,
             "enableSpicetify": false,
             "enableAdwSteam": false,
-            "enablePearDesktop": true,
             "colorStrength": 1.0,
             "useBackdropForColors": false,
             "colorsOnlyMode": false,
@@ -188,7 +188,7 @@
             }
         },
         "shellScale": 1.0,
-        "iconTheme": "WhiteSur-dark",
+        "iconTheme": "",
         "dockIconTheme": ""
     },
     "apps": {
@@ -258,20 +258,20 @@
         },
         "hideWhenFullscreen": true,
         "parallax": {
-            "enable": false,
+            "enable": true,
             "axis": "vertical",
             "autoVertical": false,
             "enableSidebar": true,
             "enableWorkspace": true,
             "workspaceShift": 1.0,
             "vertical": true,
-            "zoom": 1.0,
+            "zoom": 1.07,
             "panelShift": 0.15,
             "widgetDepth": 1.2,
             "pauseDuringTransitions": true,
             "transitionSettleMs": 220,
             "widgetsFactor": 1.2,
-            "workspaceZoom": 1.0
+            "workspaceZoom": 1.07
         },
         "thumbnailPath": "",
         "wallpaperPath": "",
@@ -296,7 +296,7 @@
         },
         "transition": {
             "enable": true,
-            "type": "random",
+            "type": "crossfade",
             "direction": "right",
             "duration": 800,
             "bezier": [
@@ -570,7 +570,7 @@
         "showWallpaperSchemeChips": false
     },
     "settingsUi": {
-        "overlayMode": true,
+        "overlayMode": false,
         "overlayAppearance": {
             "scrimDim": 35,
             "backgroundOpacity": 1.0,
@@ -668,7 +668,6 @@
         "scrimDim": 100
     },
     "overview": {
-        "activeScreenOnly": false,
         "backgroundBlurEnable": true,
         "backgroundBlurRadius": 50,
         "backgroundDim": 40,
@@ -846,21 +845,13 @@
             "hideSyncBanner": false,
             "browser": "firefox",
             "cookiesPath": "",
-            "useManualCookies": false,
             "connected": false,
             "resolvedBrowserArg": "",
-            "audioQuality": "best",
-            "verbose": false,
-            "shuffleMode": false,
-            "repeatMode": 0,
             "recentSearches": [],
             "queue": [],
             "playlists": [],
             "liked": [],
             "lastLikedSync": "",
-            "upNextNotifications": true,
-            "suppressUpNextInFullscreen": true,
-            "volume": 100,
             "profile": {
                 "name": "",
                 "avatar": "",
@@ -870,18 +861,6 @@
                 "playlists": [],
                 "albums": [],
                 "liked": []
-            },
-            "resume": {
-                "videoId": "",
-                "title": "",
-                "artist": "",
-                "thumbnail": "",
-                "url": "",
-                "position": 0,
-                "wasPlaying": false,
-                "activePlaylist": [],
-                "currentIndex": -1,
-                "activePlaylistSource": ""
             }
         },
         "wallhaven": {
@@ -1057,16 +1036,10 @@
         "disableNiriAnimations": false,
         "disableReloadToasts": true,
         "disableDiscoverOverlay": true,
-        "suppressNotifications": true,
         "checkInterval": 2000,
         "minimalMode": false,
         "niriWindowListUpdateIntervalMs": 100,
         "niriWindowListUpdateIntervalMsGameMode": 500
-    },
-    "hotspot": {
-        "ssid": "iNiR Hotspot",
-        "password": "inirhotspot",
-        "band": "bg"
     },
     "reloadToasts": {
         "enable": true
@@ -1202,8 +1175,8 @@
                 "enableWorkspace": false,
                 "enableSidebar": false,
                 "workspaceShift": 1.0,
-                "workspaceZoom": 1.0,
-                "zoom": 1.0,
+                "workspaceZoom": 1.05,
+                "zoom": 1.05,
                 "autoVertical": true,
                 "vertical": false,
                 "panelShift": 0.12,
@@ -1219,7 +1192,7 @@
                     "x": 100,
                     "y": 100,
                     "dim": 55,
-                    "fontFamily": "Roboto Flex",
+                    "fontFamily": "Segoe UI Variable Display",
                     "style": "hero",
                     "timeFormat": "system",
                     "dateStyle": "long",
@@ -1244,9 +1217,6 @@
             "iconSize": 26,
             "leftAlignApps": false,
             "monochromeIcons": false,
-            "activationWatermark": {
-                "enable": true
-            },
             "desktopPeek": {
                 "hoverPeek": false,
                 "hoverDelay": 500
@@ -1260,7 +1230,6 @@
         "actionCenter": {
             "toggles": [
                 "network",
-                "hotspot",
                 "bluetooth",
                 "audio",
                 "mic",
@@ -1300,9 +1269,9 @@
         "widgetsPanel": {
             "showDateTime": true,
             "showWeather": true,
-            "showSystem": false,
+            "showSystem": true,
             "showMedia": true,
-            "showQuickActions": false,
+            "showQuickActions": true,
             "quickActions": [
                 "files",
                 "terminal",
@@ -1320,7 +1289,7 @@
             "showScreenshot": true,
             "showScreenRecord": true,
             "showSession": true,
-            "showColorScheme": false
+            "showColorScheme": true
         },
         "workspaceNames": {},
         "taskView": {
@@ -1357,7 +1326,6 @@
         "iiClipboard",
         "iiShellUpdate"
     ],
-    "knownPanels": [],
     "powerProfiles": {
         "restoreOnStart": true,
         "preferredProfile": ""

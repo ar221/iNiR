@@ -78,50 +78,32 @@ ShellRoot {
     }
 
     // Migrate enabledPanels for users upgrading from older versions
+    // Schema version 1: enabledPanels base-panel injection + waffle backdrop swap + kitty dock migration
+    readonly property int _targetSchemaVersion: 1
     property bool _migrationDone: false
     function migrateEnabledPanels() {
         if (_migrationDone) return;
         _migrationDone = true;
 
+        // Skip all migration work if config is already at the target schema version
+        if ((Config.options?.schemaVersion ?? 0) >= root._targetSchemaVersion) {
+            root._log("[Shell] Config schema v" + root._targetSchemaVersion + " current, skipping migration");
+            return;
+        }
+
+        root._log("[Shell] Running migration to schema v" + root._targetSchemaVersion);
+
         const family = Config.options?.panelFamily ?? "ii";
         let panels = [...(Config.options?.enabledPanels ?? [])];
         let changed = false;
 
-        // Only add genuinely NEW panels (from updates), not panels the user deliberately disabled.
-        // knownPanels tracks what the user has seen. If a panel is in knownPanels but not in
-        // enabledPanels, the user removed it — don't re-add.
+        // Ensure all base panels for current family are present (adds new panels from updates)
         const basePanels = root.panelFamilies[family] ?? [];
-        let known = [...(Config.options?.knownPanels ?? [])];
-        const isFirstRun = known.length === 0;
-
-        if (isFirstRun) {
-            // First boot with this logic — seed knownPanels with ALL families' panels.
-            // This prevents re-adding panels that existing users already disabled,
-            // including across family switches.
-            const allPanels = [];
-            for (const fam of root.families) {
-                for (const p of (root.panelFamilies[fam] ?? [])) {
-                    if (!allPanels.includes(p)) allPanels.push(p);
-                }
-            }
-            Config.setNestedValue("knownPanels", allPanels);
-        } else {
-            // Subsequent boots: only add panels that are new (not in knownPanels)
-            let knownChanged = false;
-            for (const panel of basePanels) {
-                if (!known.includes(panel)) {
-                    // Genuinely new panel from an update
-                    if (!panels.includes(panel)) {
-                        root._log("[Shell] Adding new panel to enabledPanels: " + panel);
-                        panels.push(panel);
-                        changed = true;
-                    }
-                    known.push(panel);
-                    knownChanged = true;
-                }
-            }
-            if (knownChanged) {
-                Config.setNestedValue("knownPanels", known);
+        for (const panel of basePanels) {
+            if (!panels.includes(panel)) {
+                root._log("[Shell] Adding new panel to enabledPanels: " + panel);
+                panels.push(panel);
+                changed = true;
             }
         }
 
@@ -148,6 +130,10 @@ ShellRoot {
 
         if (changed)
             Config.setNestedValue("enabledPanels", panels)
+
+        // Stamp the schema version so this block is skipped on future boots
+        Config.setNestedValue("schemaVersion", root._targetSchemaVersion)
+        root._log("[Shell] Migration complete, wrote schemaVersion=" + root._targetSchemaVersion);
     }
 
     // IPC for settings - overlay mode or separate window based on config
@@ -213,14 +199,14 @@ ShellRoot {
             "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard",
             "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners",
             "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar",
-            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard", "iiShellUpdate"
+            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ],
         "waffle": [
             "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wTaskView", "wLock", "wPolkit", "wSessionScreen",
             // Shared modules that work with waffle
             // Note: wAltSwitcher is always loaded when waffle is active (not in this list)
-            "iiCheatsheet", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
-            "iiRegionSelector", "iiScreenCorners", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiCheatsheet", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
+            "iiRegionSelector", "iiScreenCorners", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ]
     })
 
@@ -243,17 +229,6 @@ ShellRoot {
             if (!merged.includes(panel)) merged.push(panel)
         }
         Config.setNestedValue("enabledPanels", merged)
-
-        // Update knownPanels so the new family's panels are tracked before the user can disable them
-        const known = [...(Config.options?.knownPanels ?? [])]
-        let knownChanged = false
-        for (const panel of basePanels) {
-            if (!known.includes(panel)) {
-                known.push(panel)
-                knownChanged = true
-            }
-        }
-        if (knownChanged) Config.setNestedValue("knownPanels", known)
     }
 
     function cyclePanelFamily() {
