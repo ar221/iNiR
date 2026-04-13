@@ -31,6 +31,161 @@ MouseArea {
     readonly property string currentSelectionTarget: Wallpapers.currentSelectionTarget()
     readonly property string currentSelectionPath: Wallpapers.currentWallpaperPathForTarget(currentSelectionTarget, selectedMonitor)
 
+    // ─── Color filter system ─────────────────────────────
+    property string _colorFilter: "" // empty = no filter, or bucket name like "blue"
+    property var _colorCache: ({}) // { "/path/file.jpg": { hue, sat, lum, bucket } }
+    property bool _colorAnalysisRunning: false
+    readonly property string _colorCachePath: {
+        const xdg = Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+        return xdg + "/quickshell/wallpaper-colors.json"
+    }
+    readonly property string _colorAnalysisScript: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/colors/analyze-wallpaper-colors.py`
+
+    readonly property var _colorBuckets: [
+        { name: "red",     color: "#E53935" },
+        { name: "orange",  color: "#FB8C00" },
+        { name: "yellow",  color: "#FDD835" },
+        { name: "lime",    color: "#7CB342" },
+        { name: "green",   color: "#43A047" },
+        { name: "teal",    color: "#00897B" },
+        { name: "cyan",    color: "#00ACC1" },
+        { name: "blue",    color: "#1E88E5" },
+        { name: "indigo",  color: "#5E35B1" },
+        { name: "violet",  color: "#8E24AA" },
+        { name: "pink",    color: "#D81B60" },
+        { name: "neutral", color: "#78909C" },
+    ]
+
+    function _loadColorCache() {
+        _colorLoadProc._buf = ""
+        _colorLoadProc.command = ["cat", root._colorCachePath]
+        _colorLoadProc.running = true
+    }
+
+    function _runColorAnalysis() {
+        if (root._colorAnalysisRunning) return
+        const dir = Wallpapers.effectiveDirectory
+        if (!dir) return
+        root._colorAnalysisRunning = true
+        _colorAnalyzeProc.command = ["python3", root._colorAnalysisScript, dir, "--json-output"]
+        _colorAnalyzeProc.running = true
+    }
+
+    function _bucketCount(bucketName: string): int {
+        const dir = Wallpapers.effectiveDirectory
+        let count = 0
+        for (const path in root._colorCache) {
+            if (path.startsWith(dir + "/") && root._colorCache[path].bucket === bucketName)
+                count++
+        }
+        return count
+    }
+
+    function _rebuildFilteredModel() {
+        _filteredModel.clear()
+        if (root._colorFilter.length === 0) return
+        const src = Wallpapers.folderModel
+        const total = src.count
+        for (let i = 0; i < total; i++) {
+            const filePath = src.get(i, "filePath")
+            const fileIsDir = src.get(i, "fileIsDir")
+            // Always include directories so navigation still works
+            if (fileIsDir) {
+                _filteredModel.append({
+                    filePath: String(filePath),
+                    fileName: String(src.get(i, "fileName")),
+                    fileIsDir: true,
+                    fileUrl: String(src.get(i, "fileUrl") || src.get(i, "fileURL") || "")
+                })
+                continue
+            }
+            const entry = root._colorCache[filePath]
+            if (entry && entry.bucket === root._colorFilter) {
+                _filteredModel.append({
+                    filePath: String(filePath),
+                    fileName: String(src.get(i, "fileName")),
+                    fileIsDir: false,
+                    fileUrl: String(src.get(i, "fileUrl") || src.get(i, "fileURL") || "")
+                })
+            }
+        }
+    }
+
+    ListModel { id: _filteredModel }
+
+    Process {
+        id: _colorLoadProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => { _colorLoadProc._buf += data }
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0 && _colorLoadProc._buf.length > 0) {
+                try {
+                    root._colorCache = JSON.parse(_colorLoadProc._buf)
+                } catch(e) { root._colorCache = {} }
+            }
+            _colorLoadProc._buf = ""
+            if (root._colorFilter.length > 0) root._rebuildFilteredModel()
+        }
+    }
+
+    Process {
+        id: _colorAnalyzeProc
+        property string _buf: ""
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.startsWith("PROGRESS ")) return
+                _colorAnalyzeProc._buf += data
+            }
+        }
+        onExited: (exitCode) => {
+            root._colorAnalysisRunning = false
+            if (exitCode === 0 && _colorAnalyzeProc._buf.length > 0) {
+                try {
+                    const newData = JSON.parse(_colorAnalyzeProc._buf)
+                    root._colorCache = Object.assign({}, root._colorCache, newData)
+                } catch(e) { /* parse error, ignore */ }
+            }
+            _colorAnalyzeProc._buf = ""
+            if (root._colorFilter.length > 0) root._rebuildFilteredModel()
+        }
+    }
+
+    Timer {
+        id: _colorAnalysisDebounce
+        interval: 1000
+        onTriggered: root._runColorAnalysis()
+    }
+
+    Timer {
+        id: _filterRebuildDebounce
+        interval: 150
+        onTriggered: root._rebuildFilteredModel()
+    }
+
+    Connections {
+        target: Wallpapers
+        function onFolderChanged() {
+            _colorAnalysisDebounce.restart()
+            if (root._colorFilter.length > 0) _filterRebuildDebounce.restart()
+        }
+    }
+
+    Connections {
+        target: Wallpapers.folderModel
+        function onCountChanged() {
+            if (root._colorFilter.length > 0) _filterRebuildDebounce.restart()
+        }
+    }
+
+    // Trigger rebuild whenever _colorFilter changes (via property observer)
+    Item {
+        id: _colorFilterObserver
+        property string tracked: root._colorFilter
+        onTrackedChanged: root._rebuildFilteredModel()
+    }
+
     function syncDirectoryToCurrentSelection() {
         const currentPath = FileUtils.trimFileProtocol(String(root.currentSelectionPath ?? ""))
         const currentDir = FileUtils.parentDirectory(currentPath)
@@ -55,10 +210,12 @@ MouseArea {
                 _capturedMonitor = Hyprland.focusedMonitor?.name ?? ""
             }
         }
+        root._loadColorCache()
         Qt.callLater(() => {
             Wallpapers.searchQuery = ""
             root.syncDirectoryToCurrentSelection()
             root.updateThumbnails()
+            _colorAnalysisDebounce.restart()
         })
     }
 
@@ -414,7 +571,7 @@ MouseArea {
                             }
                         }
 
-                        model: Wallpapers.folderModel
+                        model: root._colorFilter.length > 0 ? _filteredModel : Wallpapers.folderModel
                         onModelChanged: currentIndex = 0
                         delegate: WallpaperDirectoryItem {
                             required property int index
@@ -516,6 +673,88 @@ MouseArea {
                             text: root.useDarkMode ? "dark_mode" : "light_mode"
                             StyledToolTip {
                                 text: Translation.tr("Click to toggle light/dark mode\n(applied when wallpaper is chosen)")
+                            }
+                        }
+
+                        // ─── Color filter chips ───────────────
+                        Row {
+                            id: colorDotsRow
+                            spacing: 5
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.leftMargin: 4
+
+                            MaterialSymbol {
+                                anchors.verticalCenter: parent.verticalCenter
+                                iconSize: 18
+                                text: root._colorAnalysisRunning ? "hourglass_empty" : "palette"
+                                color: Appearance.colors.colOnSurfaceVariant
+                            }
+
+                            Repeater {
+                                model: root._colorBuckets
+                                delegate: MouseArea {
+                                    required property var modelData
+                                    required property int index
+                                    property bool hovered: containsMouse
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 26
+                                    height: 26
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+
+                                    onClicked: {
+                                        if (root._colorFilter === modelData.name)
+                                            root._colorFilter = ""
+                                        else
+                                            root._colorFilter = modelData.name
+                                    }
+
+                                    Rectangle {
+                                        id: dot
+                                        anchors.centerIn: parent
+                                        width: root._colorFilter === parent.modelData.name ? 22 : (parent.containsMouse ? 20 : 16)
+                                        height: width
+                                        radius: width / 2
+                                        color: parent.modelData.color
+                                        opacity: (root._colorFilter.length === 0 || root._colorFilter === parent.modelData.name) ? 1.0 : 0.45
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: 120 }
+                                        }
+                                        Behavior on opacity {
+                                            NumberAnimation { duration: 120 }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        visible: root._colorFilter === parent.modelData.name
+                                        anchors.centerIn: parent
+                                        width: dot.width + 4
+                                        height: width
+                                        radius: width / 2
+                                        color: "transparent"
+                                        border.width: 2
+                                        border.color: Appearance.colors.colOnSurface
+                                    }
+
+                                    StyledToolTip {
+                                        text: {
+                                            const name = parent.modelData.name
+                                            const count = root._bucketCount(name)
+                                            return name.charAt(0).toUpperCase() + name.slice(1) + ` (${count})`
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        IconToolbarButton {
+                            implicitWidth: height
+                            visible: root._colorFilter.length > 0
+                            onClicked: root._colorFilter = ""
+                            text: "filter_alt_off"
+                            StyledToolTip {
+                                text: Translation.tr("Clear color filter")
                             }
                         }
 
