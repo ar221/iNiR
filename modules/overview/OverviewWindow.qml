@@ -64,7 +64,7 @@ Item { // Window
     property real bottomLeftRadius
     property real bottomRightRadius
 
-    layer.enabled: true
+    layer.enabled: root.topLeftRadius > 0 || root.topRightRadius > 0 || root.bottomLeftRadius > 0 || root.bottomRightRadius > 0
     layer.effect: OpacityMask {
         maskSource: Rectangle {
             width: root.width

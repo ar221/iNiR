@@ -31,7 +31,7 @@ Rectangle {
     color: "transparent"
     clip: true
     
-    layer.enabled: true
+    layer.enabled: root.radius > 0
     layer.effect: GE.OpacityMask {
         maskSource: Rectangle {
             width: root.width

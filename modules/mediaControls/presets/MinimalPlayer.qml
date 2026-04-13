@@ -50,11 +50,11 @@ Item {
         border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
         clip: true
         
-        layer.enabled: true
+        layer.enabled: card.radius > 0
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle { width: card.width; height: card.height; radius: card.radius }
         }
-        
+
         // Subtle visualizer at bottom
         WaveVisualizer {
             anchors.left: parent.left

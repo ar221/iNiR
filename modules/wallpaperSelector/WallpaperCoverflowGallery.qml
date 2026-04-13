@@ -836,7 +836,7 @@ Item {
                 Item {
                     id: heroClipContent
                     anchors.fill: parent
-                    layer.enabled: true
+                    layer.enabled: heroCard.radius > 0
                     layer.effect: GE.OpacityMask {
                         maskSource: Rectangle {
                             width: heroClipContent.width
@@ -1245,7 +1245,7 @@ Item {
                     Item {
                         id: thumbClipContent
                         anchors.fill: parent
-                        layer.enabled: true
+                        layer.enabled: root.panelRadius > 0
                         layer.effect: GE.OpacityMask {
                             maskSource: Rectangle {
                                 width: thumbClipContent.width

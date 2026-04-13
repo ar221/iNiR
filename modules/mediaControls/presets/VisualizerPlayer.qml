@@ -47,11 +47,11 @@ Item {
         border.color: "transparent"
         clip: true
         
-        layer.enabled: true
+        layer.enabled: card.radius > 0
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle { width: card.width; height: card.height; radius: card.radius }
         }
-        
+
         // Large visualizer as background
         WaveVisualizer {
             anchors.fill: parent

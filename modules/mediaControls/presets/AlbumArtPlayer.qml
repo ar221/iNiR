@@ -45,11 +45,11 @@ Item {
         color: "transparent"
         clip: true
         
-        layer.enabled: true
+        layer.enabled: card.radius > 0
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle { width: card.width; height: card.height; radius: card.radius }
         }
-        
+
         // Full cover art background with blur
         Image {
             anchors.fill: parent

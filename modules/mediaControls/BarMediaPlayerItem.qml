@@ -155,7 +155,7 @@ Item { // Player instance - Old style design
 
         AngelPartialBorder { targetRadius: background.radius; coverage: 0.5 }
 
-        layer.enabled: true
+        layer.enabled: background.radius > 0
         layer.effect: OpacityMask {
             maskSource: Rectangle {
                 width: background.width
@@ -257,7 +257,7 @@ Item { // Player instance - Old style design
                 radius: Appearance.rounding.verysmall
                 color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
 
-                layer.enabled: true
+                layer.enabled: artBackground.radius > 0
                 layer.effect: OpacityMask {
                     maskSource: Rectangle {
                         width: artBackground.width
