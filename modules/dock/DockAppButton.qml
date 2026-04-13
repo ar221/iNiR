@@ -79,12 +79,7 @@ DockButton {
         return 0;
     }
 
-    // Subtle highlight for active app
-    scale: appIsActive ? 1.05 : 1.0
-    Behavior on scale {
-        enabled: Appearance.animationsEnabled
-        animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-    }
+    // Active app uses indicator dots below — no scale effect needed
 
     property bool isSeparator: appToplevel.appId === "SEPARATOR"
     // Use originalAppId (preserves case) for desktop entry lookup, fallback to appId for backwards compat
@@ -397,7 +392,7 @@ DockButton {
                                    : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer0, 0.5)
 
                             Behavior on implicitWidth {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                                NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                             }
                         }
                     }

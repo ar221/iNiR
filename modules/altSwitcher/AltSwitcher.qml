@@ -880,10 +880,10 @@ Scope {
                                 font.pixelSize: iconSize
                                 font.family: Appearance.font.family.monospace
                                 opacity: previewImage.visible ? 0.7 : 1.0
-                                Behavior on opacity { NumberAnimation { duration: Appearance.calcEffectiveDuration(200) } }
+                                Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration } }
                                 color: skewSlice.isCurrent ? Appearance.colors.colPrimary : Qt.rgba(Appearance.colors.colTertiary.r, Appearance.colors.colTertiary.g, Appearance.colors.colTertiary.b, 0.5)
-                                Behavior on iconSize { NumberAnimation { duration: Appearance.calcEffectiveDuration(200); easing.type: Easing.OutQuad } }
-                                Behavior on color { ColorAnimation { duration: Appearance.calcEffectiveDuration(200) } }
+                                Behavior on iconSize { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
+                                Behavior on color { ColorAnimation { duration: Appearance.animation.elementMove.duration } }
                                 visible: !skewSlice.modelData?.icon
                             }
                             
@@ -896,8 +896,8 @@ Scope {
                                 source: skewSlice.modelData?.icon || ""
                                 opacity: previewImage.visible ? 0.7 : 1.0
                                 visible: !!skewSlice.modelData?.icon
-                                Behavior on width { NumberAnimation { duration: Appearance.calcEffectiveDuration(200); easing.type: Easing.OutQuad } }
-                                Behavior on opacity { NumberAnimation { duration: Appearance.calcEffectiveDuration(200) } }
+                                Behavior on width { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
+                                Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration } }
                             }
                         }
 
@@ -1097,21 +1097,23 @@ Scope {
                                        : Appearance.inirEverywhere ? Appearance.inir.colLayer3 
                                        : Appearance.auroraEverywhere ? Appearance.colors.colLayer2Base 
                                        : Appearance.m3colors.m3surfaceContainerHighest)
-                            scale: compactMouseArea.pressed ? 0.92 : (compactMouseArea.containsMouse && !root.isHighLoad ? 1.05 : 1.0)
-                            
-                            Behavior on color { 
+                            opacity: compactMouseArea.pressed ? 0.8 : (compactMouseArea.containsMouse && !root.isHighLoad ? 0.9 : 1.0)
+
+                            Behavior on color {
                                 enabled: !root.isHighLoad
-                                ColorAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                } 
+                                ColorAnimation {
+                                    duration: Appearance.animation.elementMove.duration
+                                    easing.type: Appearance.animation.elementMove.type
+                                    easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+                                }
                             }
-                            Behavior on scale { 
+                            Behavior on opacity {
                                 enabled: !root.isHighLoad
-                                NumberAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                } 
+                                NumberAnimation {
+                                    duration: Appearance.animation.elementMove.duration
+                                    easing.type: Appearance.animation.elementMove.type
+                                    easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+                                }
                             }
                             
                             IconImage {

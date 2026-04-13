@@ -83,7 +83,7 @@ Item {
                         iconSize: 20
                         color: Appearance.colors.colSubtext
                         rotation: root.moveExpanded ? 0 : -90
-                        Behavior on rotation { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        Behavior on rotation { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     }
                 }
             }
@@ -94,7 +94,7 @@ Item {
                 spacing: 4
                 visible: root.moveExpanded
                 opacity: root.moveExpanded ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
 
                 Repeater {
                     model: root.workspaces
@@ -187,7 +187,7 @@ Item {
                         iconSize: 20
                         color: Appearance.colors.colSubtext
                         rotation: root.utilitiesExpanded ? 0 : -90
-                        Behavior on rotation { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        Behavior on rotation { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     }
                 }
             }
@@ -200,7 +200,7 @@ Item {
                 columnSpacing: 8
                 visible: root.utilitiesExpanded
                 opacity: root.utilitiesExpanded ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
 
                 NiriAction {
                     actionIcon: "fullscreen"
@@ -248,8 +248,8 @@ Item {
         buttonRadius: Appearance.rounding.small
         colBackground: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.4)
         colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.2)
-        scale: buttonHovered ? 1.03 : 1.0
-        Behavior on scale { NumberAnimation { duration: 150 } }
+        opacity: buttonHovered ? 0.85 : 1.0
+        Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
         onClicked: niriActionProc.running = true
 
         Process { id: niriActionProc; command: ["/usr/bin/bash", "-c", parent.cmd] }

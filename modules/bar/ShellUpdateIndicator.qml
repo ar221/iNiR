@@ -43,7 +43,7 @@ MouseArea {
         width: contentRow.implicitWidth + 16
         height: contentRow.implicitHeight + 8
         radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : height / 2
-        scale: (!ShellUpdates.isUpdating && root.pressed) ? 0.93 : ((!ShellUpdates.isUpdating && root.containsMouse) ? 1.03 : 1.0)
+        opacity: (!ShellUpdates.isUpdating && root.pressed) ? 0.8 : ((!ShellUpdates.isUpdating && root.containsMouse) ? 0.9 : 1.0)
         color: {
             if (ShellUpdates.isUpdating) {
                 if (Appearance.angelEverywhere) return ColorUtils.transparentize(Appearance.angel.colPrimary, 0.92)
@@ -76,8 +76,8 @@ MouseArea {
         Behavior on color {
             animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
-        Behavior on scale {
-            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        Behavior on opacity {
+            NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
         }
     }
 

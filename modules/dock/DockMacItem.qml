@@ -53,9 +53,9 @@ Item {
     Behavior on _magnifyScale {
         enabled: Appearance.animationsEnabled
         NumberAnimation {
-            duration:      root._magnifyScale >= 1.0 ? 300 : 220
-            easing.type:   root._magnifyScale >= 1.0 ? Easing.OutBack : Easing.OutCubic
-            easing.overshoot: 0.55
+            duration:      root._magnifyScale >= 1.0 ? Appearance.animation.elementMove.duration : Appearance.animation.elementMoveExit.duration
+            easing.type:   Appearance.animation.elementMove.type
+            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
         }
     }
 
@@ -71,8 +71,9 @@ Item {
         }
         NumberAnimation {
             target: root; property: "_pulseScale"
-            to: 1.0; duration: 260
-            easing.type: Easing.OutBack; easing.overshoot: 0.5
+            to: 1.0; duration: Appearance.animation.elementMove.duration
+            easing.type: Appearance.animation.elementMove.type
+            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
         }
     }
 
@@ -130,7 +131,7 @@ Item {
 
                 Behavior on implicitWidth {
                     enabled: Appearance.animationsEnabled
-                    NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                    NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
                 }
                 Behavior on color {
                     enabled: Appearance.animationsEnabled

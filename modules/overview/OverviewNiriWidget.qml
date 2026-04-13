@@ -719,11 +719,12 @@ Item {
                             asynchronous: true
                             fillMode: Image.PreserveAspectFit
                             visible: !windowPreview.visible
-                            scale: windowItem.hovered ? 1.08 : 1.0
-                            Behavior on scale {
+                            opacity: windowItem.hovered ? 0.85 : 1.0
+                            Behavior on opacity {
                                 NumberAnimation {
-                                    duration: 120
-                                    easing.type: Easing.InOutQuad
+                                    duration: Appearance.animation.elementMoveEnter.duration
+                                    easing.type: Appearance.animation.elementMoveEnter.type
+                                    easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
                                 }
                             }
                         }

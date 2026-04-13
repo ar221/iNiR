@@ -122,7 +122,7 @@ MouseArea {
                 fill: 1
                 scale: root.isSelected ? 1 : 0
                 Behavior on scale {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+                    NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
             }
         }

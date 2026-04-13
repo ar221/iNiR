@@ -137,9 +137,10 @@ Item {
 
                     Behavior on scale {
                         enabled: Appearance.animationsEnabled
-                        NumberAnimation { 
+                        NumberAnimation {
                             duration: Appearance.animation.elementMoveFast.duration
-                            easing.type: Easing.OutBack
+                            easing.type: Appearance.animation.elementMoveFast.type
+                            easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                         }
                     }
                     Behavior on opacity {

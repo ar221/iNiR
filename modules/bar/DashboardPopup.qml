@@ -143,8 +143,8 @@ LazyLoader {
 
             ParallelAnimation {
                 id: entryAnim
-                NumberAnimation { target: popupBackground; property: "opacity"; to: 1; duration: 250; easing.type: Easing.OutCubic }
-                NumberAnimation { target: popupBackground; property: "scale"; to: 1; duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+                NumberAnimation { target: popupBackground; property: "opacity"; to: 1; duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
+                NumberAnimation { target: popupBackground; property: "scale"; to: 1; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 
             ParallelAnimation {
@@ -287,8 +287,8 @@ LazyLoader {
                             const item = tabRepeater.itemAt(tabStack.currentIndex)
                             return item ? item.x + (item.width - width) / 2 : 0
                         }
-                        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.InOutCubic } }
-                        Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.InOutCubic } }
+                        Behavior on x { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
+                        Behavior on width { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     }
                 }
 

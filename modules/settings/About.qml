@@ -193,8 +193,8 @@ ContentPage {
                             PropertyAction { target: _avatarFxLabel; property: "visible"; value: true }
                             PropertyAction { target: _avatarFxLabel; property: "scale"; value: 0 }
                             PropertyAction { target: _avatarFxLabel; property: "opacity"; value: 1 }
-                            NumberAnimation { target: _avatarFxLabel; property: "scale"; to: 1.5; duration: 300; easing.type: Easing.OutBack }
-                            NumberAnimation { target: _avatarFxLabel; property: "scale"; to: 1.0; duration: 200 }
+                            NumberAnimation { target: _avatarFxLabel; property: "scale"; to: 1.5; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
+                            NumberAnimation { target: _avatarFxLabel; property: "scale"; to: 1.0; duration: Appearance.animation.elementMove.duration }
                             PauseAnimation { duration: 800 }
                             ParallelAnimation {
                                 NumberAnimation { target: _avatarFxLabel; property: "opacity"; to: 0; duration: 400 }

@@ -551,19 +551,12 @@ Item {
             // Elevated z-order when dragging
             z: isBeingDragged ? 100 : 0
 
-            // Scale effect when being dragged
-            // Merge active-app highlight scale with drag elevation scale
-            // (overrides the base DockAppButton scale property)
-            scale: isBeingDragged ? 1.08
-                 : appToplevel.toplevels.find(t => t.activated === true) !== undefined ? 1.05
-                 : 1.0
-
-            // Dragged item lifts slightly; others dim just enough to signal drag mode
-            opacity: isBeingDragged ? 0.8
+            // Dragged item dims; others dim just enough to signal drag mode
+            opacity: isBeingDragged ? 0.7
                    : root.dragActive ? 0.85 : 1.0
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 
             // ─── Insertion line at drop gap ───────────────────────────

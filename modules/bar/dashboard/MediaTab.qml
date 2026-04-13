@@ -109,7 +109,7 @@ Item {
                 // Track background
                 Rectangle {
                     anchors.fill: parent
-                    radius: 3
+                    radius: Appearance.rounding.unsharpen
                     color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
                 }
 
@@ -117,11 +117,11 @@ Item {
                 Rectangle {
                     width: parent.width * parent.fraction
                     height: parent.height
-                    radius: 3
+                    radius: Appearance.rounding.unsharpen
                     color: Appearance.colors.colPrimary
 
                     Behavior on width {
-                        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                     }
                 }
 
@@ -175,8 +175,8 @@ Item {
                     colBackground: "transparent"
                     colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
                     onClicked: MprisController.activePlayer?.previous()
-                    scale: buttonHovered ? 1.1 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 150 } }
+                    opacity: buttonHovered ? 0.85 : 1.0
+                    Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: "skip_previous"
@@ -191,8 +191,8 @@ Item {
                     colBackground: Appearance.colors.colPrimary
                     colBackgroundHover: Qt.lighter(Appearance.colors.colPrimary, 1.1)
                     onClicked: MprisController.activePlayer?.togglePlaying()
-                    scale: buttonHovered ? 1.1 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 150 } }
+                    opacity: buttonHovered ? 0.85 : 1.0
+                    Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: MprisController.activePlayer?.isPlaying ? "pause" : "play_arrow"
@@ -207,8 +207,8 @@ Item {
                     colBackground: "transparent"
                     colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
                     onClicked: MprisController.activePlayer?.next()
-                    scale: buttonHovered ? 1.1 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 150 } }
+                    opacity: buttonHovered ? 0.85 : 1.0
+                    Behavior on opacity { NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve } }
                     contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: "skip_next"
