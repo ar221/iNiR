@@ -10,68 +10,6 @@ import qs.modules.common
 Singleton {
     id: root
 
-    property bool _resumeRestored: false
-
-    function _persistResume(): void {
-        if (!root.currentVideoId) return
-        Config.setNestedValues({
-            'sidebar.ytmusic.resume.videoId': root.currentVideoId,
-            'sidebar.ytmusic.resume.title': root.currentTitle,
-            'sidebar.ytmusic.resume.artist': root.currentArtist,
-            'sidebar.ytmusic.resume.thumbnail': root.currentThumbnail,
-            'sidebar.ytmusic.resume.url': root.currentUrl,
-            'sidebar.ytmusic.resume.position': root.currentPosition,
-            'sidebar.ytmusic.resume.wasPlaying': root.isPlaying,
-            'sidebar.ytmusic.resume.activePlaylist': root.activePlaylist,
-            'sidebar.ytmusic.resume.currentIndex': root.currentIndex,
-            'sidebar.ytmusic.resume.activePlaylistSource': root.activePlaylistSource
-        })
-    }
-
-    function _clearResume(): void {
-        Config.setNestedValues({
-            'sidebar.ytmusic.resume.videoId': "",
-            'sidebar.ytmusic.resume.title': "",
-            'sidebar.ytmusic.resume.artist': "",
-            'sidebar.ytmusic.resume.thumbnail': "",
-            'sidebar.ytmusic.resume.url': "",
-            'sidebar.ytmusic.resume.position': 0,
-            'sidebar.ytmusic.resume.wasPlaying': false,
-            'sidebar.ytmusic.resume.activePlaylist': [],
-            'sidebar.ytmusic.resume.currentIndex': -1,
-            'sidebar.ytmusic.resume.activePlaylistSource': ""
-        })
-    }
-
-    Timer {
-        id: _resumeSaveTimer
-        interval: 5000
-        repeat: true
-        running: root.currentVideoId !== ""
-        onTriggered: root._persistResume()
-    }
-
-    Component.onDestruction: {
-        if (root.currentVideoId) {
-            root._persistResume()
-            Config.flushWrites()
-        }
-        _playProc.running = false
-        _killOrphanedMpvProc.running = true
-    }
-
-    Timer {
-        id: _resumeSeekTimer
-        interval: 1500
-        repeat: false
-        property real _targetPosition: 0
-        onTriggered: {
-            if (_resumeSeekTimer._targetPosition > 3) {
-                root.seek(_resumeSeekTimer._targetPosition)
-            }
-        }
-    }
-
     property bool available: false
     property bool enabled: Config.options?.sidebar?.ytmusic?.enable ?? false
     property bool searching: false
@@ -94,25 +32,11 @@ Singleton {
     property bool canSeek: _mpvPlayer?.canSeek ?? true
     property real volume: _mpvPlayer?.volume ?? (_savedVolume / 100)
     
-    property bool shuffleMode: Config.options?.sidebar?.ytmusic?.shuffleMode ?? false
-    property int repeatMode: Config.options?.sidebar?.ytmusic?.repeatMode ?? 0
-    readonly property bool upNextNotificationsEnabled: Config.options?.sidebar?.ytmusic?.upNextNotifications ?? true
-    readonly property bool suppressUpNextInFullscreen: Config.options?.sidebar?.ytmusic?.suppressUpNextInFullscreen ?? true
-    
-    property string audioQuality: Config.options?.sidebar?.ytmusic?.audioQuality ?? "best"
-    onAudioQualityChanged: Config.setNestedValue('sidebar.ytmusic.audioQuality', audioQuality)
+    property bool shuffleMode: _stateAdapter?.shuffleMode ?? false
+    property int repeatMode: _stateAdapter?.repeatMode ?? 0
 
-    // Maps audioQuality setting to yt-dlp format string for mpv's --ytdl-format
-    readonly property string _ytdlFormat: {
-        switch (root.audioQuality) {
-            case "low": return "worstaudio"
-            case "medium": return "bestaudio[abr<=128]/bestaudio"
-            default: return "bestaudio"
-        }
-    }
-
-    onShuffleModeChanged: Config.setNestedValue('sidebar.ytmusic.shuffleMode', shuffleMode)
-    onRepeatModeChanged: Config.setNestedValue('sidebar.ytmusic.repeatMode', repeatMode)
+    onShuffleModeChanged: if (_stateReady) _setStateValue('shuffleMode', shuffleMode)
+    onRepeatModeChanged: if (_stateReady) _setStateValue('repeatMode', repeatMode)
     
     property var searchResults: []
     property var recentSearches: []
@@ -126,8 +50,7 @@ Singleton {
     property int currentIndex: -1
     property string activePlaylistSource: ""
     
-    // currentArtistInfo removed — was declared but never populated.
-    // Artist header UI in YtMusicView was dead code.
+    property var currentArtistInfo: null
     
     property string userName: ""
     property string userAvatar: ""
@@ -138,13 +61,90 @@ Singleton {
     property string googleError: ""
     property string googleBrowser: "firefox"
     property string customCookiesPath: ""
-    // True when user manually provided a cookies.txt (vs auto-detected browser)
-    property bool _useManualCookies: false
     property list<string> detectedBrowsers: []
     property var ytMusicPlaylists: []
     property string defaultBrowser: ""
     property bool autoConnectAttempted: false
     property bool autoConnectEnabled: Config.options?.sidebar?.ytmusic?.autoConnect ?? true
+
+    // ── YtMusic Runtime State ────────────────────────────────────────────────
+    // Separate JSON file to avoid triggering Config.configChanged (and its 9
+    // listeners including ThemeService signature recomputation) on every queue
+    // update, shuffle toggle, or liked-songs sync.
+    // Path: ~/.config/illogical-impulse/ytmusic-state.json
+    // ─────────────────────────────────────────────────────────────────────────
+    property bool _stateReady: false
+
+    function _setStateValue(key, value) {
+        if (!_stateAdapter) return
+        const existing = _stateAdapter[key]
+        if (existing === value) return
+        if (typeof value === "object" && value !== null) {
+            try { if (JSON.stringify(existing) === JSON.stringify(value)) return } catch(e) {}
+        }
+        _stateAdapter[key] = value
+        _stateWriteTimer.restart()
+    }
+
+    Timer {
+        id: _stateWriteTimer
+        interval: 50
+        repeat: false
+        onTriggered: _stateFileView.writeAdapter()
+    }
+
+    Timer {
+        id: _stateReloadTimer
+        interval: 50
+        repeat: false
+        onTriggered: _stateFileView.reload()
+    }
+
+    FileView {
+        id: _stateFileView
+        path: `${Directories.shellConfig}/ytmusic-state.json`
+        watchChanges: false  // Only YtMusic writes this file; no need to watch for external changes
+        onFileChanged: _stateReloadTimer.restart()
+        onAdapterUpdated: _stateWriteTimer.restart()
+        onLoaded: {
+            root._stateReady = true
+            root._log("[YtMusic] State file loaded from", _stateFileView.path)
+            root._maybeLoadData()
+        }
+        onLoadFailed: error => {
+            if (error == FileViewError.FileNotFound) {
+                root._log("[YtMusic] State file not found, will create on first write.")
+                const dir = _stateFileView.path.substring(0, _stateFileView.path.lastIndexOf('/'))
+                Quickshell.execDetached(["/usr/bin/mkdir", "-p", dir])
+            }
+            root._stateReady = true
+            root._maybeLoadData()
+        }
+
+        JsonAdapter {
+            id: _stateAdapter
+            // Playback mode state (hot-path: written on every shuffle/repeat toggle)
+            property bool shuffleMode: false
+            property int repeatMode: 0
+            // Session/connection state
+            property bool connected: false
+            property string resolvedBrowserArg: ""
+            property string browser: "firefox"
+            property string cookiesPath: ""
+            property JsonObject profile: JsonObject {
+                property string name: ""
+                property string avatar: ""
+                property string url: ""
+            }
+            // Library state (potentially large)
+            property list<string> recentSearches: []
+            property list<var> queue: []
+            property list<var> playlists: []
+            property list<var> liked: []
+            property string lastLikedSync: ""
+        }
+    }
+    // ── End YtMusic Runtime State ────────────────────────────────────────────
     
     // OAuth state
     property bool oauthConfigured: false
@@ -162,17 +162,17 @@ Singleton {
     readonly property int maxSearchResults: 30
     
     readonly property var browserInfo: ({
-        "firefox": { name: "Firefox", icon: "local_fire_department", configPath: "~/.mozilla/firefox" },
-        "chrome": { name: "Chrome", icon: "public", configPath: "~/.config/google-chrome" },
-        "chromium": { name: "Chromium", icon: "public", configPath: "~/.config/chromium" },
-        "brave": { name: "Brave", icon: "shield", configPath: "~/.config/BraveSoftware" },
-        "vivaldi": { name: "Vivaldi", icon: "music_note", configPath: "~/.config/vivaldi" },
-        "opera": { name: "Opera", icon: "radio_button_checked", configPath: "~/.config/opera" },
-        "edge": { name: "Edge", icon: "diamond", configPath: "~/.config/microsoft-edge" },
-        "zen": { name: "Zen", icon: "self_improvement", configPath: "~/.zen" },
-        "librewolf": { name: "LibreWolf", icon: "pets", configPath: "~/.librewolf" },
-        "floorp": { name: "Floorp", icon: "waves", configPath: "~/.floorp" },
-        "waterfox": { name: "Waterfox", icon: "water_drop", configPath: "~/.waterfox" }
+        "firefox": { name: "Firefox", icon: "🦊", configPath: "~/.mozilla/firefox" },
+        "chrome": { name: "Chrome", icon: "🌐", configPath: "~/.config/google-chrome" },
+        "chromium": { name: "Chromium", icon: "🔵", configPath: "~/.config/chromium" },
+        "brave": { name: "Brave", icon: "🦁", configPath: "~/.config/BraveSoftware" },
+        "vivaldi": { name: "Vivaldi", icon: "🎼", configPath: "~/.config/vivaldi" },
+        "opera": { name: "Opera", icon: "🔴", configPath: "~/.config/opera" },
+        "edge": { name: "Edge", icon: "🔷", configPath: "~/.config/microsoft-edge" },
+        "zen": { name: "Zen", icon: "☯️", configPath: "~/.zen" },
+        "librewolf": { name: "LibreWolf", icon: "🐺", configPath: "~/.librewolf" },
+        "floorp": { name: "Floorp", icon: "🌊", configPath: "~/.floorp" },
+        "waterfox": { name: "Waterfox", icon: "💧", configPath: "~/.waterfox" }
     })
 
     property MprisPlayer _mpvPlayer: null
@@ -278,23 +278,15 @@ Singleton {
     function _syncFromMpvPlayer(player): void {
         if (!player) return
 
+        const title = player.trackTitle ?? ""
+        const artist = player.trackArtist ?? ""
         const url = player.metadata?.["xesam:url"] ?? ""
         const art = player.trackArtUrl ?? ""
         const pos = player.position ?? 0
         const len = player.length ?? 0
 
-        // Don't sync title/artist from MPRIS — we set them ourselves in _playInternal
-        // and --force-media-title feeds back a concatenated "Title - Artist" string
-        // which overwrites currentTitle, causing exponential title growth.
-        // Only sync title/artist if we have nothing (e.g. picking up an orphaned player).
-        if (!root.currentTitle) {
-            const title = player.trackTitle ?? ""
-            if (title) root.currentTitle = title
-        }
-        if (!root.currentArtist) {
-            const artist = player.trackArtist ?? ""
-            if (artist) root.currentArtist = artist
-        }
+        if (title) root.currentTitle = title
+        if (artist) root.currentArtist = artist
         if (url) root.currentUrl = url
 
         const vid = root._extractVideoId(url)
@@ -309,42 +301,26 @@ Singleton {
         if (pos >= 0) root.currentPosition = pos
     }
     
-    Component.onCompleted: {
-        // Kill any mpv orphans from previous sessions before doing anything else
-        _killOrphanedMpvProc.running = true
+    // _loadData() is deferred until the state file has loaded to avoid reading
+    // stale JsonAdapter defaults. Called from _stateFileView.onLoaded / onLoadFailed
+    // via _maybeLoadData() (QML doesn't auto-generate change handlers for
+    // underscore-prefixed properties).
+    property bool _loadDataDone: false
+    function _maybeLoadData() {
+        if (_stateReady && !_loadDataDone) {
+            _loadDataDone = true
+            _loadData()
+        }
+    }
 
+    Component.onCompleted: {
         _checkAvailability.running = true
         _checkMpvMpris.running = true
         _detectDefaultBrowserProc.running = true
         _detectBrowsersProc.running = true
-        _loadData()
+        // _loadData() is called via onStateReadyChanged once the state file loads
         _findMpvPlayer()
         checkOAuth()
-
-        // Restore previous playback session if applicable.
-        if (!root._resumeRestored) {
-            root._resumeRestored = true
-            const r = Config.options?.sidebar?.ytmusic?.resume
-            if (r?.videoId && r.wasPlaying && !root.currentVideoId) {
-                const item = {
-                    videoId: r.videoId,
-                    title: r.title ?? "",
-                    artist: r.artist ?? "",
-                    thumbnail: r.thumbnail ?? "",
-                    url: r.url ?? ""
-                }
-                const playlist = r.activePlaylist ?? []
-                const idx = r.currentIndex ?? 0
-                const src = r.activePlaylistSource ?? "single"
-                if (playlist.length > 0 && idx >= 0 && idx < playlist.length) {
-                    root.playFromPlaylist(playlist, idx, src)
-                } else {
-                    root.play(item)
-                }
-                _resumeSeekTimer._targetPosition = r.position ?? 0
-                _resumeSeekTimer.start()
-            }
-        }
     }
 
     Timer {
@@ -355,22 +331,19 @@ Singleton {
             if (root._mpvPlayer) {
                 root.currentPosition = root._mpvPlayer.position
                 root._ipcPaused = !root._mpvPlayer.isPlaying
-            } else if (!root._userInitiatedPlay) {
+            } else {
                 _ipcQueryProc.running = true
                 _ipcPauseQueryProc.running = true
             }
 
-            // Don't query EOF while a new play is pending — the old socket
-            // would return stale eof-reached=true and cause double-advance.
-            if (!root._userInitiatedPlay)
-                _ipcEofQueryProc.running = true
+            _ipcEofQueryProc.running = true
 
             // Covers keep-open style endings where mpv doesn't exit,
             // so onExited never fires but eof-reached becomes true.
             // Also guard against stale EOF from old mpv when user initiated a new play.
             if (root._ipcEofReached && !root._autoAdvanceTriggered && !root._userInitiatedPlay && root.currentVideoId !== "") {
                 root._autoAdvanceTriggered = true
-                root.playNext(true)
+                root.playNext()
             }
         }
     }
@@ -433,12 +406,15 @@ Singleton {
         root.error = ""
         root.searching = true
         root.searchResults = []
+        root.currentArtistInfo = null
         _searchQuery = query.trim()
         _searchProc.running = true
         _addToRecentSearches(query.trim())
     }
     
-    // clearArtistInfo() removed — currentArtistInfo was dead code
+    function clearArtistInfo(): void {
+        root.currentArtistInfo = null
+    }
 
     property var _pendingItem: null
     property real _fadeVolume: 1.0
@@ -465,7 +441,7 @@ Singleton {
         root._playUrl = root.currentUrl
         root._pendingItem = item
         
-        root._stopMpv()
+        _stopProc.running = true
         _playDelayTimer.restart()
     }
     
@@ -528,8 +504,7 @@ Singleton {
 
     function stop(): void {
         _playProc.running = false
-        _killOrphanedMpvProc.running = true // kill any orphaned mpv too
-        _stopProc.running = true  // clean up socket
+        _stopProc.running = true
         _playDelayTimer.stop()
         root.loading = false
         root._autoAdvanceTriggered = false
@@ -544,7 +519,6 @@ Singleton {
         root.currentPosition = 0
         root.activePlaylist = []
         root.currentIndex = -1
-        root._clearResume()
     }
 
     function _didTrackEndNaturally(code: int, stderrText: string): bool {
@@ -588,7 +562,6 @@ Singleton {
     function setVolume(vol): void {
         const clamped = Math.max(0, Math.min(1, vol))
         root._savedVolume = Math.round(clamped * 100)
-        Config.setNestedValue("sidebar.ytmusic.volume", root._savedVolume)
         if (root._mpvPlayer) {
             root._mpvPlayer.volume = clamped
         } else {
@@ -601,7 +574,7 @@ Singleton {
     }
     
     property real _ipcVolume: 1.0
-    property int _savedVolume: Config.options?.sidebar?.ytmusic?.volume ?? 100
+    property int _savedVolume: 100
 
     function toggleShuffle(): void {
         root.shuffleMode = !root.shuffleMode
@@ -611,35 +584,7 @@ Singleton {
         root.repeatMode = (root.repeatMode + 1) % 3
     }
 
-    function _shouldNotifyUpcomingTrack(): bool {
-        if (!root.upNextNotificationsEnabled) return false
-        if (Config.options?.notifications?.silent ?? false) return false
-        if (root.suppressUpNextInFullscreen && (GameMode.active || GameMode.hasAnyFullscreenWindow)) return false
-        return true
-    }
-
-    function _notifyUpcomingTrack(item): void {
-        if (!item) return
-        if (!root._shouldNotifyUpcomingTrack()) return
-
-        const title = String(item.title ?? "").trim()
-        if (!title) return
-        const artist = String(item.artist ?? "").trim()
-        const body = artist.length > 0 ? `${title} - ${artist}` : title
-
-        Quickshell.execDetached([
-            "/usr/bin/notify-send",
-            Translation.tr("Up Next"),
-            body,
-            "-a", "YtMusic",
-            "-i", "audio-x-generic",
-            "-h", "int:transient:1",
-            "-t", "4000"
-        ])
-    }
-
-    function playNext(notifyUpcoming): void {
-        notifyUpcoming = (notifyUpcoming === true)
+    function playNext(): void {
         root._log("[YtMusic] playNext called. activePlaylist.length=" + activePlaylist.length + " currentIndex=" + currentIndex + " source=" + activePlaylistSource)
         
         if (root.repeatMode === 1 && root.currentVideoId) {
@@ -659,8 +604,6 @@ Singleton {
             
             if (nextIndex >= root.activePlaylist.length) {
                 if (root.queue.length > 0) {
-                    if (notifyUpcoming)
-                        root._notifyUpcomingTrack(root.queue[0])
                     playFromQueue(0)
                     return
                 }
@@ -671,17 +614,12 @@ Singleton {
                 }
             }
             
-            const nextItem = root.activePlaylist[nextIndex]
-            if (notifyUpcoming)
-                root._notifyUpcomingTrack(nextItem)
             root.currentIndex = nextIndex
-            _playInternal(nextItem)
+            _playInternal(root.activePlaylist[nextIndex])
             return
         }
         
         if (root.queue.length > 0) {
-            if (notifyUpcoming)
-                root._notifyUpcomingTrack(root.queue[0])
             playFromQueue(0)
         }
     }
@@ -805,7 +743,7 @@ Singleton {
         })
         if (liked.length > root.maxLikedSongs) liked = liked.slice(0, root.maxLikedSongs)
         root.likedSongs = liked
-        Config.setNestedValue('sidebar.ytmusic.liked', root.likedSongs)
+        root._setStateValue('liked', root.likedSongs)
         // Send real like to YouTube via OAuth
         if (root.oauthConfigured) {
             _rateLikeProc._videoId = root.currentVideoId
@@ -819,7 +757,7 @@ Singleton {
         let liked = [...root.likedSongs]
         liked.splice(idx, 1)
         root.likedSongs = liked
-        Config.setNestedValue('sidebar.ytmusic.liked', root.likedSongs)
+        root._setStateValue('liked', root.likedSongs)
         // Send real unlike to YouTube via OAuth
         if (root.oauthConfigured) {
             _rateUnlikeProc._videoId = videoId
@@ -976,20 +914,16 @@ Singleton {
         root.googleError = ""
         root.googleChecking = true
         root._resolvedBrowserArg = ""
-        root._useManualCookies = false
-        Config.setNestedValue('sidebar.ytmusic.browser', root.googleBrowser)
-        Config.setNestedValue('sidebar.ytmusic.useManualCookies', false)
+        root._setStateValue('browser', root.googleBrowser)
         _checkGoogleConnection()
     }
 
     function setCustomCookiesPath(path): void {
         if (!path) return
         root.customCookiesPath = path
-        root._useManualCookies = true
         root.googleError = ""
         root.googleChecking = true
-        Config.setNestedValue('sidebar.ytmusic.cookiesPath', path)
-        Config.setNestedValue('sidebar.ytmusic.useManualCookies', true)
+        root._setStateValue('cookiesPath', path)
         _checkGoogleConnection()
     }
 
@@ -1003,9 +937,9 @@ Singleton {
         root.userName = ""
         root.userAvatar = ""
         root.userChannelUrl = ""
-        Config.setNestedValue('sidebar.ytmusic.connected', false)
-        Config.setNestedValue('sidebar.ytmusic.resolvedBrowserArg', "")
-        Config.setNestedValue('sidebar.ytmusic.profile', { name: "", avatar: "", url: "" })
+        root._setStateValue('connected', false)
+        root._setStateValue('resolvedBrowserArg', "")
+        root._setStateValue('profile', { name: "", avatar: "", url: "" })
         // Delete stale cookie file
         _deleteCookiesProc.running = true
     }
@@ -1113,9 +1047,9 @@ print("")
                 root.googleConnected = true
                 root.googleError = ""
                 root.googleChecking = false
-                Config.setNestedValue('sidebar.ytmusic.browser', root.googleBrowser)
-                Config.setNestedValue('sidebar.ytmusic.connected', true)
-                Config.setNestedValue('sidebar.ytmusic.resolvedBrowserArg', root._resolvedBrowserArg)
+                root._setStateValue('browser', root.googleBrowser)
+                root._setStateValue('connected', true)
+                root._setStateValue('resolvedBrowserArg', root._resolvedBrowserArg)
                 root._log("[YtMusic] QuickConnect succeeded with:", root._browserArgForYtdlp)
                 // Export static cookie file for mpv
                 _exportCookiesProc.running = true
@@ -1179,7 +1113,7 @@ print("")
     }
     
     function _persistProfile(): void {
-        Config.setNestedValue('sidebar.ytmusic.profile', {
+        root._setStateValue('profile', {
             name: root.userName,
             avatar: root.userAvatar,
             url: root.userChannelUrl
@@ -1238,8 +1172,8 @@ print("")
             if (code === 0 && _fetchLikedProc.newLiked.length > 0) {
                 root.likedSongs = _fetchLikedProc.newLiked
                 root.lastLikedSync = new Date().toLocaleString(Qt.locale(), "yyyy-MM-dd hh:mm")
-                Config.setNestedValue('sidebar.ytmusic.liked', root.likedSongs)
-                Config.setNestedValue('sidebar.ytmusic.lastLikedSync', root.lastLikedSync)
+                root._setStateValue('liked', root.likedSongs)
+                root._setStateValue('lastLikedSync', root.lastLikedSync)
             } else {
                 // Error or empty result — try YouTube LL fallback
                 _fetchLikedFallbackProc.running = true
@@ -1290,8 +1224,8 @@ print("")
             if (code === 0 && _fetchLikedFallbackProc.newLiked.length > 0) {
                 root.likedSongs = _fetchLikedFallbackProc.newLiked
                 root.lastLikedSync = new Date().toLocaleString(Qt.locale(), "yyyy-MM-dd hh:mm")
-                Config.setNestedValue('sidebar.ytmusic.liked', root.likedSongs)
-                Config.setNestedValue('sidebar.ytmusic.lastLikedSync', root.lastLikedSync)
+                root._setStateValue('liked', root.likedSongs)
+                root._setStateValue('lastLikedSync', root.lastLikedSync)
             }
         }
     }
@@ -1326,8 +1260,8 @@ print("")
             if (_fetchLikedOAuthProc._items.length > 0) {
                 root.likedSongs = _fetchLikedOAuthProc._items
                 root.lastLikedSync = new Date().toLocaleString(Qt.locale(), "yyyy-MM-dd hh:mm")
-                Config.setNestedValue('sidebar.ytmusic.liked', root.likedSongs)
-                Config.setNestedValue('sidebar.ytmusic.lastLikedSync', root.lastLikedSync)
+                root._setStateValue('liked', root.likedSongs)
+                root._setStateValue('lastLikedSync', root.lastLikedSync)
                 root.syncingLiked = false
             } else if (root.googleConnected) {
                 // OAuth returned empty or failed — fallback to cookie method
@@ -1377,17 +1311,16 @@ print("")
     readonly property bool _browserArgReady: root._resolvedBrowserArg !== "" || !root._firefoxForks.includes(root.googleBrowser)
 
     // ALWAYS use --cookies-from-browser for yt-dlp (fresh cookies, never stale)
-    // Unless user manually provided a cookies.txt file
     readonly property string _browserArgForYtdlp: root._resolvedBrowserArg || root.googleBrowser
 
-    property var _cookieArgs: root._useManualCookies && root.customCookiesPath
-        ? ["--cookies", root.customCookiesPath, "--js-runtimes", "node", "--remote-components", "ejs:github"]
-        : ["--cookies-from-browser", root._browserArgForYtdlp, "--js-runtimes", "node", "--remote-components", "ejs:github"]
+    property var _cookieArgs: [
+        "--cookies-from-browser", root._browserArgForYtdlp,
+        "--js-runtimes", "node",
+        "--remote-components", "ejs:github"
+    ]
 
-    // Static cookie file — used by mpv (which can't use --cookies-from-browser)
-    // When user provides a manual cookies file, use that instead of the auto-exported one
-    readonly property string _mpvCookiesFile: root._useManualCookies && root.customCookiesPath
-        ? root.customCookiesPath : root._cookiesFilePath
+    // Static cookie file — only used by mpv (which can't use --cookies-from-browser)
+    readonly property string _mpvCookiesFile: root._cookiesFilePath
 
     function _getThumbnailUrl(videoId): string {
         if (!videoId) return ""
@@ -1407,8 +1340,8 @@ print("")
                     _googleCheckProc.running = true
                     return
                 }
-                // If we have a saved browser, use it (don't override with detected[0])
-                if (Config.options?.sidebar?.ytmusic?.browser) {
+                // If we have a previously-used browser (persisted connected state), use it
+                if (_stateAdapter.connected) {
                     Qt.callLater(() => root._checkGoogleConnection())
                 } else if (root.defaultBrowser && root.detectedBrowsers.includes(root.defaultBrowser)) {
                     Qt.callLater(() => root._checkGoogleConnection())
@@ -1421,39 +1354,71 @@ print("")
     }
 
     function _loadData(): void {
-        root.recentSearches = Config.options?.sidebar?.ytmusic?.recentSearches ?? []
-        root.queue = Config.options?.sidebar?.ytmusic?.queue ?? []
-        root.playlists = Config.options?.sidebar?.ytmusic?.playlists ?? []
-        root.likedSongs = Config.options?.sidebar?.ytmusic?.liked ?? []
-        root.lastLikedSync = Config.options?.sidebar?.ytmusic?.lastLikedSync ?? ""
-        root.customCookiesPath = Config.options?.sidebar?.ytmusic?.cookiesPath ?? ""
-        root._useManualCookies = Config.options?.sidebar?.ytmusic?.useManualCookies ?? false
-        
-        const profile = Config.options?.sidebar?.ytmusic?.profile
+        // Read runtime state from the dedicated state file (via _stateAdapter).
+        // Fall back to Config for first-run migration: if the state file had no
+        // data (all adapter defaults), copy legacy Config values into it so
+        // users don't lose their browser/connection/liked state on upgrade.
+        // The old Config keys are intentionally left as-is (zombie data) for
+        // easy rollback — they will not be updated going forward.
+
+        const hasSavedState = (_stateAdapter.connected ||
+                               _stateAdapter.browser !== "firefox" ||
+                               _stateAdapter.recentSearches.length > 0 ||
+                               _stateAdapter.liked.length > 0)
+
+        if (!hasSavedState) {
+            // First run — migrate from Config
+            root._log("[YtMusic] State file is fresh, migrating from Config...")
+            const cfg = Config.options?.sidebar?.ytmusic
+            if (cfg) {
+                if (cfg.recentSearches?.length) root._setStateValue('recentSearches', cfg.recentSearches)
+                if (cfg.queue?.length)           root._setStateValue('queue', cfg.queue)
+                if (cfg.playlists?.length)       root._setStateValue('playlists', cfg.playlists)
+                if (cfg.liked?.length)           root._setStateValue('liked', cfg.liked)
+                if (cfg.lastLikedSync)           root._setStateValue('lastLikedSync', cfg.lastLikedSync)
+                if (cfg.cookiesPath)             root._setStateValue('cookiesPath', cfg.cookiesPath)
+                if (cfg.browser && cfg.browser !== "firefox") root._setStateValue('browser', cfg.browser)
+                if (cfg.resolvedBrowserArg)      root._setStateValue('resolvedBrowserArg', cfg.resolvedBrowserArg)
+                if (cfg.connected)               root._setStateValue('connected', true)
+                if (cfg.shuffleMode)             root._setStateValue('shuffleMode', cfg.shuffleMode)
+                if (cfg.repeatMode)              root._setStateValue('repeatMode', cfg.repeatMode)
+                const p = cfg.profile
+                if (p && (p.name || p.avatar || p.url)) {
+                    root._setStateValue('profile', { name: p.name ?? "", avatar: p.avatar ?? "", url: p.url ?? "" })
+                }
+            }
+        }
+
+        // Load from state adapter
+        root.recentSearches = _stateAdapter.recentSearches ?? []
+        root.queue = _stateAdapter.queue ?? []
+        root.playlists = _stateAdapter.playlists ?? []
+        root.likedSongs = _stateAdapter.liked ?? []
+        root.lastLikedSync = _stateAdapter.lastLikedSync ?? ""
+        root.customCookiesPath = _stateAdapter.cookiesPath ?? ""
+
+        const profile = _stateAdapter.profile
         if (profile) {
             root.userName = profile.name ?? ""
             root.userAvatar = profile.avatar ?? ""
             root.userChannelUrl = profile.url ?? ""
         }
-        
-        const savedBrowser = Config.options?.sidebar?.ytmusic?.browser
-        if (savedBrowser) {
+
+        const savedBrowser = _stateAdapter.browser
+        if (savedBrowser && savedBrowser !== "firefox") {
             root.googleBrowser = savedBrowser
         }
-        
+
         // Restore persisted resolved browser arg (avoids re-resolving on restart)
-        const savedResolvedArg = Config.options?.sidebar?.ytmusic?.resolvedBrowserArg ?? ""
+        const savedResolvedArg = _stateAdapter.resolvedBrowserArg ?? ""
         if (savedResolvedArg) {
             root._resolvedBrowserArg = savedResolvedArg
         }
-        
+
         // Restore persisted connection state
-        const wasConnected = Config.options?.sidebar?.ytmusic?.connected ?? false
-        if (wasConnected) {
+        if (_stateAdapter.connected) {
             root.googleConnected = true
         }
-        
-
     }
 
     Process {
@@ -1472,7 +1437,9 @@ print("")
                 else if (desktop.includes("edge")) browser = "edge"
                 else if (desktop.includes("zen")) browser = "zen"
                 
-                if (browser && !Config.options?.sidebar?.ytmusic?.browser) {
+                // Only auto-set default browser if user hasn't explicitly connected yet
+                // (connected == false means no prior successful auth with a specific browser)
+                if (browser && !_stateAdapter.connected) {
                     root.googleBrowser = browser
                     root.defaultBrowser = browser
                 }
@@ -1516,15 +1483,15 @@ print("")
     }
 
     function _persistRecentSearches(): void {
-        Config.setNestedValue('sidebar.ytmusic.recentSearches', root.recentSearches)
+        root._setStateValue('recentSearches', root.recentSearches)
     }
 
     function _persistQueue(): void {
-        Config.setNestedValue('sidebar.ytmusic.queue', root.queue)
+        root._setStateValue('queue', root.queue)
     }
 
     function _persistPlaylists(): void {
-        Config.setNestedValue('sidebar.ytmusic.playlists', root.playlists)
+        root._setStateValue('playlists', root.playlists)
     }
 
     function _resolveBrowserArg(): void {
@@ -1564,7 +1531,7 @@ print("")
                 const resolved = line.trim()
                 if (resolved) {
                     root._resolvedBrowserArg = resolved
-                    Config.setNestedValue('sidebar.ytmusic.resolvedBrowserArg', resolved)
+                    root._setStateValue('resolvedBrowserArg', resolved)
                     root._log("[YtMusic] Resolved browser arg:", resolved)
                 }
             }
@@ -1599,15 +1566,12 @@ print("")
         id: _playDelayTimer
         interval: 200
         onTriggered: {
-            // Reset auto-advance and EOF flags — the new play supersedes any pending advance.
+            // New mpv is about to start — clear the guards now.
+            // _autoAdvanceTriggered is reset here (not in _playInternal) so that any
+            // stale onExited from the old mpv that fires between user-click and now
+            // cannot trigger a spurious playNext().
             root._autoAdvanceTriggered = false
-            root._ipcEofReached = false
-            // KEEP _userInitiatedPlay = true here! When _playProc.running = true kills
-            // the old mpv, onExited fires synchronously. If _userInitiatedPlay were false,
-            // that onExited would pass the guard and trigger a spurious playNext().
-            // _userInitiatedPlay is cleared in _playProc.onRunningChanged when the new
-            // mpv actually starts.
-
+            root._userInitiatedPlay = false
             // Refresh static cookie file for mpv before playing
             if (root.googleConnected) {
                 _refreshCookiesForMpvProc.running = true
@@ -1660,8 +1624,8 @@ print("")
                     _googleCheckProc.running = true
                     return
                 }
-                // If we have a saved browser, use it
-                if (Config.options?.sidebar?.ytmusic?.browser) {
+                // If we have a previously-used browser (persisted connected state), use it
+                if (_stateAdapter.connected) {
                     Qt.callLater(_checkGoogleConnection)
                 } else if (root.detectedBrowsers.length > 0) {
                     Qt.callLater(_checkGoogleConnection)
@@ -1703,15 +1667,15 @@ print("")
                 root.googleChecking = false
                 root.googleConnected = true
                 root.googleError = ""
-                Config.setNestedValue('sidebar.ytmusic.connected', true)
-                Config.setNestedValue('sidebar.ytmusic.resolvedBrowserArg', root._resolvedBrowserArg)
+                root._setStateValue('connected', true)
+                root._setStateValue('resolvedBrowserArg', root._resolvedBrowserArg)
                 root._log("[YtMusic] Successfully connected via --cookies-from-browser:", root._browserArgForYtdlp)
                 // Export static cookie file for mpv use
                 _exportCookiesProc.running = true
             } else {
                 root.googleChecking = false
                 root.googleConnected = false
-                Config.setNestedValue('sidebar.ytmusic.connected', false)
+                root._setStateValue('connected', false)
                 const err = errorOutput.toLowerCase()
                 root._log("[YtMusic] Connection failed. Error output:", errorOutput.substring(0, 200))
                 if (err.includes("sign in") || err.includes("403") || err.includes("not found")) {
@@ -1736,7 +1700,7 @@ print("")
                     const res = JSON.parse(line)
                     if (res.status === "success" && res.cookies_path) {
                         root.customCookiesPath = res.cookies_path
-                        Config.setNestedValue('sidebar.ytmusic.cookiesPath', res.cookies_path)
+                        root._setStateValue('cookiesPath', res.cookies_path)
                     }
                 } catch (e) {}
             }
@@ -1768,7 +1732,7 @@ print("")
                     const data = JSON.parse(line)
                     if (!data.id || _searchProc.results.length >= root.maxSearchResults) return
                     const duration = data.duration || 0
-                    if (duration < 30 || duration > 600) return
+                    if (duration < 60 || duration > 600) return
                     const title = (data.title || "").toLowerCase()
                     const videoKeywords = ['podcast', 'interview', 'documentary', 'tutorial', 
                                           'review', 'gameplay', 'walkthrough', 'vlog', 
@@ -1804,24 +1768,7 @@ print("")
 
     Process {
         id: _stopProc
-        command: ["/bin/sh", "-c", "rm -f " + root.ipcSocket]
-    }
-
-    // Kill any orphaned mpv instances that use our IPC socket.
-    // Handles processes that survived across inir restart or weren't cleaned up properly.
-    Process {
-        id: _killOrphanedMpvProc
-        command: ["/bin/sh", "-c", "pkill -f 'mpv.*qs-ytmusic-mpv\\.sock' 2>/dev/null; true"]
-    }
-
-    function _stopMpv(): void {
-        // Use running=false (not signal) so Quickshell marks the Process as stopped.
-        // signal(15) sends SIGTERM but leaves running=true, so the next
-        // _playProc.running=true becomes a no-op and orphans the old mpv.
-        _playProc.running = false
-        // Belt-and-suspenders: kill any orphaned mpv instances using our IPC socket
-        _killOrphanedMpvProc.running = true
-        _stopProc.running = true // clean up IPC socket
+        command: ["/bin/bash", "-c", "pkill -f qs-ytmusic-mpv; rm -f " + root.ipcSocket]
     }
 
     Process {
@@ -1843,7 +1790,6 @@ print("")
             "--cache=yes",
             "--cache-secs=30",
             "--script-opts=ytdl_hook-ytdl_path=yt-dlp",
-            "--ytdl-format=" + root._ytdlFormat,
             ...(root.googleConnected && root._mpvCookiesFile ? [
                 "--ytdl-raw-options=cookies=" + root._mpvCookiesFile + ",js-runtimes=node,remote-components=ejs:github",
                 "--cookies-file=" + root._mpvCookiesFile
@@ -1861,9 +1807,6 @@ print("")
         onRunningChanged: {
             if (running) {
                 root.loading = false
-                // New mpv is confirmed running — safe to clear the guard now.
-                // Any onExited from here on is for THIS mpv instance.
-                root._userInitiatedPlay = false
                 Qt.callLater(root._findMpvPlayer)
             }
         }
@@ -1877,10 +1820,9 @@ print("")
             if (root._didTrackEndNaturally(code, _stderr) && !root._autoAdvanceTriggered) {
                 // Track ended naturally, advance according to playlist/queue/repeat state
                 root._autoAdvanceTriggered = true
-                root.playNext(true)
+                root.playNext()
             } else if (code !== 0 && code !== 4 && code !== 9 && code !== 15 && code !== 143 && code !== 137) {
-                const hint = _stderr.trim().split("\n").slice(-2).join(" ").substring(0, 120)
-                root.error = Translation.tr("Playback failed") + (hint ? ": " + hint : "")
+                root.error = Translation.tr("Playback failed")
             }
         }
     }
