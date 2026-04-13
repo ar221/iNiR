@@ -535,10 +535,10 @@ Singleton {
         // Values tuned for visual hierarchy while maintaining readability
         
         // Transparency levels (higher = more transparent)
-        readonly property real overlayTransparentize: 0.38      // Main panels: 62% opaque - subtle glass
-        readonly property real subSurfaceTransparentize: 0.52   // Cards/groups: 48% opaque - visible hierarchy
-        readonly property real popupTransparentize: 0.42        // Popups/menus: 58% opaque - prominent
-        readonly property real tooltipTransparentize: 0.35      // Tooltips: 65% opaque - high contrast
+        readonly property real overlayTransparentize: 0.50      // Main panels: 50% opaque - glassy
+        readonly property real subSurfaceTransparentize: 0.58   // Cards/groups: 42% opaque - visible hierarchy
+        readonly property real popupTransparentize: 0.48        // Popups/menus: 52% opaque - prominent
+        readonly property real tooltipTransparentize: 0.38      // Tooltips: 62% opaque - high contrast
         
         // === Main Panel Overlay (Layer 0) ===
         readonly property color colOverlay: ColorUtils.transparentize(root.colors.colLayer0Base, overlayTransparentize)
