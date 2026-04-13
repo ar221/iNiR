@@ -9,7 +9,7 @@ Item {
     id: root
     
     required property string text
-    property int fontSize: 11
+    property int fontSize: Appearance.font.pixelSize.smaller
     property int fontWeight: Font.Medium
 
     Layout.fillWidth: true
