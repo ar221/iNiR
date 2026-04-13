@@ -7,6 +7,7 @@ Rectangle {
     id: root
 
     property bool editMode: false
+    property bool compactMode: false
     readonly property bool cardStyle: Config.options?.sidebar?.cardStyle ?? false
 
     radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
