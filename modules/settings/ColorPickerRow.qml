@@ -5,6 +5,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 
 Item {
     id: root
@@ -13,9 +14,13 @@ Item {
     property string contrastAgainst: ""  // Key to check contrast against (e.g., "m3background")
     signal colorChanged()
 
+    // Settings search integration
+    property bool enableSettingsSearch: true
+    property int settingsSearchOptionId: -1
+
     property color currentColor: Config.options?.appearance?.customTheme?.[colorKey] ?? "#888888"
     property color bgColor: contrastAgainst ? (Config.options?.appearance?.customTheme?.[contrastAgainst] ?? "#000000") : "#000000"
-    property real ratio: contrastAgainst ? ColorUtils.contrastRatio(currentColor, bgColor) : 0
+    property real ratio: contrastAgainst ? CF.ColorUtils.contrastRatio(currentColor, bgColor) : 0
     property bool showContrast: contrastAgainst !== ""
 
     Layout.fillWidth: true
@@ -123,6 +128,62 @@ Item {
         onAccepted: {
             Config.setNestedValue("appearance.customTheme." + root.colorKey, selectedColor.toString())
             root.colorChanged()
+        }
+    }
+
+    function _findSettingsContext() {
+        var page = null;
+        var sectionTitle = "";
+        var p = root.parent;
+        while (p) {
+            if (!page && p.hasOwnProperty("settingsPageIndex")) {
+                page = p;
+            }
+            if (p.hasOwnProperty("title") && p.hasOwnProperty("icon")) {
+                if (!sectionTitle) sectionTitle = p.title;
+            }
+            p = p.parent;
+        }
+        return { page: page, sectionTitle: sectionTitle };
+    }
+
+    function focusFromSettingsSearch() {
+        var p = root.parent;
+        while (p) {
+            if (p.hasOwnProperty("expanded") && p.hasOwnProperty("collapsible")) {
+                p.expanded = true;
+                break;
+            }
+            p = p.parent;
+        }
+        root.forceActiveFocus();
+    }
+
+    Component.onCompleted: {
+        if (!enableSettingsSearch)
+            return;
+        if (typeof SettingsSearchRegistry === "undefined")
+            return;
+
+        var ctx = _findSettingsContext();
+        var page = ctx.page;
+        if (!page || page.settingsPageIndex === undefined || page.settingsPageIndex < 0)
+            return;
+
+        settingsSearchOptionId = SettingsSearchRegistry.registerOption({
+            control: root,
+            pageIndex: page.settingsPageIndex,
+            pageName: page.settingsPageName || "",
+            section: ctx.sectionTitle,
+            label: root.label,
+            description: root.colorKey,
+            keywords: [root.colorKey, "color", "picker", "custom", "theme"]
+        });
+    }
+
+    Component.onDestruction: {
+        if (typeof SettingsSearchRegistry !== "undefined") {
+            SettingsSearchRegistry.unregisterControl(root);
         }
     }
 }

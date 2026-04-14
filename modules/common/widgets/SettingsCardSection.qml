@@ -16,6 +16,7 @@ Item {
 
     property bool enableSettingsSearch: true
     property int settingsSearchOptionId: -1
+    property bool _searchHighlighted: false
 
     Layout.fillWidth: true
     implicitHeight: card.implicitHeight
@@ -36,6 +37,14 @@ Item {
     function focusFromSettingsSearch() {
         root.expanded = true;
         root.forceActiveFocus();
+        root._searchHighlighted = true;
+        _searchHighlightReset.restart();
+    }
+
+    Timer {
+        id: _searchHighlightReset
+        interval: 1200
+        onTriggered: root._searchHighlighted = false
     }
 
     Component.onCompleted: {
@@ -126,6 +135,25 @@ Item {
                      : (Appearance.inirEverywhere ? 1
                      : (Appearance.auroraEverywhere ? 1 : 1))
         border.color: Appearance.angelEverywhere ? "transparent" : SettingsMaterialPreset.cardBorderColor
+
+        // Search highlight pulse overlay
+        Rectangle {
+            id: searchPulse
+            anchors.fill: parent
+            radius: card.radius
+            color: "transparent"
+            border.width: 2
+            border.color: SettingsMaterialPreset.accentColor
+            opacity: root._searchHighlighted ? 0.85 : 0
+            z: 2
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: root._searchHighlighted ? 80 : 1200
+                    easing.type: root._searchHighlighted ? Easing.OutQuad : Easing.InCubic
+                }
+            }
+        }
 
         // Angel partial border
         AngelPartialBorder {

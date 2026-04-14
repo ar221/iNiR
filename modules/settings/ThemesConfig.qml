@@ -1388,6 +1388,7 @@ ContentPage {
         SettingsGroup {
             Loader {
                 Layout.fillWidth: true
+                asynchronous: true
                 active: Appearance.angelEverywhere
                 source: "AngelStyleEditor.qml"
             }
@@ -1403,6 +1404,7 @@ ContentPage {
         SettingsGroup {
             Loader {
                 Layout.fillWidth: true
+                asynchronous: true
                 active: ThemeService.currentTheme === "custom"
                 source: "CustomThemeEditor.qml"
             }
@@ -1418,6 +1420,7 @@ ContentPage {
         SettingsGroup {
             Loader {
                 Layout.fillWidth: true
+                asynchronous: true
                 active: gowallEditorSection.expanded
                 source: "GowallWallpaperEditor.qml"
             }

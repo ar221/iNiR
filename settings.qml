@@ -1740,6 +1740,9 @@ ApplicationWindow {
         searchTargetControl = control;
         searchTargetFlickable = flick;
 
+        // Trigger widget focus + card pulse after layout settles
+        _widgetFocusTimer.restart();
+
         // Clear pending data after successful navigation
         pendingSpotlightOptionId = -1;
         pendingSpotlightLabel = "";
@@ -1749,6 +1752,17 @@ ApplicationWindow {
     }
 
     property real spotlightTargetScrollY: 0
+
+    Timer {
+        id: _widgetFocusTimer
+        interval: 50
+        onTriggered: {
+            var c = root.searchTargetControl;
+            if (c && typeof c.focusFromSettingsSearch === "function") {
+                c.focusFromSettingsSearch();
+            }
+        }
+    }
 
     function findParentFlickable(item) {
         var p = item ? item.parent : null;
@@ -2042,8 +2056,8 @@ ApplicationWindow {
                                 SequentialAnimation on opacity {
                                     loops: Animation.Infinite
                                     running: settingsSearchField.cursorVisible
-                                    NumberAnimation { to: 0; duration: 530 }
-                                    NumberAnimation { to: 1; duration: 530 }
+                                    NumberAnimation { to: 0; duration: 400 }
+                                    NumberAnimation { to: 1; duration: 400 }
                                 }
                             }
 
@@ -2230,6 +2244,7 @@ ApplicationWindow {
                                     buttonIconRotation: modelData.iconRotation || 0
                                     buttonText: modelData.name
                                     showToggledHighlight: false
+                                    activeColor: "#ff1100"
                                 }
                             }
                         }

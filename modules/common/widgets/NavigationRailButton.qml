@@ -15,6 +15,7 @@ TabButton {
     property string buttonText
     property bool expanded: false
     property bool showToggledHighlight: true
+    property color activeColor: Appearance.colors.colPrimary
     readonly property real visualWidth: root.expanded ? root.baseSize + 20 + itemText.implicitWidth : root.baseSize
 
     property real baseSize: 56
@@ -65,7 +66,7 @@ TabButton {
 
             Rectangle {
                 id: bubbleBackground
-                color: Appearance.colors.colPrimary
+                color: root.activeColor
                 radius: Appearance.rounding.full
                 implicitWidth: bubbleText.implicitWidth + 24
                 implicitHeight: root.baseHighlightHeight
@@ -127,7 +128,7 @@ TabButton {
                     : (toggled ?
                         root.showToggledHighlight ?
                             (root.down ? Appearance.colors.colSecondaryContainerActive : root.hovered ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainer)
-                            : (root.down ? Appearance.colors.colLayer1Active : root.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.92)) :
+                            : (root.down ? Appearance.colors.colLayer1Active : root.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(root.activeColor, 0.92)) :
                         (root.down ? Appearance.colors.colLayer1Active : root.hovered ? Appearance.colors.colLayer1Hover : "transparent"))
 
             states: State {
@@ -178,7 +179,7 @@ TabButton {
                 font.weight: (toggled || root.hovered) ? Font.DemiBold : Font.Normal
                 text: buttonIcon
                 color: toggled
-                    ? (root.showToggledHighlight ? Appearance.m3colors.m3onSecondaryContainer : Appearance.m3colors.m3primary)
+                    ? (root.showToggledHighlight ? Appearance.m3colors.m3onSecondaryContainer : root.activeColor)
                     : Appearance.colors.colOnLayer1
 
                 Behavior on color {

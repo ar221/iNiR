@@ -4,6 +4,7 @@ import QtQuick.Controls
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.services
 
 ColumnLayout {
@@ -299,11 +300,11 @@ ColumnLayout {
                     width: 48; height: 48
                     radius: Appearance.angel.roundingSmall
                     color: Appearance.angelEverywhere
-                        ? ColorUtils.transparentize(Appearance.colors.colPrimary, Appearance.angel.escalonadoOpacity)
+                        ? CF.ColorUtils.transparentize(Appearance.colors.colPrimary, Appearance.angel.escalonadoOpacity)
                         : "transparent"
                     border.width: 1
                     border.color: Appearance.angelEverywhere
-                        ? ColorUtils.transparentize(Appearance.colors.colPrimary, Appearance.angel.escalonadoBorderOpacity)
+                        ? CF.ColorUtils.transparentize(Appearance.colors.colPrimary, Appearance.angel.escalonadoBorderOpacity)
                         : "transparent"
                 }
                 Rectangle {

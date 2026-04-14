@@ -450,6 +450,20 @@ Scope {
         searchTargetControl = control;
         pendingSpotlightOptionId = -1;
         pendingSpotlightIsSection = false;
+
+        // Trigger widget focus + card pulse after layout settles
+        _overlayWidgetFocusTimer.restart();
+    }
+
+    Timer {
+        id: _overlayWidgetFocusTimer
+        interval: 50
+        onTriggered: {
+            var c = root.searchTargetControl;
+            if (c && typeof c.focusFromSettingsSearch === "function") {
+                c.focusFromSettingsSearch();
+            }
+        }
     }
 
     function resetSearchTarget() {
@@ -837,8 +851,8 @@ Scope {
                                             SequentialAnimation on opacity {
                                                 loops: Animation.Infinite
                                                 running: overlaySearchField.cursorVisible
-                                                NumberAnimation { to: 0; duration: 530 }
-                                                NumberAnimation { to: 1; duration: 530 }
+                                                NumberAnimation { to: 0; duration: 400 }
+                                                NumberAnimation { to: 1; duration: 400 }
                                             }
                                         }
 

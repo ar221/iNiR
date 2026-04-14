@@ -7,6 +7,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import "root:modules/common/functions/parallax.js" as ParallaxMath
 
 ContentPage {
@@ -917,8 +918,8 @@ ContentPage {
                                     materialIcon: "blur_on"
                                     mainText: Translation.tr("Change backdrop")
                                     colBackground: Appearance.colors.colSecondaryContainer
-                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.15)
-                                    colRipple: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.3)
+                                    colBackgroundHover: CF.ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.15)
+                                    colRipple: CF.ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.3)
                                     mainContentComponent: Component {
                                         StyledText {
                                             text: Translation.tr("Change backdrop")

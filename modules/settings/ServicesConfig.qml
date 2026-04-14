@@ -5,6 +5,7 @@ import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -412,14 +413,14 @@ ContentPage {
                 visible: Config.options?.shellUpdates?.enabled ?? true
 
                 color: {
-                    if (ShellUpdates.hasUpdate) return ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.92)
-                    if (ShellUpdates.lastError.length > 0) return ColorUtils.transparentize(Appearance.m3colors.m3error, 0.92)
+                    if (ShellUpdates.hasUpdate) return CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.92)
+                    if (ShellUpdates.lastError.length > 0) return CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.92)
                     return Appearance.colors.colSurfaceContainerLow
                 }
                 border.width: 1
                 border.color: {
-                    if (ShellUpdates.hasUpdate) return ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
-                    if (ShellUpdates.lastError.length > 0) return ColorUtils.transparentize(Appearance.m3colors.m3error, 0.7)
+                    if (ShellUpdates.hasUpdate) return CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
+                    if (ShellUpdates.lastError.length > 0) return CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.7)
                     return Appearance.colors.colLayer0Border
                 }
 
@@ -444,10 +445,10 @@ ContentPage {
                             height: 40
                             radius: Appearance.rounding.small
                             color: {
-                                if (ShellUpdates.hasUpdate) return ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.8)
-                                if (ShellUpdates.isChecking || ShellUpdates.isUpdating) return ColorUtils.transparentize(Appearance.colors.colSubtext, 0.85)
-                                if (ShellUpdates.lastError.length > 0) return ColorUtils.transparentize(Appearance.m3colors.m3error, 0.8)
-                                return ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
+                                if (ShellUpdates.hasUpdate) return CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.8)
+                                if (ShellUpdates.isChecking || ShellUpdates.isUpdating) return CF.ColorUtils.transparentize(Appearance.colors.colSubtext, 0.85)
+                                if (ShellUpdates.lastError.length > 0) return CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.8)
+                                return CF.ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
                             }
 
                             MaterialSymbol {
@@ -577,9 +578,9 @@ ContentPage {
                             Layout.fillWidth: true
                             implicitHeight: remoteCommitCol.implicitHeight + 12
                             radius: Appearance.rounding.small
-                            color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.88)
+                            color: CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.88)
                             border.width: 1
-                            border.color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
+                            border.color: CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
 
                             ColumnLayout {
                                 id: remoteCommitCol

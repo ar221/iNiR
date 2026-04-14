@@ -8,6 +8,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 
 ColumnLayout {
     id: root
@@ -142,14 +143,14 @@ ColumnLayout {
         // Adjust surface containers to create proper gradient
         if (toLightMode) {
             // Light mode: lighten backgrounds
-            ct.m3surfaceDim = ColorUtils.lighten(ct.m3surfaceDim, 0.7)
+            ct.m3surfaceDim = CF.ColorUtils.lighten(ct.m3surfaceDim, 0.7)
             ct.m3surfaceBright = "#ffffff"
-            ct.m3surfaceContainer = ColorUtils.lighten(ct.m3surfaceContainer, 0.6)
+            ct.m3surfaceContainer = CF.ColorUtils.lighten(ct.m3surfaceContainer, 0.6)
         } else {
             // Dark mode: darken backgrounds  
-            ct.m3surfaceDim = ColorUtils.darken(ct.m3surfaceDim, 0.7)
-            ct.m3surfaceBright = ColorUtils.darken(ct.m3surfaceBright, 0.5)
-            ct.m3surfaceContainer = ColorUtils.darken(ct.m3surfaceContainer, 0.6)
+            ct.m3surfaceDim = CF.ColorUtils.darken(ct.m3surfaceDim, 0.7)
+            ct.m3surfaceBright = CF.ColorUtils.darken(ct.m3surfaceBright, 0.5)
+            ct.m3surfaceContainer = CF.ColorUtils.darken(ct.m3surfaceContainer, 0.6)
         }
         
         ct.darkmode = !toLightMode
@@ -486,7 +487,7 @@ ColumnLayout {
                             text: modelData.label
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.weight: Font.Medium
-                            color: ColorUtils.contrastColor(parent.color)
+                            color: CF.ColorUtils.contrastColor(parent.color)
                         }
                     }
                 }
@@ -925,19 +926,19 @@ ColumnLayout {
 
         if (scheme === "complementary") {
             // Complementary: secondary = complement, tertiary = shifted complement
-            const comp = ColorUtils.complementary(primary)
-            return role === "secondary" ? comp : ColorUtils.shiftHue(comp, 30)
+            const comp = CF.ColorUtils.complementary(primary)
+            return role === "secondary" ? comp : CF.ColorUtils.shiftHue(comp, 30)
         } else if (scheme === "analogous") {
             // Analogous: colors adjacent on wheel
-            const colors = ColorUtils.analogous(primary, 30)
+            const colors = CF.ColorUtils.analogous(primary, 30)
             return role === "secondary" ? colors[0] : colors[1]
         } else if (scheme === "triadic") {
             // Triadic: evenly spaced (120°)
-            const colors = ColorUtils.triadic(primary)
+            const colors = CF.ColorUtils.triadic(primary)
             return role === "secondary" ? colors[0] : colors[1]
         } else if (scheme === "split") {
             // Split complementary
-            const colors = ColorUtils.splitComplementary(primary)
+            const colors = CF.ColorUtils.splitComplementary(primary)
             return role === "secondary" ? colors[0] : colors[1]
         }
         return primary
@@ -949,17 +950,17 @@ ColumnLayout {
 
         // Apply secondary colors
         Config.setNestedValue('appearance.customTheme.m3secondary', secondary.toString())
-        Config.setNestedValue('appearance.customTheme.m3onSecondary', ColorUtils.contrastColor(secondary).toString())
-        const secondaryContainer = ColorUtils.colorWithLightness(secondary, (Config.options?.appearance?.customTheme?.darkmode ?? true) ? 0.25 : 0.85)
+        Config.setNestedValue('appearance.customTheme.m3onSecondary', CF.ColorUtils.contrastColor(secondary).toString())
+        const secondaryContainer = CF.ColorUtils.colorWithLightness(secondary, (Config.options?.appearance?.customTheme?.darkmode ?? true) ? 0.25 : 0.85)
         Config.setNestedValue('appearance.customTheme.m3secondaryContainer', secondaryContainer.toString())
-        Config.setNestedValue('appearance.customTheme.m3onSecondaryContainer', ColorUtils.contrastColor(secondaryContainer).toString())
+        Config.setNestedValue('appearance.customTheme.m3onSecondaryContainer', CF.ColorUtils.contrastColor(secondaryContainer).toString())
 
         // Apply tertiary colors
         Config.setNestedValue('appearance.customTheme.m3tertiary', tertiary.toString())
-        Config.setNestedValue('appearance.customTheme.m3onTertiary', ColorUtils.contrastColor(tertiary).toString())
-        const tertiaryContainer = ColorUtils.colorWithLightness(tertiary, (Config.options?.appearance?.customTheme?.darkmode ?? true) ? 0.25 : 0.85)
+        Config.setNestedValue('appearance.customTheme.m3onTertiary', CF.ColorUtils.contrastColor(tertiary).toString())
+        const tertiaryContainer = CF.ColorUtils.colorWithLightness(tertiary, (Config.options?.appearance?.customTheme?.darkmode ?? true) ? 0.25 : 0.85)
         Config.setNestedValue('appearance.customTheme.m3tertiaryContainer', tertiaryContainer.toString())
-        Config.setNestedValue('appearance.customTheme.m3onTertiaryContainer', ColorUtils.contrastColor(tertiaryContainer).toString())
+        Config.setNestedValue('appearance.customTheme.m3onTertiaryContainer', CF.ColorUtils.contrastColor(tertiaryContainer).toString())
 
         applyToShell()
     }
@@ -1906,7 +1907,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: modelData.label
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: ColorUtils.contrastColor(parent.color)
+                            color: CF.ColorUtils.contrastColor(parent.color)
                         }
                     }
                 }
@@ -2006,7 +2007,7 @@ ColumnLayout {
                         anchors.centerIn: parent
                         text: paletteCard.icon
                         iconSize: 16
-                        color: ColorUtils.contrastColor(parent.color)
+                        color: CF.ColorUtils.contrastColor(parent.color)
                     }
                 }
 
@@ -2049,7 +2050,7 @@ ColumnLayout {
                         readonly property string contrastKey: modelData.contrastAgainst ?? ""
                         readonly property color fgColor: Config.options.appearance.customTheme?.[modelData.key] ?? "#888"
                         readonly property color bgColor: contrastKey ? (Config.options.appearance.customTheme?.[contrastKey] ?? "#000") : "#000"
-                        readonly property real ratio: contrastKey ? ColorUtils.contrastRatio(fgColor, bgColor) : 0
+                        readonly property real ratio: contrastKey ? CF.ColorUtils.contrastRatio(fgColor, bgColor) : 0
                         readonly property bool showContrast: contrastKey !== ""
 
                         ColumnLayout {

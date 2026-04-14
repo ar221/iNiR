@@ -11,12 +11,12 @@ QtObject {
 
     readonly property int cardRadius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
         : Appearance.rounding.normal
-    readonly property int cardPadding: 14
+    readonly property int cardPadding: 12
 
     readonly property int headerRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
         : Appearance.rounding.small
     readonly property int headerPaddingX: 10
-    readonly property int headerPaddingY: 6
+    readonly property int headerPaddingY: 4
 
     readonly property int groupRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
         : Appearance.rounding.small
@@ -32,4 +32,6 @@ QtObject {
         ? Appearance.angel.colGlassPopup : Appearance.colors.colLayer2
     readonly property color groupBorderColor: Appearance.angelEverywhere
         ? Appearance.angel.colBorderSubtle : Appearance.colors.colLayer0Border
+
+    readonly property color accentColor: "#ff1100"
 }

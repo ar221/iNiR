@@ -6,6 +6,7 @@ import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -538,7 +539,7 @@ ContentPage {
                     color: Appearance.colors.colSurfaceContainerLow
                     border.width: 1
                     border.color: modelData.activeState === "failed"
-                        ? ColorUtils.transparentize(Appearance.colors.colError, 0.6)
+                        ? CF.ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                         : Appearance.colors.colLayer0Border
                     Layout.topMargin: index === 0 ? 0 : 4
                     clip: true
@@ -598,9 +599,9 @@ ContentPage {
                                 implicitHeight: svcBadgeRow.implicitHeight + 6
                                 radius: height / 2
                                 color: {
-                                    if (modelData.subState === "running") return ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
-                                    if (modelData.activeState === "failed" || modelData.subState === "failed") return ColorUtils.transparentize(Appearance.colors.colError, 0.85)
-                                    return ColorUtils.transparentize(Appearance.colors.colSubtext, 0.88)
+                                    if (modelData.subState === "running") return CF.ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
+                                    if (modelData.activeState === "failed" || modelData.subState === "failed") return CF.ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+                                    return CF.ColorUtils.transparentize(Appearance.colors.colSubtext, 0.88)
                                 }
 
                                 RowLayout {
@@ -679,10 +680,10 @@ ContentPage {
                                     buttonRadius: Appearance.rounding.small
                                     colBackground: modelData.activeState === "active"
                                         ? Appearance.colors.colSurfaceContainerLow
-                                        : ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
+                                        : CF.ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
                                     colBackgroundHover: modelData.activeState === "active"
                                         ? Appearance.colors.colLayer1Hover
-                                        : ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.7)
+                                        : CF.ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.7)
                                     colRipple: Appearance.colors.colLayer1Active
                                     onClicked: {
                                         if (modelData.activeState === "active")
@@ -740,8 +741,8 @@ ContentPage {
                                     }
                                     buttonRadius: Appearance.rounding.small
                                     colBackground: "transparent"
-                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
-                                    colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.7)
+                                    colBackgroundHover: CF.ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+                                    colRipple: CF.ColorUtils.transparentize(Appearance.colors.colError, 0.7)
                                     onClicked: Autostart.deleteUserService(modelData.name)
 
                                     contentItem: MaterialSymbol {
@@ -1125,7 +1126,7 @@ ContentPage {
                                 implicitWidth: sysBadgeRow.implicitWidth + 14
                                 implicitHeight: sysBadgeRow.implicitHeight + 6
                                 radius: height / 2
-                                color: ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
+                                color: CF.ColorUtils.transparentize(Appearance.m3colors.m3tertiary, 0.85)
 
                                 RowLayout {
                                     id: sysBadgeRow

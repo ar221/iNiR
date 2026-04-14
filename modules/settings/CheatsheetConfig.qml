@@ -4,6 +4,7 @@ import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -66,16 +67,16 @@ ContentPage {
         implicitHeight: statusBarRow.implicitHeight + 16
         radius: Appearance.rounding.small
         color: root._statusType === "error"
-            ? ColorUtils.transparentize(Appearance.colors.colError, 0.82)
+            ? CF.ColorUtils.transparentize(Appearance.colors.colError, 0.82)
             : root._statusType === "removed"
-            ? ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.7)
-            : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+            ? CF.ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.7)
+            : CF.ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
         border.width: 1
         border.color: root._statusType === "error"
-            ? ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+            ? CF.ColorUtils.transparentize(Appearance.colors.colError, 0.45)
             : root._statusType === "removed"
-            ? ColorUtils.transparentize(Appearance.colors.colSubtext, 0.55)
-            : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.45)
+            ? CF.ColorUtils.transparentize(Appearance.colors.colSubtext, 0.55)
+            : CF.ColorUtils.transparentize(Appearance.colors.colPrimary, 0.45)
 
         RowLayout {
             id: statusBarRow
@@ -409,7 +410,7 @@ ContentPage {
         radius: Appearance.rounding.small
         color: Appearance.colors.colSurfaceContainerHigh ?? Appearance.colors.colLayer1
         border.width: 1
-        border.color: Appearance.m3colors.m3outlineVariant ?? ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.85)
+        border.color: Appearance.m3colors.m3outlineVariant ?? CF.ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.85)
 
         StyledText {
             id: keyLabel

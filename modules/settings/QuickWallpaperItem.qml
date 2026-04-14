@@ -2,6 +2,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
@@ -16,7 +17,7 @@ MouseArea {
 
     property color colBackground: isHovered ? Appearance.colors.colPrimary 
         : isSelected ? Appearance.colors.colSecondaryContainer 
-        : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+        : CF.ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
     property color colText: isHovered ? Appearance.colors.colOnPrimary 
         : isSelected ? Appearance.colors.colOnSecondaryContainer 
         : Appearance.colors.colOnLayer1

@@ -1001,7 +1001,7 @@ ContentPage {
                         color: Appearance.colors.colPrimary
 
                         Behavior on width {
-                            NumberAnimation { duration: 900; easing.type: Easing.Linear }
+                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
                     }
                 }

@@ -42,6 +42,18 @@ RowLayout {
         return { page: page, sectionTitle: sectionTitle, groupTitle: groupTitle };
     }
 
+    function _pulseParentCard() {
+        var p = root.parent;
+        while (p) {
+            if (p.hasOwnProperty("_searchHighlighted") && p.hasOwnProperty("_searchHighlightReset")) {
+                p._searchHighlighted = true;
+                p._searchHighlightReset.restart();
+                break;
+            }
+            p = p.parent;
+        }
+    }
+
     function focusFromSettingsSearch() {
         // Expand parent CollapsibleSection if collapsed
         var p = root.parent;
@@ -53,6 +65,7 @@ RowLayout {
             p = p.parent;
         }
         spinBoxWidget.forceActiveFocus();
+        _pulseParentCard();
     }
 
     Component.onCompleted: {

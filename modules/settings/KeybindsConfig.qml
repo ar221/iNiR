@@ -5,6 +5,7 @@ import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -307,7 +308,7 @@ ContentPage {
         radius: Appearance.rounding.small
         color: Appearance.colors.colSurfaceContainerHigh ?? Appearance.colors.colLayer1
         border.width: 1
-        border.color: Appearance.m3colors.m3outlineVariant ?? ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.85)
+        border.color: Appearance.m3colors.m3outlineVariant ?? CF.ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.85)
 
         StyledText {
             id: keyLabel
@@ -446,13 +447,13 @@ ContentPage {
                             contentItem: MaterialSymbol {
                                 text: "delete_outline"
                                 iconSize: Appearance.font.pixelSize.normal
-                                color: ColorUtils.transparentize(Appearance.colors.colError, 0.4)
+                                color: CF.ColorUtils.transparentize(Appearance.colors.colError, 0.4)
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
                                 radius: Appearance.rounding.small
-                                color: parent.hovered ? ColorUtils.transparentize(Appearance.colors.colError, 0.9) : "transparent"
+                                color: parent.hovered ? CF.ColorUtils.transparentize(Appearance.colors.colError, 0.9) : "transparent"
                             }
 
                             onClicked: {
@@ -488,7 +489,7 @@ ContentPage {
                                 }
                                 background: Rectangle {
                                     radius: Appearance.rounding.small
-                                    color: parent.hovered ? ColorUtils.transparentize(Appearance.colors.colError, 0.9) : "transparent"
+                                    color: parent.hovered ? CF.ColorUtils.transparentize(Appearance.colors.colError, 0.9) : "transparent"
                                 }
                                 onClicked: {
                                     var combo = root.buildOriginalCombo(kbRow.mods, kbRow.rawKey || kbRow.keyName)
@@ -590,9 +591,9 @@ ContentPage {
 
         implicitHeight: formColumn.implicitHeight + 24
         radius: Appearance.rounding.small
-        color: Appearance.colors.colSurfaceContainerLow ?? ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
+        color: Appearance.colors.colSurfaceContainerLow ?? CF.ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
         border.width: 1
-        border.color: Appearance.colors.colLayer0Border ?? ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
+        border.color: Appearance.colors.colLayer0Border ?? CF.ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
 
         function reset() {
             currentMods = isNew ? [] : initialMods.slice()
@@ -723,8 +724,8 @@ ContentPage {
                                 SequentialAnimation on opacity {
                                     running: editForm.capturing
                                     loops: Animation.Infinite
-                                    NumberAnimation { to: 0.4; duration: 600; easing.type: Easing.InOutQuad }
-                                    NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+                                    NumberAnimation { to: 0.4; duration: 300; easing.type: Easing.InOutQuad }
+                                    NumberAnimation { to: 1.0; duration: 300; easing.type: Easing.InOutQuad }
                                 }
                             }
 
@@ -739,7 +740,7 @@ ContentPage {
                         background: Rectangle {
                             radius: Appearance.rounding.small
                             color: editForm.capturing
-                                ? ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
+                                ? CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
                                 : (parent.hovered ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1)
                             border.width: editForm.capturing ? 2 : 1
                             border.color: editForm.capturing

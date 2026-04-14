@@ -5,6 +5,7 @@ import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -250,8 +251,8 @@ ContentPage {
                                     implicitHeight: 32
                                     buttonRadius: Appearance.rounding.small
                                     colBackground: "transparent"
-                                    colBackgroundHover: ColorUtils.transparentize(Appearance.m3colors.m3error, 0.85)
-                                    colRipple: ColorUtils.transparentize(Appearance.m3colors.m3error, 0.7)
+                                    colBackgroundHover: CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.85)
+                                    colRipple: CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.7)
                                     onClicked: {
                                         Notifications.removeRuleForApp(appDelegate.appName)
                                         appDelegate.rule = Notifications.getRuleForApp(appDelegate.appName)

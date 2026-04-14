@@ -6,6 +6,7 @@ import Quickshell.Services.UPower
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.common.widgets
 
 ContentPage {
@@ -102,7 +103,7 @@ ContentPage {
                             height: parent.height
                             radius: 4
                             color: Battery.percentage <= 10 ? Appearance.m3colors.m3error
-                                 : Battery.percentage <= 20 ? ColorUtils.transparentize(Appearance.m3colors.m3error, 0.4)
+                                 : Battery.percentage <= 20 ? CF.ColorUtils.transparentize(Appearance.m3colors.m3error, 0.4)
                                  : Appearance.m3colors.m3tertiary
 
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
@@ -373,9 +374,9 @@ ContentPage {
                 Layout.fillWidth: true
                 implicitHeight: profileDescRow.implicitHeight + 20
                 radius: Appearance.rounding.small
-                color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
+                color: CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
                 border.width: 1
-                border.color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
+                border.color: CF.ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.7)
 
                 RowLayout {
                     id: profileDescRow
