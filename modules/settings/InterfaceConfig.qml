@@ -1527,6 +1527,27 @@ ContentPage {
                             border.color: wallhavenApiInput.activeFocus ? Appearance.colors.colPrimary : Appearance.colors.colLayer0Border
                         }
                         onTextChanged: Config.setNestedValue("sidebar.wallhaven.apiKey", text)
+
+                        // Suppress default registration (label would be placeholder only)
+                        enableSettingsSearch: false
+
+                        Component.onCompleted: {
+                            if (typeof SettingsSearchRegistry === "undefined")
+                                return;
+                            settingsSearchOptionId = SettingsSearchRegistry.registerOption({
+                                control: wallhavenApiInput,
+                                pageIndex: root.settingsPageIndex,
+                                pageName: root.settingsPageName || "",
+                                section: Translation.tr("Wallhaven"),
+                                label: Translation.tr("API key"),
+                                description: Translation.tr("Optional - for NSFW content"),
+                                keywords: ["api", "key", "wallhaven", "nsfw", "sidebar", "apikey"]
+                            });
+                        }
+                        Component.onDestruction: {
+                            if (typeof SettingsSearchRegistry !== "undefined")
+                                SettingsSearchRegistry.unregisterControl(wallhavenApiInput);
+                        }
                     }
                 }
             }

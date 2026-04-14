@@ -187,6 +187,7 @@ ContentPage {
                 expanded: true
 
                 readonly property int catIdx: index
+                readonly property string catName: modelData.name ?? ""
                 readonly property var categoryKeybinds: modelData.children?.[0]?.keybinds ?? []
 
                 icon: root.getCategoryIcon(modelData.name)
@@ -212,6 +213,7 @@ ContentPage {
                             options: modelData.options ?? ({})
                             showDivider: index < categoryKeybinds.length - 1
                             editable: root.hasEditCapability
+                            categoryName: catName
                         }
                     }
                 }
@@ -333,9 +335,39 @@ ContentPage {
         property bool editable: false
         property int categoryIndex: -1
         property int keybindIndex: -1
+        property string categoryName: ""
 
         readonly property bool isEditing: root.editingCategoryIndex === categoryIndex && root.editingKeybindIndex === keybindIndex
         readonly property bool isDeleting: root.deleteCategoryIndex === categoryIndex && root.deleteKeybindIndex === keybindIndex
+
+        property int _searchId: -1
+
+        function _buildComboString() {
+            var parts = kbRow.mods.map(function(m) { return m === "Super" ? "Mod" : m; });
+            if (kbRow.keyName.length > 0)
+                parts.push(kbRow.keyName);
+            return parts.join("+");
+        }
+
+        Component.onCompleted: {
+            if (typeof SettingsSearchRegistry === "undefined")
+                return;
+            var combo = _buildComboString();
+            _searchId = SettingsSearchRegistry.registerOption({
+                control: kbRow,
+                pageIndex: root.settingsPageIndex,
+                pageName: root.settingsPageName || "",
+                section: kbRow.categoryName,
+                label: kbRow.comment || kbRow.action || combo,
+                description: combo,
+                keywords: [combo, kbRow.action, kbRow.comment, kbRow.categoryName].filter(function(s) { return s && s.length > 0; })
+            });
+        }
+
+        Component.onDestruction: {
+            if (typeof SettingsSearchRegistry !== "undefined")
+                SettingsSearchRegistry.unregisterControl(kbRow);
+        }
 
         implicitHeight: rowColumn.implicitHeight
 
