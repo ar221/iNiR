@@ -1133,6 +1133,400 @@ ContentPage {
         }
     }
 
+    // ── Satellite Widgets ──────────────────────────────────────────────
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "schedule"
+        title: Translation.tr("Widget: Time & Calendar")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.timeCalendar.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.timeCalendar.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Standalone clock, date, calendar grid, and upcoming events")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.timeCalendar.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.timeCalendar.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.timeCalendar.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.timeCalendar.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.timeCalendar.cardWidth ?? 300
+                    from: 220
+                    to: 500
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.timeCalendar.cardWidth", value);
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "speed"
+        title: Translation.tr("Widget: System Rings")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.systemRings.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.systemRings.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("CPU, RAM, Temp, and VRAM progress rings with in-ring sparklines")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.systemRings.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.systemRings.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.systemRings.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.systemRings.cardOpacity", value / 100);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Rings")
+
+                SettingsSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("Show GPU ring")
+                    checked: Config.options.background.widgets.systemRings.showGpu ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.systemRings.showGpu", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Show VRAM usage ring alongside CPU, RAM, and Temp")
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "lan"
+        title: Translation.tr("Widget: Network")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.network.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.network.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("IP address, ping quality, and RX/TX sparklines")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.network.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.network.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.network.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.network.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.network.cardWidth ?? 240
+                    from: 180
+                    to: 400
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.network.cardWidth", value);
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "assignment"
+        title: Translation.tr("Widget: Context Card")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.contextCard.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Status hub — focus mode, pomodoro, market status, updates, and service health")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.contextCard.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.contextCard.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.contextCard.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.contextCard.cardWidth ?? 280
+                    from: 200
+                    to: 450
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.cardWidth", value);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Sections")
+
+                SettingsSwitch {
+                    buttonIcon: "routine"
+                    text: Translation.tr("Focus Mode")
+                    checked: Config.options.background.widgets.contextCard.showFocusMode ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.showFocusMode", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Current focus mode chip — click to cycle modes")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "timer"
+                    text: Translation.tr("Pomodoro Timer")
+                    checked: Config.options.background.widgets.contextCard.showPomodoro ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.showPomodoro", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Progress ring and countdown when a pomodoro session is running")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "monitoring"
+                    text: Translation.tr("Market Status")
+                    checked: Config.options.background.widgets.contextCard.showMarketStatus ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.showMarketStatus", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("NYSE open/closed indicator (reads from market-state timer)")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "system_update_alt"
+                    text: Translation.tr("Package Updates")
+                    checked: Config.options.background.widgets.contextCard.showPackageUpdates ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.showPackageUpdates", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Pending system updates count (checks every 30 minutes)")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "health_and_safety"
+                    text: Translation.tr("Service Health")
+                    checked: Config.options.background.widgets.contextCard.showServiceHealth ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.contextCard.showServiceHealth", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Failed systemd user services count (checks every 10 minutes)")
+                    }
+                }
+            }
+        }
+    }
+
     SettingsCardSection {
         expanded: true
         icon: "notifications"
