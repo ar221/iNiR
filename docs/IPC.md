@@ -204,15 +204,28 @@ By default, confirmation is disabled (closes immediately). Enable it in settings
 
 ### settings
 
-Open the settings window. GUI config so you don't have to edit JSON like it's 2005.
+Open the settings panel. GUI config so you don't have to edit JSON like it's 2005.
 
 | Function | Description |
 |----------|-------------|
-| `open` | Open settings window |
-| `toggle` | Toggle settings (overlay mode toggles, window mode opens) |
+| `open` | Open settings (overlay mode toggles, window mode opens) |
+| `toggle` | Alias for `open` |
+| `close` | Close the settings overlay |
+| `page <name>` | Open settings and navigate to a specific page by name |
+
+Page names are case-insensitive and match the sidebar label (e.g. `Wallpaper`, `Keybinds`, `Compositor`, `Desktop Widgets`).
 
 ```kdl
-bind "Super+Comma" { spawn "inir" "settings"; }
+bind "Super+Comma" { spawn "qs" "msg" "-c" "inir" "settings" "open"; }
+```
+
+Deep-link examples:
+
+```bash
+qs msg -c inir settings page Wallpaper
+qs msg -c inir settings page Keybinds
+qs msg -c inir settings page "Desktop Widgets"
+qs msg -c inir settings close
 ```
 
 ---
