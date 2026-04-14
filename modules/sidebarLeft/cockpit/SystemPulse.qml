@@ -175,14 +175,19 @@ Item {
                 Layout.preferredHeight: 72
                 Layout.alignment: Qt.AlignVCenter
 
-                // Background arc: full circle, subtle, transparent on aurora/angel
+                // Background arc: full circle track. On aurora/angel we fade to
+                // 35% alpha rather than kill it — the gauge needs a visible body or
+                // low-usage arcs read as floating crescents. Stroke width matches
+                // the progress arc (4px) so track and fill align perfectly.
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 2
                     radius: width / 2
                     color: "transparent"
                     border.width: 4
-                    border.color: Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colBorderSubtle
+                    border.color: Appearance.auroraEverywhere
+                        ? ColorUtils.transparentize(Appearance.colors.colBorderSubtle, 0.65)
+                        : Appearance.colors.colBorderSubtle
                 }
 
                 // Progress arc via Canvas
