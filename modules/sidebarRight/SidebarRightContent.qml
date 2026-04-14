@@ -258,7 +258,8 @@ Item {
             color: bg.angelEverywhere ? Appearance.angel.colGlassCard
                 : bg.auroraEverywhere
                 ? Appearance.aurora.colSubSurface
-                : Appearance.colors.colLayer1
+                // M3 tier audit: sidebar cards use surfaceContainerHigh on material fallback
+                : Appearance.colors.colLayer3
             radius: bg.angelEverywhere ? Appearance.angel.roundingSmall : height / 2
             border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 0
             border.color: bg.angelEverywhere ? Appearance.angel.colCardBorder : "transparent"
@@ -298,7 +299,8 @@ Item {
             color: bg.angelEverywhere ? Appearance.angel.colGlassCard
                 : bg.auroraEverywhere
                 ? Appearance.aurora.colSubSurface
-                : Appearance.colors.colLayer1
+                // M3 tier audit: sidebar cards use surfaceContainerHigh on material fallback
+                : Appearance.colors.colLayer3
             padding: 4
             spacing: 8  // Increased from default 5 to reduce accidental clicks
 

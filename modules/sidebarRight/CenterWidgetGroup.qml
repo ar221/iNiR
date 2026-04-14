@@ -16,8 +16,9 @@ Rectangle {
         : Appearance.rounding.normal
     color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
          : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-         : Appearance.auroraEverywhere ? "transparent" 
-         : Appearance.colors.colLayer1
+         : Appearance.auroraEverywhere ? "transparent"
+         // M3 tier audit: widget cards use surfaceContainerHigh on material fallback
+         : Appearance.colors.colLayer3
     border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
     border.color: Appearance.angelEverywhere ? "transparent"
         : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"

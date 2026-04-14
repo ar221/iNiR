@@ -388,6 +388,7 @@ Item {
         sidebarPadding: root.sidebarPadding
 
         // Compact-specific sub-surface colors (used by widget cards)
+        // M3 tier audit: material fallback uses colLayer3 (= m3surfaceContainerHigh)
         readonly property color colDarkSurface: angelEverywhere
             ? ColorUtils.transparentize(Appearance.angel.colGlassCard, 0.76)
             : inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colLayer1, 0.22)
@@ -395,7 +396,7 @@ Item {
                 (blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base),
                 Math.max(0.10, Appearance.aurora.subSurfaceTransparentize - 0.16)
             )
-            : ColorUtils.transparentize(Appearance.colors.colLayer1, 0.22)
+            : ColorUtils.transparentize(Appearance.colors.colLayer3, 0.22)
         readonly property color colDarkSurfaceHover: angelEverywhere
             ? Appearance.angel.colGlassCardHover
             : inirEverywhere ? Appearance.inir.colLayer2Hover
@@ -403,7 +404,7 @@ Item {
                 (blendedColors?.colLayer1 ?? Appearance.colors.colLayer1),
                 Math.max(0.16, Appearance.aurora.subSurfaceTransparentize - 0.10)
             )
-            : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 0.20)
+            : ColorUtils.transparentize(Appearance.colors.colLayer3Hover, 0.20)
         readonly property color colDarkSurfaceActive: angelEverywhere
             ? Appearance.angel.colGlassCardActive
             : inirEverywhere ? Appearance.inir.colLayer2Active
@@ -411,7 +412,7 @@ Item {
                 (blendedColors?.colLayer1 ?? Appearance.colors.colLayer1),
                 Math.max(0.12, Appearance.aurora.subSurfaceTransparentize - 0.14)
             )
-            : ColorUtils.transparentize(Appearance.colors.colLayer1Active, 0.18)
+            : ColorUtils.transparentize(Appearance.colors.colLayer3Active, 0.18)
 
         // ─────────────────────────────────────────────────────────
         // Two-column layout

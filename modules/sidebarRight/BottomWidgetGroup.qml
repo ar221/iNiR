@@ -20,7 +20,8 @@ Rectangle {
     color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
          : Appearance.inirEverywhere ? Appearance.inir.colLayer1
          : Appearance.auroraEverywhere ? "transparent"
-         : Appearance.colors.colLayer1
+         // M3 tier audit: widget cards use surfaceContainerHigh on material fallback
+         : Appearance.colors.colLayer3
     border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
     border.color: Appearance.angelEverywhere ? "transparent"
         : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
@@ -290,7 +291,7 @@ Rectangle {
                 height: 20
                 visible: railFlickable.contentY > 0 && !Appearance.auroraEverywhere
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer1 }
+                    GradientStop { position: 0.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer3 }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
@@ -304,7 +305,7 @@ Rectangle {
                 visible: railFlickable.contentHeight > railFlickable.height && railFlickable.contentY < (railFlickable.contentHeight - railFlickable.height) && !Appearance.auroraEverywhere
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer1 }
+                    GradientStop { position: 1.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer3 }
                 }
             }
         }

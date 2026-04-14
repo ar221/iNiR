@@ -132,6 +132,26 @@ Scope {
             }
         }
 
+        // Modal scrim — dims the rest of the screen while sidebar is open.
+        // Sits between backdrop click area and the sidebar content Loader in
+        // declaration order, which is also the z-order. Bound to _sidebarShown
+        // (not sidebarOpen) so it fades in/out in sync with the content animation.
+        Rectangle {
+            id: modalScrim
+            anchors.fill: parent
+            color: Appearance.m3colors.m3scrim
+            opacity: root._sidebarShown ? 0.32 : 0
+            // MouseArea on backdropClickArea already captures clicks for dismiss
+            // — no MouseArea here, pointer events fall through.
+            Behavior on opacity {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation {
+                    duration: Appearance.animation?.elementMoveExit?.duration ?? 200
+                    easing.type: Appearance.animation?.elementMoveExit?.type ?? Easing.OutCubic
+                }
+            }
+        }
+
         Loader {
             id: sidebarContentLoader
             active: root.sidebarOpen || (Config?.options?.sidebar?.[root.keepLoadedKey] ?? true)
