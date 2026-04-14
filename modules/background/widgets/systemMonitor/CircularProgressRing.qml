@@ -10,17 +10,23 @@ Item {
     property int ringSize: 80
     property int lineWidth: 5
     property color ringColor: Appearance.colors.colPrimary
-    property color trackColor: ColorUtils.transparentize(ringColor, 0.82)
     property string label: ""
     property string icon: ""
     property string valueText: ""
+
+    // Critical threshold — ring turns #ff1100 when value exceeds this
+    property real criticalThreshold: 0.85
+    property bool isCritical: value >= criticalThreshold
+    property color effectiveRingColor: isCritical ? "#ff1100" : ringColor
+    property color effectiveTrackColor: ColorUtils.transparentize(effectiveRingColor, 0.82)
 
     implicitWidth: ringSize
     implicitHeight: contentColumn.implicitHeight
 
     property real _animatedValue: 0
     Behavior on _animatedValue {
-        NumberAnimation { duration: 800; easing.type: Easing.OutCubic }
+        enabled: Appearance.animationsEnabled
+        NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Easing.OutQuart }
     }
     onValueChanged: _animatedValue = value
 
@@ -48,7 +54,7 @@ Item {
                     ctx.beginPath()
                     ctx.arc(cx, cy, r, 0, 2 * Math.PI)
                     ctx.lineWidth = root.lineWidth
-                    ctx.strokeStyle = root.trackColor.toString()
+                    ctx.strokeStyle = root.effectiveTrackColor.toString()
                     ctx.lineCap = "round"
                     ctx.stroke()
 
@@ -57,7 +63,7 @@ Item {
                         ctx.beginPath()
                         ctx.arc(cx, cy, r, startAngle, startAngle + root._animatedValue * 2 * Math.PI)
                         ctx.lineWidth = root.lineWidth
-                        ctx.strokeStyle = root.ringColor.toString()
+                        ctx.strokeStyle = root.effectiveRingColor.toString()
                         ctx.lineCap = "round"
                         ctx.stroke()
                     }
@@ -70,8 +76,8 @@ Item {
             }
             Connections {
                 target: root
-                function onRingColorChanged() { canvas.requestPaint() }
-                function onTrackColorChanged() { canvas.requestPaint() }
+                function onEffectiveRingColorChanged() { canvas.requestPaint() }
+                function onEffectiveTrackColorChanged() { canvas.requestPaint() }
             }
 
             // Icon centered in ring
@@ -79,7 +85,7 @@ Item {
                 anchors.centerIn: parent
                 text: root.icon
                 iconSize: root.ringSize * 0.36
-                color: root.ringColor
+                color: root.effectiveRingColor
                 visible: root.icon !== ""
             }
         }
@@ -94,6 +100,7 @@ Item {
                 return root.label || root.valueText
             }
             font.pixelSize: Appearance.font.pixelSize.small
+            font.family: Appearance.font.family.numbers
             font.weight: Font.Medium
             color: Appearance.colors.colOnLayer0
         }

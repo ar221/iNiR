@@ -22,6 +22,13 @@ ColumnLayout {
     visible: hasPlayer
     spacing: 8
 
+    function formatTime(microseconds) {
+        const totalSecs = Math.floor(microseconds / 1000000)
+        const mins = Math.floor(totalSecs / 60)
+        const secs = totalSecs % 60
+        return mins + ":" + (secs < 10 ? "0" : "") + secs
+    }
+
     // Preload album art (invisible until used)
     Image {
         id: albumArt
@@ -157,6 +164,60 @@ ColumnLayout {
                 live: root.isPlaying
                 maxVisualizerValue: 800
                 smoothing: 3
+            }
+        }
+    }
+
+    // ── Track progress bar ──
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 24
+        visible: root.hasPlayer && (root.player?.length ?? 0) > 0
+
+        // Background track
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            height: 3
+            radius: 1.5
+            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+        }
+
+        // Progress fill
+        Rectangle {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            height: 3
+            radius: 1.5
+            width: parent.width * Math.min(1, Math.max(0, (root.player?.position ?? 0) / Math.max(1, root.player?.length ?? 1)))
+            color: Appearance.colors.colPrimary
+
+            Behavior on width {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation { duration: 1000; easing.type: Easing.Linear }
+            }
+        }
+
+        // Time labels
+        RowLayout {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.bottom
+            anchors.topMargin: 1
+
+            StyledText {
+                text: formatTime(root.player?.position ?? 0)
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.family: Appearance.font.family.numbers
+                color: Appearance.colors.colSubtext
+            }
+            Item { Layout.fillWidth: true }
+            StyledText {
+                text: formatTime(root.player?.length ?? 0)
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.family: Appearance.font.family.numbers
+                color: Appearance.colors.colSubtext
             }
         }
     }

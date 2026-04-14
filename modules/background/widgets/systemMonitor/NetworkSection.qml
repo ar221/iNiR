@@ -127,14 +127,45 @@ ColumnLayout {
         }
     }
 
-    // ── IP address centered ──
-    StyledText {
+    // ── IP address centered (click to copy) ──
+    Item {
         Layout.alignment: Qt.AlignHCenter
-        text: root.ipAddress || "—"
-        font.pixelSize: Appearance.font.pixelSize.normal
-        font.family: Appearance.font.family.monospace
-        font.weight: Font.Medium
-        color: Appearance.colors.colPrimary
+        implicitWidth: ipText.implicitWidth
+        implicitHeight: ipText.implicitHeight
+
+        StyledText {
+            id: ipText
+            anchors.centerIn: parent
+            text: copiedTimer.running ? "Copied \u2713" : (root.ipAddress || "\u2014")
+            font.pixelSize: Appearance.font.pixelSize.normal
+            font.family: Appearance.font.family.monospace
+            font.weight: Font.Medium
+            color: copiedTimer.running ? Appearance.colors.colPrimary : Appearance.colors.colPrimary
+
+            Behavior on opacity {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation { duration: 150 }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                copyProc.running = true
+                copiedTimer.restart()
+            }
+        }
+
+        Process {
+            id: copyProc
+            command: ["/usr/bin/wl-copy", root.ipAddress]
+        }
+
+        Timer {
+            id: copiedTimer
+            interval: 1500
+        }
     }
 
     // ── Sparkline graph ──
