@@ -6,7 +6,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import "root:"
 
 Item {
@@ -282,59 +281,9 @@ Item {
         Layout.fillWidth: true
         spacing: 6
 
-        property string rxSpeed: "0 B/s"
-        property string txSpeed: "0 B/s"
-        property real lastRx: 0
-        property real lastTx: 0
-        property real lastTime: 0
-
-        Timer {
-            running: GlobalStates.sidebarRightOpen
-            interval: 2000
-            repeat: true
-            triggeredOnStart: true
-            onTriggered: netProc.running = true
-        }
-
-        Process {
-            id: netProc
-            command: ["/usr/bin/cat", "/proc/net/dev"]
-            running: false
-            stdout: SplitParser {
-                splitMarker: ""
-                onRead: data => {
-                    const lines = data.split("\n")
-                    let totalRx = 0, totalTx = 0
-                    for (const line of lines) {
-                        if (line.includes(":") && !line.includes("lo:")) {
-                            const parts = line.split(/\s+/).filter(p => p)
-                            if (parts.length >= 10) {
-                                totalRx += parseInt(parts[1]) || 0
-                                totalTx += parseInt(parts[9]) || 0
-                            }
-                        }
-                    }
-
-                    const now = Date.now()
-                    if (netStats.lastTime > 0) {
-                        const dt = (now - netStats.lastTime) / 1000
-                        if (dt > 0) {
-                            netStats.rxSpeed = netStats.formatSpeed((totalRx - netStats.lastRx) / dt)
-                            netStats.txSpeed = netStats.formatSpeed((totalTx - netStats.lastTx) / dt)
-                        }
-                    }
-                    netStats.lastRx = totalRx
-                    netStats.lastTx = totalTx
-                    netStats.lastTime = now
-                }
-            }
-        }
-
-        function formatSpeed(bytesPerSec) {
-            if (bytesPerSec < 1024) return bytesPerSec.toFixed(0) + " B/s"
-            if (bytesPerSec < 1024 * 1024) return (bytesPerSec / 1024).toFixed(1) + " KB/s"
-            return (bytesPerSec / (1024 * 1024)).toFixed(1) + " MB/s"
-        }
+        // Data comes from the NetworkUsage service singleton, which already
+        // polls /proc/net/dev and maintains 60-sample normalized history for
+        // sparkline use. No local Timer / Process needed.
 
         // Header
         RowLayout {
@@ -366,7 +315,7 @@ Item {
                 spacing: 4
                 MaterialSymbol { text: "arrow_downward"; iconSize: 14; color: Appearance.colors.colPrimary }
                 StyledText {
-                    text: rxSpeed
+                    text: NetworkUsage.downloadSpeedStr || "0 B/s"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.numbers
                     color: root.colText
@@ -377,7 +326,7 @@ Item {
                 spacing: 4
                 MaterialSymbol { text: "arrow_upward"; iconSize: 14; color: Appearance.colors.colSecondary }
                 StyledText {
-                    text: txSpeed
+                    text: NetworkUsage.uploadSpeedStr || "0 B/s"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.numbers
                     color: root.colText
@@ -385,6 +334,40 @@ Item {
             }
 
             Item { Layout.fillWidth: true }
+        }
+
+        // Dual sparkline (RX + TX overlaid)
+        Item {
+            visible: NetworkUsage.downloadHistory.length > 0 || NetworkUsage.uploadHistory.length > 0
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 4
+                color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                    : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                    : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
+                    : Appearance.colors.colLayer1
+            }
+
+            Graph {
+                anchors.fill: parent
+                anchors.margins: 2
+                values: NetworkUsage.downloadHistory
+                color: Appearance.colors.colPrimary
+                fillOpacity: 0.25
+                alignment: Graph.Alignment.Right
+            }
+
+            Graph {
+                anchors.fill: parent
+                anchors.margins: 2
+                values: NetworkUsage.uploadHistory
+                color: Appearance.colors.colSecondary
+                fillOpacity: 0.2
+                alignment: Graph.Alignment.Right
+            }
         }
     }
 }
