@@ -80,10 +80,10 @@ Singleton {
         }
     }
 
-    // Only poll when the bar button is enabled; start/stop handlers call refreshStatus() directly
+    // Poll to keep active in sync; start/stop handlers also call refreshStatus() directly
     Timer {
         interval: 5000
-        running: Config.ready && (Config.options?.bar?.utilButtons?.showProxyToggle ?? false)
+        running: Config.ready
         repeat: true
         onTriggered: root.refreshStatus()
     }

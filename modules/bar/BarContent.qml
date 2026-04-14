@@ -311,12 +311,26 @@ Item { // Bar content region
             anchors.rightMargin: Appearance.rounding.screenRounding
             spacing: 10
 
-            LeftSidebarButton { // Left sidebar button
+            // Monogram Anchor (Move 2): replaces LeftSidebarButton when bar.identity.monogram.enabled
+            Loader {
                 visible: Config.options?.bar?.modules?.leftSidebarButton ?? true
                 Layout.alignment: Qt.AlignVCenter
-                colBackground: barLeftSideMouseArea.hovered
-                    ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
-                    : "transparent"
+                active: visible
+                sourceComponent: (Config.options?.bar?.identity?.monogram?.enabled ?? true)
+                    ? monogramAnchorComponent
+                    : leftSidebarButtonComponent
+            }
+            Component {
+                id: monogramAnchorComponent
+                MonogramAnchor {}
+            }
+            Component {
+                id: leftSidebarButtonComponent
+                LeftSidebarButton {
+                    colBackground: barLeftSideMouseArea.hovered
+                        ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
+                        : "transparent"
+                }
             }
 
             ActiveWindow {
@@ -653,6 +667,99 @@ Item { // Bar content region
                             text: FocusMode.icon
                             iconSize: Appearance.font.pixelSize.larger
                             color: FocusMode.accentColor
+                        }
+                    }
+                    // Claude proxy indicator — live when proxy service is active
+                    Revealer {
+                        reveal: ClaudeCodeProxy.active
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        MaterialSymbol {
+                            text: "dns"
+                            fill: 1
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: "#ff1100"
+                            Behavior on color {
+                                enabled: Appearance.animationsEnabled
+                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: ClaudeCodeProxy.toggle()
+                        }
+                    }
+                    // Next calendar event indicator — visible when event within 2 hours
+                    Revealer {
+                        id: calEventRevealer
+                        property var _now: new Date()
+                        readonly property var _nextEvent: {
+                            var upcoming = CalendarSync.list.filter(function(e) {
+                                var dt = new Date(e.dateTime)
+                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 7200000
+                            }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
+                            return upcoming.length > 0 ? upcoming[0] : null
+                        }
+                        readonly property int _msUntil: _nextEvent ? (new Date(_nextEvent.dateTime) - _now) : -1
+                        readonly property bool imminent: _msUntil >= 0 && _msUntil < 300000
+                        readonly property string _deltaText: {
+                            if (_msUntil < 0) return ""
+                            var mins = Math.floor(_msUntil / 60000)
+                            if (mins < 60) return "· " + mins + "m"
+                            var h = Math.floor(mins / 60)
+                            var m = mins % 60
+                            return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
+                        }
+
+                        reveal: _nextEvent !== null
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+
+                        // Refresh _now only while an event is within the 3h horizon; idle otherwise.
+                        // Interval narrows as imminence grows so the countdown stays accurate near T-0.
+                        Timer {
+                            readonly property bool _hasSoon: CalendarSync.list.some(function(e) {
+                                var dt = new Date(e.dateTime)
+                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 10800000
+                            })
+                            interval: calEventRevealer.imminent ? 10000 : 30000
+                            running: _hasSoon
+                            repeat: true
+                            onTriggered: calEventRevealer._now = new Date()
+                        }
+
+                        Row {
+                            spacing: 3
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                id: calEventTitle
+                                readonly property string _raw: calEventRevealer._nextEvent?.title ?? ""
+                                text: _raw.length > 18 ? _raw.substring(0, 17) + "…" : _raw
+                                font.family: Appearance.font.family.main
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: calEventRevealer.imminent ? "#ff1100" : rightSidebarButton.colText
+                                Behavior on color {
+                                    enabled: Appearance.animationsEnabled
+                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                                }
+                            }
+                            Text {
+                                text: calEventRevealer._deltaText
+                                font.family: Appearance.font.family.main
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: calEventRevealer.imminent ? "#ff1100" : rightSidebarButton.colText
+                                Behavior on color {
+                                    enabled: Appearance.animationsEnabled
+                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                                }
+                            }
                         }
                     }
                     HyprlandXkbIndicator {

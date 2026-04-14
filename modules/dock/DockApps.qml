@@ -294,9 +294,21 @@ Item {
                 ? CompositorService.sortedToplevels
                 : ToplevelManager.toplevels.values;
 
+        // Workspace-scoped filtering (Niri only)
+        const dockScope = Config.options?.dock?.scope ?? "workspace";
+        const focusedWsId = NiriService.focusedWorkspaceId;
+        const wsFilterActive = dockScope === "workspace"
+            && CompositorService.isNiri
+            && focusedWsId !== ""
+            && allToplevels.length > 0
+            && allToplevels[0]?.niriWorkspaceId !== undefined;
+        const filteredToplevels = wsFilterActive
+            ? allToplevels.filter(t => t.niriWorkspaceId == focusedWsId)
+            : allToplevels;
+
         // Build map of running apps (apps with open windows)
         const runningAppsMap = new Map();
-        for (const toplevel of allToplevels) {
+        for (const toplevel of filteredToplevels) {
             if (!toplevel.appId) continue;
             if (toplevel.appId === "" || toplevel.appId === "null") continue;
 
@@ -458,6 +470,17 @@ Item {
             root.rebuildDockItems()
         }
         function onIgnoredAppRegexesChanged() {
+            root.rebuildDockItems()
+        }
+        function onScopeChanged() {
+            root.rebuildDockItems()
+        }
+    }
+
+    // Re-filter when focused workspace changes (workspace-scope mode)
+    Connections {
+        target: NiriService
+        function onFocusedWorkspaceIdChanged() {
             root.rebuildDockItems()
         }
     }

@@ -727,11 +727,15 @@ Singleton {
                     property bool alwaysShowTemp: true
                     property bool alwaysShowCpu: true
                     property bool alwaysShowGpu: true
+                    property bool hideWhenIdle: false // hide all stats at rest; reveal on hover or caution
                     property int tempCautionThreshold: 65
                     property int tempWarningThreshold: 80
+                    property int memoryCautionThreshold: 80
                     property int memoryWarningThreshold: 95
                     property int swapWarningThreshold: 85
+                    property int cpuCautionThreshold: 70
                     property int cpuWarningThreshold: 90
+                    property int gpuCautionThreshold: 70
                     property int gpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
@@ -740,8 +744,8 @@ Singleton {
                     property bool showScreenRecord: true
                     property bool showColorPicker: false
                     property bool showMicToggle: false
-                    property bool showKeyboardToggle: true
-                    property bool showDarkModeToggle: true
+                    property bool showKeyboardToggle: false
+                    property bool showDarkModeToggle: false
                     property bool showPerformanceProfileToggle: false
                     property bool showScreenCast: false
                     property string screenCastOutput: "HDMI-A-1"
@@ -781,6 +785,12 @@ Singleton {
                 property JsonObject indicators: JsonObject {
                     property JsonObject notifications: JsonObject {
                         property bool showUnreadCount: false
+                    }
+                }
+                property JsonObject identity: JsonObject {
+                    property JsonObject monogram: JsonObject {
+                        property bool enabled: true
+                        property string text: "AR" // Two-letter monogram shown at far-left of bar
                     }
                 }
             }
@@ -846,6 +856,7 @@ Singleton {
                 property bool keepPreviewOnClick: false // Keep preview open when clicking a window thumbnail
                 // Drag & drop reordering
                 property bool enableDragReorder: true // Allow drag to reorder pinned apps
+                property string scope: "workspace" // "workspace" = show only apps on focused workspace; "global" = all running apps
             }
 
             property JsonObject controlPanel: JsonObject {
