@@ -1307,6 +1307,15 @@ Singleton {
                     // Controls section order for compact layout (drag to reorder)
                     property list<string> controlsSectionOrder: ["sliders", "toggles", "devices", "media", "quickActions"]
                 }
+
+                // Context Strip footer rail (cockpit bottom slot)
+                // Settings UI surfacing deferred — configure via config.json only.
+                property JsonObject contextStrip: JsonObject {
+                    // If false, strip renders as 0 height and cockpit reflows.
+                    property bool enable: true
+                    // Initial slot on sidebar open. Options: "projectPulse" | "steamStatus" | "nextUp"
+                    property string defaultWidget: "projectPulse"
+                }
             }
 
             property JsonObject sounds: JsonObject {

@@ -876,6 +876,10 @@
                 "showSettings": true,
                 "showLock": true
             }
+        },
+        "contextStrip": {
+            "enable": true,
+            "defaultWidget": "projectPulse"
         }
     },
     "sounds": {
