@@ -31,6 +31,7 @@ ColumnLayout {
             icon: "settings"
             label: "CPU"
             valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
+            history: ResourceUsage.cpuUsageHistory
         }
 
         CircularProgressRing {
@@ -40,6 +41,7 @@ ColumnLayout {
             icon: "grid_view"
             label: "RAM"
             valueText: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
+            history: ResourceUsage.memoryUsageHistory
         }
 
         CircularProgressRing {
@@ -62,6 +64,7 @@ ColumnLayout {
                 const gb = ResourceUsage.vramUsed / (1024 * 1024 * 1024)
                 return gb.toFixed(1) + " GB"
             }
+            history: ResourceUsage.gpuUsageHistory
         }
     }
 }
