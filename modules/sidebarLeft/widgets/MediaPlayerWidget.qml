@@ -368,13 +368,7 @@ Item {
                             handleColor: Appearance.angelEverywhere ? Appearance.angel.colPrimary
                                 : Appearance.inirEverywhere ? root.jiraColPrimary : (blendedColors?.colPrimary ?? Appearance.colors.colPrimary)
                             value: root.effectiveLength > 0 ? root.effectivePosition / root.effectiveLength : 0
-                            onMoved: {
-                                if (root.isYtMusicPlayer) {
-                                    YtMusic.seek(value * root.effectiveLength)
-                                } else if (root.player) {
-                                    root.player.position = value * root.player.length
-                                }
-                            }
+                            onMoved: MprisController.setPosition(value * root.effectiveLength)
                             scrollable: true
                         }
                     }

@@ -353,7 +353,7 @@ Item {
                         root.blendedColors?.colLayer1 ?? Appearance.colors.colLayer2, 0.6)
                     : Appearance.colors.colLayer2
                 enableWavy: true
-                onSeekRequested: (seconds) => playerBase.seek(seconds)
+                onSeekRequested: (seconds) => MprisController.setPosition(seconds)
             }
 
             // ═══ TRANSPORT CONTROLS ═══

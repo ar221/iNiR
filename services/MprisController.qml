@@ -525,6 +525,24 @@ Singleton {
 		}
 	}
 
+	// Seek the active player to the given absolute position in seconds.
+	// Handles YtMusic vs. regular MPRIS — widgets should prefer this over
+	// reaching into activePlayer.position directly.
+	property bool canSeek: (root.isYtMusicActive && YtMusic.currentVideoId) ||
+		(this.activePlayer?.canSeek ?? false)
+	property real activePosition: root.isYtMusicActive && YtMusic.currentVideoId
+		? (YtMusic.currentPosition ?? 0) : (this.activePlayer?.position ?? 0)
+	property real activeLength: root.isYtMusicActive && YtMusic.currentVideoId
+		? (YtMusic.currentDuration ?? 0) : (this.activePlayer?.length ?? 0)
+	function setPosition(seconds: real): void {
+		if (!(seconds >= 0)) return;
+		if (root.isYtMusicActive && YtMusic.currentVideoId) {
+			YtMusic.seek(seconds);
+		} else if (this.activePlayer) {
+			this.activePlayer.position = seconds;
+		}
+	}
+
 	property bool canChangeVolume: (root.isYtMusicActive && YtMusic.currentVideoId) ||
 		(this.activePlayer && this.activePlayer.volumeSupported && this.activePlayer.canControl);
 
