@@ -92,13 +92,42 @@ MouseArea { // Notification group area
         destroyAnimation.running = true;
     }
 
+    // Hover-to-expand in sidebar (non-popup) mode. Keeps popup behavior untouched
+    // so toasts don't balloon under the cursor unexpectedly.
+    property bool hoverExpand: !root.popup && (Config.options?.notifications?.hoverExpand ?? true)
+    property bool _hoverExpanded: false
+
     hoverEnabled: true
     onContainsMouseChanged: {
-        if (!root.popup) return;
-        if (root.containsMouse) root.notifications.forEach(notif => {
-            Notifications.cancelTimeout(notif.notificationId);
-        });
-        // Don't restart timeout on mouse leave - let them stay visible
+        if (root.popup) {
+            if (root.containsMouse) root.notifications.forEach(notif => {
+                Notifications.cancelTimeout(notif.notificationId);
+            });
+            return;
+        }
+        // Sidebar: hover-expand with small delay in/out to avoid flicker
+        if (!root.hoverExpand) return;
+        if (root.containsMouse) hoverExpandInTimer.restart();
+        else hoverExpandOutTimer.restart();
+    }
+
+    Timer {
+        id: hoverExpandInTimer
+        interval: 120
+        onTriggered: {
+            if (!root.containsMouse || root.expanded || !root.hoverExpand) return;
+            root._hoverExpanded = true;
+            root.toggleExpanded();
+        }
+    }
+    Timer {
+        id: hoverExpandOutTimer
+        interval: 180
+        onTriggered: {
+            if (root.containsMouse || !root._hoverExpanded) return;
+            root._hoverExpanded = false;
+            if (root.expanded) root.toggleExpanded();
+        }
     }
 
     SequentialAnimation { // Drag finish animation

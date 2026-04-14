@@ -645,7 +645,8 @@
         "timeoutLow": 5000,
         "timeoutNormal": 7000,
         "rules": {},
-        "undoOnDismiss": true
+        "undoOnDismiss": true,
+        "hoverExpand": true
     },
     "osd": {
         "timeout": 1000

@@ -939,6 +939,10 @@ Singleton {
                 property bool silent: false
                 // Use legacy manual counter (false = auto-sync with popup list, true = manual counter)
                 property bool useLegacyCounter: true
+                // Hover a sidebar notification group to auto-expand (body, actions, timestamp)
+                property bool hoverExpand: true
+                // Undo window after dismissing a notification
+                property bool undoOnDismiss: true
             }
 
             property JsonObject osd: JsonObject {
