@@ -1628,7 +1628,19 @@ Scope {
             name: Translation.tr("Panels"),
             shortName: "",
             icon: "bottom_app_bar",
-            component: Quickshell.shellPath("modules/settings/InterfaceConfig.qml")
+            component: Quickshell.shellPath("modules/settings/PanelsConfig.qml")
+        },
+        {
+            name: Translation.tr("Sidebars"),
+            shortName: "",
+            icon: "side_navigation",
+            component: Quickshell.shellPath("modules/settings/SidebarsConfig.qml")
+        },
+        {
+            name: Translation.tr("Shell Widgets"),
+            shortName: "",
+            icon: "widgets",
+            component: Quickshell.shellPath("modules/settings/ShellWidgetsConfig.qml")
         },
         {
             name: Translation.tr("Tools"),

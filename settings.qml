@@ -62,7 +62,17 @@ ApplicationWindow {
         {
             name: Translation.tr("Panels"),
             icon: "bottom_app_bar",
-            component: "modules/settings/InterfaceConfig.qml"
+            component: "modules/settings/PanelsConfig.qml"
+        },
+        {
+            name: Translation.tr("Sidebars"),
+            icon: "side_navigation",
+            component: "modules/settings/SidebarsConfig.qml"
+        },
+        {
+            name: Translation.tr("Shell Widgets"),
+            icon: "widgets",
+            component: "modules/settings/ShellWidgetsConfig.qml"
         },
         {
             name: Translation.tr("Tools"),
@@ -636,7 +646,7 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Interface (page 5) — per-option entries
+        // Panels (page 7) / Sidebars (page 8) / Shell Widgets (page 9) — per-option entries
         // =====================================================================
         {
             pageIndex: 7, pageName: pages[7].name,
@@ -814,77 +824,77 @@ ApplicationWindow {
             keywords: ["region", "selector", "snip", "lens", "screenshot", "google"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("Sidebars"),
             description: Translation.tr("Sidebar toggles, sliders and corner open"),
             keywords: ["sidebar", "quick", "toggles", "sliders", "corner"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("Corner open"),
             description: Translation.tr("Open sidebar by hovering screen corners"),
             keywords: ["sidebar", "corner", "open", "hover", "edge", "clickless"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("Quick toggles style"),
             description: Translation.tr("Classic or Android-style quick toggles"),
             keywords: ["sidebar", "quick", "toggles", "style", "android", "classic"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("Keep sidebars loaded"),
             description: Translation.tr("Keep sidebar content in memory for faster opening"),
             keywords: ["sidebar", "loaded", "memory", "keep", "preload", "fast"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("YT Music Up Next notifications"),
             description: Translation.tr("Enable or disable next-track notifications for YT Music auto-advance"),
             keywords: ["ytmusic", "youtube", "music", "up next", "notification", "auto", "advance"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("Sidebars"),
             label: Translation.tr("YT Music fullscreen suppression"),
             description: Translation.tr("Mute YT Music Up Next notifications during fullscreen apps or GameMode"),
             keywords: ["ytmusic", "fullscreen", "gamemode", "mute", "suppress", "notification", "gaming"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 8, pageName: pages[8].name,
             section: Translation.tr("On-screen display"),
             label: Translation.tr("OSD timeout"),
             description: Translation.tr("How long the volume/brightness OSD stays visible"),
             keywords: ["osd", "volume", "brightness", "timeout", "duration"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 9, pageName: pages[9].name,
             section: Translation.tr("Overview"),
             label: Translation.tr("Overview"),
             description: Translation.tr("Overview scale, rows and columns"),
             keywords: ["overview", "grid", "rows", "columns", "scale"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 9, pageName: pages[9].name,
             section: Translation.tr("Overview"),
             label: Translation.tr("Overview scale"),
             description: Translation.tr("Size of workspace thumbnails in overview"),
             keywords: ["overview", "scale", "size", "workspace", "thumbnail"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 9, pageName: pages[9].name,
             section: Translation.tr("Overview"),
             label: Translation.tr("Window previews in overview"),
             description: Translation.tr("Show window thumbnails in overview"),
             keywords: ["overview", "preview", "window", "thumbnail"]
         },
         {
-            pageIndex: 7, pageName: pages[7].name,
+            pageIndex: 9, pageName: pages[9].name,
             section: Translation.tr("Wallpaper selector"),
             label: Translation.tr("Wallpaper selector"),
             description: Translation.tr("Wallpaper picker behaviour"),
@@ -892,45 +902,45 @@ ApplicationWindow {
         },
 
         // =====================================================================
-        // Tools (page 6)
+        // Tools (page 10)
         // =====================================================================
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Screen Recording"),
             label: Translation.tr("Screen recording"),
             description: Translation.tr("Screen recording settings and shortcuts"),
             keywords: ["screen", "record", "recording", "video", "capture", "wf-recorder"]
         },
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Region Selector"),
             label: Translation.tr("Region selector"),
             description: Translation.tr("Screenshot region selector tool"),
             keywords: ["region", "selector", "screenshot", "snip", "area", "capture"]
         },
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Crosshair"),
             label: Translation.tr("Crosshair overlay"),
             description: Translation.tr("Screen crosshair overlay for aiming"),
             keywords: ["crosshair", "overlay", "aim", "center", "screen"]
         },
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Discord"),
             label: Translation.tr("Discord overlay"),
             description: Translation.tr("Discord rich presence overlay widget"),
             keywords: ["discord", "overlay", "rich", "presence", "widget"]
         },
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("Overlay"),
             label: Translation.tr("Overlay widgets"),
             description: Translation.tr("Floating desktop overlay widgets"),
             keywords: ["overlay", "widgets", "floating", "desktop", "notes", "mixer", "fps"]
         },
         {
-            pageIndex: 8, pageName: pages[8].name,
+            pageIndex: 10, pageName: pages[10].name,
             section: Translation.tr("On-Screen Display"),
             label: Translation.tr("On-screen display"),
             description: Translation.tr("Volume and brightness OSD settings"),
@@ -941,112 +951,112 @@ ApplicationWindow {
         // Services (page 7) — per-option entries
         // =====================================================================
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("AI"),
             label: Translation.tr("AI"),
             description: Translation.tr("System prompt for sidebar AI"),
             keywords: ["ai", "prompt", "system", "sidebar", "chat"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("AI"),
             label: Translation.tr("AI system prompt"),
             description: Translation.tr("Custom instructions for the AI assistant"),
             keywords: ["ai", "prompt", "system", "instructions", "custom", "assistant"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Music Recognition"),
             label: Translation.tr("Music Recognition"),
             description: Translation.tr("Song recognition timeout and interval"),
             keywords: ["music", "recognition", "song", "timeout", "shazam", "songrec"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Networking"),
             label: Translation.tr("User agent"),
             description: Translation.tr("Custom user agent string for web requests"),
             keywords: ["network", "user", "agent", "http", "web", "request"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Resources"),
             label: Translation.tr("Resource monitor interval"),
             description: Translation.tr("Polling interval for CPU/RAM/disk monitor"),
             keywords: ["resources", "cpu", "memory", "ram", "disk", "interval", "poll", "monitor"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search"),
             description: Translation.tr("Search engine, prefix configuration"),
             keywords: ["search", "prefix", "engine", "web", "google", "app", "launcher"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search engine"),
             description: Translation.tr("Default search engine URL"),
             keywords: ["search", "engine", "url", "google", "duckduckgo", "web"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Search"),
             label: Translation.tr("Search prefixes"),
             description: Translation.tr("Type shortcuts: / for actions, > for apps, = for math"),
             keywords: ["search", "prefix", "shortcut", "action", "app", "math", "emoji", "clipboard"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Weather"),
             label: Translation.tr("Weather"),
             description: Translation.tr("Weather units, GPS and city"),
             keywords: ["weather", "gps", "city", "fahrenheit", "celsius", "temperature", "units"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Idle & Power"),
             description: Translation.tr("Screen off, lock and suspend timeouts"),
             keywords: ["idle", "power", "screen", "off", "lock", "suspend", "sleep", "timeout"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Screen off timeout"),
             description: Translation.tr("Time before screen turns off"),
             keywords: ["screen", "off", "timeout", "idle", "dpms", "blank"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Idle & Power"),
             label: Translation.tr("Lock timeout"),
             description: Translation.tr("Time before screen locks"),
             keywords: ["lock", "timeout", "idle", "auto", "security"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Night Light"),
             label: Translation.tr("Night light"),
             description: Translation.tr("Blue light filter / color temperature"),
             keywords: ["night", "light", "blue", "filter", "color", "temperature", "warm", "redshift"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Night Light"),
             label: Translation.tr("Night light schedule"),
             description: Translation.tr("Automatic night light based on time"),
             keywords: ["night", "light", "schedule", "auto", "time", "sunset", "sunrise"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("GameMode"),
             label: Translation.tr("GameMode"),
             description: Translation.tr("Auto-detect fullscreen games and reduce effects"),
             keywords: ["game", "mode", "fullscreen", "performance", "fps", "auto", "detect", "animations", "effects"]
         },
         {
-            pageIndex: 9, pageName: pages[9].name,
+            pageIndex: 11, pageName: pages[11].name,
             section: Translation.tr("Applications"),
             label: Translation.tr("Default applications"),
             description: Translation.tr("Terminal, file manager, browser commands"),
@@ -1057,35 +1067,35 @@ ApplicationWindow {
         // Advanced (page 8)
         // =====================================================================
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("Color generation"),
             label: Translation.tr("Color generation"),
             description: Translation.tr("Wallpaper-based color theming and palette type"),
             keywords: ["color", "generation", "theming", "wallpaper", "material you", "palette"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("Color generation"),
             label: Translation.tr("Palette type"),
             description: Translation.tr("Material You palette algorithm variant"),
             keywords: ["palette", "type", "scheme", "content", "expressive", "fidelity", "tonal", "spot", "monochrome"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("Terminal Colors"),
             label: Translation.tr("Terminal color adjustments"),
             description: Translation.tr("Fine-tune terminal theme colors"),
             keywords: ["terminal", "color", "saturation", "brightness", "harmony", "adjustment"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("Performance"),
             label: Translation.tr("Low power mode"),
             description: Translation.tr("Reduce resource usage for low-end hardware"),
             keywords: ["performance", "low", "power", "mode", "reduce", "battery", "laptop"]
         },
         {
-            pageIndex: 10, pageName: pages[10].name,
+            pageIndex: 12, pageName: pages[12].name,
             section: Translation.tr("Interactions"),
             label: Translation.tr("Scrolling"),
             description: Translation.tr("Touchpad and mouse scroll speed"),
@@ -1096,7 +1106,7 @@ ApplicationWindow {
         // Shortcuts (page 9)
         // =====================================================================
         {
-            pageIndex: 11, pageName: pages[11].name,
+            pageIndex: 13, pageName: pages[13].name,
             section: Translation.tr("Keyboard Shortcuts"),
             label: Translation.tr("Keyboard Shortcuts"),
             description: Translation.tr("Niri and ii keybindings reference"),
@@ -1110,42 +1120,42 @@ ApplicationWindow {
         // Modules (page 10)
         // =====================================================================
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Panel Modules"),
             description: Translation.tr("Enable or disable shell modules"),
             keywords: ["modules", "panels", "enable", "disable", "bar", "sidebar", "overview"]
         },
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable notification popups"),
             description: Translation.tr("Toggle notification toast popups"),
             keywords: ["module", "notification", "popup", "toast", "enable", "disable"]
         },
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable dock"),
             description: Translation.tr("Toggle dock panel"),
             keywords: ["module", "dock", "enable", "disable", "panel"]
         },
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable overview"),
             description: Translation.tr("Toggle workspace overview"),
             keywords: ["module", "overview", "enable", "disable", "workspace"]
         },
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Panel Modules"),
             label: Translation.tr("Enable sidebars"),
             description: Translation.tr("Toggle left and right sidebars"),
             keywords: ["module", "sidebar", "left", "right", "enable", "disable"]
         },
         {
-            pageIndex: 12, pageName: pages[12].name,
+            pageIndex: 14, pageName: pages[14].name,
             section: Translation.tr("Alt+Tab Switcher"),
             label: Translation.tr("Alt+Tab Switcher"),
             description: Translation.tr("Window switcher style and behavior"),
@@ -1156,42 +1166,42 @@ ApplicationWindow {
         // Waffle Style (page 11)
         // =====================================================================
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Taskbar"),
             label: Translation.tr("Waffle Taskbar"),
             description: Translation.tr("Windows 11 style taskbar settings"),
             keywords: ["waffle", "taskbar", "windows", "bottom", "tray"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Start Menu"),
             label: Translation.tr("Waffle Start Menu"),
             description: Translation.tr("Start menu size and behavior"),
             keywords: ["waffle", "start", "menu", "apps", "pinned"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Action Center"),
             label: Translation.tr("Waffle Action Center"),
             description: Translation.tr("Quick toggles and action center"),
             keywords: ["waffle", "action", "center", "toggles", "quick"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Widgets"),
             label: Translation.tr("Waffle Widgets"),
             description: Translation.tr("Widgets panel settings"),
             keywords: ["waffle", "widgets", "panel", "weather", "calendar"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Alt+Tab"),
             label: Translation.tr("Waffle Alt+Tab"),
             description: Translation.tr("Waffle window switcher with thumbnails"),
             keywords: ["waffle", "alt", "tab", "switcher", "thumbnails", "carousel"]
         },
         {
-            pageIndex: 13, pageName: pages[13].name,
+            pageIndex: 15, pageName: pages[15].name,
             section: Translation.tr("Waffle Background"),
             label: Translation.tr("Waffle Background"),
             description: Translation.tr("Waffle-specific wallpaper and backdrop settings"),
@@ -1202,112 +1212,112 @@ ApplicationWindow {
         // Compositor (page 12)
         // =====================================================================
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Displays"),
             label: Translation.tr("Displays"),
             description: Translation.tr("Monitor configuration and display outputs"),
             keywords: ["display", "monitor", "output", "screen", "resolution", "refresh", "rate"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Keyboard"),
             label: Translation.tr("Keyboard"),
             description: Translation.tr("Keyboard layout and repeat settings"),
             keywords: ["keyboard", "layout", "repeat", "delay", "rate", "xkb", "input"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Touchpad"),
             label: Translation.tr("Touchpad"),
             description: Translation.tr("Touchpad gestures, tap and scroll"),
             keywords: ["touchpad", "tap", "scroll", "gesture", "natural", "click", "input"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Mouse"),
             label: Translation.tr("Mouse"),
             description: Translation.tr("Mouse acceleration and speed"),
             keywords: ["mouse", "acceleration", "speed", "pointer", "input"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Trackpoint"),
             label: Translation.tr("Trackpoint"),
             description: Translation.tr("Trackpoint speed and acceleration"),
             keywords: ["trackpoint", "speed", "acceleration", "thinkpad", "input"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("General Input"),
             label: Translation.tr("General Input"),
             description: Translation.tr("Focus follows mouse, workspace auto-back-and-forth"),
             keywords: ["input", "focus", "mouse", "workspace", "auto", "back", "forth"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Cursor"),
             label: Translation.tr("Cursor"),
             description: Translation.tr("Cursor theme, size, and hide on typing"),
             keywords: ["cursor", "theme", "size", "hide", "typing", "pointer"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Window Gaps"),
             label: Translation.tr("Window gaps"),
             description: Translation.tr("Inner and outer gap size between windows"),
             keywords: ["gap", "gaps", "window", "inner", "outer", "spacing"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Window Border"),
             label: Translation.tr("Window border"),
             description: Translation.tr("Active and inactive window border width and color"),
             keywords: ["border", "window", "active", "inactive", "color", "width"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Focus Ring"),
             label: Translation.tr("Focus ring"),
             description: Translation.tr("Focus ring width and color"),
             keywords: ["focus", "ring", "color", "width", "active", "inactive"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Layout"),
             label: Translation.tr("Default column display"),
             description: Translation.tr("Default column width for new windows"),
             keywords: ["column", "display", "width", "default", "layout", "proportion"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Window Shadow"),
             label: Translation.tr("Window shadow"),
             description: Translation.tr("Window shadow softness, spread, offset, color"),
             keywords: ["shadow", "window", "softness", "spread", "offset", "color"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Struts"),
             label: Translation.tr("Struts"),
             description: Translation.tr("Reserved screen edge space for panels"),
             keywords: ["struts", "edge", "space", "panel", "reserved", "left", "right", "top", "bottom"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Misc"),
             label: Translation.tr("Clip windows"),
             description: Translation.tr("Clip windows to their workspace bounds"),
             keywords: ["clip", "window", "workspace", "bounds", "hotspot"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Animations"),
             label: Translation.tr("Per-animation toggles"),
             description: Translation.tr("Enable or disable individual compositor animations"),
             keywords: ["animation", "toggle", "enable", "disable", "compositor", "transition"]
         },
         {
-            pageIndex: 14, pageName: pages[14].name,
+            pageIndex: 16, pageName: pages[16].name,
             section: Translation.tr("Niri config status"),
             label: Translation.tr("Managed overrides status"),
             description: Translation.tr("Actionable managed overrides and extra files in Niri config"),
@@ -1318,7 +1328,7 @@ ApplicationWindow {
         // About (page 13)
         // =====================================================================
         {
-            pageIndex: 15, pageName: pages[15].name,
+            pageIndex: 17, pageName: pages[17].name,
             section: Translation.tr("About"),
             label: Translation.tr("About ii"),
             description: Translation.tr("Version info, credits and links"),
@@ -1329,7 +1339,7 @@ ApplicationWindow {
         // Displays (page 14)
         // =====================================================================
         {
-            pageIndex: 16, pageName: pages[16].name,
+            pageIndex: 18, pageName: pages[18].name,
             section: Translation.tr("Displays"),
             label: Translation.tr("Display Configuration"),
             description: Translation.tr("Monitor arrangement, resolution, scale and transform"),
@@ -1340,28 +1350,28 @@ ApplicationWindow {
         // Autostart & Services (page 15)
         // =====================================================================
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("Shell Autostart"),
             label: Translation.tr("Shell Autostart"),
             description: Translation.tr("Commands and apps that launch with the shell"),
             keywords: ["autostart", "startup", "launch", "command", "desktop", "boot", "login"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("User Services"),
             label: Translation.tr("User Services"),
             description: Translation.tr("Manage systemd user services — start, stop, enable, disable"),
             keywords: ["service", "systemd", "user", "start", "stop", "enable", "disable", "daemon", "unit"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("System Services"),
             label: Translation.tr("System Services"),
             description: Translation.tr("View and control system-level services (requires admin)"),
             keywords: ["system", "service", "systemd", "root", "admin", "pkexec", "privileged"]
         },
         {
-            pageIndex: 17, pageName: pages[17].name,
+            pageIndex: 19, pageName: pages[19].name,
             section: Translation.tr("User Scripts"),
             label: Translation.tr("User Scripts"),
             description: Translation.tr("Run or autostart scripts from ~/.local/bin"),
@@ -1372,21 +1382,21 @@ ApplicationWindow {
         // Input Devices (page 16)
         // =====================================================================
         {
-            pageIndex: 18, pageName: pages[18].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Keyboard"),
             label: Translation.tr("Keyboard"),
             description: Translation.tr("Keyboard layout, repeat rate and numlock"),
             keywords: ["keyboard", "layout", "repeat", "delay", "rate", "numlock", "xkb", "input"]
         },
         {
-            pageIndex: 18, pageName: pages[18].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Touchpad"),
             label: Translation.tr("Touchpad"),
             description: Translation.tr("Tap to click, natural scroll, pointer speed"),
             keywords: ["touchpad", "tap", "click", "natural", "scroll", "speed", "dwt", "gesture", "input"]
         },
         {
-            pageIndex: 18, pageName: pages[18].name,
+            pageIndex: 20, pageName: pages[20].name,
             section: Translation.tr("Mouse"),
             label: Translation.tr("Mouse"),
             description: Translation.tr("Acceleration profile and pointer speed"),
@@ -1397,21 +1407,21 @@ ApplicationWindow {
         // Power (page 17)
         // =====================================================================
         {
-            pageIndex: 19, pageName: pages[19].name,
+            pageIndex: 21, pageName: pages[21].name,
             section: Translation.tr("Battery"),
             label: Translation.tr("Battery"),
             description: Translation.tr("Battery thresholds, auto-suspend, and notifications"),
             keywords: ["battery", "low", "critical", "suspend", "full", "charge", "threshold", "power"]
         },
         {
-            pageIndex: 19, pageName: pages[19].name,
+            pageIndex: 21, pageName: pages[21].name,
             section: Translation.tr("Power Profile"),
             label: Translation.tr("Power Profile"),
             description: Translation.tr("Switch between power saver, balanced, and performance"),
             keywords: ["power", "profile", "saver", "balanced", "performance", "energy", "cpu"]
         },
         {
-            pageIndex: 19, pageName: pages[19].name,
+            pageIndex: 21, pageName: pages[21].name,
             section: Translation.tr("Idle & Sleep"),
             label: Translation.tr("Idle & Sleep"),
             description: Translation.tr("Screen off, lock, and suspend timeouts"),
@@ -1422,7 +1432,7 @@ ApplicationWindow {
         // Keybinds (page 18)
         // =====================================================================
         {
-            pageIndex: 20, pageName: pages[20].name,
+            pageIndex: 22, pageName: pages[22].name,
             section: Translation.tr("Keybinds"),
             label: Translation.tr("Keybinds"),
             description: Translation.tr("View and edit keyboard shortcuts for Niri and ii"),
@@ -1433,14 +1443,14 @@ ApplicationWindow {
         // Default Apps (page 19)
         // =====================================================================
         {
-            pageIndex: 21, pageName: pages[21].name,
+            pageIndex: 23, pageName: pages[23].name,
             section: Translation.tr("System Defaults"),
             label: Translation.tr("System Defaults"),
             description: Translation.tr("Default browser, file manager, editor, image and video apps"),
             keywords: ["default", "apps", "browser", "file", "manager", "editor", "image", "video", "xdg", "mime"]
         },
         {
-            pageIndex: 21, pageName: pages[21].name,
+            pageIndex: 23, pageName: pages[23].name,
             section: Translation.tr("Shell Apps"),
             label: Translation.tr("Shell Apps"),
             description: Translation.tr("Terminal, task manager, volume mixer, and other shell app preferences"),
@@ -1451,28 +1461,28 @@ ApplicationWindow {
         // Notification Rules (page 20)
         // =====================================================================
         {
-            pageIndex: 22, pageName: pages[22].name,
+            pageIndex: 24, pageName: pages[24].name,
             section: Translation.tr("Per-App Rules"),
             label: Translation.tr("Per-App Rules"),
             description: Translation.tr("Configure notification behavior for each application"),
             keywords: ["notification", "rules", "app", "per-app", "allow", "block", "silent", "sound"]
         },
         {
-            pageIndex: 22, pageName: pages[22].name,
+            pageIndex: 24, pageName: pages[24].name,
             section: Translation.tr("Per-App Rules"),
             label: Translation.tr("Block app notifications"),
             description: Translation.tr("Block or silence notifications from specific apps"),
             keywords: ["notification", "block", "silence", "mute", "app", "filter", "hide"]
         },
         {
-            pageIndex: 22, pageName: pages[22].name,
+            pageIndex: 24, pageName: pages[24].name,
             section: Translation.tr("Global Settings"),
             label: Translation.tr("Notification position"),
             description: Translation.tr("Where popup notifications appear on screen"),
             keywords: ["notification", "position", "popup", "corner", "top", "bottom", "left", "right"]
         },
         {
-            pageIndex: 22, pageName: pages[22].name,
+            pageIndex: 24, pageName: pages[24].name,
             section: Translation.tr("Global Settings"),
             label: Translation.tr("Notification timeouts"),
             description: Translation.tr("Default timeouts for low, normal and critical notifications"),
