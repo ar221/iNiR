@@ -34,4 +34,10 @@ QtObject {
         ? Appearance.angel.colBorderSubtle : Appearance.colors.colLayer0Border
 
     readonly property color accentColor: "#ff1100"
+
+    readonly property color titleExpandedColor: Appearance.colors.colOnLayer1
+    readonly property color titleCollapsedColor: Appearance.colors.colOnLayer1Inactive
+    readonly property color iconExpandedColor: Appearance.colors.colOnLayer1
+    readonly property color iconCollapsedColor: Appearance.colors.colOnLayer1Inactive
+    readonly property color headerHoverColor: Appearance.colors.colLayer1Hover
 }

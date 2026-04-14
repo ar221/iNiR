@@ -332,7 +332,7 @@ detect_running_instance_dir() {
 
     if command -v jq >/dev/null 2>&1; then
         local json_output
-        json_output="$($qs_bin list --all --json 2>/dev/null || true)"
+        json_output="$(timeout 3 "$qs_bin" list --all --json 2>/dev/null || true)"
         if [[ -n "$json_output" && "$json_output" != "[]" ]]; then
             running_path="$(printf '%s' "$json_output" | jq -r '
                 [.[] | (.config_path // .configPath // empty) | select(endswith("/shell.qml"))]
@@ -344,7 +344,7 @@ detect_running_instance_dir() {
     # Fallback: parse text output
     if [[ -z "$running_path" ]]; then
         local text_output
-        text_output="$($qs_bin list --all 2>/dev/null || true)"
+        text_output="$(timeout 3 "$qs_bin" list --all 2>/dev/null || true)"
         if [[ -n "$text_output" ]]; then
             running_path="$(printf '%s' "$text_output" | sed -n 's/^[[:space:]]*Config path:[[:space:]]*//p' | grep '/shell\.qml$' | head -1)"
         fi
@@ -464,7 +464,7 @@ resolve_config_dir() {
 }
 
 list_instances() {
-    "$qs_bin" -p "$1" list 2>/dev/null || true
+    timeout 3 "$qs_bin" -p "$1" list 2>/dev/null || true
 }
 
 has_instances() {
@@ -625,7 +625,7 @@ kill_shell() {
     # qs kill only kills one instance per invocation — loop until all are gone.
     local attempts=0
     while (( attempts < 10 )); do
-        "$qs_bin" -p "$dir" kill >/dev/null 2>&1 || break
+        timeout 3 "$qs_bin" -p "$dir" kill >/dev/null 2>&1 || break
         attempts=$((attempts + 1))
         sleep 0.2
     done
