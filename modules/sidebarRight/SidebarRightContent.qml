@@ -236,6 +236,7 @@ Item {
                     }
                 }
             }
+            }
 
             StaggeredReveal {
                 Layout.fillWidth: true
