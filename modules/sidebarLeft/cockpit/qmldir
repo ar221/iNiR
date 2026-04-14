@@ -1,0 +1,8 @@
+module qs.modules.sidebarLeft.cockpit
+
+CockpitSurface 1.0 CockpitSurface.qml
+AmbientBackground 1.0 AmbientBackground.qml
+NowPlayingHero 1.0 NowPlayingHero.qml
+SystemPulse 1.0 SystemPulse.qml
+WallpaperPalette 1.0 WallpaperPalette.qml
+ContextStrip 1.0 ContextStrip.qml
