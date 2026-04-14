@@ -832,20 +832,6 @@
                 "timer"
             ]
         },
-        "translator": {
-            "delay": 300,
-            "enable": false
-        },
-        "tools": {
-            "enable": false
-        },
-        "software": {
-            "enable": false
-        },
-        "plugins": {
-            "enable": false,
-            "lastActivePlugin": ""
-        },
         "ytmusic": {
             "enable": false,
             "autoConnect": true,
@@ -879,50 +865,7 @@
             "enable": false,
             "showNsfw": false
         },
-        "reddit": {
-            "enable": true,
-            "subreddits": [
-                "unixporn",
-                "linux",
-                "archlinux",
-                "kde",
-                "gnome"
-            ],
-            "limit": 25
-        },
         "widgets": {
-            "enable": true,
-            "media": true,
-            "week": true,
-            "context": true,
-            "note": false,
-            "launch": false,
-            "controls": true,
-            "status": true,
-            "crypto": false,
-            "widgetOrder": [
-                "media",
-                "week",
-                "context",
-                "controls",
-                "status",
-                "note",
-                "launch",
-                "crypto"
-            ],
-            "spacing": 8,
-            "crypto_settings": {
-                "refreshInterval": 300,
-                "coins": [
-                    "bitcoin",
-                    "ethereum"
-                ]
-            },
-            "glance": {
-                "showVolume": true,
-                "showGameMode": true,
-                "showDnd": true
-            },
             "statusRings": {
                 "showCpu": true,
                 "showRam": true,
@@ -939,29 +882,7 @@
                 "showBluetooth": true,
                 "showSettings": true,
                 "showLock": true
-            },
-            "quickLaunch": [
-                {
-                    "icon": "folder",
-                    "name": "Files",
-                    "cmd": "/usr/bin/nautilus"
-                },
-                {
-                    "icon": "terminal",
-                    "name": "Terminal",
-                    "cmd": "/usr/bin/kitty"
-                },
-                {
-                    "icon": "web",
-                    "name": "Browser",
-                    "cmd": "/usr/bin/firefox"
-                },
-                {
-                    "icon": "code",
-                    "name": "Code",
-                    "cmd": "/usr/bin/code"
-                }
-            ]
+            }
         }
     },
     "sounds": {

@@ -1102,12 +1102,6 @@ Scope {
                 checked: Config.options?.light?.night?.automatic ?? false
                 onCheckedChanged: Config.setNestedValue("light.night.automatic", checked)
             }
-            ConfigSwitch {
-                buttonIcon: "translate"
-                text: Translation.tr("Sidebar translator")
-                checked: Config.options?.sidebar?.translator?.enable ?? true
-                onCheckedChanged: Config.setNestedValue("sidebar.translator.enable", checked)
-            }
         }
 
         Item { Layout.fillHeight: true }

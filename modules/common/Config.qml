@@ -1195,13 +1195,6 @@ Singleton {
                 // Fade + slide each top-level sidebar card in 40ms apart when the
                 // sidebar opens. Disable for instant reveal.
                 property bool staggeredReveal: true
-                property JsonObject translator: JsonObject {
-                    property bool enable: true
-                    property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
-                }
-                property JsonObject ai: JsonObject {
-                    property bool textFadeIn: false
-                }
                 property JsonObject booru: JsonObject {
                     property bool allowNsfw: false
                     property string defaultProvider: "yandere"
@@ -1226,25 +1219,6 @@ Singleton {
                     // Custom streaming site URL (use %s for search query placeholder)
                     // Examples: "https://9animetv.to/search?keyword=%s", "https://anitaku.pe/search.html?keyword=%s"
                     property string watchSite: ""
-                }
-                // Reddit tab - public JSON API
-                property JsonObject reddit: JsonObject {
-                    property bool enable: false
-                    property list<string> subreddits: ["unixporn", "linux", "archlinux", "kde", "gnome"]
-                    property int limit: 25
-                }
-                // Tools tab - Niri debug options and quick actions
-                property JsonObject tools: JsonObject {
-                    property bool enable: false
-                }
-                // Software catalog tab - curated app install/remove
-                property JsonObject software: JsonObject {
-                    property bool enable: false
-                }
-                // Web Apps / Plugins tab - embedded webapps in sidebar
-                property JsonObject plugins: JsonObject {
-                    property bool enable: false
-                    property string lastActivePlugin: ""
                 }
                 // YT Music tab - Search and play YouTube music via yt-dlp
                 property JsonObject ytmusic: JsonObject {
@@ -1273,34 +1247,15 @@ Singleton {
                         property list<var> liked: []
                     }
                 }
-                // Widgets tab in left sidebar
+                // Cockpit left-sidebar config.
+                //
+                // The old widget drawer is gone (Cockpit Campaign 2026-04 Session A).
+                // The cockpit has a fixed composition, not a reorderable drawer.
+                // A handful of keys remain because other surfaces still consume them:
+                //   - controlsCard: consumed by CompactSidebarRightContent
+                //   - statusRings:  migrates to SystemPulse in Session D
                 property JsonObject widgets: JsonObject {
-                    property bool enable: true
-                    // Widget visibility
-                    property bool media: true
-                    property bool week: true
-                    property bool context: true
-                    property bool note: false
-                    property bool launch: false
-                    property bool controls: true
-                    property bool status: true
-                    property bool crypto: false
-                    property bool wallpaper: true
-                    // ContextCard specific
-                    property bool contextShowWeather: true
-                    // Widget order (drag to reorder)
-                    property list<string> widgetOrder: ["media", "week", "context", "note", "launch", "controls", "status", "crypto", "wallpaper"]
-                    // Spacing between widgets (px)
-                    property int spacing: 8
-
-                    // GlanceHeader behavior
-                    property JsonObject glance: JsonObject {
-                        property bool showVolume: true
-                        property bool showGameMode: true
-                        property bool showDnd: true
-                    }
-
-                    // StatusRings behavior
+                    // StatusRings behavior (kept until Session D replaces with SystemPulse)
                     property JsonObject statusRings: JsonObject {
                         property bool showCpu: true
                         property bool showRam: true
@@ -1309,7 +1264,7 @@ Singleton {
                         property bool showBattery: true
                     }
 
-                    // ControlsCard behavior
+                    // ControlsCard behavior (still consumed by right sidebar)
                     property JsonObject controlsCard: JsonObject {
                         property bool showDarkMode: true
                         property bool showDnd: true
@@ -1319,26 +1274,6 @@ Singleton {
                         property bool showBluetooth: true
                         property bool showSettings: true
                         property bool showLock: true
-                    }
-
-                    // CryptoWidget behavior
-                    property JsonObject crypto_settings: JsonObject {
-                        property int refreshInterval: 60
-                        property list<string> coins: ["bitcoin", "ethereum"]
-                    }
-
-                    // QuickLaunch shortcuts
-                    property list<var> quickLaunch: [
-                        { "icon": "folder", "name": "Files", "cmd": "/usr/bin/nautilus" },
-                        { "icon": "terminal", "name": "Terminal", "cmd": "/usr/bin/kitty" },
-                        { "icon": "web", "name": "Browser", "cmd": "/usr/bin/firefox" },
-                        { "icon": "code", "name": "Code", "cmd": "/usr/bin/code" }
-                    ]
-
-                    // QuickWallpaper settings
-                    property JsonObject quickWallpaper: JsonObject {
-                        property int itemSize: 72
-                        property bool showHeader: true
                     }
                 }
                 property JsonObject cornerOpen: JsonObject {
