@@ -160,6 +160,14 @@ ShellRoot {
         function toggle(): void {
             open()
         }
+        function close(): void {
+            GlobalStates.settingsOverlayOpen = false
+        }
+        function page(name: string): void {
+            GlobalStates.settingsRequestedPage = name
+            if (!GlobalStates.settingsOverlayOpen)
+                open()
+        }
     }
 
     // Settings overlay panel (loaded only when overlay mode is enabled)

@@ -27,6 +27,7 @@ Singleton {
     property bool altSwitcherOpen: false
     property bool clipboardOpen: false
     property bool settingsOverlayOpen: false
+    property string settingsRequestedPage: ""
     property bool regionSelectorOpen: false
     property bool screenLocked: false
     property bool screenLockContainsCharacters: false

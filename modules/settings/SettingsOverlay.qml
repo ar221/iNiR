@@ -501,8 +501,29 @@ Scope {
         function onSettingsOverlayOpenChanged() {
             if (GlobalStates.settingsOverlayOpen) {
                 root._everOpened = true
+                root._applyRequestedPage()
             }
         }
+        function onSettingsRequestedPageChanged() {
+            if (GlobalStates.settingsRequestedPage && GlobalStates.settingsOverlayOpen)
+                root._applyRequestedPage()
+        }
+    }
+
+    function _applyRequestedPage(): void {
+        const name = GlobalStates.settingsRequestedPage
+        if (!name) return
+        GlobalStates.settingsRequestedPage = ""
+        const lower = name.toLowerCase()
+        for (let i = 0; i < root.overlayPages.length; i++) {
+            const p = root.overlayPages[i]
+            if (p.name.toLowerCase() === lower
+                || (p.shortName && p.shortName.toLowerCase() === lower)) {
+                root.overlayCurrentPage = i
+                return
+            }
+        }
+        console.warn(`settings.page: unknown page '${name}'`)
     }
 
     Loader {
