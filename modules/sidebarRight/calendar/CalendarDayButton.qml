@@ -47,20 +47,46 @@ RippleButton {
             }
         }
         
-        // Event indicator dot
+        // Event indicator — bar at bottom, count badge in top-right when multiple
         Rectangle {
+            id: eventBar
             visible: button.eventCount > 0 && !button.isHeader
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 4
-            width: 6
-            height: 6
-            radius: 3
-            color: button.isToday == 1 
+            anchors.bottomMargin: 3
+            width: 12
+            height: 3
+            radius: 1.5
+            color: button.isToday == 1
                 ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
                     : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary)
                 : (Appearance.angelEverywhere ? Appearance.angel.colPrimary
                     : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+        }
+
+        // Count badge — top-right corner, only when >1 event
+        Rectangle {
+            visible: button.eventCount > 1 && !button.isHeader
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: 2
+            anchors.rightMargin: 2
+            width: 13
+            height: 13
+            radius: 6.5
+            color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
+                : Appearance.inirEverywhere ? Appearance.inir.colPrimary
+                : Appearance.colors.colPrimary
+
+            StyledText {
+                anchors.centerIn: parent
+                text: button.eventCount > 9 ? "9+" : button.eventCount
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                color: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
+                    : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
+                    : Appearance.colors.colOnPrimary
+            }
         }
     }
 }
