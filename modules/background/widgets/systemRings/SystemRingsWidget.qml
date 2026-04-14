@@ -78,6 +78,20 @@ AbstractBackgroundWidget {
             border.width: 1
             border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
         }
+
+        // Inset depth — top edge gradient
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 1
+            height: 6
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
     }
 
     // Click to launch btop (disabled in edit mode to allow dragging)
@@ -125,6 +139,7 @@ AbstractBackgroundWidget {
                 icon: "settings"
                 label: "CPU"
                 valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
+                history: ResourceUsage.cpuUsageHistory
             }
 
             CircularProgressRing {
@@ -134,6 +149,7 @@ AbstractBackgroundWidget {
                 icon: "grid_view"
                 label: "RAM"
                 valueText: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
+                history: ResourceUsage.memoryUsageHistory
             }
 
             CircularProgressRing {
@@ -156,6 +172,7 @@ AbstractBackgroundWidget {
                     const gb = ResourceUsage.vramUsed / (1024 * 1024 * 1024)
                     return gb.toFixed(1) + " GB"
                 }
+                history: ResourceUsage.gpuUsageHistory
             }
         }
     }

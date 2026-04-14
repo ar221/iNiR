@@ -75,6 +75,20 @@ AbstractBackgroundWidget {
             border.width: 1
             border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
         }
+
+        // Inset depth — top edge gradient
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 1
+            height: 6
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
     }
 
     // ── Content ──
