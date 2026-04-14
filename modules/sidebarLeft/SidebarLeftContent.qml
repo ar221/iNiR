@@ -13,7 +13,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import QtQuick.Effects
 import Qt5Compat.GraphicalEffects as GE
 
 Item {
@@ -94,116 +93,18 @@ Item {
         swipeView.currentItem?.forceActiveFocus()
     }
 
-    implicitHeight: sidebarLeftBackground.implicitHeight
-    implicitWidth: sidebarLeftBackground.implicitWidth
+    implicitHeight: bg.implicitHeight
+    implicitWidth: bg.implicitWidth
 
-    StyledRectangularShadow {
-        target: sidebarLeftBackground
-        visible: !Appearance.gameModeMinimal
-    }
-    Rectangle {
-        id: sidebarLeftBackground
-
+    SidebarBackground {
+        id: bg
         anchors.fill: parent
-        implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
-        implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
-        property bool cardStyle: Config.options?.sidebar?.cardStyle ?? false
-        readonly property bool angelEverywhere: Appearance.angelEverywhere
-        readonly property bool auroraEverywhere: Appearance.auroraEverywhere
-        readonly property bool gameModeMinimal: Appearance.gameModeMinimal
-        readonly property string wallpaperUrl: {
-            const _dep1 = WallpaperListener.multiMonitorEnabled
-            const _dep2 = WallpaperListener.effectivePerMonitor
-            const _dep3 = Wallpapers.effectiveWallpaperUrl
-            return WallpaperListener.wallpaperUrlForScreen(root.panelScreen)
-        }
-
-        ColorQuantizer {
-            id: sidebarLeftWallpaperQuantizer
-            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? sidebarLeftBackground.wallpaperUrl : ""
-            depth: 0
-            rescaleSize: 10
-        }
-
-        readonly property color wallpaperDominantColor: (sidebarLeftWallpaperQuantizer?.colors?.[0] ?? Appearance.colors.colPrimary)
-        readonly property QtObject blendedColors: AdaptedMaterialScheme {
-            color: ColorUtils.mix(sidebarLeftBackground.wallpaperDominantColor, Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
-        }
-
-        color: gameModeMinimal ? "transparent"
-             : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
-             : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
-        border.width: gameModeMinimal ? 0 : (angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
-        border.color: angelEverywhere ? Appearance.angel.colPanelBorder
-            : Appearance.inirEverywhere ? Appearance.inir.colBorder
-            : Appearance.colors.colLayer0Border
-        radius: angelEverywhere ? Appearance.angel.roundingNormal
-            : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-            : cardStyle ? Appearance.rounding.normal : (Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1)
-
-        clip: true
-
-        layer.enabled: auroraEverywhere && !gameModeMinimal
-        layer.effect: GE.OpacityMask {
-            maskSource: Rectangle {
-                width: sidebarLeftBackground.width
-                height: sidebarLeftBackground.height
-                radius: sidebarLeftBackground.radius
-            }
-        }
-
-        Image {
-            id: sidebarLeftBlurredWallpaper
-            x: -Appearance.sizes.hyprlandGapsOut
-            y: -Appearance.sizes.hyprlandGapsOut
-            width: root.screenWidth
-            height: root.screenHeight
-            visible: sidebarLeftBackground.auroraEverywhere && !sidebarLeftBackground.gameModeMinimal
-            source: sidebarLeftBackground.wallpaperUrl
-            fillMode: Image.PreserveAspectCrop
-            cache: true
-            sourceSize.width: root.screenWidth
-            sourceSize.height: root.screenHeight
-            asynchronous: true
-
-            layer.enabled: Appearance.effectsEnabled && sidebarLeftBackground.auroraEverywhere && !sidebarLeftBackground.gameModeMinimal
-            layer.effect: MultiEffect {
-                source: sidebarLeftBlurredWallpaper
-                anchors.fill: source
-                saturation: sidebarLeftBackground.angelEverywhere
-                    ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
-                    : (Appearance.effectsEnabled ? 0.2 : 0)
-                blurEnabled: Appearance.effectsEnabled
-                blurMax: 64
-                blur: Appearance.effectsEnabled
-                    ? (sidebarLeftBackground.angelEverywhere ? Appearance.angel.blurIntensity : 1)
-                    : 0
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                color: sidebarLeftBackground.angelEverywhere
-                    ? ColorUtils.transparentize((sidebarLeftBackground.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base), Appearance.angel.overlayOpacity * Appearance.angel.panelTransparentize)
-                    : ColorUtils.transparentize((sidebarLeftBackground.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base), Appearance.aurora.overlayTransparentize)
-            }
-        }
-
-        // Angel inset glow — top edge
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Appearance.angel.insetGlowHeight
-            visible: sidebarLeftBackground.angelEverywhere
-            color: Appearance.angel.colInsetGlow
-            z: 10
-        }
-
-        // Angel partial border — elegant half-borders
-        AngelPartialBorder {
-            targetRadius: sidebarLeftBackground.radius
-            z: 10
-        }
+        side: "left"
+        panelScreen: root.panelScreen
+        screenWidth: root.screenWidth
+        screenHeight: root.screenHeight
+        sidebarWidth: root.sidebarWidth
+        sidebarPadding: root.sidebarPadding
 
         ColumnLayout {
             anchors.fill: parent

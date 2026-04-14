@@ -23,9 +23,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Hyprland
-import QtQuick.Effects
-import Qt5Compat.GraphicalEffects as GE
-
 import qs.modules.sidebarRight.quickToggles
 import qs.modules.sidebarRight.quickToggles.classicStyle
 import qs.modules.sidebarRight.bluetoothDevices
@@ -127,257 +124,86 @@ Item {
 
     Component {
         id: calendarComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: calendarSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: calendarSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                CalendarWidget {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    onDayWithEventsClicked: (date) => {
-                        const eventsIdx = root.sections.findIndex(s => s.id === "events")
-                        if (eventsIdx !== -1) root.activeSection = eventsIdx
-                    }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: CalendarWidget {
+                onDayWithEventsClicked: (date) => {
+                    const eventsIdx = root.sections.findIndex(s => s.id === "events")
+                    if (eventsIdx !== -1) root.activeSection = eventsIdx
                 }
             }
         }
     }
-    Component { 
+    Component {
         id: eventsComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: eventsSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: eventsSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                EventsWidget { 
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    onOpenEventsDialog: (editEvent) => {
-                        root.eventsDialogEditEvent = editEvent
-                        root.showEventsDialog = true
-                    }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: EventsWidget {
+                onOpenEventsDialog: (editEvent) => {
+                    root.eventsDialogEditEvent = editEvent
+                    root.showEventsDialog = true
                 }
             }
         }
     }
     Component {
         id: todoComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: todoSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: todoSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                TodoWidget {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                }
-            }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: TodoWidget {}
         }
     }
     Component {
         id: notepadComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: notepadSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: notepadSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                NotepadWidget {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                }
-            }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: NotepadWidget {}
         }
     }
     Component {
         id: calculatorComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: calculatorSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: calculatorSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                CalculatorWidget {
-                    compactMode: true
-                    centerContentVertically: true
-                    anchors.fill: parent
-                    anchors.margins: 6
-                }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: CalculatorWidget {
+                compactMode: true
+                centerContentVertically: true
             }
         }
     }
     Component {
         id: sysmonComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: sysmonSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: sysmonSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                SysMonWidget {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                }
-            }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: SysMonWidget {}
         }
     }
     Component {
         id: timerComponent
-        Item {
-            anchors.fill: parent
-
-            StyledRectangularShadow {
-                target: timerSurface
-                visible: !bg.inirEverywhere && !bg.auroraEverywhere && !bg.angelEverywhere
-                blur: 0.35 * Appearance.sizes.elevationMargin
-            }
-
-            Rectangle {
-                id: timerSurface
-                anchors.fill: parent
-                anchors.margins: 8
-                radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-                    : bg.inirEverywhere ? Appearance.inir.roundingNormal
-                    : Appearance.rounding.normal
-                color: bg.angelEverywhere ? Appearance.angel.colGlassCard
-                    : bg.inirEverywhere ? Appearance.inir.colLayer1
-                    : bg.colDarkSurface
-                border.width: bg.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
-                border.color: bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.22)
-                    : bg.inirEverywhere ? Appearance.inir.colBorder
-                    : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.78)
-                    : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.72)
-                clip: true
-
-                PomodoroWidget {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    compactMode: true
-                }
+        CompactWidgetSurface {
+            inirEverywhere: bg.inirEverywhere
+            auroraEverywhere: bg.auroraEverywhere
+            angelEverywhere: bg.angelEverywhere
+            colDarkSurface: bg.colDarkSurface
+            widget: PomodoroWidget {
+                compactMode: true
             }
         }
     }
@@ -549,41 +375,19 @@ Item {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Background (identical pattern to SidebarRightContent)
+    // Background
     // ─────────────────────────────────────────────────────────────
-    StyledRectangularShadow {
-        target: bg
-        visible: !Appearance.inirEverywhere && !Appearance.gameModeMinimal
-    }
-
-    Rectangle {
+    SidebarBackground {
         id: bg
         anchors.fill: parent
+        side: "right"
+        panelScreen: root.panelScreen
+        screenWidth: root.screenWidth
+        screenHeight: root.screenHeight
+        sidebarWidth: root.sidebarWidth
+        sidebarPadding: root.sidebarPadding
 
-        property bool cardStyle: Config.options?.sidebar?.cardStyle ?? false
-        readonly property bool angelEverywhere:  Appearance.angelEverywhere
-        readonly property bool auroraEverywhere: Appearance.auroraEverywhere
-        readonly property bool inirEverywhere:   Appearance.inirEverywhere
-        readonly property bool gameModeMinimal:  Appearance.gameModeMinimal
-
-        readonly property string wallpaperUrl: {
-            const _d1 = WallpaperListener.multiMonitorEnabled
-            const _d2 = WallpaperListener.effectivePerMonitor
-            const _d3 = Wallpapers.effectiveWallpaperUrl
-            return WallpaperListener.wallpaperUrlForScreen(root.panelScreen)
-        }
-
-        ColorQuantizer {
-            id: bgQuant
-            source: (Appearance.auroraEverywhere || Appearance.angelEverywhere) ? bg.wallpaperUrl : ""
-            depth: 0
-            rescaleSize: 10
-        }
-        readonly property color wallpaperDominantColor: bgQuant?.colors?.[0] ?? Appearance.colors.colPrimary
-        readonly property QtObject blendedColors: AdaptedMaterialScheme {
-            color: ColorUtils.mix(bg.wallpaperDominantColor, Appearance.colors.colPrimaryContainer, 0.8)
-                   || Appearance.m3colors.m3secondaryContainer
-        }
+        // Compact-specific sub-surface colors (used by widget cards)
         readonly property color colDarkSurface: angelEverywhere
             ? ColorUtils.transparentize(Appearance.angel.colGlassCard, 0.76)
             : inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colLayer1, 0.22)
@@ -608,75 +412,6 @@ Item {
                 Math.max(0.12, Appearance.aurora.subSurfaceTransparentize - 0.14)
             )
             : ColorUtils.transparentize(Appearance.colors.colLayer1Active, 0.18)
-
-        color: gameModeMinimal  ? "transparent"
-             : inirEverywhere   ? (cardStyle ? Appearance.inir.colLayer1 : Appearance.inir.colLayer0)
-             : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
-             : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
-
-        border.width: gameModeMinimal ? 0 : (angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
-        border.color: angelEverywhere  ? Appearance.angel.colPanelBorder
-                    : inirEverywhere   ? Appearance.inir.colBorder
-                    : Appearance.colors.colLayer0Border
-
-        radius: angelEverywhere  ? Appearance.angel.roundingNormal
-              : inirEverywhere   ? (cardStyle ? Appearance.inir.roundingLarge : Appearance.inir.roundingNormal)
-              : cardStyle        ? Appearance.rounding.normal
-              : (Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1)
-        clip: true
-
-        layer.enabled: !gameModeMinimal
-        layer.effect: GE.OpacityMask {
-            maskSource: Rectangle {
-                width: bg.width; height: bg.height; radius: bg.radius
-            }
-        }
-
-        // Aurora blurred wallpaper
-        Image {
-            id: bgBlurWallpaper
-            x: -(root.screenWidth - bg.width - Appearance.sizes.hyprlandGapsOut)
-            y: -Appearance.sizes.hyprlandGapsOut
-            width:  root.screenWidth  ?? 1920
-            height: root.screenHeight ?? 1080
-            visible: bg.auroraEverywhere && !bg.inirEverywhere && !bg.gameModeMinimal
-            source: bg.wallpaperUrl
-            fillMode: Image.PreserveAspectCrop
-            cache: true; asynchronous: true
-            sourceSize.width: root.screenWidth ?? 1920
-            sourceSize.height: root.screenHeight ?? 1080
-            layer.enabled: Appearance.effectsEnabled && bg.auroraEverywhere && !bg.inirEverywhere
-            layer.effect: MultiEffect {
-                source: bgBlurWallpaper
-                anchors.fill: source
-                saturation: bg.angelEverywhere
-                    ? (Appearance.angel.blurSaturation * Appearance.angel.colorStrength)
-                    : (Appearance.effectsEnabled ? 0.2 : 0)
-                blurEnabled: Appearance.effectsEnabled
-                blurMax: 100
-                blur: Appearance.effectsEnabled
-                    ? (bg.angelEverywhere ? Appearance.angel.blurIntensity : 1) : 0
-            }
-            Rectangle {
-                anchors.fill: parent
-                color: bg.angelEverywhere
-                    ? ColorUtils.transparentize((bg.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base),
-                                               Appearance.angel.overlayOpacity * Appearance.angel.panelTransparentize)
-                    : ColorUtils.transparentize((bg.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base),
-                                               Appearance.aurora.overlayTransparentize)
-            }
-        }
-
-        // Angel inset glow — top edge
-        Rectangle {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            height:  Appearance.angel.insetGlowHeight
-            visible: bg.angelEverywhere
-            color:   Appearance.angel.colInsetGlow
-            z: 10
-        }
-
-        AngelPartialBorder { targetRadius: bg.radius; z: 10 }
 
         // ─────────────────────────────────────────────────────────
         // Two-column layout
