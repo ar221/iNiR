@@ -91,6 +91,7 @@ SettingsSwitch 1.0 SettingsSwitch.qml
 SidebarBackground 1.0 SidebarBackground.qml
 SidebarShell 1.0 SidebarShell.qml
 SineCookie 1.0 SineCookie.qml
+StaggeredReveal 1.0 StaggeredReveal.qml
 StyledBlurEffect 1.0 StyledBlurEffect.qml
 StyledComboBox 1.0 StyledComboBox.qml
 StyledDropShadow 1.0 StyledDropShadow.qml

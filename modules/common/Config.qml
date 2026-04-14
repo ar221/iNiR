@@ -1117,6 +1117,9 @@ Singleton {
                 property JsonObject focusModeChips: JsonObject {
                     property bool enable: true
                 }
+                // Fade + slide each top-level sidebar card in 40ms apart when the
+                // sidebar opens. Disable for instant reveal.
+                property bool staggeredReveal: true
                 property JsonObject translator: JsonObject {
                     property bool enable: true
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.

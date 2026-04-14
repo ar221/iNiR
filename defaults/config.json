@@ -789,6 +789,7 @@
         "focusModeChips": {
             "enable": true
         },
+        "staggeredReveal": true,
         "quickSliders": {
             "enable": true,
             "showBrightness": true,

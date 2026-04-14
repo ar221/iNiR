@@ -95,34 +95,56 @@ Item {
             anchors.margins: sidebarPadding
             spacing: 14
 
-            SystemButtonRow {
-                Layout.fillHeight: false
+            // Staggered entrance — each card fades + slides in 40ms apart from
+            // its predecessor when the sidebar opens. Indices preserve the
+            // visual order; hidden cards (inactive Loaders) don't consume an
+            // index slot visually but keep their place in the sequence so the
+            // cadence stays stable as config flips on/off.
+            readonly property bool _staggerActive: GlobalStates.sidebarRightOpen
+                && (Config.options?.sidebar?.staggeredReveal ?? true)
+
+            StaggeredReveal {
                 Layout.fillWidth: true
-                // Layout.margins: 10
                 Layout.topMargin: 4
                 Layout.bottomMargin: 4
+                index: 0
+                active: parent._staggerActive
+                SystemButtonRow {
+                    width: parent.width
+                }
             }
 
-            Loader {
-                id: slidersLoader
+            StaggeredReveal {
                 Layout.fillWidth: true
-                visible: active
-                active: {
-                    const configQuickSliders = Config.options?.sidebar?.quickSliders
-                    if (!configQuickSliders?.enable) return false
-                    if (!configQuickSliders?.showMic && !configQuickSliders?.showVolume && !configQuickSliders?.showBrightness) return false;
-                    return true;
+                index: 1
+                active: parent._staggerActive
+                visible: slidersLoader.active
+                Loader {
+                    id: slidersLoader
+                    width: parent.width
+                    visible: active
+                    active: {
+                        const configQuickSliders = Config.options?.sidebar?.quickSliders
+                        if (!configQuickSliders?.enable) return false
+                        if (!configQuickSliders?.showMic && !configQuickSliders?.showVolume && !configQuickSliders?.showBrightness) return false;
+                        return true;
+                    }
+                    sourceComponent: QuickSliders {}
                 }
-                sourceComponent: QuickSliders {}
             }
 
             // ─── Focus Mode chip strip ─────────────────────────────
-            Loader {
-                id: focusModeChipsLoader
+            StaggeredReveal {
                 Layout.fillWidth: true
-                visible: active
-                active: Config.options?.sidebar?.focusModeChips?.enable ?? true
-                sourceComponent: ButtonGroup {
+                index: 2
+                active: parent._staggerActive
+                visible: focusModeChipsLoader.active
+                Loader {
+                    id: focusModeChipsLoader
+                    width: parent.width
+                    visible: active
+                    active: Config.options?.sidebar?.focusModeChips?.enable ?? true
+                    sourceComponent: ButtonGroup {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 32
                     spacing: 4
@@ -215,30 +237,54 @@ Item {
                 }
             }
 
-            LoaderedQuickPanelImplementation {
-                styleName: "classic"
-                sourceComponent: ClassicQuickPanel {}
-            }
-
-            LoaderedQuickPanelImplementation {
-                styleName: "android"
-                sourceComponent: AndroidQuickPanel {
-                    editMode: root.editMode
+            StaggeredReveal {
+                Layout.fillWidth: true
+                index: 3
+                active: parent._staggerActive
+                visible: classicQuickPanel.visible
+                LoaderedQuickPanelImplementation {
+                    id: classicQuickPanel
+                    width: parent.width
+                    styleName: "classic"
+                    sourceComponent: ClassicQuickPanel {}
                 }
             }
 
-            CenterWidgetGroup {
+            StaggeredReveal {
+                Layout.fillWidth: true
+                index: 3
+                active: parent._staggerActive
+                visible: androidQuickPanel.visible
+                LoaderedQuickPanelImplementation {
+                    id: androidQuickPanel
+                    width: parent.width
+                    styleName: "android"
+                    sourceComponent: AndroidQuickPanel {
+                        editMode: root.editMode
+                    }
+                }
+            }
+
+            StaggeredReveal {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                index: 4
+                active: parent._staggerActive
+                CenterWidgetGroup {
+                    anchors.fill: parent
+                }
             }
 
-            BottomWidgetGroup {
-                id: bottomWidgetGroup
+            StaggeredReveal {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.fillHeight: false
                 Layout.fillWidth: true
-                Layout.preferredHeight: implicitHeight
+                index: 5
+                active: parent._staggerActive
+                BottomWidgetGroup {
+                    id: bottomWidgetGroup
+                    width: parent.width
+                }
             }
         }
     }
