@@ -76,48 +76,6 @@ Item {
                 }
             }
 
-            // === Quick Toggles ===
-            CollapsibleSection {
-                title: Translation.tr("Quick Toggles")
-                icon: "toggle_on"
-                expanded: true
-                enableSettingsSearch: false
-
-                ConfigSwitch {
-                    buttonIcon: "dark_mode"
-                    text: Translation.tr("Dark mode")
-                    checked: Appearance.m3colors?.darkmode ?? false
-                    onCheckedChanged: {
-                        const current = Config.options?.appearance?.customTheme?.darkmode ?? true
-                        if (checked !== current) Config.setNestedValue("appearance.customTheme.darkmode", checked)
-                    }
-                }
-                ConfigSwitch {
-                    buttonIcon: "nightlight"
-                    text: Translation.tr("Night light")
-                    checked: Hyprsunset.active ?? false
-                    onCheckedChanged: if (checked !== Hyprsunset.active) Hyprsunset.toggle()
-                }
-                ConfigSwitch {
-                    buttonIcon: "coffee"
-                    text: Translation.tr("Idle inhibitor")
-                    checked: Idle.inhibit ?? false
-                    onCheckedChanged: if (checked !== Idle.inhibit) Idle.toggleInhibit()
-                }
-                ConfigSwitch {
-                    buttonIcon: "do_not_disturb_on"
-                    text: Translation.tr("Do not disturb")
-                    checked: Notifications.silent ?? false
-                    onCheckedChanged: if (checked !== Notifications.silent) Notifications.toggleSilent()
-                }
-                ConfigSwitch {
-                    buttonIcon: "sports_esports"
-                    text: Translation.tr("Game mode")
-                    checked: GameMode.active
-                    onCheckedChanged: if (checked !== GameMode.active) GameMode.toggle()
-                }
-            }
-
             // === Capture ===
             CollapsibleSection {
                 title: Translation.tr("Capture")
@@ -229,12 +187,13 @@ Item {
                 }
             }
 
-            // === Niri Debug ===
+            // === Niri Debug (devMode only) ===
             CollapsibleSection {
                 title: Translation.tr("Niri Debug")
                 icon: "bug_report"
                 expanded: false
                 enableSettingsSearch: false
+                visible: Config.options?.devMode ?? false
 
                 ConfigSwitch {
                     buttonIcon: "palette"

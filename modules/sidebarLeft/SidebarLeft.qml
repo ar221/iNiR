@@ -13,7 +13,6 @@ SidebarShell {
             screenWidth: shell.screenWidth
             screenHeight: shell.screenHeight
             panelScreen: shell.panelScreen
-            onPluginViewActiveChanged: shell.pluginViewActive = pluginViewActive
         }
     }
 }

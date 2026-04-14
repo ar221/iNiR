@@ -19,7 +19,6 @@ Scope {
     required property Component contentComponent // What to render inside
 
     // ── Optional properties ──────────────────────────────────────
-    property bool pluginViewActive: false        // Left-only: webapp expansion
     property bool soundEnabled: false            // Right-only: open sound
 
     // ── Derived from side ────────────────────────────────────────
@@ -37,20 +36,7 @@ Scope {
     readonly property bool instantOpen: Config.options?.sidebar?.instantOpen ?? false
     readonly property string animationType: Config.options?.sidebar?.animationType ?? "slide"
 
-    // ── Plugin transition tracking (left-only) ───────────────────
-    property bool _pluginTransitioning: false
-    onPluginViewActiveChanged: {
-        root._pluginTransitioning = true
-        _pluginTransitionTimer.restart()
-    }
-    Timer {
-        id: _pluginTransitionTimer
-        interval: 50
-        onTriggered: root._pluginTransitioning = false
-    }
-    readonly property real effectiveSidebarWidth: pluginViewActive
-        ? Appearance.sizes.sidebarWidthExtended
-        : sidebarWidth
+    readonly property real effectiveSidebarWidth: sidebarWidth
 
     // ── Deferred slide trigger ───────────────────────────────────
     property bool _sidebarShown: false
@@ -175,7 +161,7 @@ Scope {
             width: root.effectiveSidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
             Behavior on width {
                 // Only active for left sidebar plugin transitions
-                enabled: Appearance.animationsEnabled && !root.isRight && !root._pluginTransitioning
+                enabled: Appearance.animationsEnabled && !root.isRight
                 NumberAnimation {
                     duration: Appearance.animation.elementResize.duration
                     easing.type: Appearance.animation.elementResize.type
@@ -244,7 +230,7 @@ Scope {
             transitions: [
                 Transition {
                     to: "open"
-                    enabled: Appearance.animationsEnabled && !root._pluginTransitioning && !root.instantOpen
+                    enabled: Appearance.animationsEnabled && !root.instantOpen
                     ParallelAnimation {
                         NumberAnimation {
                             target: sidebarContentLoader; property: "animTranslateX"
@@ -300,7 +286,7 @@ Scope {
                 },
                 Transition {
                     to: "closed"
-                    enabled: Appearance.animationsEnabled && !root._pluginTransitioning && !root.instantOpen
+                    enabled: Appearance.animationsEnabled && !root.instantOpen
                     ParallelAnimation {
                         NumberAnimation {
                             target: sidebarContentLoader; property: "animTranslateX"

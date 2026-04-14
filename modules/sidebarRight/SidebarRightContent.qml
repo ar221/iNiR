@@ -31,8 +31,6 @@ Item {
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
-    property bool showEventsDialog: false
-    property var eventsDialogEditEvent: null
     property bool showHotspotDialog: false
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
@@ -58,7 +56,6 @@ Item {
                 root.showAudioInputDialog = false;
                 root.showNightLightDialog = false;
                 root.showHotspotDialog = false;
-                root.eventsDialogEditEvent = null;
             }
         }
         function onRequestWifiDialogChanged() {
@@ -478,15 +475,11 @@ Item {
                 opacity: enabled ? 1.0 : 0.5
                 buttonIcon: "restart_alt"
                 onClicked: {
-                    if (!root.reloadButtonEnabled) {
-                        console.log("[SidebarRight] Reload button still on cooldown, ignoring click");
-                        return;
-                    }
-                    
-                    console.log("[SidebarRight] Reload button clicked");
+                    if (!root.reloadButtonEnabled) return;
+
                     root.reloadButtonEnabled = false;
                     reloadButtonCooldown.restart();
-                    
+
                     if (CompositorService.isHyprland) {
                         Hyprland.dispatch("reload");
                     } else if (CompositorService.isNiri) {
@@ -502,10 +495,7 @@ Item {
             Timer {
                 id: reloadButtonCooldown
                 interval: 500
-                onTriggered: {
-                    root.reloadButtonEnabled = true;
-                    console.log("[SidebarRight] Reload button cooldown finished");
-                }
+                onTriggered: root.reloadButtonEnabled = true
             }
             QuickToggleButton {
                 id: settingsButton
@@ -514,22 +504,16 @@ Item {
                 opacity: enabled ? 1.0 : 0.5
                 buttonIcon: "settings"
                 onClicked: {
-                    if (!root.settingsButtonEnabled) {
-                        console.log("[SidebarRight] Settings button still on cooldown, ignoring click");
-                        return;
-                    }
-                    
-                    console.log("[SidebarRight] Settings button clicked");
+                    if (!root.settingsButtonEnabled) return;
+
                     root.settingsButtonEnabled = false;
                     settingsButtonCooldown.restart();
-                    
+
                     if (CompositorService.isNiri) {
                         const wins = NiriService.windows || []
-                        console.log("[SidebarRight] Checking for existing settings window among", wins.length, "windows");
                         for (let i = 0; i < wins.length; i++) {
                             const w = wins[i]
                             if (w.title === "illogical-impulse Settings" && w.app_id === "org.quickshell") {
-                                console.log("[SidebarRight] Found existing settings window, focusing it");
                                 GlobalStates.sidebarRightOpen = false;
                                 Qt.callLater(() => {
                                     NiriService.focusWindow(w.id)
@@ -537,10 +521,8 @@ Item {
                                 return
                             }
                         }
-                        console.log("[SidebarRight] No existing settings window found");
                     }
-                    
-                    console.log("[SidebarRight] Opening new settings window via IPC");
+
                     GlobalStates.sidebarRightOpen = false;
                     Qt.callLater(() => {
                         Quickshell.execDetached([Quickshell.shellPath("scripts/inir"), "settings"]);
@@ -554,10 +536,7 @@ Item {
             Timer {
                 id: settingsButtonCooldown
                 interval: 500
-                onTriggered: {
-                    root.settingsButtonEnabled = true;
-                    console.log("[SidebarRight] Settings button cooldown finished");
-                }
+                onTriggered: root.settingsButtonEnabled = true
             }
             QuickToggleButton {
                 toggled: false
