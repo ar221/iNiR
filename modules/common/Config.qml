@@ -1253,17 +1253,8 @@ Singleton {
                 // The cockpit has a fixed composition, not a reorderable drawer.
                 // A handful of keys remain because other surfaces still consume them:
                 //   - controlsCard: consumed by CompactSidebarRightContent
-                //   - statusRings:  migrates to SystemPulse in Session D
+                // StatusRings config removed in Session D (replaced by SystemPulse — no per-ring toggles).
                 property JsonObject widgets: JsonObject {
-                    // StatusRings behavior (kept until Session D replaces with SystemPulse)
-                    property JsonObject statusRings: JsonObject {
-                        property bool showCpu: true
-                        property bool showRam: true
-                        property bool showDisk: true
-                        property bool showTemp: true
-                        property bool showBattery: true
-                    }
-
                     // ControlsCard behavior (still consumed by right sidebar)
                     property JsonObject controlsCard: JsonObject {
                         property bool showDarkMode: true

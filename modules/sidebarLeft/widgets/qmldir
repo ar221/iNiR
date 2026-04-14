@@ -1,7 +1,6 @@
 module qs.modules.sidebarLeft.widgets
 
 ControlsCard 1.0 ControlsCard.qml
-StatusRings 1.0 StatusRings.qml
 
 YtMusicPlayerCard 1.0 YtMusicPlayerCard.qml
 YtMusicTrackItem 1.0 YtMusicTrackItem.qml

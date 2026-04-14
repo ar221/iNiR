@@ -866,13 +866,6 @@
             "showNsfw": false
         },
         "widgets": {
-            "statusRings": {
-                "showCpu": true,
-                "showRam": true,
-                "showDisk": true,
-                "showTemp": true,
-                "showBattery": true
-            },
             "controlsCard": {
                 "showDarkMode": true,
                 "showDnd": true,
