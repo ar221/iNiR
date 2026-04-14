@@ -1412,7 +1412,13 @@ run_ipc_target_command() {
         echo "Timed out waiting for iNiR to start" >&2
         exit 1
     fi
-    exec "$qs_bin" -p "$config_dir" ipc call "$target" "$@"
+    # IPC handlers for most panels register ~500ms after shell start (deferred panel
+    # loading at boot). If the first call fails while the shell is still initializing,
+    # retry once after a brief wait before giving up.
+    if ! "$qs_bin" -p "$config_dir" ipc call "$target" "$@" 2>/dev/null; then
+        has_instances "$config_dir" && sleep 0.5
+        exec "$qs_bin" -p "$config_dir" ipc call "$target" "$@"
+    fi
 }
 
 launch_configured_browser() {
@@ -1729,7 +1735,10 @@ case "$command_name" in
             echo "Timed out waiting for iNiR to start" >&2
             exit 1
         fi
-        exec "$qs_bin" -p "$config_dir" ipc call "$@"
+        if ! "$qs_bin" -p "$config_dir" ipc call "$@" 2>/dev/null; then
+            has_instances "$config_dir" && sleep 0.5
+            exec "$qs_bin" -p "$config_dir" ipc call "$@"
+        fi
         ;;
     settings|open)
         require_qs
