@@ -166,7 +166,8 @@ Item {
                             visible: playerBase.downloaded && playerBase.effectiveIsPlaying
 
                             Behavior on border.color {
-                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                                enabled: Appearance.animationsEnabled
+                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
 
@@ -189,7 +190,7 @@ Item {
                             color: Qt.rgba(0, 0, 0, artOverlayMA.containsPress ? 0.45 : 0.32)
                             opacity: artOverlayMA.containsMouse ? 1 : 0
                             visible: opacity > 0
-                            Behavior on opacity { NumberAnimation { duration: 120 } }
+                            Behavior on opacity { enabled: Appearance.animationsEnabled; NumberAnimation { duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve } }
 
                             MaterialSymbol {
                                 anchors.centerIn: parent
@@ -210,9 +211,11 @@ Item {
 
                         scale: artOverlayMA.containsMouse ? 1.04 : 1.0
                         Behavior on scale {
+                            enabled: Appearance.animationsEnabled
                             NumberAnimation {
                                 duration: Appearance.animation.elementMoveFast.duration
-                                easing.type: Easing.OutCubic
+                                easing.type: Appearance.animation.elementMoveFast.type
+                                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                             }
                         }
                     }
@@ -399,12 +402,14 @@ Item {
                         }
 
                         Behavior on color {
-                            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                            enabled: Appearance.animationsEnabled
+                            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         scale: playMA.containsPress ? 0.92 : 1.0
                         Behavior on scale {
-                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                            enabled: Appearance.animationsEnabled
+                            NumberAnimation { duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve }
                         }
 
                         MaterialSymbol {
@@ -416,7 +421,7 @@ Item {
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
-                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
 
@@ -539,7 +544,8 @@ Item {
             }
 
             Behavior on color {
-                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                enabled: Appearance.animationsEnabled
+                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             MaterialSymbol {
@@ -553,13 +559,15 @@ Item {
                     : root.colText
 
                 Behavior on color {
-                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                    enabled: Appearance.animationsEnabled
+                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
             }
 
             scale: tBtnMA.containsPress ? 0.88 : 1.0
             Behavior on scale {
-                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                enabled: Appearance.animationsEnabled
+                NumberAnimation { duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve }
             }
 
             MouseArea {

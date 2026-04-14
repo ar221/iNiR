@@ -250,7 +250,7 @@ Item {
 
             Behavior on color {
                 enabled: Appearance.animationsEnabled
-                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             RowLayout {
@@ -305,7 +305,7 @@ Item {
                     opacity: chipMA.containsMouse ? 0.9 : 0.5
                     Behavior on opacity {
                         enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 120 }
+                        NumberAnimation { duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve }
                     }
                 }
             }
@@ -475,12 +475,14 @@ Item {
                     visible: root.activeSection >= 0 && root.activeSection < root.sections.length
 
                     Behavior on y {
+                        enabled: Appearance.animationsEnabled
                         NumberAnimation {
                             duration: Appearance.animation.elementMoveFast.duration * 1.5
-                            easing.type: Easing.OutCubic
+                            easing.type: Appearance.animation.elementMoveFast.type
+                            easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                         }
                     }
-                    Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
+                    Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
                 }
 
                 // ── Sliding active pill on left edge ──
@@ -497,9 +499,11 @@ Item {
                     visible: navIndicator.visible
 
                     Behavior on y {
+                        enabled: Appearance.animationsEnabled
                         NumberAnimation {
                             duration: Appearance.animation.elementMoveFast.duration * 1.5
-                            easing.type: Easing.OutCubic
+                            easing.type: Appearance.animation.elementMoveFast.type
+                            easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                         }
                     }
                 }
@@ -566,7 +570,7 @@ Item {
                                     : bg.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.34)
                                     : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.74)
                                     : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.68)
-                                Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
+                                Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                                 MaterialSymbol {
                                     anchors.centerIn: parent
@@ -581,7 +585,7 @@ Item {
                                         : (bg.inirEverywhere  ? Appearance.inir.colTextSecondary
                                          : bg.angelEverywhere ? Appearance.angel.colTextSecondary
                                          : Appearance.colors.colOnLayer1)
-                                    Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
+                                    Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
                                 }
 
                                 // ── Notification badge ──────────
@@ -701,7 +705,7 @@ Item {
                                     : bg.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.36)
                                     : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.75)
                                     : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.70)
-                                Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
+                                Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                                 MaterialSymbol {
                                     anchors.centerIn: parent
@@ -757,7 +761,7 @@ Item {
                                 : bg.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.36)
                                 : bg.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.75)
                                 : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.70)
-                            Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
+                            Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                             MaterialSymbol {
                                 anchors.centerIn: parent
@@ -809,9 +813,11 @@ Item {
                         opacity: isCurrent ? 1 : 0
                         visible: opacity > 0
                         Behavior on opacity {
+                            enabled: Appearance.animationsEnabled
                             NumberAnimation {
                                 duration: Appearance.animation.elementMoveFast.duration
-                                easing.type: Easing.OutCubic
+                                easing.type: Appearance.animation.elementMoveFast.type
+                                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                             }
                         }
 
@@ -822,7 +828,8 @@ Item {
                                 enabled: Appearance.animationsEnabled
                                 NumberAnimation {
                                     duration: Appearance.animation.elementMove.duration
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Appearance.animation.elementMove.type
+                                    easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                                 }
                             }
                         }
@@ -1566,12 +1573,12 @@ Item {
 
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
-                NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             Behavior on scale {
                 enabled: Appearance.animationsEnabled
-                NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             Rectangle {
@@ -1649,11 +1656,11 @@ Item {
             scale: qaBtnMA.containsPress ? 0.94 : 1.0
             Behavior on scale {
                 enabled: Appearance.animationsEnabled
-                NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.animation.elementMoveExit.duration; easing.type: Appearance.animation.elementMoveExit.type; easing.bezierCurve: Appearance.animation.elementMoveExit.bezierCurve }
             }
             Behavior on color {
                 enabled: Appearance.animationsEnabled
-                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             ColumnLayout {

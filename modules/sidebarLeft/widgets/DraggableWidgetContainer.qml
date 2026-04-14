@@ -222,8 +222,9 @@ Item {
                     Behavior on y {
                         enabled: Appearance.animationsEnabled && !widgetWrapper.isBeingDragged
                         NumberAnimation {
-                            duration: 280
-                            easing.type: Easing.OutCubic
+                            duration: Appearance.animation.elementResize.duration
+                            easing.type: Appearance.animation.elementResize.type
+                            easing.bezierCurve: Appearance.animation.elementResize.bezierCurve
                         }
                     }
                 }
@@ -231,16 +232,17 @@ Item {
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
                     NumberAnimation {
-                        duration: 500
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                        duration: Appearance.animation.elementMoveEnter.duration
+                        easing.type: Appearance.animation.elementMoveEnter.type
+                        easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
                     }
                 }
                 Behavior on scale {
                     enabled: Appearance.animationsEnabled && !widgetWrapper.isBeingDragged
                     NumberAnimation {
-                        duration: 150
-                        easing.type: Easing.OutCubic
+                        duration: Appearance.animation.elementMove.duration
+                        easing.type: Appearance.animation.elementMove.type
+                        easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                     }
                 }
 
@@ -263,7 +265,7 @@ Item {
 
                     Behavior on opacity {
                         enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                     }
 
                     // Subtle glow (hidden in inir style)
@@ -296,7 +298,7 @@ Item {
 
                     Behavior on opacity {
                         enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                     }
 
                     Rectangle {
@@ -326,7 +328,7 @@ Item {
 
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                     }
 
@@ -341,11 +343,11 @@ Item {
 
                         Behavior on scale {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         sourceComponent: {
@@ -374,7 +376,7 @@ Item {
 
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 180 }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                     }
 
@@ -390,7 +392,7 @@ Item {
 
                         Behavior on border.width {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 180 }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                     }
 
@@ -427,11 +429,11 @@ Item {
 
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
-                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         MaterialSymbol {

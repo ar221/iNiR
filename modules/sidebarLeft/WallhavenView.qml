@@ -439,8 +439,9 @@ Item {
                     bottom: parent.bottom
                     bottomMargin: 20 + (root.pullLoading ? 0 : Math.max(0, (root.normalizedPullDistance - 0.5) * 50))
                     Behavior on bottomMargin {
+                        enabled: Appearance.animationsEnabled
                         NumberAnimation {
-                            duration: 200
+                            duration: Appearance.animation.elementMoveFast.duration
                             easing.type: Easing.BezierSpline
                             easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
                         }
@@ -623,6 +624,7 @@ Item {
             property bool filterPanelExpanded: true
 
             Behavior on implicitHeight {
+                enabled: Appearance.animationsEnabled
                 animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
             }
 
@@ -684,7 +686,7 @@ Item {
                                 height: width
                                 radius: width / 2
                                 color: "#" + parent.modelData.hex
-                                Behavior on width { NumberAnimation { duration: 100 } }
+                                Behavior on width { enabled: Appearance.animationsEnabled; NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
                                 Rectangle {
                                     visible: Wallhaven.colorFilter === parent.parent.modelData.hex
                                     anchors.centerIn: parent
@@ -1063,6 +1065,7 @@ Item {
             clip: true
 
             Behavior on implicitHeight {
+                enabled: Appearance.animationsEnabled
                 animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
             }
 

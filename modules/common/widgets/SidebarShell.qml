@@ -157,8 +157,9 @@ Scope {
                 // Only active for left sidebar plugin transitions
                 enabled: Appearance.animationsEnabled && !root.isRight && !root._pluginTransitioning
                 NumberAnimation {
-                    duration: Appearance.calcEffectiveDuration(250)
-                    easing.type: Easing.OutCubic
+                    duration: Appearance.animation.elementResize.duration
+                    easing.type: Appearance.animation.elementResize.type
+                    easing.bezierCurve: Appearance.animation.elementResize.bezierCurve
                 }
             }
             height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
