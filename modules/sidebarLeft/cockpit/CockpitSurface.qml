@@ -85,7 +85,7 @@ Item {
             SystemPulse {}
             WallpaperPalette {
                 id: palette
-                // Session G: onExpandRequested: root.expand(wallhavenView)
+                onExpandRequested: root.expand(wallhavenView)
             }
             ContextStrip {}
         }
@@ -115,7 +115,14 @@ Item {
         id: ytMusicView
         parent: null
     }
-    // Session G adds: WallhavenView { id: wallhavenView; parent: null }
+    // Cached expand target for WallpaperPalette — mirrors ytMusicView.
+    // Created at CockpitSurface load, parent: null keeps it out of the render tree
+    // until ExpandedSurface re-parents on expand. State (filters, search, scroll)
+    // persists across expand/collapse cycles.
+    WallhavenView {
+        id: wallhavenView
+        parent: null
+    }
 
     // ── States ────────────────────────────────────────────────────────────
     states: [

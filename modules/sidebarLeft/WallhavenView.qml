@@ -13,6 +13,8 @@ import Quickshell
 Item {
     id: root
     property real padding: 4
+    // Expand-header title (read by ExpandedSurface via duck-typed property)
+    property string expandTitle: Translation.tr("Wallhaven")
 
     property var inputField: tagInputField
     readonly property var responses: Wallhaven.responses
