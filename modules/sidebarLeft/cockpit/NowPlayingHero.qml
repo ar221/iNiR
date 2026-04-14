@@ -102,7 +102,6 @@ Item {
 
     // ── Expand signal (wired in Session F) ───────────────────────────────
     signal expandRequested()
-    onExpandRequested: console.log("[NowPlayingHero] expandRequested — Session F will wire YT Music expand")
 
     // ── Outer expand MouseArea ────────────────────────────────────────────
     // Z=0 — sits below transport buttons. RippleButton's internal MouseArea
