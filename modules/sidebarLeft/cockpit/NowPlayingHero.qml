@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -105,11 +107,12 @@ Item {
 
     // ── Outer expand MouseArea ────────────────────────────────────────────
     // Z=0 — sits below transport buttons. RippleButton's internal MouseArea
-    // consumes presses before they reach this area.
+    // consumes presses before they reach this area (child hover/click wins).
     MouseArea {
         anchors.fill: parent
         z: 0
-        hoverEnabled: false
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
         onClicked: root.expandRequested()
     }
 
@@ -217,7 +220,7 @@ Item {
             spacing: 0
 
             // Track title — top-aligned, 2-line clamp, title font
-            Text {
+            StyledText {
                 id: titleText
                 Layout.fillWidth: true
                 text: MprisController.activeTrack?.title ?? ""
@@ -237,7 +240,7 @@ Item {
             }
 
             // Artist — single line, subdued
-            Text {
+            StyledText {
                 id: artistText
                 Layout.fillWidth: true
                 text: MprisController.activeTrack?.artist ?? ""

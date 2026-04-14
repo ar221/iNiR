@@ -63,6 +63,8 @@ Item {
         }
     }
 
+    // Choreographed ripple on wallpaper change — bare 75ms/OutQuad values are
+    // intentional for the micro-animation timing; do NOT migrate to elementMoveFast.
     ParallelAnimation {
         id: paletteRippleAnim
         SequentialAnimation {
