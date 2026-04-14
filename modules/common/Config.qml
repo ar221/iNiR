@@ -1110,6 +1110,9 @@ Singleton {
                 property bool instantOpen: false
                 property string animationType: "slide" // "slide" | "fade" | "pop" | "reveal"
                 property bool openFolderOnDownload: false // Open file manager after wallpaper download
+                property JsonObject focusModeChips: JsonObject {
+                    property bool enable: true
+                }
                 property JsonObject translator: JsonObject {
                     property bool enable: true
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
@@ -1292,7 +1295,7 @@ Singleton {
 
                 // Right sidebar widget toggles
                 property JsonObject right: JsonObject {
-                    property list<string> enabledWidgets: ["calendar", "todo", "notepad", "calculator", "sysmon", "timer"]
+                    property list<string> enabledWidgets: ["calendar", "events", "todo", "notepad", "calculator", "sysmon", "timer"]
                     // Controls section order for compact layout (drag to reorder)
                     property list<string> controlsSectionOrder: ["sliders", "toggles", "devices", "media", "quickActions"]
                 }

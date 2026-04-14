@@ -138,6 +138,16 @@ ContentPage {
                     text: Translation.tr("Open file manager when downloading wallpapers from Wallhaven or Booru")
                 }
             }
+
+            SettingsSwitch {
+                buttonIcon: "bolt"
+                text: Translation.tr("Focus Mode chips")
+                checked: Config.options.sidebar?.focusModeChips?.enable ?? true
+                onCheckedChanged: Config.setNestedValue("sidebar.focusModeChips.enable", checked)
+                StyledToolTip {
+                    text: Translation.tr("Show Focus / Gaming / Zen mode chip strip at the top of the right sidebar")
+                }
+            }
             }
 
             ContentSubsection {

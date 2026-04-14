@@ -3,6 +3,7 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.services
 import qs.modules.sidebarRight.calendar
+import qs.modules.sidebarRight.events
 import qs.modules.sidebarRight.todo
 import qs.modules.sidebarRight.pomodoro
 import qs.modules.sidebarRight.notepad
@@ -34,6 +35,7 @@ Rectangle {
     property bool collapsed: Persistent.states?.sidebar?.bottomGroup?.collapsed ?? false
     property var allTabs: [
         {"type": "calendar", "name": Translation.tr("Calendar"), "icon": "calendar_month", "widget": calendarWidget},
+        {"type": "events", "name": Translation.tr("Events"), "icon": "event_upcoming", "widget": eventsWidget},
         {"type": "todo", "name": Translation.tr("To Do"), "icon": "done_outline", "widget": todoWidget},
         {"type": "notepad", "name": Translation.tr("Notepad"), "icon": "edit_note", "widget": notepadWidget},
         {"type": "calculator", "name": Translation.tr("Calc"), "icon": "calculate", "widget": calculatorWidget},
@@ -49,7 +51,7 @@ Rectangle {
 
     readonly property var enabledWidgets: {
         root.configVersion // Force dependency
-        return Config.options?.sidebar?.right?.enabledWidgets ?? ["calendar", "todo", "notepad", "calculator", "sysmon", "timer"]
+        return Config.options?.sidebar?.right?.enabledWidgets ?? ["calendar", "events", "todo", "notepad", "calculator", "sysmon", "timer"]
     }
 
     property var tabs: allTabs.filter(tab => enabledWidgets.includes(tab.type))
@@ -382,6 +384,18 @@ Rectangle {
         CalendarWidget {
             anchors.fill: parent
             anchors.margins: 5
+        }
+    }
+
+    // Events component
+    Component {
+        id: eventsWidget
+        EventsWidget {
+            anchors.fill: parent
+            anchors.margins: 5
+            // openEventsDialog signal is emitted here but unhandled in tab context;
+            // the dialog lives in Sidebar[Right|Compact]Content and is triggered from
+            // the standalone Events view. Known deferral — Session F cleanup.
         }
     }
 

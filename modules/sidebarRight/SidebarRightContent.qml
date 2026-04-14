@@ -116,6 +116,105 @@ Item {
                 sourceComponent: QuickSliders {}
             }
 
+            // ─── Focus Mode chip strip ─────────────────────────────
+            Loader {
+                id: focusModeChipsLoader
+                Layout.fillWidth: true
+                visible: active
+                active: Config.options?.sidebar?.focusModeChips?.enable ?? true
+                sourceComponent: ButtonGroup {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    spacing: 4
+                    color: "transparent"
+
+                    Repeater {
+                        model: FocusMode._modeOrder
+
+                        GroupButton {
+                            required property string modelData
+                            required property int index
+
+                            readonly property var modeProfile: FocusMode._profiles[modelData] ?? ({})
+                            readonly property bool isActive: FocusMode.activeMode === modelData
+
+                            toggled: isActive
+                            buttonText: modeProfile.label ?? modelData
+                            buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                                : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
+                                : Appearance.rounding.small
+
+                            implicitHeight: 32
+                            horizontalPadding: 12
+                            verticalPadding: 0
+                            bounce: false
+
+                            colBackgroundToggled: {
+                                switch (modelData) {
+                                    case "focus": return Appearance.m3colors.m3primary
+                                    case "gaming": return Appearance.m3colors.m3tertiary
+                                    case "zen": return Appearance.m3colors.m3secondary
+                                    default: return Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2
+                                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                                        : Appearance.colors.colLayer2
+                                }
+                            }
+                            colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.15)
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
+                                : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
+                                : Appearance.colors.colLayer2Hover
+
+                            Layout.fillWidth: true
+
+                            onClicked: FocusMode.setMode(modelData)
+
+                            contentItem: RowLayout {
+                                spacing: 4
+
+                                MaterialSymbol {
+                                    visible: modeProfile.icon !== ""
+                                    text: modeProfile.icon ?? ""
+                                    iconSize: 16
+                                    color: isActive
+                                        ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
+                                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
+                                            : Appearance.m3colors.m3onPrimary)
+                                        : (Appearance.angelEverywhere ? Appearance.angel.colText
+                                            : Appearance.inirEverywhere ? Appearance.inir.colText
+                                            : Appearance.colors.colOnLayer1)
+
+                                    Behavior on color {
+                                        enabled: Appearance.animationsEnabled
+                                        animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                                    }
+                                }
+
+                                StyledText {
+                                    text: modeProfile.label ?? modelData
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.weight: Font.Medium
+                                    color: isActive
+                                        ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
+                                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
+                                            : Appearance.m3colors.m3onPrimary)
+                                        : (Appearance.angelEverywhere ? Appearance.angel.colText
+                                            : Appearance.inirEverywhere ? Appearance.inir.colText
+                                            : Appearance.colors.colOnLayer1)
+
+                                    Behavior on color {
+                                        enabled: Appearance.animationsEnabled
+                                        animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             LoaderedQuickPanelImplementation {
                 styleName: "classic"
                 sourceComponent: ClassicQuickPanel {}

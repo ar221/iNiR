@@ -785,6 +785,9 @@
         "animationType": "slide",
         "layout": "default",
         "width": 460,
+        "focusModeChips": {
+            "enable": true
+        },
         "quickSliders": {
             "enable": true,
             "showBrightness": true,
