@@ -27,6 +27,9 @@ Item {
 
     property string currentView: "search"
 
+    // Expand-header title — read by ExpandedSurface via duck-typed property.
+    property string expandTitle: Translation.tr("YT Music")
+
     function openAddToPlaylist(item) { 
         addToPlaylistPopup.targetItem = item
         addToPlaylistPopup.open() 
