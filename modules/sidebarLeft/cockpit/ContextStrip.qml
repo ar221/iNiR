@@ -14,10 +14,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.preferredHeight: 52
 
-    color: Appearance.colors.colLayer2
-    radius: Appearance.rounding.normal
-    border.width: 1
-    border.color: Appearance.colors.colOutlineVariant
+    color: "transparent"
 
     StyledText {
         anchors.centerIn: parent

@@ -15,15 +15,13 @@ Rectangle {
     Layout.preferredHeight: Math.round(parent ? parent.height * 0.40 : 200)
     Layout.minimumHeight: 160
 
-    color: Appearance.colors.colLayer2
-    radius: Appearance.rounding.normal
-    border.width: 1
-    border.color: Appearance.colors.colOutlineVariant
+    color: "transparent"
 
     StyledText {
         anchors.centerIn: parent
         text: "[NowPlayingHero placeholder]"
-        color: Appearance.colors.colOnLayer1
+        color: Appearance.colors.colOnLayer1Inactive
+        opacity: 0.4
         font.pixelSize: Appearance.font.pixelSize.small
     }
 }
