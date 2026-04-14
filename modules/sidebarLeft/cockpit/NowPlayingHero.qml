@@ -61,6 +61,14 @@ Item {
         : ""
     readonly property bool _hasArt: artUrlSanitized.length > 0
 
+    // ── Art side: square, but capped at 40% of hero width ────────────────
+    // Prevents art from dominating when hero is taller than it is wide.
+    // Text column guaranteed ≥ 60% of root.width.
+    readonly property real _artSide: Math.min(
+        topRow.height,
+        root.width * 0.40
+    )
+
     // ── Accent color extraction ───────────────────────────────────────────
     // Independent quantizer — AmbientBackground._artColor has alpha pre-applied
     // (12% wash). We need raw dominant for accents at full opacity.
@@ -118,11 +126,13 @@ Item {
         anchors.bottomMargin: 4
         spacing: Appearance.font.pixelSize.normal  // ~16px
 
-        // ── Art wrapper — square, fills topRow height ─────────────────────
+        // ── Art wrapper — square, capped at 40% hero width ───────────────
+        // _artSide = min(topRow.height, root.width * 0.40) so text column
+        // always gets ≥ 60% of horizontal space regardless of hero aspect ratio.
         Item {
             id: artWrapper
             Layout.fillHeight: true
-            Layout.preferredWidth: height
+            Layout.preferredWidth: root._artSide
             Layout.minimumWidth: 0
 
             // Shadow positioned behind artCard
