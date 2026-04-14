@@ -130,7 +130,7 @@ Item {
 
         clip: true
 
-        layer.enabled: !gameModeMinimal
+        layer.enabled: (angelEverywhere || auroraEverywhere) && !gameModeMinimal
         layer.effect: GE.OpacityMask {
             maskSource: Rectangle {
                 width: sidebarRightBackground.width

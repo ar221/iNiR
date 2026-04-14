@@ -71,7 +71,7 @@ QuickToggleButton {
     Timer {
         interval: 5000
         repeat: true
-        running: true
+        running: GlobalStates.sidebarRightOpen
         onTriggered: root.refreshStatus()
     }
 

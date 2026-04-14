@@ -365,6 +365,7 @@ Rectangle {
                     Loader {
                         id: tabLoader
                         anchors.fill: parent
+                        active: Math.abs(root.selectedTab - tabItem.tabIndex) <= 1
                         sourceComponent: modelData.widget
                         focus: root.selectedTab === tabItem.tabIndex
                     }
