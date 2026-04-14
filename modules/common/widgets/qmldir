@@ -14,6 +14,7 @@ CliphistImage 1.0 CliphistImage.qml
 ClippedFilledCircularProgress 1.0 ClippedFilledCircularProgress.qml
 ClippedProgressBar 1.0 ClippedProgressBar.qml
 CollapsibleSection 1.0 CollapsibleSection.qml
+CompactWidgetSurface 1.0 CompactWidgetSurface.qml
 CompositorFocusGrab 1.0 CompositorFocusGrab.qml
 ConfigRow 1.0 ConfigRow.qml
 ConfigSelectionArray 1.0 ConfigSelectionArray.qml
@@ -87,6 +88,8 @@ SettingsGroup 1.0 SettingsGroup.qml
 singleton SettingsMaterialPreset 1.0 SettingsMaterialPreset.qml
 singleton SettingsSearchRegistry 1.0 SettingsSearchRegistry.qml
 SettingsSwitch 1.0 SettingsSwitch.qml
+SidebarBackground 1.0 SidebarBackground.qml
+SidebarShell 1.0 SidebarShell.qml
 SineCookie 1.0 SineCookie.qml
 StyledBlurEffect 1.0 StyledBlurEffect.qml
 StyledComboBox 1.0 StyledComboBox.qml
