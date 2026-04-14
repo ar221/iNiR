@@ -169,13 +169,13 @@ Item {
                 id: projectPulse
                 anchors.fill: parent
                 _active: root._activeIndex === 0
-                _scanTrigger: root._scanRequested
+                scanGen: root.scanGen
             }
             SteamStatusStrip {
                 id: steamStatus
                 anchors.fill: parent
                 _active: root._activeIndex === 1
-                _scanTrigger: root._scanRequested
+                scanGen: root.scanGen
             }
             NextUpStrip {
                 id: nextUp
@@ -192,8 +192,9 @@ Item {
     component ProjectPulseStrip: Item {
         id: ppRoot
 
-        property bool  _active: false
-        property bool  _scanTrigger: false   // toggled by root to fire scan
+        property bool _active: false
+        property int  scanGen: 0   // bump from root to fire scan
+        onScanGenChanged: if (scanGen > 0) ppScan.running = true
 
         // Expose accent up to root for the background wash.
         readonly property color _accent:
@@ -244,7 +245,6 @@ Item {
         // Uses $HOME to handle the "™" character naturally via the shell.
         Process {
             id: ppScan
-            running: ppRoot._scanTrigger
             command: [
                 "/usr/bin/bash", "-c",
                 "cd \"$HOME/Documents/Ayaz OS/03 Projects\" 2>/dev/null || exit 0; " +
@@ -328,7 +328,8 @@ Item {
         id: ssRoot
 
         property bool _active: false
-        property bool _scanTrigger: false
+        property int  scanGen: 0
+        onScanGenChanged: if (scanGen > 0) ssScan.running = true
 
         // Gaming context → tertiary always (no staleness gradient per spec §5).
         readonly property color _accent: _hasGame
@@ -376,7 +377,6 @@ Item {
         // Outputs single line: <epoch>\t<game name>
         Process {
             id: ssScan
-            running: ssRoot._scanTrigger
             command: [
                 "/usr/bin/bash", "-c",
                 "ls -t ~/.steam/steam/steamapps/appmanifest_*.acf 2>/dev/null | " +
