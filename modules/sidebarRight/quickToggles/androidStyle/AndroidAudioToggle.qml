@@ -19,6 +19,7 @@ AndroidQuickToggleButton {
     altAction: () => {
         root.openMenu()
     }
+    settingsAction: () => root.openMenu()
 
     StyledToolTip {
         text: Translation.tr("Audio output | Right-click for volume mixer & device selector")

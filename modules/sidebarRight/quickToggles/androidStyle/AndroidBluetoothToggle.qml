@@ -20,6 +20,7 @@ AndroidQuickToggleButton {
     altAction: () => {
         root.openMenu()
     }
+    settingsAction: () => root.openMenu()
     StyledToolTip {
         text: Translation.tr("%1 | Right-click to configure").arg(
             (BluetoothStatus.firstActiveDevice?.name ?? Translation.tr("Bluetooth"))

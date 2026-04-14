@@ -21,6 +21,7 @@ AndroidQuickToggleButton {
     altAction: () => {
         root.openMenu()
     }
+    settingsAction: () => root.openMenu()
 
     StyledToolTip {
         text: Translation.tr("Anti-flashbang")

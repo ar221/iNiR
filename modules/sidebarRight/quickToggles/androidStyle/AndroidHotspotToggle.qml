@@ -24,6 +24,7 @@ AndroidQuickToggleButton {
     }
 
     altAction: () => root.openMenu()
+    settingsAction: () => root.openMenu()
 
     mainAction: () => {
         if (root.toggled) {

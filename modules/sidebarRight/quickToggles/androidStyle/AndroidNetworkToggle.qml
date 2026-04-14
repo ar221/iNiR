@@ -14,6 +14,7 @@ AndroidQuickToggleButton {
     buttonIcon: Network.materialSymbol
     mainAction: () => Network.toggleWifi()
     altAction: () => root.openMenu()
+    settingsAction: () => root.openMenu()
     StyledToolTip {
         text: Translation.tr("%1 | Right-click to configure").arg(Network.networkName)
     }

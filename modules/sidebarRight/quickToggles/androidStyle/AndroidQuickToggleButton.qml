@@ -15,6 +15,9 @@ GroupButton {
     required property string name
     required property var mainAction
     property var altAction: null
+    // Long-press deep-link to a settings dialog or detail panel. Falls back
+    // to altAction when unset so existing toggles keep their long-press behavior.
+    property var settingsAction: null
     property string statusText: toggled ? Translation.tr("Active") : Translation.tr("Inactive")
 
     required property real baseCellWidth
@@ -50,6 +53,17 @@ GroupButton {
         acceptedButtons: Qt.RightButton
         onTapped: {
             if (root.altAction) root.altAction();
+        }
+    }
+
+    // Long-press deep-link: fires settingsAction when set. Fires slightly
+    // before GroupButton's built-in 0.5s altAction handler, but the two are
+    // compatible — dialog opens are idempotent.
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        longPressThreshold: 0.4
+        onLongPressed: {
+            if (root.settingsAction) root.settingsAction();
         }
     }
 

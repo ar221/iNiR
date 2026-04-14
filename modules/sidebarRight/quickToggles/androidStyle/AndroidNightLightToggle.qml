@@ -22,6 +22,7 @@ AndroidQuickToggleButton {
     altAction: () => {
         root.openMenu()
     }
+    settingsAction: () => root.openMenu()
 
     Component.onCompleted: {
         Hyprsunset.fetchState()
