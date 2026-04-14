@@ -28,10 +28,11 @@ Item {
     id: root
 
     // ── Layout reactive on player presence ───────────────────────────────
-    // Collapse slot to 0 when no player. ColumnLayout reflows automatically.
+    // Content-sized: art square + transport row + 4px gap.
+    // Collapse to 0 when no player. ColumnLayout reflows automatically.
     Layout.fillWidth: true
-    Layout.preferredHeight: _hasTrack ? Math.round(parent ? parent.height * 0.40 : 200) : 0
-    Layout.minimumHeight: _hasTrack ? 160 : 0
+    Layout.preferredHeight: _hasTrack ? (_artSide + transportRow.implicitHeight + 4) : 0
+    Layout.minimumHeight: _hasTrack ? (_artSide + transportRow.implicitHeight + 4) : 0
 
     // Asymmetric enter (150ms elementMove) / exit (80ms elementMoveExit).
     // _hasTrack already reflects the new value when the Behavior evaluates.
@@ -61,13 +62,11 @@ Item {
         : ""
     readonly property bool _hasArt: artUrlSanitized.length > 0
 
-    // ── Art side: square, but capped at 40% of hero width ────────────────
-    // Prevents art from dominating when hero is taller than it is wide.
-    // Text column guaranteed ≥ 60% of root.width.
-    readonly property real _artSide: Math.min(
-        topRow.height,
-        root.width * 0.40
-    )
+    // ── Art side: 35% of hero width, min 80px ────────────────────────────
+    // Width-only binding — avoids circular dependency with topRow.height
+    // (which is now derived from _artSide, not the other way around).
+    // Text column guaranteed ≥ 65% of root.width.
+    readonly property real _artSide: Math.max(80, root.width * 0.35)
 
     // ── Accent color extraction ───────────────────────────────────────────
     // Independent quantizer — AmbientBackground._artColor has alpha pre-applied
@@ -126,13 +125,14 @@ Item {
         anchors.bottomMargin: 4
         spacing: Appearance.font.pixelSize.normal  // ~16px
 
-        // ── Art wrapper — square, capped at 40% hero width ───────────────
-        // _artSide = min(topRow.height, root.width * 0.40) so text column
-        // always gets ≥ 60% of horizontal space regardless of hero aspect ratio.
+        // ── Art wrapper — explicitly square at _artSide × _artSide ─────────
+        // NOT fillHeight — hero height is now derived from _artSide, so
+        // fillHeight would be circular. Fixed preferred height = preferred width.
         Item {
             id: artWrapper
-            Layout.fillHeight: true
+            Layout.fillHeight: false
             Layout.preferredWidth: root._artSide
+            Layout.preferredHeight: root._artSide
             Layout.minimumWidth: 0
 
             // Shadow positioned behind artCard
@@ -310,15 +310,15 @@ Item {
         }
     }
 
-    // ── Transport shim — mirrors artWrapper's horizontal span ─────────────
-    // Anchored to bottom of root. Width = artWrapper.width so transport
-    // stays centered under the art column, not full hero width.
+    // ── Transport shim — at least as wide as transport row ───────────────
+    // Left-aligned. Width = max(artWrapper, transport row implicit) so if
+    // transport overflows art width on narrow sidebars it still fits.
     // z: 1 — above outer MouseArea so RippleButton clicks win.
     Item {
         id: transportShim
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: artWrapper.width
+        width: Math.max(artWrapper.width, transportRow.implicitWidth)
         height: transportRow.implicitHeight
         z: 1
 
