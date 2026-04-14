@@ -557,6 +557,30 @@ Singleton {
                         property bool showFooter: true
                         property string footerText: "Touch Grass"
                     }
+                    property JsonObject timeCalendar: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 50
+                        property real y: 50
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 300
+                    }
+                    property JsonObject systemRings: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 400
+                        property real y: 50
+                        property bool showGpu: true
+                        property real cardOpacity: 0.85
+                    }
+                    property JsonObject network: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 400
+                        property real y: 250
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 320
+                    }
                 }
                 property bool externalWallpaper: false // Hide internal wallpaper for external WE (linux-wallpaperengine)
                 property string wallpaperPath: ""

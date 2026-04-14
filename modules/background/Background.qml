@@ -20,6 +20,9 @@ import qs.modules.background.widgets.clock
 import qs.modules.background.widgets.mediaControls
 import qs.modules.background.widgets.weather
 import qs.modules.background.widgets.systemMonitor
+import qs.modules.background.widgets.timeCalendar
+import qs.modules.background.widgets.systemRings
+import qs.modules.background.widgets.network
 import "root:modules/common/functions/parallax.js" as ParallaxMath
 
 Variants {
@@ -1082,6 +1085,39 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
                         scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
                         wallpaperScale: bgRoot.effectiveWallpaperScale
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.timeCalendar?.enable ?? false
+                    sourceComponent: TimeCalendarWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.systemRings?.enable ?? false
+                    sourceComponent: SystemRingsWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.network?.enable ?? false
+                    sourceComponent: NetworkWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
                     }
                 }
             }
