@@ -1601,10 +1601,22 @@ Scope {
             component: Quickshell.shellPath("modules/settings/BarConfig.qml")
         },
         {
-            name: Translation.tr("Background"),
+            name: Translation.tr("Wallpaper"),
             shortName: "",
             icon: "texture",
-            component: Quickshell.shellPath("modules/settings/BackgroundConfig.qml")
+            component: Quickshell.shellPath("modules/settings/WallpaperConfig.qml")
+        },
+        {
+            name: Translation.tr("Effects"),
+            shortName: "",
+            icon: "blur_on",
+            component: Quickshell.shellPath("modules/settings/EffectsConfig.qml")
+        },
+        {
+            name: Translation.tr("Desktop Widgets"),
+            shortName: "Widgets",
+            icon: "widgets",
+            component: Quickshell.shellPath("modules/settings/DesktopWidgetsConfig.qml")
         },
         {
             name: Translation.tr("Themes"),
