@@ -98,12 +98,12 @@ Item {
                 radius: Appearance.rounding.full
 
                 Behavior on x {
-                    enabled: tabIndicator.enableIndicatorAnimation
+                    enabled: Appearance.animationsEnabled && tabIndicator.enableIndicatorAnimation
                     animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
 
                 Behavior on implicitWidth {
-                    enabled: tabIndicator.enableIndicatorAnimation
+                    enabled: Appearance.animationsEnabled && tabIndicator.enableIndicatorAnimation
                     animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                 }
             }
@@ -191,7 +191,8 @@ Item {
         visible: opacity > 0
         opacity: root.showAddDialog ? 1 : 0
         Behavior on opacity {
-            NumberAnimation { 
+            enabled: Appearance.animationsEnabled
+            NumberAnimation {
                 duration: Appearance.animation.elementMoveFast.duration
                 easing.type: Appearance.animation.elementMoveFast.type
                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
