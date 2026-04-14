@@ -107,17 +107,21 @@ Item {
         onClicked: root.expandRequested()
     }
 
-    // ── Main horizontal layout ────────────────────────────────────────────
+    // ── Top row: art wrapper + text column ───────────────────────────────
+    // Fills hero minus transport shim at bottom.
     RowLayout {
-        id: mainRow
-        anchors.fill: parent
+        id: topRow
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: transportShim.top
+        anchors.bottomMargin: 4
         spacing: Appearance.font.pixelSize.normal  // ~16px
 
-        // ── Left column: art card + transport row ─────────────────────────
+        // ── Art wrapper — square, fills topRow height ─────────────────────
         Item {
-            id: artColumn
+            id: artWrapper
             Layout.fillHeight: true
-            // Square column: width tracks height
             Layout.preferredWidth: height
             Layout.minimumWidth: 0
 
@@ -130,15 +134,10 @@ Item {
                 radius: artCard.radius
             }
 
-            // Art card — square, clipped, shadow-owned
+            // Art card — fills artWrapper, clipped, rounded
             Rectangle {
                 id: artCard
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                // Fill vertical space minus transport row height + small gap
-                readonly property int _available: artColumn.height - transportRow.implicitHeight - 4
-                width: Math.max(0, _available)
-                height: Math.max(0, _available)
+                anchors.fill: parent
                 radius: Appearance.rounding.normal  // 4px scaled
                 color: "transparent"
                 clip: true
@@ -199,135 +198,16 @@ Item {
                     }
                 }
             }
-
-            // ── Transport row — centered under art card ───────────────────
-            // z: 1 — above outer MouseArea so clicks reach RippleButton
-            RowLayout {
-                id: transportRow
-                anchors.top: artCard.bottom
-                anchors.topMargin: 4
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Appearance.font.pixelSize.large  // ~17px between glyphs
-                z: 1
-
-                // Previous
-                RippleButton {
-                    id: prevButton
-                    implicitWidth: 36
-                    implicitHeight: 36
-                    colBackground: "transparent"
-                    colBackgroundHover: Appearance.colors.colLayer1Hover
-                    enabled: MprisController.canGoPrevious
-                    onClicked: MprisController.previous()
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "skip_previous"
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: prevButton.enabled
-                            ? (prevButton.buttonHovered
-                                ? Appearance.colors.colOnLayer1
-                                : Appearance.colors.colOnLayer1Inactive)
-                            : Appearance.colors.colOnLayer1Inactive
-                    }
-                }
-
-                // Play / Pause — dual-symbol stack for smooth icon swap
-                RippleButton {
-                    id: playPauseButton
-                    implicitWidth: 36
-                    implicitHeight: 36
-                    colBackground: "transparent"
-                    colBackgroundHover: Appearance.colors.colLayer1Hover
-                    onClicked: MprisController.togglePlaying()
-                    z: 1
-
-                    // play_arrow — visible when paused
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "play_arrow"
-                        iconSize: Appearance.font.pixelSize.huge  // 22px — anchor
-                        color: playPauseButton.buttonHovered ? root._accentRaw : Appearance.colors.colOnLayer1
-                        opacity: MprisController.isPlaying ? 0.0 : 1.0
-                        Behavior on opacity {
-                            enabled: Appearance.animationsEnabled
-                            NumberAnimation {
-                                duration: Appearance.animation.elementMoveEnter.duration
-                                easing.type: Appearance.animation.elementMoveEnter.type
-                                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                            }
-                        }
-                        Behavior on color {
-                            enabled: Appearance.animationsEnabled
-                            ColorAnimation {
-                                duration: Appearance.animation.elementMoveEnter.duration
-                                easing.type: Appearance.animation.elementMoveEnter.type
-                                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                            }
-                        }
-                    }
-
-                    // pause — visible when playing
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "pause"
-                        iconSize: Appearance.font.pixelSize.huge
-                        color: playPauseButton.buttonHovered ? root._accentRaw : Appearance.colors.colOnLayer1
-                        opacity: MprisController.isPlaying ? 1.0 : 0.0
-                        Behavior on opacity {
-                            enabled: Appearance.animationsEnabled
-                            NumberAnimation {
-                                duration: Appearance.animation.elementMoveEnter.duration
-                                easing.type: Appearance.animation.elementMoveEnter.type
-                                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                            }
-                        }
-                        Behavior on color {
-                            enabled: Appearance.animationsEnabled
-                            ColorAnimation {
-                                duration: Appearance.animation.elementMoveEnter.duration
-                                easing.type: Appearance.animation.elementMoveEnter.type
-                                easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
-                            }
-                        }
-                    }
-                }
-
-                // Next
-                RippleButton {
-                    id: nextButton
-                    implicitWidth: 36
-                    implicitHeight: 36
-                    colBackground: "transparent"
-                    colBackgroundHover: Appearance.colors.colLayer1Hover
-                    enabled: MprisController.canGoNext
-                    onClicked: MprisController.next()
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "skip_next"
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: nextButton.enabled
-                            ? (nextButton.buttonHovered
-                                ? Appearance.colors.colOnLayer1
-                                : Appearance.colors.colOnLayer1Inactive)
-                            : Appearance.colors.colOnLayer1Inactive
-                    }
-                }
-            }
         }
 
-        // ── Right column: title / artist / progress ───────────────────────
+        // ── Text column: title / artist / progress ────────────────────────
         ColumnLayout {
             id: textColumn
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 0
 
-            // Push title block down to vertically align with art-card top
-            Item { Layout.fillHeight: true }
-
-            // Track title — 2-line clamp, title font
+            // Track title — top-aligned, 2-line clamp, title font
             Text {
                 id: titleText
                 Layout.fillWidth: true
@@ -359,7 +239,9 @@ Item {
                 elide: Text.ElideRight
             }
 
-            // Push progress hairline to bottom of column (aligns with art-card bottom)
+            // Push progress hairline to bottom of text column.
+            // textColumn.height == artWrapper.height (both fill topRow),
+            // so progressContainer.bottom == artCard.bottom. Spec §2 achieved.
             Item { Layout.fillHeight: true }
 
             // Progress hairline — 2px, accent-tinted, spans text column width
@@ -413,6 +295,131 @@ Item {
                             easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // ── Transport shim — mirrors artWrapper's horizontal span ─────────────
+    // Anchored to bottom of root. Width = artWrapper.width so transport
+    // stays centered under the art column, not full hero width.
+    // z: 1 — above outer MouseArea so RippleButton clicks win.
+    Item {
+        id: transportShim
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: artWrapper.width
+        height: transportRow.implicitHeight
+        z: 1
+
+        RowLayout {
+            id: transportRow
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Appearance.font.pixelSize.large  // ~17px between glyphs
+
+            // Previous
+            RippleButton {
+                id: prevButton
+                implicitWidth: 36
+                implicitHeight: 36
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.colors.colLayer1Hover
+                enabled: MprisController.canGoPrevious
+                onClicked: MprisController.previous()
+
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "skip_previous"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: prevButton.enabled
+                        ? (prevButton.buttonHovered
+                            ? Appearance.colors.colOnLayer1
+                            : Appearance.colors.colOnLayer1Inactive)
+                        : Appearance.colors.colOnLayer1Inactive
+                }
+            }
+
+            // Play / Pause — dual-symbol stack for smooth icon swap
+            RippleButton {
+                id: playPauseButton
+                implicitWidth: 36
+                implicitHeight: 36
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.colors.colLayer1Hover
+                onClicked: MprisController.togglePlaying()
+                z: 1
+
+                // play_arrow — visible when paused
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "play_arrow"
+                    iconSize: Appearance.font.pixelSize.huge  // 22px — anchor
+                    color: playPauseButton.buttonHovered ? root._accentRaw : Appearance.colors.colOnLayer1
+                    opacity: MprisController.isPlaying ? 0.0 : 1.0
+                    Behavior on opacity {
+                        enabled: Appearance.animationsEnabled
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMoveEnter.duration
+                            easing.type: Appearance.animation.elementMoveEnter.type
+                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                        }
+                    }
+                    Behavior on color {
+                        enabled: Appearance.animationsEnabled
+                        ColorAnimation {
+                            duration: Appearance.animation.elementMoveEnter.duration
+                            easing.type: Appearance.animation.elementMoveEnter.type
+                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                        }
+                    }
+                }
+
+                // pause — visible when playing
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "pause"
+                    iconSize: Appearance.font.pixelSize.huge
+                    color: playPauseButton.buttonHovered ? root._accentRaw : Appearance.colors.colOnLayer1
+                    opacity: MprisController.isPlaying ? 1.0 : 0.0
+                    Behavior on opacity {
+                        enabled: Appearance.animationsEnabled
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMoveEnter.duration
+                            easing.type: Appearance.animation.elementMoveEnter.type
+                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                        }
+                    }
+                    Behavior on color {
+                        enabled: Appearance.animationsEnabled
+                        ColorAnimation {
+                            duration: Appearance.animation.elementMoveEnter.duration
+                            easing.type: Appearance.animation.elementMoveEnter.type
+                            easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                        }
+                    }
+                }
+            }
+
+            // Next
+            RippleButton {
+                id: nextButton
+                implicitWidth: 36
+                implicitHeight: 36
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.colors.colLayer1Hover
+                enabled: MprisController.canGoNext
+                onClicked: MprisController.next()
+
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "skip_next"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: nextButton.enabled
+                        ? (nextButton.buttonHovered
+                            ? Appearance.colors.colOnLayer1
+                            : Appearance.colors.colOnLayer1Inactive)
+                        : Appearance.colors.colOnLayer1Inactive
                 }
             }
         }
