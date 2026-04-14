@@ -1527,6 +1527,251 @@ ContentPage {
         }
     }
 
+    // ── Signature Widgets ─────────────────────────────────────────────
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "favorite"
+        title: Translation.tr("Widget: Lissajous Heartbeat")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.lissajous.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.lissajous.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("CPU load as animated parametric curves — clean figure-8 at idle, tangled chaos under load")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.lissajous.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.lissajous.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.lissajous.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.lissajous.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.lissajous.cardWidth ?? 240
+                    from: 180
+                    to: 400
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.lissajous.cardWidth", value);
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "local_fire_department"
+        title: Translation.tr("Widget: GPU Thermal Bloom")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.thermalBloom.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.thermalBloom.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Pulsing radial heat gradient — cool blues at idle, angry reds at throttle")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.thermalBloom.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.thermalBloom.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.thermalBloom.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.thermalBloom.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.thermalBloom.cardWidth ?? 240
+                    from: 180
+                    to: 400
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.thermalBloom.cardWidth", value);
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "layers"
+        title: Translation.tr("Widget: Waveform Fossil")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.waveformFossil.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.waveformFossil.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Audio waveform that petrifies into geological strata — live when playing, fossilized when silent")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.waveformFossil.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.waveformFossil.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.waveformFossil.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.waveformFossil.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.waveformFossil.cardWidth ?? 280
+                    from: 200
+                    to: 450
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.waveformFossil.cardWidth", value);
+                    }
+                }
+            }
+        }
+    }
+
     SettingsCardSection {
         expanded: true
         icon: "notifications"

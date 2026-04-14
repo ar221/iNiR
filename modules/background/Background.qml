@@ -24,6 +24,9 @@ import qs.modules.background.widgets.timeCalendar
 import qs.modules.background.widgets.systemRings
 import qs.modules.background.widgets.contextCard
 import qs.modules.background.widgets.network
+import qs.modules.background.widgets.lissajous
+import qs.modules.background.widgets.thermalBloom
+import qs.modules.background.widgets.waveformFossil
 import "root:modules/common/functions/parallax.js" as ParallaxMath
 
 Variants {
@@ -1125,6 +1128,39 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.contextCard?.enable ?? false
                     sourceComponent: ContextCardWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.lissajous?.enable ?? false
+                    sourceComponent: LissajousHeartbeatWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.thermalBloom?.enable ?? false
+                    sourceComponent: ThermalBloomWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.waveformFossil?.enable ?? false
+                    sourceComponent: WaveformFossilWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width

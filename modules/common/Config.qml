@@ -594,6 +594,30 @@ Singleton {
                         property bool showPackageUpdates: true
                         property bool showServiceHealth: true
                     }
+                    property JsonObject lissajous: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 500
+                        property real y: 100
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 240
+                    }
+                    property JsonObject thermalBloom: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 500
+                        property real y: 350
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 240
+                    }
+                    property JsonObject waveformFossil: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 500
+                        property real y: 600
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 280
+                    }
                 }
                 property bool externalWallpaper: false // Hide internal wallpaper for external WE (linux-wallpaperengine)
                 property string wallpaperPath: ""
