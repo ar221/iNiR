@@ -22,6 +22,7 @@ import qs.modules.background.widgets.weather
 import qs.modules.background.widgets.systemMonitor
 import qs.modules.background.widgets.timeCalendar
 import qs.modules.background.widgets.systemRings
+import qs.modules.background.widgets.contextCard
 import qs.modules.background.widgets.network
 import "root:modules/common/functions/parallax.js" as ParallaxMath
 
@@ -1113,6 +1114,17 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.network?.enable ?? false
                     sourceComponent: NetworkWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.contextCard?.enable ?? false
+                    sourceComponent: ContextCardWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width

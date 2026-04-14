@@ -581,6 +581,19 @@ Singleton {
                         property real cardOpacity: 0.85
                         property real cardWidth: 320
                     }
+                    property JsonObject contextCard: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 50
+                        property real y: 400
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 280
+                        property bool showFocusMode: true
+                        property bool showPomodoro: true
+                        property bool showMarketStatus: true
+                        property bool showPackageUpdates: true
+                        property bool showServiceHealth: true
+                    }
                 }
                 property bool externalWallpaper: false // Hide internal wallpaper for external WE (linux-wallpaperengine)
                 property string wallpaperPath: ""
