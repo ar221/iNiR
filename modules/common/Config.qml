@@ -1104,6 +1104,7 @@ Singleton {
             property JsonObject sidebar: JsonObject {
                 property bool cardStyle: false
                 property string layout: "default" // "default" | "compact"
+                property int width: 460 // Base sidebar width in px (before fontSizeScale)
                 property bool keepRightSidebarLoaded: true
                 property bool keepLeftSidebarLoaded: true
                 property bool instantOpen: false

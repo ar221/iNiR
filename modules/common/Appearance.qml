@@ -876,7 +876,7 @@ Singleton {
         property real osdWidth: Math.round(180 * root.fontSizeScale)
         property real searchWidthCollapsed: Math.round(210 * root.fontSizeScale)
         property real searchWidth: Math.round(360 * root.fontSizeScale)
-        property real sidebarWidth: Math.round(460 * root.fontSizeScale)
+        property real sidebarWidth: Math.round((Config.options?.sidebar?.width ?? 460) * root.fontSizeScale)
         property real sidebarWidthExtended: Math.round(750 * root.fontSizeScale)
         property real baseVerticalBarWidth: Math.round(46 * root.fontSizeScale)
         property real verticalBarWidth: (((Config.options?.bar?.cornerStyle ?? 0) === 1) || ((Config.options?.bar?.cornerStyle ?? 0) === 3)) ? 

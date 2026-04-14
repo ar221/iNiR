@@ -32,6 +32,7 @@ Item {
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
     property bool showEventsDialog: false
+    property var eventsDialogEditEvent: null
     property bool showHotspotDialog: false
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
@@ -311,6 +312,17 @@ Item {
                 onClicked: root.editMode = !root.editMode
                 StyledToolTip {
                     text: Translation.tr("Edit quick toggles") + (root.editMode ? Translation.tr("\nLMB to enable/disable\nRMB to toggle size\nScroll to swap position") : "")
+                }
+            }
+            QuickToggleButton {
+                readonly property bool _isCompact: (Config.options?.sidebar?.layout ?? "default") === "compact"
+                toggled: _isCompact
+                buttonIcon: _isCompact ? "expand_content" : "compress"
+                onClicked: {
+                    Config.setNestedValue("sidebar.layout", _isCompact ? "default" : "compact")
+                }
+                StyledToolTip {
+                    text: Translation.tr("Toggle compact layout")
                 }
             }
             QuickToggleButton {

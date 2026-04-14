@@ -51,6 +51,31 @@ ContentPage {
             }
 
             SettingsSwitch {
+                buttonIcon: "memory"
+                text: Translation.tr('Keep left sidebar loaded')
+                checked: Config.options.sidebar?.keepLeftSidebarLoaded ?? true
+                onCheckedChanged: {
+                    Config.setNestedValue("sidebar.keepLeftSidebarLoaded", checked);
+                }
+                StyledToolTip {
+                    text: Translation.tr("When enabled keeps the content of the left sidebar loaded to reduce the delay when opening,\nat the cost of around 15MB of consistent RAM usage. Delay significance depends on your system's performance.\nUsing a custom kernel like linux-cachyos might help")
+                }
+            }
+
+            ConfigSpinBox {
+                icon: "width"
+                text: Translation.tr("Sidebar width")
+                value: Config.options?.sidebar?.width ?? 460
+                from: 300
+                to: 700
+                stepSize: 20
+                onValueChanged: Config.setNestedValue("sidebar.width", value)
+                StyledToolTip {
+                    text: Translation.tr("Base width of the sidebars in pixels. Scales with font size.")
+                }
+            }
+
+            SettingsSwitch {
                 buttonIcon: "animation"
                 text: Translation.tr("Instant sidebar opening")
                 checked: Config.options.sidebar?.instantOpen ?? false
