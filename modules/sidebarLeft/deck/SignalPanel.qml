@@ -1,16 +1,20 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import qs
 import QtQuick.Layouts
+import Quickshell.Io
 import qs.modules.common
 import qs.services
 
 /**
  * SignalPanel — Audio signal metadata instrument cluster.
  *
- * Reads MPRIS metadata to display FORMAT / RATE / DEPTH / CH / BITRATE / QUEUE.
- * All fields default to "—" — MPRIS metadata coverage varies wildly by player.
- * Collapses entirely when no track is active or no fields are available.
+ * Primary: reads MPRIS metadata for FORMAT / RATE / DEPTH / CH / BITRATE.
+ * Fallback: when MPRIS metadata is sparse (most players), runs ffprobe on
+ * the track URL (local files only) to extract codec details directly.
+ *
+ * ffprobe runs once per track change, gated on sidebar visibility.
  */
 Item {
     id: root
@@ -20,68 +24,131 @@ Item {
 
     readonly property bool _hasTrack: MprisController.activePlayer !== null
 
-    // ── Metadata extraction ───────────────────────────────────────────────
+    // ── MPRIS metadata ───────────────────────────────────────────────────
     readonly property var _meta: MprisController.activePlayer?.metadata ?? null
+    readonly property string _trackUrl: _meta?.["xesam:url"] ?? ""
 
-    // Format: parsed from xesam:url file extension
-    readonly property string _format: {
-        const url = (_meta?.["xesam:url"] ?? "").toLowerCase()
-        const match = url.match(/\.([a-z0-9]{2,5})(?:\?|#|$)/)
-        if (!match) return "—"
-        const ext = match[1]
-        const known = ["flac", "mp3", "ogg", "opus", "aac", "wav", "m4a", "alac", "ape", "wv", "wma", "mp4"]
-        return known.includes(ext) ? ext.toUpperCase() : "—"
+    // ── ffprobe fallback data ────────────────────────────────────────────
+    property string _probeCodec: ""
+    property string _probeRate: ""
+    property string _probeDepth: ""
+    property string _probeChannels: ""
+    property string _probeBitrate: ""
+    property string _lastProbedUrl: ""
+
+    // Run ffprobe when track URL changes (local files only)
+    onTrackUrlChanged: {
+        if (!_trackUrl || !_trackUrl.startsWith("file://")) {
+            _clearProbe()
+            return
+        }
+        if (_trackUrl === _lastProbedUrl) return
+        _lastProbedUrl = _trackUrl
+        probeProc.running = true
     }
 
-    // Sample rate: try common MPRIS keys
+    function _clearProbe() {
+        _probeCodec = ""
+        _probeRate = ""
+        _probeDepth = ""
+        _probeChannels = ""
+        _probeBitrate = ""
+        _lastProbedUrl = ""
+    }
+
+    Process {
+        id: probeProc
+        command: ["bash", "-c",
+            "ffprobe -v quiet -print_format json -show_format -show_streams \"" +
+            root._trackUrl.replace("file://", "") + "\" 2>/dev/null"
+        ]
+        running: false
+        stdout: StdioCollector {
+            id: probeCollector
+            onStreamFinished: {
+                try {
+                    const d = JSON.parse(probeCollector.text)
+                    const s = d.streams?.[0] ?? {}
+                    const f = d.format ?? {}
+                    root._probeCodec = (s.codec_name ?? "").toUpperCase()
+                    const rate = Number(s.sample_rate ?? 0)
+                    root._probeRate = rate > 0
+                        ? (Math.round(rate / 100) / 10) + "k" : ""
+                    const depth = Number(s.bits_per_raw_sample ?? s.bits_per_sample ?? 0)
+                    root._probeDepth = depth > 0 ? String(depth) : ""
+                    const ch = Number(s.channels ?? 0)
+                    root._probeChannels = ch === 1 ? "MONO"
+                        : ch === 2 ? "ST" : ch > 0 ? ch + "ch" : ""
+                    let br = Number(f.bit_rate ?? s.bit_rate ?? 0)
+                    root._probeBitrate = br > 0
+                        ? Math.round(br / 1000) + "k" : ""
+                } catch (e) {
+                    // ffprobe failed or not installed — silent
+                }
+            }
+        }
+    }
+
+    // ── Resolved values: MPRIS first, ffprobe fallback ───────────────────
+
+    // Format: MPRIS url extension → ffprobe codec
+    readonly property string _format: {
+        const url = (_trackUrl ?? "").toLowerCase()
+        const match = url.match(/\.([a-z0-9]{2,5})(?:\?|#|$)/)
+        if (match) {
+            const ext = match[1]
+            const known = ["flac", "mp3", "ogg", "opus", "aac", "wav",
+                           "m4a", "alac", "ape", "wv", "wma", "mp4"]
+            if (known.includes(ext)) return ext.toUpperCase()
+        }
+        return _probeCodec || "—"
+    }
+
     readonly property string _rate: {
         const r = _meta?.["xesam:audioSampleRate"]
-            ?? _meta?.["audio-samplerate"]
-            ?? _meta?.["xesam:sampleRate"]
-            ?? null
-        if (!r) return "—"
-        const khz = Math.round(Number(r) / 100) / 10
-        return isNaN(khz) || khz <= 0 ? "—" : khz + "k"
+            ?? _meta?.["audio-samplerate"] ?? null
+        if (r) {
+            const khz = Math.round(Number(r) / 100) / 10
+            if (!isNaN(khz) && khz > 0) return khz + "k"
+        }
+        return _probeRate || "—"
     }
 
-    // Bit depth
     readonly property string _depth: {
         const d = _meta?.["xesam:audioBitsPerSample"]
-            ?? _meta?.["audio-depth"]
-            ?? null
-        if (!d) return "—"
-        const n = Number(d)
-        return isNaN(n) || n <= 0 ? "—" : String(n)
+            ?? _meta?.["audio-depth"] ?? null
+        if (d) {
+            const n = Number(d)
+            if (!isNaN(n) && n > 0) return String(n)
+        }
+        return _probeDepth || "—"
     }
 
-    // Channels
     readonly property string _channels: {
         const c = _meta?.["xesam:audioChannels"]
-            ?? _meta?.["audio-channels"]
-            ?? null
-        if (!c) return "—"
-        const n = Number(c)
-        if (isNaN(n) || n <= 0) return "—"
-        if (n === 1) return "MONO"
-        if (n === 2) return "ST"
-        return String(n) + "ch"
+            ?? _meta?.["audio-channels"] ?? null
+        if (c) {
+            const n = Number(c)
+            if (!isNaN(n) && n > 0)
+                return n === 1 ? "MONO" : n === 2 ? "ST" : n + "ch"
+        }
+        return _probeChannels || "—"
     }
 
-    // Bitrate (reported in bits/sec by some players, kbps by others)
     readonly property string _bitrate: {
         const b = _meta?.["mpris:bitrate"]
-            ?? _meta?.["xesam:audioBitrate"]
-            ?? _meta?.["bitrate"]
-            ?? null
-        if (!b) return "—"
-        let n = Number(b)
-        if (isNaN(n) || n <= 0) return "—"
-        // Values > 10000 are likely in bps — convert to kbps
-        if (n > 10000) n = Math.round(n / 1000)
-        return n + "k"
+            ?? _meta?.["xesam:audioBitrate"] ?? null
+        if (b) {
+            let n = Number(b)
+            if (!isNaN(n) && n > 0) {
+                if (n > 10000) n = Math.round(n / 1000)
+                return n + "k"
+            }
+        }
+        return _probeBitrate || "—"
     }
 
-    // Queue length — YtMusic only, MPRIS trackList not widely implemented
+    // Queue length — YtMusic only
     readonly property string _queue: {
         if (MprisController.isYtMusicActive) {
             const len = YtMusic.queue?.length ?? 0
@@ -89,10 +156,6 @@ Item {
         }
         return "—"
     }
-
-    readonly property bool _anyAvailable:
-        _format !== "—" || _rate !== "—" || _depth !== "—" ||
-        _channels !== "—" || _bitrate !== "—"
 
     visible: _hasTrack
     opacity: visible ? 1.0 : 0.0
