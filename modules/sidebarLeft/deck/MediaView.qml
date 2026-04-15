@@ -528,6 +528,27 @@ Item {
             Layout.fillWidth: true
         }
 
+        // ── Source Info — player identity + metadata ─────────────────────
+        DeckDivider { visible: root._hasTrack }
+        DeckLabel { text: "SOURCE"; visible: root._hasTrack }
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 2
+            columnSpacing: 4
+            rowSpacing: 4
+            visible: root._hasTrack
+
+            InstrumentCell {
+                label: "PLAYER"
+                value: MprisController.activePlayer?.identity ?? "—"
+            }
+            InstrumentCell {
+                label: "STATUS"
+                value: MprisController.isPlaying ? "PLAYING"
+                     : MprisController.activePlayer ? "PAUSED" : "—"
+            }
+        }
+
         // ── Queue Preview — Task 8 ───────────────────────────────────────
         DeckDivider { visible: queuePreview._visible }
         DeckLabel { text: "UP NEXT"; visible: queuePreview._visible }
@@ -537,7 +558,7 @@ Item {
         }
 
         // Push SystemStrip to bottom
-        Item { Layout.fillHeight: true }
+        Item { Layout.fillHeight: true; Layout.maximumHeight: 60 }
 
         // ── System Strip — always visible ─────────────────────────────────
         SystemStrip {

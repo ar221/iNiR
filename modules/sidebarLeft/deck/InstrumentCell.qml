@@ -9,7 +9,7 @@ Rectangle {
     property bool available: value !== "—"
 
     Layout.fillWidth: true
-    implicitHeight: 36
+    implicitHeight: 44
     color: Appearance.colors.colLayer0
     border.width: 1
     border.color: Appearance.colors.colLayer1
@@ -17,12 +17,12 @@ Rectangle {
 
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 2
+        spacing: 3
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root.label
-            font.pixelSize: 7
+            font.pixelSize: 9
             font.bold: true
             font.letterSpacing: 1.5
             font.capitalization: Font.AllUppercase
@@ -36,7 +36,7 @@ Rectangle {
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root.value
-            font.pixelSize: 12
+            font.pixelSize: 15
             font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
             font.bold: true
             color: root.available ? "#ff1100"

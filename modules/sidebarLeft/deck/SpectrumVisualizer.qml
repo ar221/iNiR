@@ -24,9 +24,9 @@ Item {
     readonly property bool _isPlaying: MprisController.isPlaying
     readonly property bool _hasTrack: MprisController.activePlayer !== null
 
-    // Container height: 80px bars + 16px reflection + 4px gap
-    readonly property int _barHeight: 80
-    readonly property int _reflHeight: 16
+    // Container height: 110px bars + 20px reflection + 4px gap
+    readonly property int _barHeight: 110
+    readonly property int _reflHeight: 20
     readonly property int _totalHeight: _barHeight + _reflHeight + 4
 
     implicitHeight: _hasTrack ? _totalHeight : 0
