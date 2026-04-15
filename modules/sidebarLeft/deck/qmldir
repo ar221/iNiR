@@ -1,0 +1,3 @@
+module qs.modules.sidebarLeft.deck
+
+DeckSurface 1.0 DeckSurface.qml

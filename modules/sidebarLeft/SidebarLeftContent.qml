@@ -2,17 +2,16 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.modules.sidebarLeft.cockpit
+import qs.modules.sidebarLeft.deck
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 
 /**
- * Left sidebar content — the Cockpit.
+ * Left sidebar content — The Deck.
  *
- * Replaces the old TabBar + SwipeView drawer (pre-Cockpit-Campaign-2026-04) with
- * a single composed surface. All interaction happens within CockpitSurface; deep
- * views (YT Music, Wallhaven) expand in place rather than living as tabs.
+ * Hosts DeckSurface: a nav-rail-driven surface with three views (Media, Wallhaven,
+ * System). Replaced the Cockpit (CockpitSurface) in The Deck Campaign 2026-04.
  */
 Item {
     id: root
@@ -23,7 +22,7 @@ Item {
     property var panelScreen: null
 
     function focusActiveItem() {
-        cockpit.forceActiveFocus()
+        deck.forceActiveFocus()
     }
 
     implicitHeight: bg.implicitHeight
@@ -39,8 +38,8 @@ Item {
         sidebarWidth: root.sidebarWidth
         sidebarPadding: root.sidebarPadding
 
-        CockpitSurface {
-            id: cockpit
+        DeckSurface {
+            id: deck
             anchors.fill: parent
             anchors.margins: root.sidebarPadding
             anchors.topMargin: Appearance.angelEverywhere ? root.sidebarPadding + 4
