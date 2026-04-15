@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.modules.common
+import qs.modules.sidebarLeft
 import qs.services
 
 Item {
@@ -63,26 +64,34 @@ Item {
             }
         }
 
-        // View 1: Wallhaven (placeholder)
-        Rectangle {
+        // View 1: Wallhaven
+        Item {
             anchors.fill: parent
-            anchors.margins: 12
-            color: "transparent"
             visible: root.currentView === 1
             opacity: root.currentView === 1 ? 1 : 0
 
-            ColumnLayout {
+            // Wallhaven browser fills the content area
+            WallhavenView {
+                id: wallhavenView
                 anchors.fill: parent
-                spacing: 8
+                anchors.margins: 4
+                // Reserve space at the bottom for palette + system strip
+                anchors.bottomMargin: paletteColumn.implicitHeight + 4 + 4
+            }
 
-                Text {
-                    text: "WALLHAVEN VIEW"
-                    color: "#ff1100"
-                    font.pixelSize: 14
-                    font.bold: true
-                    font.letterSpacing: 2
-                }
-                Item { Layout.fillHeight: true }
+            // Palette extract bar + SystemStrip pinned at bottom
+            ColumnLayout {
+                id: paletteColumn
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 4
+                anchors.rightMargin: 4
+                anchors.bottomMargin: 4
+                spacing: 4
+                z: 2
+
+                PaletteExtractBar {}
                 SystemStrip {}
             }
 

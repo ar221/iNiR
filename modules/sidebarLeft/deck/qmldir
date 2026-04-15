@@ -16,3 +16,4 @@ ArcGauge 1.0 ArcGauge.qml
 UsageBar 1.0 UsageBar.qml
 ContextCards 1.0 ContextCards.qml
 SystemView 1.0 SystemView.qml
+PaletteExtractBar 1.0 PaletteExtractBar.qml
