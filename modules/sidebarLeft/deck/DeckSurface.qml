@@ -47,29 +47,12 @@ Item {
         anchors.bottom: parent.bottom
         z: 1
 
-        // View 0: Media (placeholder)
-        Rectangle {
+        // View 0: Media
+        MediaView {
             anchors.fill: parent
             anchors.margins: 12
-            color: "transparent"
             visible: root.currentView === 0
             opacity: root.currentView === 0 ? 1 : 0
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 8
-
-                Text {
-                    text: "MEDIA VIEW"
-                    color: "#ff1100"
-                    font.pixelSize: 14
-                    font.bold: true
-                    font.letterSpacing: 2
-                }
-                Item { Layout.fillHeight: true }
-                SystemStrip {}
-            }
-
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
                 NumberAnimation {
