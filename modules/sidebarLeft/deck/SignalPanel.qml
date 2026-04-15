@@ -38,20 +38,29 @@ Item {
     property string _lastProbedUrl: ""
 
     // Run ffprobe when track URL changes (local files only)
-    onTrackUrlChanged: {
+    function tryProbe() {
         if (!trackUrl || !trackUrl.startsWith("file://")) {
             _clearProbe()
             return
         }
         if (trackUrl === _lastProbedUrl) return
         _lastProbedUrl = trackUrl
-        // Set the command dynamically before running
         const localPath = trackUrl.replace("file://", "")
         probeProc.command = ["bash", "-c",
             "ffprobe -v quiet -print_format json -show_format -show_streams " +
             "'" + localPath.replace(/'/g, "'\\''") + "'"
         ]
         probeProc.running = true
+    }
+
+    onTrackUrlChanged: tryProbe()
+
+    // Also trigger when becoming visible (URL may already be set when sidebar opens)
+    onVisibleChanged: {
+        if (visible && trackUrl && _lastProbedUrl !== trackUrl) tryProbe()
+    }
+    Component.onCompleted: {
+        if (trackUrl) tryProbe()
     }
 
     function _clearProbe() {

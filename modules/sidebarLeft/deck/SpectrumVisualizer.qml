@@ -50,8 +50,9 @@ Item {
     Process {
         id: cavaProc
         command: ["cava", "-p", "/tmp/cava-inir.conf"]
-        // Gate: only run when sidebar is open, music is playing, and CAVA is enabled
-        running: root.useCava && GlobalStates.sidebarLeftOpen && root._hasTrack && root._isPlaying
+        // Gate: run when sidebar open + track exists (even if paused — CAVA outputs
+        // silence naturally, bars drop to zero smoothly instead of flashing to fallback)
+        running: root.useCava && GlobalStates.sidebarLeftOpen && root._hasTrack
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: data => {
