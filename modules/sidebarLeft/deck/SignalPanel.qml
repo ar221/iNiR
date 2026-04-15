@@ -26,7 +26,8 @@ Item {
 
     // ── MPRIS metadata ───────────────────────────────────────────────────
     readonly property var _meta: MprisController.activePlayer?.metadata ?? null
-    readonly property string _trackUrl: _meta?.["xesam:url"] ?? ""
+    // No underscore — so onTrackUrlChanged handler works in Quickshell
+    readonly property string trackUrl: _meta?.["xesam:url"] ?? ""
 
     // ── ffprobe fallback data ────────────────────────────────────────────
     property string _probeCodec: ""
@@ -38,12 +39,18 @@ Item {
 
     // Run ffprobe when track URL changes (local files only)
     onTrackUrlChanged: {
-        if (!_trackUrl || !_trackUrl.startsWith("file://")) {
+        if (!trackUrl || !trackUrl.startsWith("file://")) {
             _clearProbe()
             return
         }
-        if (_trackUrl === _lastProbedUrl) return
-        _lastProbedUrl = _trackUrl
+        if (trackUrl === _lastProbedUrl) return
+        _lastProbedUrl = trackUrl
+        // Set the command dynamically before running
+        const localPath = trackUrl.replace("file://", "")
+        probeProc.command = ["bash", "-c",
+            "ffprobe -v quiet -print_format json -show_format -show_streams " +
+            "'" + localPath.replace(/'/g, "'\\''") + "'"
+        ]
         probeProc.running = true
     }
 
@@ -58,10 +65,7 @@ Item {
 
     Process {
         id: probeProc
-        command: ["bash", "-c",
-            "ffprobe -v quiet -print_format json -show_format -show_streams \"" +
-            root._trackUrl.replace("file://", "") + "\" 2>/dev/null"
-        ]
+        command: ["true"]  // placeholder — set dynamically in onTrackUrlChanged
         running: false
         stdout: StdioCollector {
             id: probeCollector
@@ -93,7 +97,7 @@ Item {
 
     // Format: MPRIS url extension → ffprobe codec
     readonly property string _format: {
-        const url = (_trackUrl ?? "").toLowerCase()
+        const url = (trackUrl ?? "").toLowerCase()
         const match = url.match(/\.([a-z0-9]{2,5})(?:\?|#|$)/)
         if (match) {
             const ext = match[1]
