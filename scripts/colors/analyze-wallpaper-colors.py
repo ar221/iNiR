@@ -217,11 +217,16 @@ def main():
         sys.exit(0)
 
     log.info(f"Analyzing {total} files...")
+    # Save every N files so partial progress survives if we get killed mid-run
+    # (the wallpaper selector kills this process when it closes).
+    SAVE_EVERY = 25
     for i, fp in enumerate(to_analyze, 1):
         result = analyze_file(fp)
         if result:
             cache[fp] = result
         print(f"PROGRESS {i}/{total}", flush=True)
+        if i % SAVE_EVERY == 0:
+            _save_cache(cache, cache_path)
 
     _save_cache(cache, cache_path)
 
