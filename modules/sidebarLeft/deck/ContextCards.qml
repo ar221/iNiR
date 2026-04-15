@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import qs.modules.common
+import qs.services
 
 /**
  * ContextCards — rotating system info cards for the Deck SystemView.
