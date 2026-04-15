@@ -96,22 +96,12 @@ Item {
             }
         }
 
-        // View 2: System (placeholder — SystemStrip excluded per spec)
-        Rectangle {
+        // View 2: System
+        SystemView {
             anchors.fill: parent
             anchors.margins: 12
-            color: "transparent"
             visible: root.currentView === 2
             opacity: root.currentView === 2 ? 1 : 0
-
-            Text {
-                text: "SYSTEM VIEW"
-                color: "#ff1100"
-                font.pixelSize: 14
-                font.bold: true
-                font.letterSpacing: 2
-            }
-
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
                 NumberAnimation {

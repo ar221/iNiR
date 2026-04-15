@@ -12,3 +12,7 @@ InstrumentCell 1.0 InstrumentCell.qml
 SignalPanel 1.0 SignalPanel.qml
 SpectrumVisualizer 1.0 SpectrumVisualizer.qml
 QueuePreview 1.0 QueuePreview.qml
+ArcGauge 1.0 ArcGauge.qml
+UsageBar 1.0 UsageBar.qml
+ContextCards 1.0 ContextCards.qml
+SystemView 1.0 SystemView.qml

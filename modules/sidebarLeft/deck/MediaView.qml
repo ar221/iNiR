@@ -528,8 +528,13 @@ Item {
             Layout.fillWidth: true
         }
 
-        // ── [PLACEHOLDER] QueuePreview — Task 8 ──────────────────────────
-        // Item { id: queuePreviewPlaceholder; Layout.fillWidth: true }
+        // ── Queue Preview — Task 8 ───────────────────────────────────────
+        DeckDivider { visible: queuePreview._visible }
+        DeckLabel { text: "UP NEXT"; visible: queuePreview._visible }
+        QueuePreview {
+            id: queuePreview
+            Layout.fillWidth: true
+        }
 
         // Push SystemStrip to bottom
         Item { Layout.fillHeight: true }
