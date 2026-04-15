@@ -160,7 +160,7 @@ Item {
     // ── Layout ────────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: 10
 
         // Arc row: CPU + GPU
         RowLayout {
@@ -181,6 +181,9 @@ Item {
                 temperature: ResourceUsage.gpuTemp
             }
         }
+
+        // Memory section
+        DeckLabel { text: "MEMORY" }
 
         // RAM
         UsageBar {
@@ -208,19 +211,20 @@ Item {
             Text {
                 text: "▲ " + root._fmtRate(root._netTxBytesPerSec)
                 font.family: Appearance.font.family.monospace
-                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.pixelSize: 12
                 color: Appearance.colors.colOnLayer1Inactive
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: "▼ " + root._fmtRate(root._netRxBytesPerSec)
                 font.family: Appearance.font.family.monospace
-                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.pixelSize: 12
                 color: Appearance.colors.colOnLayer1Inactive
             }
         }
 
-        DeckDivider {}
+        // Disk section
+        DeckLabel { text: "DISK" }
 
         // Disk: root
         UsageBar {

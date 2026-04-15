@@ -130,10 +130,10 @@ Item {
             // Art + glow
             Item {
                 id: artWrapper
-                implicitWidth: 80
-                implicitHeight: 80
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 80
+                implicitWidth: 110
+                implicitHeight: 110
+                Layout.preferredWidth: 110
+                Layout.preferredHeight: 110
                 Layout.alignment: Qt.AlignTop
 
                 // Radial glow behind art — dominant color at 30% opacity
@@ -225,11 +225,11 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 2
 
-                // Track title — 15px bold
+                // Track title — 17px bold
                 Text {
                     Layout.fillWidth: true
                     text: MprisController.activeTrack?.title ?? ""
-                    font.pixelSize: 15
+                    font.pixelSize: 17
                     font.bold: true
                     color: Appearance.colors.colOnLayer1
                     elide: Text.ElideRight
@@ -237,22 +237,22 @@ Item {
                     wrapMode: Text.NoWrap
                 }
 
-                // Artist — 12px subdued
+                // Artist — 14px subdued
                 Text {
                     Layout.fillWidth: true
                     text: MprisController.activeTrack?.artist ?? ""
-                    font.pixelSize: 12
+                    font.pixelSize: 14
                     color: Appearance.colors.colOnSurfaceVariant
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     wrapMode: Text.NoWrap
                 }
 
-                // Album — 10px dim italic
+                // Album — 12px dim italic
                 Text {
                     Layout.fillWidth: true
                     text: MprisController.activeTrack?.album ?? ""
-                    font.pixelSize: 10
+                    font.pixelSize: 12
                     font.italic: true
                     color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.50)
                     elide: Text.ElideRight
@@ -265,7 +265,7 @@ Item {
         // ── Transport Controls ────────────────────────────────────────────
         Item {
             Layout.fillWidth: true
-            implicitHeight: 40
+            implicitHeight: 48
             visible: root._hasTrack
 
             RowLayout {
@@ -275,8 +275,8 @@ Item {
                 // Shuffle
                 RippleButton {
                     id: shuffleBtn
-                    implicitWidth: 28
-                    implicitHeight: 28
+                    implicitWidth: 32
+                    implicitHeight: 32
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     enabled: MprisController.shuffleSupported
@@ -285,7 +285,7 @@ Item {
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "shuffle"
-                        iconSize: 16
+                        iconSize: 18
                         color: MprisController.hasShuffle
                             ? "#ff1100"
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
@@ -299,8 +299,8 @@ Item {
                 // Previous
                 RippleButton {
                     id: prevBtn
-                    implicitWidth: 28
-                    implicitHeight: 28
+                    implicitWidth: 34
+                    implicitHeight: 34
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     enabled: MprisController.canGoPrevious
@@ -309,7 +309,7 @@ Item {
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "skip_previous"
-                        iconSize: 18
+                        iconSize: 20
                         color: prevBtn.enabled
                             ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.80)
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
@@ -319,8 +319,8 @@ Item {
                 // Play / Pause — hand-rolled with #ff1100 border
                 Rectangle {
                     id: playPauseCard
-                    implicitWidth: 36
-                    implicitHeight: 36
+                    implicitWidth: 44
+                    implicitHeight: 44
                     radius: 4
                     color: playPauseMouse.containsMouse
                         ? ColorUtils.applyAlpha("#ff1100", 0.15)
@@ -337,7 +337,7 @@ Item {
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "play_arrow"
-                        iconSize: 20
+                        iconSize: 24
                         color: "#ff1100"
                         opacity: MprisController.isPlaying ? 0.0 : 1.0
                         Behavior on opacity {
@@ -350,7 +350,7 @@ Item {
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "pause"
-                        iconSize: 20
+                        iconSize: 24
                         color: "#ff1100"
                         opacity: MprisController.isPlaying ? 1.0 : 0.0
                         Behavior on opacity {
@@ -371,8 +371,8 @@ Item {
                 // Next
                 RippleButton {
                     id: nextBtn
-                    implicitWidth: 28
-                    implicitHeight: 28
+                    implicitWidth: 34
+                    implicitHeight: 34
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     enabled: MprisController.canGoNext
@@ -381,7 +381,7 @@ Item {
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "skip_next"
-                        iconSize: 18
+                        iconSize: 20
                         color: nextBtn.enabled
                             ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.80)
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
@@ -391,8 +391,8 @@ Item {
                 // Repeat
                 RippleButton {
                     id: repeatBtn
-                    implicitWidth: 28
-                    implicitHeight: 28
+                    implicitWidth: 32
+                    implicitHeight: 32
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
                     enabled: MprisController.loopSupported
@@ -403,7 +403,7 @@ Item {
                         text: MprisController.loopState === MprisLoopState.Track
                             ? "repeat_one"
                             : "repeat"
-                        iconSize: 16
+                        iconSize: 18
                         color: MprisController.loopState !== MprisLoopState.None
                             ? "#ff1100"
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
@@ -419,7 +419,7 @@ Item {
         // ── Progress Bar ──────────────────────────────────────────────────
         Item {
             Layout.fillWidth: true
-            implicitHeight: 20
+            implicitHeight: 24
             visible: root._hasTrack
 
             // Elapsed timestamp
@@ -428,7 +428,7 @@ Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: progressTrack.verticalCenter
                 text: root.formatTime(MprisController.activePosition)
-                font.pixelSize: 9
+                font.pixelSize: 11
                 font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
             }
@@ -439,7 +439,7 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: progressTrack.verticalCenter
                 text: root.formatTime(MprisController.activeLength)
-                font.pixelSize: 9
+                font.pixelSize: 11
                 font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
             }
@@ -452,7 +452,7 @@ Item {
                 anchors.leftMargin: 6
                 anchors.rightMargin: 6
                 anchors.verticalCenter: parent.verticalCenter
-                height: 3
+                height: 4
                 radius: 2
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.15)
 
@@ -482,9 +482,9 @@ Item {
                 // Scrub dot — appears on hover
                 Rectangle {
                     id: scrubDot
-                    width: 7
-                    height: 7
-                    radius: 4
+                    width: 9
+                    height: 9
+                    radius: 5
                     color: "#ff1100"
                     anchors.verticalCenter: parent.verticalCenter
                     x: progressTrack.width * progressTrack._ratio - width / 2

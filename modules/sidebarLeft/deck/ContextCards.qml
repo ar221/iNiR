@@ -128,7 +128,7 @@ Item {
         id: cardContainer
         anchors.left: parent.left
         anchors.right: parent.right
-        implicitHeight: 44
+        implicitHeight: 64
 
         // Previous card (fades out)
         Rectangle {
@@ -150,7 +150,7 @@ Item {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: prevCard._data?.title ?? ""
-                    font.pixelSize: 7
+                    font.pixelSize: 10
                     font.letterSpacing: 1.5
                     font.capitalization: Font.AllUppercase
                     color: Appearance.colors.colOnLayer1Inactive
@@ -159,7 +159,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: prevCard._data?.value ?? "..."
                     font.family: Appearance.font.family.monospace
-                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    font.pixelSize: Appearance.font.pixelSize.normal
                     color: Appearance.colors.colOnLayer1
                 }
             }
@@ -185,7 +185,7 @@ Item {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: currentCard._data?.title ?? ""
-                    font.pixelSize: 7
+                    font.pixelSize: 10
                     font.letterSpacing: 1.5
                     font.capitalization: Font.AllUppercase
                     color: Appearance.colors.colOnLayer1Inactive
@@ -194,7 +194,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: currentCard._data?.value ?? "..."
                     font.family: Appearance.font.family.monospace
-                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    font.pixelSize: Appearance.font.pixelSize.normal
                     color: Appearance.colors.colOnLayer1
                 }
             }
@@ -227,8 +227,8 @@ Item {
             model: root._cards.length
             Rectangle {
                 required property int index
-                width: index === root._currentIndex ? 12 : 4
-                height: 4
+                width: index === root._currentIndex ? 16 : 6
+                height: 6
                 radius: 2
                 color: index === root._currentIndex
                     ? Appearance.colors.colPrimary
@@ -245,5 +245,5 @@ Item {
         }
     }
 
-    implicitHeight: cardContainer.implicitHeight + 12
+    implicitHeight: cardContainer.implicitHeight + 16
 }

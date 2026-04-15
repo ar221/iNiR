@@ -16,7 +16,7 @@ Item {
     id: root
 
     Layout.fillWidth: true
-    implicitHeight: _hasTrack && _anyAvailable ? _content.implicitHeight : 0
+    implicitHeight: _hasTrack ? _content.implicitHeight : 0
 
     readonly property bool _hasTrack: MprisController.activePlayer !== null
 
@@ -94,7 +94,7 @@ Item {
         _format !== "—" || _rate !== "—" || _depth !== "—" ||
         _channels !== "—" || _bitrate !== "—"
 
-    visible: _hasTrack && _anyAvailable
+    visible: _hasTrack
     opacity: visible ? 1.0 : 0.0
 
     Behavior on implicitHeight {

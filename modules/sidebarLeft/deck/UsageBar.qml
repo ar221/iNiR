@@ -20,7 +20,7 @@ Item {
     property string unit: "GB"
     property real hotThreshold: 0.9
 
-    implicitHeight: 30
+    implicitHeight: 38
     Layout.fillWidth: true
 
     readonly property real _ratio: root.total > 0
@@ -51,7 +51,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 3
+        spacing: 5
 
         // Label row
         RowLayout {
@@ -61,14 +61,14 @@ Item {
             Text {
                 text: root.label
                 font.family: Appearance.font.family.monospace
-                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.pixelSize: 13
                 color: Appearance.colors.colOnLayer1Inactive
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: root.used.toFixed(1) + " / " + root.total.toFixed(1) + " " + root.unit
                 font.family: Appearance.font.family.numbers
-                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.pixelSize: 13
                 color: Appearance.colors.colOnLayer1Inactive
             }
         }
@@ -76,7 +76,7 @@ Item {
         // Bar
         Item {
             Layout.fillWidth: true
-            implicitHeight: 8
+            implicitHeight: 12
 
             // Track
             Rectangle {
