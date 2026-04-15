@@ -90,8 +90,10 @@ Item {
         anchors.fill: parent
         spacing: 10
 
-        // ── [PLACEHOLDER] SpectrumVisualizer — Task 7 ────────────────────
-        // Item { id: spectrumPlaceholder; Layout.fillWidth: true; implicitHeight: 48 }
+        // ── Spectrum Visualizer — Task 7 ─────────────────────────────────
+        SpectrumVisualizer {
+            Layout.fillWidth: true
+        }
 
         // ── No-player state ───────────────────────────────────────────────
         Item {
