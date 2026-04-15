@@ -88,7 +88,7 @@ Item {
     // ── Main layout ───────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
-        spacing: 6
+        spacing: 4
 
         // ── Spectrum Visualizer — Task 7 ─────────────────────────────────
         SpectrumVisualizer {

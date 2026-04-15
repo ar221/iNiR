@@ -74,9 +74,10 @@ Item {
         if (root.useCava) configWriter.running = true
     }
 
-    // Container height: 110px bars + 20px reflection + 4px gap
-    readonly property int _barHeight: 110
+    // Container height: 130px bars + 20px reflection + 4px gap
+    readonly property int _barHeight: 130
     readonly property int _reflHeight: 20
+    readonly property int _edgePad: 3  // inner padding from container edges
     readonly property int _totalHeight: _barHeight + _reflHeight + 4
 
     implicitHeight: _hasTrack ? _totalHeight : 0
@@ -111,7 +112,7 @@ Item {
 
     // ── Bar gap and width ─────────────────────────────────────────────────
     readonly property real _gap: 2
-    readonly property real _barWidth: (width - (_gap * 23)) / 24
+    readonly property real _barWidth: (width - (_edgePad * 2) - (_gap * 23)) / 24
 
     // ── Main bar container ────────────────────────────────────────────────
     Rectangle {
@@ -128,7 +129,9 @@ Item {
 
         Row {
             anchors.fill: parent
-            anchors.margins: 0
+            anchors.leftMargin: root._edgePad
+            anchors.rightMargin: root._edgePad
+            anchors.bottomMargin: root._edgePad
             spacing: root._gap
 
             Repeater {
