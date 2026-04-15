@@ -518,8 +518,13 @@ Item {
             }
         }
 
-        // ── [PLACEHOLDER] SignalPanel — Task 6 ───────────────────────────
-        // Item { id: signalPanelPlaceholder; Layout.fillWidth: true }
+        // ── Signal Panel — Task 6 ────────────────────────────────────────
+        DeckDivider { visible: signalPanel.visible }
+        DeckLabel { text: "SIGNAL"; visible: signalPanel.visible }
+        SignalPanel {
+            id: signalPanel
+            Layout.fillWidth: true
+        }
 
         // ── [PLACEHOLDER] QueuePreview — Task 8 ──────────────────────────
         // Item { id: queuePreviewPlaceholder; Layout.fillWidth: true }

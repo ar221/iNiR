@@ -8,3 +8,7 @@ SystemStrip 1.0 SystemStrip.qml
 MediaView 1.0 MediaView.qml
 NavigationRail 1.0 NavigationRail.qml
 RailButton 1.0 RailButton.qml
+InstrumentCell 1.0 InstrumentCell.qml
+SignalPanel 1.0 SignalPanel.qml
+SpectrumVisualizer 1.0 SpectrumVisualizer.qml
+QueuePreview 1.0 QueuePreview.qml
