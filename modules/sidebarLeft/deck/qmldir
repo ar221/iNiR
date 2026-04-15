@@ -1,5 +1,6 @@
 module qs.modules.sidebarLeft.deck
 
+AmbientBackground 1.0 AmbientBackground.qml
 DeckSurface 1.0 DeckSurface.qml
 DeckDivider 1.0 DeckDivider.qml
 DeckLabel 1.0 DeckLabel.qml

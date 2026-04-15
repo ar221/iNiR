@@ -21,6 +21,12 @@ Item {
         }
     }
 
+    // ── Background ───────────────────────────────────────────────────
+    AmbientBackground {
+        anchors.fill: parent
+        z: 0
+    }
+
     // ── Layout: Rail | Content ───────────────────────────────────────
     NavigationRail {
         id: rail
@@ -29,6 +35,7 @@ Item {
         anchors.bottom: parent.bottom
         currentView: root.currentView
         onViewRequested: (index) => { root.currentView = index }
+        z: 1
     }
 
     // ── Content area ─────────────────────────────────────────────────
@@ -38,6 +45,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
+        z: 1
 
         // View 0: Media (placeholder)
         Rectangle {
