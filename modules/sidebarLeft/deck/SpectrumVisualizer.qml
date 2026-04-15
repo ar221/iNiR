@@ -3,18 +3,22 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import Quickshell.Io
 import qs.modules.common
 import qs.services
 
 /**
- * SpectrumVisualizer — Animated fallback spectrum display.
+ * SpectrumVisualizer — Spectrum display with CAVA integration.
+ *
+ * Primary mode: CAVA-driven real spectrum data (24 bars, 30fps).
+ * Fallback mode: staggered sine-wave animations (when CAVA unavailable or disabled).
+ *
+ * CAVA process is gated: only runs when sidebar is open AND music is playing.
+ * Switch between modes via the `cavaActive` flag — no animation code removed.
  *
  * 24 bars split into left (12) and right (12) channels.
- * Bars animate with staggered sine-wave patterns when playing.
  * Paused: animations freeze at current heights.
  * No track: collapses to height 0 with an 80ms exit animation.
- *
- * CAVA integration is Task 13 (stretch). This is the pure-QML fallback.
  */
 Item {
     id: root
@@ -23,6 +27,50 @@ Item {
 
     readonly property bool _isPlaying: MprisController.isPlaying
     readonly property bool _hasTrack: MprisController.activePlayer !== null
+
+    // ── CAVA integration ──────────────────────────────────────────────────
+    // User can disable via config.json: sidebar.deck.visualizer.useCava = false
+    property bool useCava: Config.options?.sidebar?.deck?.visualizer?.useCava ?? true
+
+    // Live CAVA state
+    property var cavaValues: new Array(24).fill(0)
+    property bool cavaActive: false
+
+    // Write CAVA config on first run, then start the process
+    Process {
+        id: configWriter
+        command: [
+            "bash", "-c",
+            "printf '[general]\\nbars = 24\\nframerate = 30\\n[output]\\nmethod = raw\\nraw_target = /dev/stdout\\ndata_format = ascii\\nascii_max_range = 255\\n[smoothing]\\nnoise_reduction = 77\\n' > /tmp/cava-inir.conf"
+        ]
+        running: false
+    }
+
+    Process {
+        id: cavaProc
+        command: ["cava", "-p", "/tmp/cava-inir.conf"]
+        // Gate: only run when sidebar is open, music is playing, and CAVA is enabled
+        running: root.useCava && GlobalStates.sidebarLeftOpen && root._hasTrack && root._isPlaying
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => {
+                const trimmed = data.trim().replace(/;$/, "")
+                if (trimmed.length === 0) return
+                const parts = trimmed.split(";")
+                if (parts.length !== 24) return
+                const vals = parts.map(v => parseInt(v) || 0)
+                root.cavaValues = vals
+                root.cavaActive = true
+            }
+        }
+        onRunningChanged: {
+            if (!running) root.cavaActive = false
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.useCava) configWriter.running = true
+    }
 
     // Container height: 110px bars + 20px reflection + 4px gap
     readonly property int _barHeight: 110
@@ -95,28 +143,45 @@ Item {
                     readonly property bool _isLeft: index < 12
 
                     width: root._barWidth
-                    height: _anim.currentValue
                     anchors.bottom: parent.bottom
                     radius: 1
+
+                    // ── CAVA-driven height ────────────────────────────────
+                    // When CAVA is active, map 0-255 range to bar pixel height.
+                    // Clamped to minimum 2px so bars never fully disappear.
+                    property real cavaHeight: Math.max(2, (root.cavaValues[index] / 255) * root._barHeight)
+
+                    // Smooth CAVA transitions at ~30fps to avoid jagginess
+                    Behavior on cavaHeight {
+                        enabled: root.cavaActive
+                        NumberAnimation { duration: 33 }
+                    }
+
+                    // ── Fallback: animated height via NumberAnimation ──────
+                    // Animates an intermediate property to avoid binding conflict on `height`.
+                    // The binding on `height` would win over a direct animation target — using
+                    // fallbackHeight as the animation target keeps both modes independent.
+                    property real fallbackHeight: _cfg.minH
+                    property real _targetHigh: _cfg.maxH
+                    property real _targetLow:  _cfg.minH
+
+                    // Switch between CAVA data and fallback sine-wave animation
+                    height: root.cavaActive ? cavaHeight : fallbackHeight
 
                     color: _isLeft
                         ? Qt.rgba(1.0, 0.15 + index * 0.04, 0.0, 1.0)
                         : Qt.rgba(1.0, 0.27 + (index - 12) * 0.04, 0.0, 0.70)
 
-                    // ── Animated height via NumberAnimation ───────────────
-                    property real _targetHigh: _cfg.maxH
-                    property real _targetLow:  _cfg.minH
-
                     NumberAnimation {
                         id: _anim
                         target: barRect
-                        property: "height"
+                        property: "fallbackHeight"
                         from: barRect._targetLow
                         to: barRect._targetHigh
                         duration: barRect._cfg.dur
                         easing.type: Easing.InOutSine
                         loops: Animation.Infinite
-                        running: root._hasTrack && root._isPlaying
+                        running: root._hasTrack && root._isPlaying && !root.cavaActive
                         paused: !root._isPlaying
 
                         onFinished: {
