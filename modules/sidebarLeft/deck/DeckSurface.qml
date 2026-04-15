@@ -24,12 +24,21 @@ Item {
         anchors.fill: parent
         color: Appearance.colors.colLayer0
 
-        Text {
-            anchors.centerIn: parent
-            text: "The Deck — View " + root.currentView
-            color: "#ff1100"
-            font.pixelSize: 16
-            font.bold: true
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 8
+
+            Text {
+                text: "The Deck — View " + root.currentView
+                color: "#ff1100"
+                font.pixelSize: 16
+                font.bold: true
+            }
+
+            Item { Layout.fillHeight: true }
+
+            SystemStrip {}
         }
     }
 }

@@ -1,3 +1,6 @@
 module qs.modules.sidebarLeft.deck
 
 DeckSurface 1.0 DeckSurface.qml
+DeckDivider 1.0 DeckDivider.qml
+DeckLabel 1.0 DeckLabel.qml
+SystemStrip 1.0 SystemStrip.qml
