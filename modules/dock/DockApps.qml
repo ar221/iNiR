@@ -50,6 +50,10 @@ Item {
     implicitWidth: listView.contentWidth
     implicitHeight: listView.contentHeight
 
+    // Cache of last non-empty sortedToplevels — held during the 100ms sort-timer window
+    // so the dock doesn't flash unsorted ToplevelManager order mid-rebuild.
+    property var _lastGoodToplevels: []
+
     // ─── Drag & Drop State ───────────────────────────────────────────────
     readonly property bool dragEnabled: Config.options?.dock?.enableDragReorder ?? true
     property bool dragActive: false
@@ -207,7 +211,7 @@ Item {
 
     Timer {
         id: dropSettleResetTimer
-        interval: 2
+        interval: 16 // one frame — 2ms was sub-frame, causing snap before delegate repositions
         repeat: false
         onTriggered: {
             dropSettlingActive = false
@@ -289,10 +293,19 @@ Item {
         const ignoredRegexes = _getIgnoredRegexes();
         const separatePinnedFromRunning = root.separatePinnedFromRunning;
 
-        // Get all open windows
-        const allToplevels = CompositorService.sortedToplevels && CompositorService.sortedToplevels.length
-                ? CompositorService.sortedToplevels
+        // Get all open windows.
+        // Prefer CompositorService.sortedToplevels; if it's empty, hold the last good
+        // frame instead of falling back to unsorted ToplevelManager order — the sort timer
+        // fires in 100ms and sortedToplevels may be empty mid-rebuild.
+        let allToplevels;
+        if (CompositorService.sortedToplevels && CompositorService.sortedToplevels.length) {
+            allToplevels = CompositorService.sortedToplevels;
+            root._lastGoodToplevels = allToplevels;
+        } else {
+            allToplevels = root._lastGoodToplevels.length
+                ? root._lastGoodToplevels
                 : ToplevelManager.toplevels.values;
+        }
 
         // Workspace-scoped filtering (Niri only)
         const dockScope = Config.options?.dock?.scope ?? "workspace";
@@ -306,8 +319,12 @@ Item {
             ? allToplevels.filter(t => t.niriWorkspaceId == focusedWsId)
             : allToplevels;
 
-        // Build map of running apps (apps with open windows)
+        // Build map of running apps (apps with open windows).
+        // insertionOrder tracks first-seen position in filteredToplevels so that
+        // the comparator can stable-sort unpinned apps without relying on Map
+        // iteration order (which varies across JS engine / workspace-switch rebuilds).
         const runningAppsMap = new Map();
+        let _insertionOrder = 0;
         for (const toplevel of filteredToplevels) {
             if (!toplevel.appId) continue;
             if (toplevel.appId === "" || toplevel.appId === "null") continue;
@@ -321,7 +338,8 @@ Item {
                 runningAppsMap.set(lowerAppId, {
                     appId: toplevel.appId,
                     toplevels: [],
-                    pinned: false
+                    pinned: false,
+                    insertionOrder: _insertionOrder++
                 });
             }
             runningAppsMap.get(lowerAppId).toplevels.push(toplevel);
@@ -417,7 +435,9 @@ Item {
                     entry: entry
                 });
             }
-            // Sort to keep consistency: pinned+running apps first (by pinned order), then unpinned
+            // Sort: pinned+running apps first (by pinned order), then unpinned by
+            // first-appearance index in filteredToplevels — prevents reshuffling on
+            // workspace switch when the underlying sortedToplevels order changes.
             sortedRunningApps.sort((a, b) => {
                 const aIndex = pinnedApps.findIndex(p => p.toLowerCase() === a.lowerAppId);
                 const bIndex = pinnedApps.findIndex(p => p.toLowerCase() === b.lowerAppId);
@@ -430,8 +450,8 @@ Item {
                 if (aIsPinned) return -1;
                 if (bIsPinned) return 1;
 
-                // Unpinned apps maintain their order
-                return 0;
+                // Stable tiebreaker for unpinned apps — use insertion order from filteredToplevels
+                return a.entry.insertionOrder - b.entry.insertionOrder;
             });
 
             for (const {lowerAppId, entry} of sortedRunningApps) {

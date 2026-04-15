@@ -1331,11 +1331,12 @@ Singleton {
                 if (usedToplevels.has(toplevel))
                     continue
 
-                const score = matchToplevelToWindow(toplevel, niriWindow)
+                const score = matchToplevelToWindow(toplevel, niriWindow, root.focusedWorkspaceId)
                 if (score > bestScore) {
                     bestScore = score
                     bestMatch = toplevel
-                    if (score === 3)
+                    // 3.5 = perfect title match + workspace bonus (max possible score)
+                    if (score >= 3.5)
                         break
                 }
             }
@@ -1380,7 +1381,7 @@ Singleton {
         return null
     }
 
-    function matchToplevelToWindow(toplevel, niriWindow) {
+    function matchToplevelToWindow(toplevel, niriWindow, focusedWsId) {
         if (toplevel.appId !== niriWindow.app_id)
             return 0
 
@@ -1392,6 +1393,10 @@ Singleton {
                 score = 2
             }
         }
+        // Workspace-local windows win same-appId disambiguation.
+        // Uses loose == because focusedWsId is string, workspace_id is int.
+        if (focusedWsId !== undefined && niriWindow.workspace_id == focusedWsId)
+            score += 0.5
         return score
     }
 
