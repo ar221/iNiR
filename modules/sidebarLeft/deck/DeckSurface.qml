@@ -198,6 +198,7 @@ Item {
     YtMusicView {
         id: ytMusicView
         parent: null
+        visible: false
     }
 
     // ── States ────────────────────────────────────────────────────────────

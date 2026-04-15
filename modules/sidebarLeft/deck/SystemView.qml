@@ -60,8 +60,9 @@ Item {
         interval: 2000
         repeat: true
         running: GlobalStates.sidebarLeftOpen && root.visible
-        onTriggered: {
-            netProc.running = true
+        onTriggered: netProc.running = true
+        onRunningChanged: {
+            if (running && !netProc.running) netProc.running = true
         }
     }
 
@@ -113,8 +114,14 @@ Item {
         interval: 10000
         repeat: true
         running: GlobalStates.sidebarLeftOpen && root.visible
-        triggeredOnStart: true
         onTriggered: diskProc.running = true
+    }
+
+    // Trigger first disk poll when view becomes visible
+    onVisibleChanged: {
+        if (visible && GlobalStates.sidebarLeftOpen && !diskProc.running) {
+            diskProc.running = true
+        }
     }
 
     Process {
