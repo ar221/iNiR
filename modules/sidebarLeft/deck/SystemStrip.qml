@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import qs
 import QtQuick.Layouts
 import qs.modules.common
 import qs.services
@@ -9,7 +10,7 @@ RowLayout {
     id: root
     spacing: 4
     Layout.fillWidth: true
-    height: 28
+    height: 36
 
     property bool polling: GlobalStates.sidebarLeftOpen
 
@@ -24,7 +25,7 @@ RowLayout {
         property bool hot: false
 
         Layout.fillWidth: true
-        implicitHeight: 28
+        implicitHeight: 36
         color: Appearance.colors.colLayer0
         border.width: 1
         border.color: Appearance.colors.colLayer1
@@ -36,7 +37,7 @@ RowLayout {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: cell.label
-                font.pixelSize: 7
+                font.pixelSize: 8
                 font.bold: true
                 font.letterSpacing: 1
                 font.capitalization: Font.AllUppercase
@@ -50,8 +51,8 @@ RowLayout {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: cell.value
-                font.pixelSize: 10
-                font.family: Appearance.font.numbers.family
+                font.pixelSize: 13
+                font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
                 color: cell.hot ? "#ff1100" : Appearance.colors.colOnSurfaceVariant
                 Behavior on color {
                     enabled: Appearance.animationsEnabled

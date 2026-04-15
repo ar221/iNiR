@@ -43,10 +43,7 @@ RowLayout {
                 Quickshell.clipboardText = swatch.swatchColor.toString().toUpperCase()
             }
 
-            StyledToolTip {
-                text: swatch.swatchColor.toString().toUpperCase()
-                position: "top"
-            }
+            // No tooltip — just click to copy hex
         }
     }
 
