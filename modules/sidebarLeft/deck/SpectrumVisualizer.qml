@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Quickshell.Io
+import qs
 import qs.modules.common
 import qs.services
 
@@ -181,8 +182,8 @@ Item {
                         duration: barRect._cfg.dur
                         easing.type: Easing.InOutSine
                         loops: Animation.Infinite
-                        running: root._hasTrack && root._isPlaying && !root.cavaActive
-                        paused: !root._isPlaying
+                        running: root._hasTrack && !root.cavaActive
+                        paused: running && !root._isPlaying
 
                         onFinished: {
                             // Alternate between low→high and high→low for natural motion
