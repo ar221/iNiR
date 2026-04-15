@@ -88,7 +88,7 @@ Item {
     // ── Main layout ───────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 6
 
         // ── Spectrum Visualizer — Task 7 ─────────────────────────────────
         SpectrumVisualizer {
@@ -121,151 +121,138 @@ Item {
             }
         }
 
-        // ── Track Row ─────────────────────────────────────────────────────
-        RowLayout {
+        // ── Album Art (centered, above title) ────────────────────────────
+        Item {
+            id: artWrapper
             Layout.fillWidth: true
-            spacing: 12
+            Layout.preferredHeight: 160
             visible: root._hasTrack
 
-            // Art + glow
-            Item {
-                id: artWrapper
-                implicitWidth: 110
-                implicitHeight: 110
-                Layout.preferredWidth: 110
-                Layout.preferredHeight: 110
-                Layout.alignment: Qt.AlignTop
+            // Radial glow behind art — dominant color at 30% opacity
+            RadialGradient {
+                anchors.centerIn: artCard
+                width: artCard.width + 24
+                height: artCard.height + 24
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: ColorUtils.applyAlpha(root._accentRaw, 0.30) }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+            }
 
-                // Radial glow behind art — dominant color at 30% opacity
-                RadialGradient {
+            // Art card — centered, square, clipped, rounded
+            Rectangle {
+                id: artCard
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: 160
+                height: 160
+                radius: 6
+                color: "transparent"
+                clip: true
+                border.width: 1
+                border.color: Appearance.colors.colLayer1
+
+                // Fallback: colSecondaryContainer + music_note
+                Rectangle {
                     anchors.fill: parent
-                    anchors.margins: -8
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0.0
-                            color: ColorUtils.applyAlpha(root._accentRaw, 0.30)
-                        }
-                        GradientStop {
-                            position: 1.0
-                            color: "transparent"
-                        }
-                    }
-                    Behavior on gradient {
-                        enabled: false // RadialGradient gradient is not animatable
+                    radius: parent.radius
+                    color: Appearance.colors.colSecondaryContainer
+                    z: 0
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "music_note"
+                        iconSize: 48
+                        color: ColorUtils.applyAlpha(
+                            Appearance.colors.colOnSecondaryContainer, 0.6)
                     }
                 }
 
-                // Art card — clipped, rounded, 1px border
-                Rectangle {
-                    id: artCard
+                // Art slot A
+                StyledImage {
+                    id: artImageA
                     anchors.fill: parent
-                    radius: Appearance.rounding.normal
-                    color: "transparent"
-                    clip: true
-                    border.width: 1
-                    border.color: Appearance.colors.colLayer1
-
-                    // Fallback: colSecondaryContainer + music_note
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: Appearance.colors.colSecondaryContainer
-                        z: 0
-
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: "music_note"
-                            iconSize: 32
-                            color: ColorUtils.applyAlpha(
-                                Appearance.colors.colOnSecondaryContainer, 0.6)
+                    source: root._artUrlA
+                    fillMode: Image.PreserveAspectCrop
+                    opacity: (root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
+                    z: root._artSlotA ? 2 : 1
+                    Behavior on opacity {
+                        enabled: Appearance.animationsEnabled
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMove.duration
+                            easing.type: Appearance.animation.elementMove.type
+                            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                         }
                     }
+                }
 
-                    // Art slot A
-                    StyledImage {
-                        id: artImageA
-                        anchors.fill: parent
-                        source: root._artUrlA
-                        fillMode: Image.PreserveAspectCrop
-                        opacity: (root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
-                        z: root._artSlotA ? 2 : 1
-                        Behavior on opacity {
-                            enabled: Appearance.animationsEnabled
-                            NumberAnimation {
-                                duration: Appearance.animation.elementMove.duration
-                                easing.type: Appearance.animation.elementMove.type
-                                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
-                            }
-                        }
-                    }
-
-                    // Art slot B
-                    StyledImage {
-                        id: artImageB
-                        anchors.fill: parent
-                        source: root._artUrlB
-                        fillMode: Image.PreserveAspectCrop
-                        opacity: (!root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
-                        z: root._artSlotA ? 1 : 2
-                        Behavior on opacity {
-                            enabled: Appearance.animationsEnabled
-                            NumberAnimation {
-                                duration: Appearance.animation.elementMove.duration
-                                easing.type: Appearance.animation.elementMove.type
-                                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
-                            }
+                // Art slot B
+                StyledImage {
+                    id: artImageB
+                    anchors.fill: parent
+                    source: root._artUrlB
+                    fillMode: Image.PreserveAspectCrop
+                    opacity: (!root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
+                    z: root._artSlotA ? 1 : 2
+                    Behavior on opacity {
+                        enabled: Appearance.animationsEnabled
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMove.duration
+                            easing.type: Appearance.animation.elementMove.type
+                            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                         }
                     }
                 }
             }
+        }
 
-            // Track info column
-            ColumnLayout {
+        // ── Track Info (centered text below art) ─────────────────────────
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            visible: root._hasTrack
+
+            // Track title — 17px bold, centered
+            Text {
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: 2
+                text: MprisController.activeTrack?.title ?? ""
+                font.pixelSize: 17
+                font.bold: true
+                color: Appearance.colors.colOnLayer1
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+                maximumLineCount: 2
+                wrapMode: Text.WordWrap
+            }
 
-                // Track title — 17px bold
-                Text {
-                    Layout.fillWidth: true
-                    text: MprisController.activeTrack?.title ?? ""
-                    font.pixelSize: 17
-                    font.bold: true
-                    color: Appearance.colors.colOnLayer1
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                    wrapMode: Text.NoWrap
-                }
+            // Artist — 14px subdued, centered
+            Text {
+                Layout.fillWidth: true
+                text: MprisController.activeTrack?.artist ?? ""
+                font.pixelSize: 14
+                color: Appearance.colors.colOnSurfaceVariant
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+                maximumLineCount: 1
+            }
 
-                // Artist — 14px subdued
-                Text {
-                    Layout.fillWidth: true
-                    text: MprisController.activeTrack?.artist ?? ""
-                    font.pixelSize: 14
-                    color: Appearance.colors.colOnSurfaceVariant
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                    wrapMode: Text.NoWrap
-                }
-
-                // Album — 12px dim italic
-                Text {
-                    Layout.fillWidth: true
-                    text: MprisController.activeTrack?.album ?? ""
-                    font.pixelSize: 12
-                    font.italic: true
-                    color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.50)
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                    wrapMode: Text.NoWrap
-                }
+            // Album — 12px dim italic, centered
+            Text {
+                Layout.fillWidth: true
+                text: MprisController.activeTrack?.album ?? ""
+                font.pixelSize: 12
+                font.italic: true
+                color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.50)
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+                maximumLineCount: 1
             }
         }
 
         // ── Transport Controls ────────────────────────────────────────────
         Item {
             Layout.fillWidth: true
-            implicitHeight: 48
+            implicitHeight: 44
             visible: root._hasTrack
 
             RowLayout {

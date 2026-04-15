@@ -4,7 +4,7 @@ import qs.modules.common
 
 Rectangle {
     id: root
-    height: 1
+    height: 2
     Layout.fillWidth: true
 
     gradient: Gradient {
