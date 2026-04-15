@@ -116,11 +116,15 @@ Item {
         }
     }
 
-    // Initial poll when activated
-    on_ShouldPollChanged: {
-        if (root._shouldPoll) {
+    // Initial poll when activated — use onActiveChanged instead of
+    // on_ShouldPollChanged (underscore-prefixed handlers unreliable in Quickshell)
+    onActiveChanged: {
+        if (root.active && GlobalStates.sidebarLeftOpen) {
             root._triggerPoll()
         }
+    }
+    Component.onCompleted: {
+        if (root._shouldPoll) root._triggerPoll()
     }
 
     // ── UI ────────────────────────────────────────────────────────────

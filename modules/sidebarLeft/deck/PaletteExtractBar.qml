@@ -44,7 +44,7 @@ RowLayout {
             }
 
             StyledToolTip {
-                text: swatch.label + ": " + swatch.swatchColor.toString().toUpperCase()
+                text: swatch.swatchColor.toString().toUpperCase()
                 position: "top"
             }
         }

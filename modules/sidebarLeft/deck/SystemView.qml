@@ -257,12 +257,145 @@ Item {
 
         DeckDivider {}
 
-        ContextCards {
+        DeckLabel { text: "SYSTEM" }
+
+        // 2×3 grid of InstrumentCell
+        GridLayout {
             Layout.fillWidth: true
-            active: root.visible && GlobalStates.sidebarLeftOpen
+            columns: 2
+            rowSpacing: 4
+            columnSpacing: 4
+
+            InstrumentCell { label: "UPTIME";  value: root._uptime }
+            InstrumentCell { label: "KERNEL";  value: root._kernel }
+            InstrumentCell { label: "PKGS";    value: root._packages }
+            InstrumentCell { label: "LOAD";    value: root._loadavg }
+            InstrumentCell { label: "SHELL";   value: "fish" }
+            InstrumentCell { label: "WM";      value: "niri" }
         }
 
-        // Spacer
-        Item { Layout.fillHeight: true }
+        DeckDivider {}
+
+        DeckLabel { text: "TOP PROCESSES" }
+
+        // Top 3 CPU processes
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+
+            Repeater {
+                model: root._topProcs
+
+                RowLayout {
+                    required property var modelData
+                    required property int index
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: 12
+                        color: Appearance.colors.colOnLayer1Inactive
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        text: modelData.cpu
+                        font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: parseFloat(modelData.cpu) > 50 ? "#ff1100" : Appearance.colors.colOnLayer1
+                    }
+                }
+            }
+        }
+
+        // Small bottom spacer — don't consume all remaining space
+        Item { Layout.preferredHeight: 8 }
+    }
+
+    // ── System info (uptime, kernel, pkgs, loadavg) ───────────────────
+    property string _uptime:   "..."
+    property string _kernel:   "..."
+    property string _packages: "..."
+    property string _loadavg:  "..."
+
+    Timer {
+        id: sysInfoTimer
+        interval: 30000
+        repeat: true
+        running: GlobalStates.sidebarLeftOpen && root.visible
+        onTriggered: {
+            if (!sysInfoProc.running) sysInfoProc.running = true
+        }
+        onRunningChanged: {
+            if (running && !sysInfoProc.running) sysInfoProc.running = true
+        }
+    }
+
+    Process {
+        id: sysInfoProc
+        command: ["bash", "-c",
+            "printf '%s|%s|%s|%s' \"$(uptime -p)\" \"$(uname -r)\" \"$(pacman -Q | wc -l)\" \"$(cut -d' ' -f1 /proc/loadavg)\""
+        ]
+        running: false
+        stdout: StdioCollector {
+            id: sysInfoCollector
+            onStreamFinished: {
+                const raw = sysInfoCollector.text.trim()
+                const parts = raw.split("|")
+                if (parts.length < 4) return
+                // uptime -p → "up 2 hours, 39 minutes" or "up 39 minutes" or "up 1 day, 2 hours"
+                let up = parts[0].replace(/^up /, "")
+                up = up.replace(/(\d+) days?/, "$1d")
+                up = up.replace(/(\d+) hours?/, "$1h")
+                up = up.replace(/(\d+) minutes?/, "$1m")
+                up = up.replace(/, /g, " ")
+                root._uptime   = up
+                root._kernel   = parts[1].split("-")[0]  // trim -arch suffix
+                root._packages = parts[2].trim()
+                root._loadavg  = parts[3].trim()
+            }
+        }
+    }
+
+    // ── Top processes (CPU) ───────────────────────────────────────────
+    property var _topProcs: []
+
+    Timer {
+        id: topProcsTimer
+        interval: 5000
+        repeat: true
+        running: GlobalStates.sidebarLeftOpen && root.visible
+        onTriggered: {
+            if (!topProcsProc.running) topProcsProc.running = true
+        }
+        onRunningChanged: {
+            if (running && !topProcsProc.running) topProcsProc.running = true
+        }
+    }
+
+    Process {
+        id: topProcsProc
+        command: ["bash", "-c",
+            "ps aux --sort=-%cpu | head -4 | tail -3 | awk '{split($11,a,\"/\"); printf \"%s|%.1f\\n\", a[length(a)], $3}'"
+        ]
+        running: false
+        stdout: StdioCollector {
+            id: topProcsCollector
+            onStreamFinished: {
+                const lines = topProcsCollector.text.trim().split("\n")
+                const procs = []
+                for (const line of lines) {
+                    const sep = line.lastIndexOf("|")
+                    if (sep < 0) continue
+                    const name = line.substring(0, sep)
+                    const cpu  = line.substring(sep + 1) + "%"
+                    if (name) procs.push({ name: name, cpu: cpu })
+                }
+                root._topProcs = procs
+            }
+        }
     }
 }
