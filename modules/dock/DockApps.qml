@@ -534,21 +534,29 @@ Item {
 
     Component.onCompleted: rebuildDockItems()
 
-    // Magnification hover tracker — pure position tracking, doesn't eat events
-    MouseArea {
-        id: magnifyArea
-        anchors.fill: listView
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton  // Transparent to press/release/click
+    // Magnification hover tracker — passive, doesn't block delegate hover/clicks
+    HoverHandler {
+        id: magnifyHover
         enabled: root.magnifyEnabled && !root.dragActive
-
-        onPositionChanged: (mouse) => {
-            root.magnifyMousePos = root.vertical ? mouse.y : mouse.x
-        }
-        onExited: root.magnifyMousePos = -1
-        // Reset when drag starts (enabled becomes false)
-        onEnabledChanged: if (!enabled) root.magnifyMousePos = -1
     }
+
+    // Drive magnifyMousePos from HoverHandler
+    onMagnifyEnabledChanged: if (!magnifyEnabled) magnifyMousePos = -1
+    Connections {
+        target: magnifyHover
+        function onHoveredChanged() {
+            if (!magnifyHover.hovered) root.magnifyMousePos = -1
+        }
+        function onPointChanged() {
+            if (magnifyHover.hovered && root.magnifyEnabled && !root.dragActive) {
+                root.magnifyMousePos = root.vertical
+                    ? magnifyHover.point.position.y
+                    : magnifyHover.point.position.x
+            }
+        }
+    }
+    // Also reset when drag starts
+    onDragActiveChanged: if (dragActive) magnifyMousePos = -1
 
     StyledListView {
         id: listView

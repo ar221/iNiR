@@ -88,7 +88,7 @@ Scope {
                     right: !root.isLeft || !root.isVertical
                 }
 
-                exclusiveZone: GameMode.shouldHidePanels ? 0 : root.pinned ? (dockHeight + Appearance.sizes.elevationMargin) : 0
+                exclusiveZone: GameMode.shouldHidePanels ? 0 : root.pinned ? (dockHeight + Appearance.sizes.elevationMargin + 20) : 0
 
                 implicitWidth: root.isVertical
                     ? (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)

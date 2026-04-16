@@ -97,10 +97,10 @@ DockButton {
 
     implicitWidth: isSeparator
         ? (vertical ? separatorSize : 8)
-        : baseButtonSize * (vertical ? 1 : magnifyScale)
+        : baseButtonSize * magnifyScale
     implicitHeight: isSeparator
         ? (vertical ? 8 : separatorSize)
-        : baseButtonSize * (vertical ? magnifyScale : 1)
+        : baseButtonSize * magnifyScale
     background.visible: !isSeparator
 
     // Hover shadow (disabled for angel — whole dock already has escalonado)
