@@ -356,7 +356,7 @@ Item { // Bar content region
             implicitWidth: root.centerSideModuleWidth
 
             Loader {
-                active: Config.options?.bar?.modules?.resources ?? true
+                active: false  // Replaced by MiniRings in right section
                 visible: active
                 Layout.fillWidth: root.useShortenedForm === 2
                 sourceComponent: Resources {
@@ -826,6 +826,19 @@ Item { // Bar content region
                 sourceComponent: BarGroup {
                     WeatherBar {}
                 }
+            }
+
+            // MiniRings — gradient arc resource indicators
+            VerticalBarSeparator {
+                visible: (Config.options?.bar?.modules?.resources ?? true)
+                    && (Config.options?.bar?.borderless ?? true)
+            }
+
+            Loader {
+                active: Config.options?.bar?.modules?.resources ?? true
+                visible: active
+                Layout.alignment: Qt.AlignVCenter
+                sourceComponent: MiniRings {}
             }
         }
     }
