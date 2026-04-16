@@ -24,6 +24,7 @@ Singleton {
     property bool oskOpen: false
     property bool overlayOpen: false
     property bool overviewOpen: false
+    property bool dashboardOpen: false
     property bool altSwitcherOpen: false
     property bool clipboardOpen: false
     property bool settingsOverlayOpen: false
@@ -138,6 +139,15 @@ Singleton {
         if (GlobalStates.sidebarRightOpen) {
             Notifications.timeoutAll();
             Notifications.markAllRead();
+        }
+    }
+
+    onDashboardOpenChanged: {
+        if (GlobalStates.dashboardOpen) {
+            GlobalStates.sidebarLeftOpen = false
+            GlobalStates.sidebarRightOpen = false
+            GlobalStates.overviewOpen = false
+            GlobalStates.controlPanelOpen = false
         }
     }
 
