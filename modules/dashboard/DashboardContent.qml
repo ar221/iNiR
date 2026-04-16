@@ -200,34 +200,27 @@ Item {
         }
 
         // ════════════════════════════════════════════
-        // RIGHT COLUMN — Calendar, Weather, Notifications (scrollable)
+        // RIGHT COLUMN — Calendar, Weather, Notifications
         // ════════════════════════════════════════════
-        Flickable {
+        ColumnLayout {
             Layout.preferredWidth: root.rightColumnWidth
             Layout.fillHeight: true
-            contentHeight: rightColumn.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
+            spacing: 12
 
-            ColumnLayout {
-                id: rightColumn
-                width: parent.width
-                spacing: 12
+            CalendarCard {
+                Layout.fillWidth: true
+                visible: root.sectionCalendar
+            }
 
-                CalendarCard {
-                    Layout.fillWidth: true
-                    visible: root.sectionCalendar
-                }
+            WeatherCard {
+                Layout.fillWidth: true
+                visible: root.sectionWeather
+            }
 
-                WeatherCard {
-                    Layout.fillWidth: true
-                    visible: root.sectionWeather
-                }
-
-                NotificationsCard {
-                    Layout.fillWidth: true
-                    visible: root.sectionNotifications
-                }
+            NotificationsCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.sectionNotifications
             }
         }
     }

@@ -103,7 +103,7 @@ DashboardCard {
                 required property int index
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 64
+                Layout.preferredHeight: 72
                 radius: 12
                 color: toggleBtn.modelData.toggled
                     ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
@@ -138,7 +138,7 @@ DashboardCard {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: toggleBtn.modelData.label
-                        font.pixelSize: 9
+                        font.pixelSize: 10
                         font.weight: Font.DemiBold
                         color: toggleBtn.modelData.toggled
                             ? Appearance.colors.colPrimary

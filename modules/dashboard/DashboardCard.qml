@@ -22,7 +22,7 @@ Rectangle {
     clip: true
     color: Qt.rgba(1, 1, 1, 0.025)
     border.width: 1
-    border.color: hoverHandler.hovered ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
+    border.color: hoverHandler.hovered ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.06)
     radius: 16
 
     Behavior on border.color {
@@ -47,7 +47,7 @@ Rectangle {
             font.pixelSize: 10
             font.weight: Font.DemiBold
             font.letterSpacing: 1.5
-            color: Qt.rgba(1, 1, 1, 0.3)
+            color: Qt.rgba(1, 1, 1, 0.4)
             Layout.fillWidth: true
         }
 

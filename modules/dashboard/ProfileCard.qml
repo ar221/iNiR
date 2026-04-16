@@ -68,13 +68,23 @@ DashboardCard {
         implicitWidth: 72
         implicitHeight: 72
 
-        // Gradient background circle
+        // Outer glow (rendered behind avatar)
+        RectangularGlow {
+            anchors.fill: avatarBg
+            glowRadius: 12
+            spread: 0.1
+            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
+            cornerRadius: avatarBg.radius + glowRadius
+            z: -1
+        }
+
+        // Gradient background circle — layer.enabled clips to rounded shape
         Rectangle {
             id: avatarBg
             anchors.fill: parent
             radius: width / 2
             color: "transparent"
-            clip: true
+            layer.enabled: true
 
             LinearGradient {
                 anchors.fill: parent
@@ -110,15 +120,6 @@ DashboardCard {
                 font.weight: Font.Bold
                 color: Qt.rgba(1, 1, 1, 0.9)
             }
-        }
-
-        // Outer glow
-        RectangularGlow {
-            anchors.fill: avatarBg
-            glowRadius: 12
-            spread: 0.1
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
-            cornerRadius: avatarBg.radius + glowRadius
         }
     }
 

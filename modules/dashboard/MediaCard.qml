@@ -10,8 +10,9 @@ DashboardCard {
     id: root
     headerText: "Now Playing"
 
-    // Only visible when a media player is active
+    // Only visible when actually playing or has a track loaded
     visible: MprisController.activePlayer !== null
+        && (MprisController.activePlayer?.trackTitle ?? "") !== ""
 
     RowLayout {
         Layout.fillWidth: true
