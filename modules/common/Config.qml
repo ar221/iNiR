@@ -724,6 +724,7 @@ Singleton {
                     }
                 }
                 property bool bottom: false // Instead of top
+                property int height: -1 // -1: use theme default | positive value: override bar height in px
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
                 property int customRounding: -1 // -1: use global theme rounding | 0+: override bar rounding (px)
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
@@ -757,6 +758,10 @@ Singleton {
                     property bool sysTray: true
                     property bool weather: true
                     property bool taskbar: false
+                }
+                property JsonObject activeWindow: JsonObject {
+                    property int maxWidth: 280
+                    property bool fadeOverflow: true
                 }
                 property JsonObject modulesPlacement: JsonObject {
                     property string resources: "start"
@@ -798,6 +803,13 @@ Singleton {
                     property int cpuWarningThreshold: 90
                     property int gpuCautionThreshold: 70
                     property int gpuWarningThreshold: 90
+                }
+                property JsonObject rings: JsonObject {
+                    property bool cpu: true
+                    property bool gpu: true
+                    property bool temp: true
+                    property bool ram: true
+                    property bool showLabels: true
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property JsonObject utilButtons: JsonObject {
