@@ -86,14 +86,12 @@ DashboardCard {
                     Layout.preferredWidth: 74
                 }
 
-                Item { Layout.fillWidth: true }
-
                 StyledText {
                     text: infoRow.modelData.value
                     font.pixelSize: 13
                     color: Qt.rgba(1, 1, 1, 0.7)
                     elide: Text.ElideRight
-                    Layout.maximumWidth: 160
+                    Layout.fillWidth: true
                     horizontalAlignment: Text.AlignRight
                 }
             }

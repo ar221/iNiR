@@ -9,3 +9,8 @@ MediaCard 1.0 MediaCard.qml
 CalendarCard 1.0 CalendarCard.qml
 WeatherCard 1.0 WeatherCard.qml
 NotificationsCard 1.0 NotificationsCard.qml
+PerformanceBar 1.0 PerformanceBar.qml
+PerformanceBarsCard 1.0 PerformanceBarsCard.qml
+Sparkline 1.0 Sparkline.qml
+NetworkSparklinesCard 1.0 NetworkSparklinesCard.qml
+TemperatureStrip 1.0 TemperatureStrip.qml

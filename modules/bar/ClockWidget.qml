@@ -8,8 +8,6 @@ Item {
     id: root
     property bool borderless: Config.options?.bar?.borderless ?? false
     property bool showDate: Config.options?.bar?.verbose ?? true
-    property bool dashboardOpen: false
-
     implicitWidth: rowLayout.implicitWidth
     implicitHeight: Appearance.sizes.barHeight
 
@@ -43,17 +41,10 @@ Item {
     }
 
     MouseArea {
-        id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.dashboardOpen = !root.dashboardOpen
-    }
-
-    DashboardPopup {
-        hoverTarget: mouseArea
-        dashboardOpen: root.dashboardOpen
-        onRequestClose: root.dashboardOpen = false
+        onClicked: GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen
     }
 }

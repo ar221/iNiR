@@ -69,138 +69,26 @@ Item {
         }
 
         // ════════════════════════════════════════════
-        // CENTER COLUMN — Performance & Activity (Phase 3 placeholder)
+        // CENTER COLUMN — Performance & Network
         // ════════════════════════════════════════════
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 12
 
-            // Phase 3: PerformanceBars will go here
-            // Phase 3: NetworkSparklines will go here
-            // Phase 4: ActivityConsole will go here
-
-            // Placeholder card while center column content is pending
-            DashboardCard {
+            PerformanceBarsCard {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: root.sectionPerformance
+            }
 
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+            NetworkSparklinesCard {
+                Layout.fillWidth: true
+                visible: root.sectionPerformance
+            }
 
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: 12
-
-                        MaterialSymbol {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "monitoring"
-                            iconSize: 48
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                        }
-
-                        StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Performance metrics"
-                            font.pixelSize: 13
-                            font.weight: Font.DemiBold
-                            color: Qt.rgba(1, 1, 1, 0.15)
-                        }
-
-                        StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Bar charts, sparklines, and activity console\ncoming in Phase 3-4"
-                            font.pixelSize: 11
-                            color: Qt.rgba(1, 1, 1, 0.1)
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        // Quick resource summary in the meantime
-                        RowLayout {
-                            Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: 12
-                            spacing: 24
-
-                            ColumnLayout {
-                                spacing: 2
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Math.round(ResourceUsage.cpuUsage * 100) + "%"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    font.family: Appearance.font.family.numbers
-                                    color: Appearance.colors.colPrimary
-                                }
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "CPU"
-                                    font.pixelSize: 9
-                                    font.letterSpacing: 1.0
-                                    color: Qt.rgba(1, 1, 1, 0.3)
-                                }
-                            }
-
-                            ColumnLayout {
-                                spacing: 2
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Math.round(ResourceUsage.gpuUsage * 100) + "%"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    font.family: Appearance.font.family.numbers
-                                    color: Appearance.colors.colSecondary
-                                }
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "GPU"
-                                    font.pixelSize: 9
-                                    font.letterSpacing: 1.0
-                                    color: Qt.rgba(1, 1, 1, 0.3)
-                                }
-                            }
-
-                            ColumnLayout {
-                                spacing: 2
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    font.family: Appearance.font.family.numbers
-                                    color: Appearance.colors.colTertiary
-                                }
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "RAM"
-                                    font.pixelSize: 9
-                                    font.letterSpacing: 1.0
-                                    color: Qt.rgba(1, 1, 1, 0.3)
-                                }
-                            }
-
-                            ColumnLayout {
-                                spacing: 2
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: ResourceUsage.maxTemp + "°"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    font.family: Appearance.font.family.numbers
-                                    color: Appearance.colors.colError
-                                }
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "TEMP"
-                                    font.pixelSize: 9
-                                    font.letterSpacing: 1.0
-                                    color: Qt.rgba(1, 1, 1, 0.3)
-                                }
-                            }
-                        }
-                    }
-                }
+            TemperatureStrip {
+                Layout.fillWidth: true
             }
         }
 

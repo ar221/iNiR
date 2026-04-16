@@ -48,10 +48,10 @@ RippleButton {
         : Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive
         : Appearance.colors.colSecondaryContainerActive
-    toggled: GlobalStates.dashboardOpen
+    toggled: GlobalStates.sidebarLeftOpen
 
     onPressed: {
-        GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen;
+        GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
     }
 
     // Watch market-state file; no QML Timer polling
