@@ -13,6 +13,7 @@ Rectangle {
 
     property string headerText: ""
     property bool showHeader: headerText !== ""
+    property int headerFontSize: 10
     default property alias content: contentColumn.data
 
     // Content-driven sizing: the card is as tall as its content needs
@@ -44,7 +45,7 @@ Rectangle {
         StyledText {
             visible: root.showHeader
             text: root.headerText.toUpperCase()
-            font.pixelSize: 10
+            font.pixelSize: root.headerFontSize
             font.weight: Font.DemiBold
             font.letterSpacing: 1.5
             color: Qt.rgba(1, 1, 1, 0.4)

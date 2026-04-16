@@ -34,7 +34,7 @@ DashboardCard {
     }
     Process {
         id: gpuProc
-        command: ["/usr/bin/bash", "-c", "lspci 2>/dev/null | grep -i 'vga\\|3d' | sed 's/.*: //' | head -1 | cut -c1-40"]
+        command: ["/usr/bin/bash", "-c", "lspci 2>/dev/null | grep -E 'VGA compatible controller|3D controller|Display controller' | sed 's/.*: //' | head -1 | cut -c1-40"]
         stdout: SplitParser { splitMarker: ""; onRead: data => { root._gpuName = data.trim() || "Unknown" } }
     }
 

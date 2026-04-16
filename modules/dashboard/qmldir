@@ -13,5 +13,4 @@ PerformanceBar 1.0 PerformanceBar.qml
 PerformanceBarsCard 1.0 PerformanceBarsCard.qml
 Sparkline 1.0 Sparkline.qml
 NetworkSparklinesCard 1.0 NetworkSparklinesCard.qml
-TemperatureStrip 1.0 TemperatureStrip.qml
 ActivityConsoleCard 1.0 ActivityConsoleCard.qml

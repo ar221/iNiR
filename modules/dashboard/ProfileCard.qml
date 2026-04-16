@@ -14,7 +14,9 @@ DashboardCard {
     // Config-driven profile data
     readonly property string displayName: {
         const configured = Config.options?.dashboard?.profile?.displayName ?? ""
-        return configured !== "" ? configured : root._userName
+        const raw = configured !== "" ? configured : root._userName
+        // Capitalize first letter of each word for display — system usernames are lowercase
+        return raw.replace(/\b\w/g, c => c.toUpperCase())
     }
     readonly property string avatarPath: Config.options?.dashboard?.profile?.avatarPath ?? ""
 

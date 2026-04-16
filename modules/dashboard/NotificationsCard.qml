@@ -12,6 +12,23 @@ DashboardCard {
     id: root
     headerText: "Notifications"
 
+    // Dedup at view layer: keep only the most recent entry per (appName, summary) pair.
+    // Notifications.list is already sorted newest-first by insertion order; iterate
+    // and skip any entry whose (appName, summary) key has already been seen.
+    readonly property var dedupedList: {
+        const seen = {}
+        const out = []
+        for (let i = 0; i < Notifications.list.length; ++i) {
+            const n = Notifications.list[i]
+            const key = (n.appName ?? "") + "\x00" + (n.summary ?? "")
+            if (!seen[key]) {
+                seen[key] = true
+                out.push(n)
+            }
+        }
+        return out
+    }
+
     // ── Scrollable notification list ──
     ListView {
         id: notifListView
@@ -20,7 +37,7 @@ DashboardCard {
         Layout.minimumHeight: 100
         clip: true
         spacing: 6
-        model: Notifications.list
+        model: root.dedupedList
 
         delegate: Rectangle {
             id: notifDelegate
@@ -116,7 +133,7 @@ DashboardCard {
         // Empty state
         Item {
             anchors.fill: parent
-            visible: Notifications.list.length === 0
+            visible: root.dedupedList.length === 0
 
             ColumnLayout {
                 anchors.centerIn: parent

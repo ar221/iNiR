@@ -22,7 +22,7 @@ DashboardCard {
         // Large day number
         StyledText {
             text: root.today.getDate().toString()
-            font.pixelSize: 42
+            font.pixelSize: 52
             font.weight: Font.Bold
             font.family: Appearance.font.family.numbers
             color: Appearance.colors.colPrimary
@@ -35,7 +35,7 @@ DashboardCard {
 
             StyledText {
                 text: root.today.toLocaleDateString(root.locale, "MMMM").toUpperCase()
-                font.pixelSize: 11
+                font.pixelSize: 13
                 font.weight: Font.DemiBold
                 font.letterSpacing: 1.0
                 color: Qt.rgba(1, 1, 1, 0.35)
@@ -43,13 +43,13 @@ DashboardCard {
 
             StyledText {
                 text: root.today.toLocaleDateString(root.locale, "yyyy")
-                font.pixelSize: 11
+                font.pixelSize: 13
                 color: Qt.rgba(1, 1, 1, 0.25)
             }
 
             StyledText {
                 text: root.today.toLocaleDateString(root.locale, "dddd")
-                font.pixelSize: 11
+                font.pixelSize: 13
                 font.weight: Font.DemiBold
                 color: Appearance.colors.colOnLayer0
             }

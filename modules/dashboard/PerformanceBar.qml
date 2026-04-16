@@ -28,7 +28,7 @@ Item {
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: Math.round(root.value * 100) + "%"
-            font.pixelSize: 14
+            font.pixelSize: 16
             font.weight: Font.Bold
             font.family: Appearance.font.family.numbers
             // Dim at idle, fully visible at load — mix(onLayer0, dim, value) → value=1 → onLayer0
@@ -92,7 +92,7 @@ Item {
                     height: root.value * barBg.height
                     radius: barBg.radius
                     // value=0 → lowColor (cool), value=1 → highColor (hot)
-                    color: ColorUtils.mix(root.highColor, root.lowColor, 1.0 - root.value)
+                    color: ColorUtils.mix(root.highColor, root.lowColor, root.value)
 
                     Behavior on height {
                         enabled: Appearance.animationsEnabled
@@ -113,7 +113,7 @@ Item {
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: root.label
-            font.pixelSize: 9
+            font.pixelSize: 10
             font.letterSpacing: 1.0
             font.family: Appearance.font.family.numbers
             color: Qt.rgba(1, 1, 1, 0.4)

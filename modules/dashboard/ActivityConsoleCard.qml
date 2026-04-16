@@ -15,7 +15,8 @@ import qs.services
 // newest-first; this card assumes that ordering.
 DashboardCard {
     id: root
-    headerText: "Activity"
+    // Header is custom (needs liveness dot) — suppress base class header
+    headerText: ""
 
     // Darker than the default 0.025 — this card is a dense info surface
     color: Qt.rgba(1, 1, 1, 0.015)
@@ -102,6 +103,41 @@ DashboardCard {
     }
 
     // -------------------------------------------------------------------------
+    // Custom header row with liveness dot
+    // -------------------------------------------------------------------------
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 6
+
+        // Liveness pulse dot — heartbeat, not a party
+        Rectangle {
+            id: liveDot
+            implicitWidth: 6
+            implicitHeight: 6
+            radius: 3
+            color: Appearance.colors.colPrimary
+            Layout.alignment: Qt.AlignVCenter
+
+            SequentialAnimation on opacity {
+                running: true
+                loops: Animation.Infinite
+                NumberAnimation { to: 0.5; duration: 900; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutSine }
+            }
+        }
+
+        StyledText {
+            text: "ACTIVITY"
+            font.pixelSize: 10
+            font.weight: Font.DemiBold
+            font.letterSpacing: 1.5
+            color: Qt.rgba(1, 1, 1, 0.4)
+            Layout.fillWidth: true
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // List + fade mask wrapper — must be an Item so overlay can use anchors
     // inside a ColumnLayout context
     // -------------------------------------------------------------------------
@@ -155,7 +191,7 @@ DashboardCard {
                     }
                     spacing: 8
 
-                    // HH:MM timestamp
+                    // HH:MM timestamp — fixed width column
                     Text {
                         text: root.formatTime(entryDelegate.ts)
                         font.family: Appearance.font.family.numbers
@@ -164,14 +200,14 @@ DashboardCard {
                         Layout.preferredWidth: 34  // wide enough for "00:00"
                     }
 
-                    // Source label — 7 chars wide in a fixed column
+                    // Source label — fixed width column (longest: "pacman"/"claude" ~64px)
                     Text {
-                        text: entryDelegate.source.padEnd(7)
+                        text: entryDelegate.source
                         font.family: Appearance.font.family.numbers
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.DemiBold
                         color: root.sourceColor(entryDelegate.source)
-                        Layout.preferredWidth: 56  // ~7 monospace chars at small size
+                        Layout.preferredWidth: 64
                     }
 
                     // Summary — takes remaining space, elides on overflow
@@ -210,11 +246,21 @@ DashboardCard {
             height: 40
             z: 1
             gradient: Gradient {
-                // Semi-opaque card bg color — close enough given the card bg is already
-                // very dark. Full opacity here blocks the fade from looking wrong against
-                // the panel background; transparent end blends into list content.
                 GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.6) }
                 GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        // Fade-out gradient mask at the bottom — sells the "infinite feed" feel.
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 40
+            z: 1
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.6) }
             }
         }
     }

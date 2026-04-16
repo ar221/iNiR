@@ -31,7 +31,7 @@ DashboardCard {
                 text: Weather.data?.temp ?? "--°C"
                 font.pixelSize: 28
                 font.weight: Font.Bold
-                font.family: Appearance.font.family.numbers
+                font.family: Appearance.font.family.monospace
                 color: Appearance.colors.colOnLayer0
             }
 

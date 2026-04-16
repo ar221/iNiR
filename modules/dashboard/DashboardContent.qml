@@ -79,7 +79,7 @@ Item {
 
             PerformanceBarsCard {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 200
+                Layout.preferredHeight: 270
                 visible: root.sectionPerformance
             }
 
@@ -92,10 +92,6 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: root.sectionActivityConsole
-            }
-
-            TemperatureStrip {
-                Layout.fillWidth: true
             }
         }
 
