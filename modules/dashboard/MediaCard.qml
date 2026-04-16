@@ -9,10 +9,8 @@ import qs.services
 DashboardCard {
     id: root
     headerText: "Now Playing"
-
-    // Only visible when actually playing or has a track loaded
-    visible: MprisController.activePlayer !== null
-        && (MprisController.activePlayer?.trackTitle ?? "") !== ""
+    // NOTE: visibility is controlled by DashboardContent.qml (combines section
+    // toggle + MPRIS state check). Setting visible here would be overridden.
 
     RowLayout {
         Layout.fillWidth: true
