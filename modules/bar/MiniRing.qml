@@ -88,8 +88,8 @@ Item {
     StyledText {
         anchors.centerIn: canvas
         text: Math.round(root.value * 100).toString()
-        font.pixelSize: 8
-        font.weight: Font.DemiBold
+        font.pixelSize: 10
+        font.weight: Font.Bold
         color: root.valueColor
     }
 
@@ -101,10 +101,10 @@ Item {
         anchors.horizontalCenter: canvas.horizontalCenter
         visible: root.showLabel && root.label !== ""
         text: root.label
-        font.pixelSize: 7
-        font.weight: Font.Medium
+        font.pixelSize: 9
+        font.weight: Font.DemiBold
         font.capitalization: Font.AllUppercase
-        color: Qt.rgba(root.valueColor.r, root.valueColor.g, root.valueColor.b, 0.35)
+        color: Qt.rgba(root.valueColor.r, root.valueColor.g, root.valueColor.b, 0.6)
         horizontalAlignment: Text.AlignHCenter
     }
 }
