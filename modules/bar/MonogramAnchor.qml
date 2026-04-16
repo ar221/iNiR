@@ -24,8 +24,8 @@ RippleButton {
     readonly property color monogramColor: marketState === "open" ? marketOpenColor : marketClosedColor
 
     property real buttonPadding: 5
-    implicitWidth: monogramLabel.implicitWidth + buttonPadding * 2 + 4
-    implicitHeight: monogramLabel.implicitHeight + buttonPadding * 2
+    implicitWidth: 28 + buttonPadding * 2
+    implicitHeight: 28 + buttonPadding * 2
 
     buttonRadius: 4
     colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
@@ -48,10 +48,10 @@ RippleButton {
         : Appearance.inirEverywhere ? Appearance.inir.colPrimaryActive
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive
         : Appearance.colors.colSecondaryContainerActive
-    toggled: GlobalStates.sidebarLeftOpen
+    toggled: GlobalStates.dashboardOpen
 
     onPressed: {
-        GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
+        GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen;
     }
 
     // Watch market-state file; no QML Timer polling
@@ -71,21 +71,28 @@ RippleButton {
         }
     }
 
-    StyledText {
-        id: monogramLabel
-        anchors.centerIn: parent
-        text: root.monogramText
-        font.pixelSize: Appearance.font.pixelSize.large
-        font.weight: Font.Bold
-        font.capitalization: Font.SmallCaps
-        color: root.monogramColor
+    // Market-aware gradient tinting
+    property color _gradStart: marketState === "open" ? "#ff4444" : "#fb923c"
+    property color _gradEnd: marketState === "open" ? "#ff1100" : "#f472b6"
 
-        Behavior on color {
-            enabled: Appearance.animationsEnabled
-            animation: ColorAnimation {
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
+    Rectangle {
+        id: monogramCircle
+        anchors.centerIn: parent
+        width: 28
+        height: 28
+        radius: width / 2
+        gradient: Gradient {
+            orientation: Gradient.Vertical
+            GradientStop { position: 0.0; color: root._gradStart }
+            GradientStop { position: 1.0; color: root._gradEnd }
+        }
+
+        StyledText {
+            anchors.centerIn: parent
+            text: root.monogramText
+            font.pixelSize: 13
+            font.weight: Font.Bold
+            color: "#ffffff"
         }
     }
 }
