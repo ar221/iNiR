@@ -13,6 +13,7 @@ import qs.modules.common
 import qs.modules.altSwitcher
 import qs.modules.closeConfirm
 import qs.modules.settings
+import qs.modules.dashboard
 
 import QtQuick
 import Quickshell
@@ -189,6 +190,12 @@ ShellRoot {
     LazyLoader {
         active: Config.ready && (Config.options?.panelFamily ?? "ii") === "waffle"
         component: ShellWafflePanels { }
+    }
+
+    // Command Center Dashboard (loaded regardless of panel family)
+    LazyLoader {
+        active: Config.ready && (Config.options?.dashboard?.enable ?? true)
+        component: Dashboard {}
     }
 
     // Close confirmation dialog (always loaded, handles IPC)
