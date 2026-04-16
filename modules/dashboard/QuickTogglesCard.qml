@@ -76,7 +76,7 @@ DashboardCard {
         {
             id: "nightLight",
             label: "Night Light",
-            icon: Hyprsunset.active ? "nightlight" : "nightlight_off",
+            icon: "nightlight",
             toggled: Hyprsunset.active,
             action: () => { Hyprsunset.toggle() }
         }
