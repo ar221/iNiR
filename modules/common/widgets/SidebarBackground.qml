@@ -27,6 +27,11 @@ Item {
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 12
 
+    // ── Audio trail border (opt-in per sidebar side) ─────────────
+    // Set audioTrail: true on the left sidebar to show the orbiting
+    // accent light when audio is playing.
+    property bool audioTrail: false
+
     // ── Exposed theme flags (children bind to these) ─────────────
     readonly property bool angelEverywhere: Appearance.angelEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
@@ -154,6 +159,104 @@ Item {
         AngelPartialBorder {
             targetRadius: _bg.radius
             z: 10
+        }
+
+        // ── Audio trail border ────────────────────────────────────
+        // A rotating accent-colored light streak that traces the sidebar
+        // perimeter when audio is playing. Fades in/out on playback state.
+        // Disabled in gameModeMinimal, when effects or animations are off.
+        Item {
+            id: audioTrailContainer
+            anchors.fill: parent
+            z: 11   // above AngelPartialBorder
+
+            // Gate: opt-in + effects + not game-mode-minimal + animations enabled
+            readonly property bool _trailEnabled: root.audioTrail
+                && !root.gameModeMinimal
+                && Appearance.effectsEnabled
+                && Appearance.animationsEnabled
+
+            readonly property bool _playing: MprisController.isPlaying
+
+            opacity: (_trailEnabled && _playing) ? 1.0 : 0.0
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 380
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            // The ring border width for the trail.
+            readonly property int trailBorderWidth: 3
+
+            // ── Conical gradient — fills the container ────────────────
+            // Arc occupies roughly 20% of the circle (72° peak → transparent).
+            // The remaining ~80% is fully transparent — giving a clean
+            // single-streak "light chasing the edge" look.
+            GE.ConicalGradient {
+                id: _conicalGrad
+                anchors.fill: parent
+                // No `source` — fill entire area, OpacityMask on container carves the ring
+                angle: 0    // driven by NumberAnimation below
+
+                gradient: Gradient {
+                    // Bright head — accent at ~70% opacity
+                    GradientStop {
+                        position: 0.0
+                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.3)
+                    }
+                    // Fade out over ~20% of circumference (72°)
+                    GradientStop {
+                        position: 0.12
+                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.72)
+                    }
+                    GradientStop {
+                        position: 0.22
+                        color: "transparent"
+                    }
+                    // Remainder: fully transparent
+                    GradientStop {
+                        position: 0.23
+                        color: "transparent"
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: "transparent"
+                    }
+                }
+
+                NumberAnimation on angle {
+                    from: 0
+                    to: 360
+                    duration: 3500
+                    loops: Animation.Infinite
+                    running: audioTrailContainer.opacity > 0
+                }
+            }
+
+            // ── OpacityMask: carves out the center so only the ring shows ─
+            // The mask is a hollow ring: outer = full rect, inner cutout via
+            // a smaller Rectangle subtracted by painting the ring border only.
+            // We use a layered Rectangle with only border.color set so the
+            // mask is white at the border edges and transparent inside/outside.
+            layer.enabled: true
+            layer.effect: GE.OpacityMask {
+                maskSource: Item {
+                    width: audioTrailContainer.width
+                    height: audioTrailContainer.height
+
+                    // Outer fill = opaque white (mask allows gradient through here)
+                    // We draw only the border ring and leave the interior transparent.
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        radius: _bg.radius
+                        border.width: audioTrailContainer.trailBorderWidth
+                        border.color: "white"
+                        layer.enabled: true
+                    }
+                }
+            }
         }
     }
 }

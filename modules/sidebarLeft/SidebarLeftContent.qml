@@ -37,6 +37,7 @@ Item {
         screenHeight: root.screenHeight
         sidebarWidth: root.sidebarWidth
         sidebarPadding: root.sidebarPadding
+        audioTrail: true
 
         DeckSurface {
             id: deck
