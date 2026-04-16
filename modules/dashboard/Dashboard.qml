@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
+import qs
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
