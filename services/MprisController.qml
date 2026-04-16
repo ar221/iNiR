@@ -41,16 +41,21 @@ Singleton {
 	// Grace period tracking - keeps players visible during track transitions
 	property var _playerGrace: ({})  // dbusName -> timestamp
 	
-	// Prioritize playing players over paused ones
-	// Uses _playbackStateVersion to force re-evaluation on state changes
+	// Prioritize playing players over paused ones.
+	// When Firefox and Plasma Browser Integration both report the same YouTube
+	// video, prefer PBI — it provides artUrl and cleaner metadata.
+	// Uses _playbackStateVersion to force re-evaluation on state changes.
 	property MprisPlayer activePlayer: {
 		// Touch version to create dependency
 		const _ = _playbackStateVersion;
 		// Only consider tracked if it survived filtering
 		const tracked = players.includes(trackedPlayer) ? trackedPlayer : null;
-		// First, prefer any player that is actively playing
-		for (let i = 0; i < players.length; i++) {
-			if (players[i]?.isPlaying) return players[i];
+		// Collect playing players; try PBI preference among them first
+		const playing = players.filter(p => p?.isPlaying);
+		if (playing.length > 0) {
+			const pbi = _pickPbiOverBrowserYt(playing);
+			if (pbi) return pbi;
+			return playing[0];
 		}
 		// If nothing is playing, keep user's tracked selection
 		if (tracked) return tracked;
@@ -593,6 +598,36 @@ Singleton {
 		}
 
 		this.trackedPlayer = targetPlayer;
+	}
+
+	// Extract the 11-character YouTube video ID from a URL.
+	// Handles watch, shorts, live, embed, and youtu.be forms.
+	function _extractYoutubeId(url): string {
+		if (!url) return "";
+		const m = (url + "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+		return m ? m[1] : "";
+	}
+
+	// When both a Plasma Browser Integration player and a browser (Firefox/Chrome)
+	// are playing the same YouTube video, prefer PBI because it provides artUrl.
+	// Returns the PBI player to use, or null if the condition is not met.
+	function _pickPbiOverBrowserYt(list): var {
+		const pbi = list.find(p => (p?.dbusName ?? "") === "org.mpris.MediaPlayer2.plasma-browser-integration");
+		if (!pbi) return null;
+		// Only prefer PBI when it actually carries art — that's the whole point
+		if (!(pbi.trackArtUrl?.length > 0)) return null;
+		const pbiId = _extractYoutubeId(pbi.metadata?.["xesam:url"] ?? "");
+		if (!pbiId) return null;
+		const hasBrowserDup = list.some(p => {
+			if (p === pbi) return false;
+			const name = p?.dbusName ?? "";
+			const isBrowser = name.includes("firefox") || name.includes("chrome") ||
+				name.includes("chromium") || name.includes("brave") ||
+				name.includes("vivaldi") || name.includes("opera");
+			if (!isBrowser) return false;
+			return _extractYoutubeId(p.metadata?.["xesam:url"] ?? "") === pbiId;
+		});
+		return hasBrowserDup ? pbi : null;
 	}
 
 	// Sanitize art URL to prevent invalid URLs from breaking image loading
