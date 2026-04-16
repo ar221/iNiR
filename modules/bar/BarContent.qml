@@ -287,7 +287,7 @@ Item { // Bar content region
         onMovedAway: GlobalStates.osdBrightnessOpen = false
         onPressed: event => {
             if (event.button === Qt.LeftButton)
-                GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
+                GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen;
             else if (event.button === Qt.RightButton)
                 root.openBarContextMenu(event.x, event.y, barLeftSideMouseArea)
         }
@@ -337,6 +337,7 @@ Item { // Bar content region
                 visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 280
             }
         }
     }
