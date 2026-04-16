@@ -858,7 +858,8 @@ Singleton {
          property real spacingSmall: Math.round(8 * root.fontSizeScale)
          property real spacingMedium: Math.round(12 * root.fontSizeScale)
          property real spacingLarge: Math.round(16 * root.fontSizeScale)
-        property real baseBarHeight: Math.round(40 * root.fontSizeScale)
+        property real _configBarHeight: Config.options?.bar?.height ?? -1
+        property real baseBarHeight: _configBarHeight > 0 ? Math.round(_configBarHeight * root.fontSizeScale) : Math.round(40 * root.fontSizeScale)
         property real barHeight: (((Config.options?.bar?.cornerStyle ?? 0) === 1) || ((Config.options?.bar?.cornerStyle ?? 0) === 3)) ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
         property real barCenterSideModuleWidth: (Config.options?.bar?.verbose ?? true) ? Math.round(360 * root.fontSizeScale) : Math.round(140 * root.fontSizeScale)
