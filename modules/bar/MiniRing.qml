@@ -87,10 +87,13 @@ Item {
     // Center value text
     StyledText {
         anchors.centerIn: canvas
+        width: canvas.width - root.lineWidth * 2
         text: Math.round(root.value * 100).toString()
         font.pixelSize: 10
         font.weight: Font.Bold
         color: root.valueColor
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
 
     // Label below ring
