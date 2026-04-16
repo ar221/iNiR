@@ -868,6 +868,40 @@ Singleton {
                 }
             }
 
+            property JsonObject dashboard: JsonObject {
+                property bool enable: true
+                property int animationDuration: 350
+                property string animationType: "flyFromTop"
+                property JsonObject backdrop: JsonObject {
+                    property real dimOpacity: 0.45
+                }
+                property JsonObject sections: JsonObject {
+                    property bool profile: true
+                    property bool systemInfo: true
+                    property bool quickToggles: true
+                    property bool media: true
+                    property bool performance: true
+                    property bool sparklines: true
+                    property bool activityConsole: true
+                    property bool calendar: true
+                    property bool weather: true
+                    property bool notifications: true
+                }
+                property JsonObject profile: JsonObject {
+                    property string displayName: ""
+                    property string subtitle: "{user}@{hostname} · {wm} · {shell}"
+                    property string avatarPath: ""
+                }
+                property JsonObject quickToggles: JsonObject {
+                    property int columns: 3
+                    property list<string> toggles: ["dnd", "darkMode", "wifi", "powerProfile", "bluetooth", "nightLight"]
+                }
+                property JsonObject layout: JsonObject {
+                    property int leftColumnWidth: 260
+                    property int rightColumnWidth: 240
+                }
+            }
+
             property JsonObject battery: JsonObject {
                 property int low: 20
                 property int critical: 5

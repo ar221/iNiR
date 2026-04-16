@@ -1,0 +1,11 @@
+module qs.modules.dashboard
+Dashboard 1.0 Dashboard.qml
+DashboardCard 1.0 DashboardCard.qml
+DashboardContent 1.0 DashboardContent.qml
+ProfileCard 1.0 ProfileCard.qml
+SystemInfoCard 1.0 SystemInfoCard.qml
+QuickTogglesCard 1.0 QuickTogglesCard.qml
+MediaCard 1.0 MediaCard.qml
+CalendarCard 1.0 CalendarCard.qml
+WeatherCard 1.0 WeatherCard.qml
+NotificationsCard 1.0 NotificationsCard.qml
