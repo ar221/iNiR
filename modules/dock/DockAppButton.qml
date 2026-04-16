@@ -12,7 +12,8 @@ DockButton {
     property var appToplevel
     property var appListRoot
     property int lastFocused: -1
-    property real iconSize: Config.options?.dock?.iconSize ?? 35
+    property real iconSize: Config.options?.dock?.iconSize ?? 56
+    readonly property real baseButtonSize: iconSize + 8
     property real countDotWidth: 10
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
@@ -88,11 +89,18 @@ DockButton {
     property var desktopEntry: AppSearch.lookupDesktopEntry(appToplevel.originalAppId ?? appToplevel.appId)
     enabled: !isSeparator
 
-    readonly property real dockHeight: Config.options?.dock?.height ?? 70
-    readonly property real separatorSize: dockHeight - 50
+    readonly property real dockHeight: Config.options?.dock?.height ?? 80
+    readonly property real separatorSize: Math.max(dockHeight - baseButtonSize, 8)
 
-    implicitWidth: isSeparator ? (vertical ? separatorSize : 8) : (vertical ? 50 : (implicitHeight - topInset - bottomInset))
-    implicitHeight: isSeparator ? (vertical ? 8 : separatorSize) : 50
+    // Magnification scale — set by the delegate in DockApps.qml
+    property real magnifyScale: 1.0
+
+    implicitWidth: isSeparator
+        ? (vertical ? separatorSize : 8)
+        : baseButtonSize * (vertical ? 1 : magnifyScale)
+    implicitHeight: isSeparator
+        ? (vertical ? 8 : separatorSize)
+        : baseButtonSize * (vertical ? magnifyScale : 1)
     background.visible: !isSeparator
 
     // Hover shadow (disabled for angel — whole dock already has escalonado)
@@ -271,9 +279,16 @@ DockButton {
             Loader {
                 id: iconImageLoader
                 anchors {
-                    left: parent.left
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
+                    // Horizontal docks: fill width, anchor to outer edge
+                    left: !root.vertical ? parent.left : undefined
+                    right: !root.vertical ? parent.right
+                         : root.dockPosition === "right" ? parent.right : undefined
+                    // Vertical docks: fill height, anchor to outer edge
+                    top: root.vertical ? parent.top : undefined
+                    bottom: root.vertical ? parent.bottom
+                          : root.dockPosition === "bottom" ? parent.bottom : undefined
+                    // Top dock: anchor to top
+                    // Left dock: anchor to left (right is already undefined)
                 }
                 active: !root.isSeparator
                 sourceComponent: IconImage {
@@ -292,15 +307,21 @@ DockButton {
                     // Don't generate candidates if iconName is already an absolute path
                     property bool isAbsolutePath: iconName.startsWith("/") || iconName.startsWith("file://")
                     property var candidates: isAbsolutePath ? [] : IconThemeService.dockIconCandidates(iconName)
+                    // candidateIndex drives source — kept as a binding so delegate recreation
+                    // always starts from 0 without breaking the source binding imperatively.
                     property int candidateIndex: 0
+                    // Reset candidate chain when iconName changes (dock theme change, app swap)
+                    onCandidatesChanged: candidateIndex = 0
 
                     source: {
                         if (isAbsolutePath) {
                             return iconName.startsWith("file://") ? iconName : `file://${iconName}`
                         }
-                        return candidates.length > 0 ? candidates[0] : Quickshell.iconPath(iconName, "image-missing")
+                        if (candidates.length > 0 && candidateIndex < candidates.length)
+                            return candidates[candidateIndex]
+                        return Quickshell.iconPath(iconName, "image-missing")
                     }
-                    implicitSize: root.iconSize
+                    implicitSize: root.iconSize * root.magnifyScale
 
                     onStatusChanged: {
                         if (status === Image.Error) {
@@ -312,19 +333,17 @@ DockButton {
                                 if (baseName.includes(".")) {
                                     baseName = baseName.split(".").slice(0, -1).join(".");
                                 }
-                                // Try loading system icon with base name
+                                // Fall through to system icon via Quickshell.iconPath by forcing
+                                // an isAbsolutePath-false path. We do this by directly loading.
                                 source = Quickshell.iconPath(baseName, "image-missing");
                                 return;
                             }
 
                             if (candidates.length > 0) {
+                                // Advance through candidates via binding — does not break source binding
                                 candidateIndex++;
-                                if (candidateIndex < candidates.length) {
-                                    source = candidates[candidateIndex];
-                                } else {
-                                    // All candidates failed, use system icon
-                                    source = Quickshell.iconPath(iconName, "image-missing");
-                                }
+                                // When candidateIndex >= candidates.length, source binding falls through
+                                // to Quickshell.iconPath(iconName, "image-missing")
                             }
                         }
                     }
