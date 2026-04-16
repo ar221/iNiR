@@ -71,7 +71,15 @@ Scope {
 
                 property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
-                readonly property real dockHeight: Config.options?.dock?.height ?? 70
+                readonly property real dockHeight: Config.options?.dock?.height ?? 80
+                readonly property real magnificationOverflow: {
+                    const enabled = Config.options?.dock?.magnification?.enabled ?? true
+                    if (!enabled) return 0
+                    const iconSize = Config.options?.dock?.iconSize ?? 56
+                    const buttonSize = iconSize + 8
+                    const maxScale = Config.options?.dock?.magnification?.maxScale ?? 1.8
+                    return buttonSize * (maxScale - 1)
+                }
 
                 anchors {
                     top: root.isTop || root.isVertical
@@ -82,8 +90,12 @@ Scope {
 
                 exclusiveZone: GameMode.shouldHidePanels ? 0 : root.pinned ? (dockHeight + Appearance.sizes.elevationMargin) : 0
 
-                implicitWidth: root.isVertical ? (dockHeight + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut) : dockBackground.implicitWidth
-                implicitHeight: root.isVertical ? dockBackground.implicitHeight : (dockHeight + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
+                implicitWidth: root.isVertical
+                    ? (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
+                    : dockBackground.implicitWidth
+                implicitHeight: root.isVertical
+                    ? dockBackground.implicitHeight
+                    : (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
 
                 WlrLayershell.namespace: "quickshell:dock"
                 color: "transparent"
@@ -255,6 +267,65 @@ Scope {
 
                                 AngelPartialBorder {
                                     targetRadius: dockVisualBackground.radius
+                                }
+
+                                // Theme accent line — inner edge of dock
+                                Rectangle {
+                                    id: dockAccentLine
+                                    visible: !Appearance.gameModeMinimal
+                                    opacity: 0.5
+
+                                    // Position along inner edge based on dock position
+                                    anchors {
+                                        // Horizontal docks: line at top (bottom dock) or bottom (top dock)
+                                        left: !root.isVertical ? parent.left : undefined
+                                        right: !root.isVertical ? parent.right : undefined
+                                        top: root.position === "bottom" ? parent.top
+                                           : root.isLeft ? undefined : (root.position === "right" ? undefined : undefined)
+                                        bottom: root.isTop ? parent.bottom : undefined
+                                        // Vertical docks: line at inner side
+                                        // Right dock: line on left edge; Left dock: line on right edge
+                                    }
+
+                                    // For vertical docks, anchor top/bottom and position on inner side
+                                    states: [
+                                        State {
+                                            when: root.position === "right"
+                                            AnchorChanges {
+                                                target: dockAccentLine
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                anchors.left: parent.left
+                                            }
+                                        },
+                                        State {
+                                            when: root.isLeft
+                                            AnchorChanges {
+                                                target: dockAccentLine
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                anchors.right: parent.right
+                                            }
+                                        }
+                                    ]
+
+                                    // Dimensions: thin line
+                                    width: root.isVertical ? 2 : undefined
+                                    height: root.isVertical ? undefined : 2
+
+                                    // Inset from edges for the gradient fade
+                                    anchors.leftMargin: !root.isVertical ? 20 : 0
+                                    anchors.rightMargin: !root.isVertical ? 20 : 0
+                                    anchors.topMargin: root.isVertical ? 20 : 0
+                                    anchors.bottomMargin: root.isVertical ? 20 : 0
+
+                                    gradient: Gradient {
+                                        orientation: root.isVertical ? Gradient.Vertical : Gradient.Horizontal
+                                        GradientStop { position: 0.0; color: "transparent" }
+                                        GradientStop { position: 0.3; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
+                                        GradientStop { position: 0.7; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
+                                        GradientStop { position: 1.0; color: "transparent" }
+                                    }
                                 }
                             }
 
