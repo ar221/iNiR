@@ -9,11 +9,14 @@ RippleButton {
     property bool vertical: false
     property string dockPosition: "bottom"
 
+    readonly property real baseIconSize: Config.options?.dock?.iconSize ?? 56
+    readonly property real baseButtonSize: baseIconSize + 8
+
     Layout.fillHeight: !vertical
     Layout.fillWidth: vertical
 
-    implicitWidth: vertical ? (implicitHeight - topInset - bottomInset) : (implicitHeight - topInset - bottomInset)
-    implicitHeight: 50
+    implicitWidth: baseButtonSize
+    implicitHeight: baseButtonSize
     buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
         : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.normal
 
@@ -30,6 +33,6 @@ RippleButton {
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive
         : Appearance.colors.colLayer0Active
 
-    background.implicitHeight: 50
-    background.implicitWidth: 50
+    background.implicitHeight: baseButtonSize
+    background.implicitWidth: baseButtonSize
 }
