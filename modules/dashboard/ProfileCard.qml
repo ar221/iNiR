@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.widgets
@@ -68,32 +67,24 @@ DashboardCard {
         implicitWidth: 72
         implicitHeight: 72
 
-        // Outer glow (rendered behind avatar)
-        RectangularGlow {
-            anchors.fill: avatarBg
-            glowRadius: 12
-            spread: 0.1
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
-            cornerRadius: avatarBg.radius + glowRadius
+        // Soft glow behind avatar
+        Rectangle {
+            anchors.centerIn: avatarBg
+            width: avatarBg.width + 16
+            height: avatarBg.height + 16
+            radius: width / 2
+            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
             z: -1
         }
 
-        // Gradient background circle — layer.enabled clips to rounded shape
+        // Accent-colored circle (gradient requires OpacityMask — revisit Phase 3)
         Rectangle {
             id: avatarBg
             anchors.fill: parent
             radius: width / 2
-            color: "transparent"
-            layer.enabled: true
-
-            LinearGradient {
-                anchors.fill: parent
-                start: Qt.point(0, 0)
-                end: Qt.point(parent.width, parent.height)
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Appearance.colors.colPrimary }
-                    GradientStop { position: 1.0; color: Appearance.colors.colTertiary }
-                }
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Appearance.colors.colPrimary }
+                GradientStop { position: 1.0; color: Appearance.colors.colTertiary }
             }
 
             // Avatar image (overrides gradient when loaded)
