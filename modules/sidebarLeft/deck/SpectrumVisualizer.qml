@@ -121,11 +121,20 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         height: root._barHeight
-        color: Appearance.colors.colLayer0
-        border.width: 1
-        border.color: Appearance.colors.colLayer1
-        radius: 4
+        color: "transparent"
+        border.width: 0
+        radius: 0
         clip: true
+
+        // Subtle gradient wash behind bars — colPrimary glow at base
+        Rectangle {
+            anchors.fill: parent
+            z: -1
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 1.0; color: Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.08) }
+            }
+        }
 
         Row {
             anchors.fill: parent
@@ -173,9 +182,12 @@ Item {
                     // Switch between CAVA data and fallback sine-wave animation
                     height: root.cavaActive ? cavaHeight : fallbackHeight
 
-                    color: _isLeft
-                        ? Qt.rgba(1.0, 0.15 + index * 0.04, 0.0, 1.0)
-                        : Qt.rgba(1.0, 0.27 + (index - 12) * 0.04, 0.0, 0.70)
+                    color: {
+                        const c = Appearance.colors.colPrimary
+                        const factor = 1.0 + (_isLeft ? index : (index - 12)) * 0.025
+                        const lit = Qt.lighter(c, factor)
+                        return _isLeft ? lit : Qt.rgba(lit.r, lit.g, lit.b, 0.70)
+                    }
 
                     NumberAnimation {
                         id: _anim
