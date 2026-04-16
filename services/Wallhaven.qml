@@ -405,6 +405,7 @@ QtObject {
         var url = _detailUrl(id)
         var xhr = new XMLHttpRequest()
         xhr.open("GET", url)
+        xhr.setRequestHeader("User-Agent", defaultUserAgent)
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE)
                 return
@@ -586,6 +587,7 @@ QtObject {
 
         var xhr = new XMLHttpRequest()
         xhr.open("GET", url)
+        xhr.setRequestHeader("User-Agent", defaultUserAgent)
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE)
                 return
