@@ -383,9 +383,14 @@
         "enable": true
       }
     },
+    "activeWindow": {
+      "fadeOverflow": true,
+      "maxWidth": 280
+    },
     "borderless": true,
     "bottom": false,
     "cornerStyle": 1,
+    "height": 54,
     "customRounding": -1,
     "edgeModulesLayout": {
       "leftOrder": [
@@ -409,13 +414,13 @@
       "battery": false,
       "clock": true,
       "leftSidebarButton": true,
-      "media": true,
+      "media": false,
       "resources": true,
       "rightSidebarButton": true,
-      "sysTray": true,
+      "sysTray": false,
       "taskbar": false,
-      "utilButtons": true,
-      "weather": true,
+      "utilButtons": false,
+      "weather": false,
       "workspaces": true
     },
     "modulesLayout": {
@@ -452,6 +457,13 @@
       "gpuWarningThreshold": 90,
       "memoryWarningThreshold": 95,
       "swapWarningThreshold": 85
+    },
+    "rings": {
+      "cpu": true,
+      "gpu": true,
+      "ram": true,
+      "showLabels": true,
+      "temp": true
     },
     "screenList": [],
     "showBackground": true,

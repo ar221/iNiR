@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Qt5Compat.GraphicalEffects as GE
 
 Item {
     id: root
@@ -74,33 +75,57 @@ Item {
         return shortenText(fbTitle, 80)
     }
 
+    property real maxTextWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 280
+    property bool fadeOverflow: Config.options?.bar?.activeWindow?.fadeOverflow ?? true
+
     implicitWidth: colLayout.implicitWidth
 
-    ColumnLayout {
-        id: colLayout
+    Item {
+        id: textContainer
+        anchors.fill: parent
+        clip: true
 
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: -1
+        ColumnLayout {
+            id: colLayout
 
-        StyledText {
-            Layout.fillWidth: true
-            font.pixelSize: Appearance.font.pixelSize.smaller
-            color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
-            elide: Text.ElideRight
-            text: root.displayAppName
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: -1
+
+            StyledText {
+                Layout.fillWidth: true
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
+                elide: Text.ElideRight
+                text: root.displayAppName
+
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer0
+                elide: Text.ElideRight
+                text: root.displayTitle
+            }
 
         }
 
-        StyledText {
-            Layout.fillWidth: true
-            font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer0
-            elide: Text.ElideRight
-            text: root.displayTitle
+        // Fade mask: visible content → transparent at right edge
+        layer.enabled: root.fadeOverflow
+        layer.effect: GE.OpacityMask {
+            maskSource: Rectangle {
+                width: textContainer.width
+                height: textContainer.height
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "#ffffffff" }
+                    GradientStop { position: 0.8; color: "#ffffffff" }
+                    GradientStop { position: 1.0; color: "#00ffffff" }
+                }
+            }
         }
-
     }
 
 }
