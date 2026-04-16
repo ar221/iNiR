@@ -28,6 +28,18 @@ Item {
 
     property Item lastHoveredButton
     property bool buttonHovered: false
+
+    // ─── Magnification ───────────────────────────────────────────────
+    readonly property bool magnifyEnabled: (Config.options?.dock?.magnification?.enabled ?? true)
+        && Appearance.animationsEnabled
+    property real magnifyMousePos: -1  // Cursor position along dock axis (-1 = not hovering)
+    readonly property real magnifyMaxScale: Config.options?.dock?.magnification?.maxScale ?? 1.8
+    readonly property real magnifySpread: {
+        const factor = Config.options?.dock?.magnification?.spread ?? 3.5
+        const iconSize = Config.options?.dock?.iconSize ?? 56
+        return factor * iconSize
+    }
+
     property bool contextMenuOpen: false
     property bool requestDockShow: dockPreviewPopup.visible || contextMenuOpen || dragActive
 
@@ -266,6 +278,21 @@ Item {
     // ─── Dock Items Model ────────────────────────────────────────────────
     property var dockItems: []
 
+    // Debounce rebuild — workspace switch triggers onFocusedWorkspaceIdChanged immediately
+    // AND onSortedToplevelsChanged ~100ms later (sort timer). Without debouncing, two rapid
+    // rebuilds churn ScriptModel, destroying and recreating delegates unnecessarily.
+    // 32ms collapses both into a single rebuild on the next frame after the sort settles.
+    Timer {
+        id: rebuildDebounceTimer
+        interval: 32
+        repeat: false
+        onTriggered: root._doRebuildDockItems()
+    }
+
+    function rebuildDockItems() {
+        rebuildDebounceTimer.restart()
+    }
+
     // Direct reactive binding to Config - will automatically trigger when Config changes
     readonly property bool separatePinnedFromRunning: Config.options?.dock?.separatePinnedFromRunning ?? true
     onSeparatePinnedFromRunningChanged: {
@@ -288,7 +315,7 @@ Item {
         return _cachedIgnoredRegexes;
     }
 
-    function rebuildDockItems() {
+    function _doRebuildDockItems() {
         const pinnedApps = Config.options?.dock?.pinnedApps ?? [];
         const ignoredRegexes = _getIgnoredRegexes();
         const separatePinnedFromRunning = root.separatePinnedFromRunning;
@@ -507,6 +534,22 @@ Item {
 
     Component.onCompleted: rebuildDockItems()
 
+    // Magnification hover tracker — pure position tracking, doesn't eat events
+    MouseArea {
+        id: magnifyArea
+        anchors.fill: listView
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton  // Transparent to press/release/click
+        enabled: root.magnifyEnabled && !root.dragActive
+
+        onPositionChanged: (mouse) => {
+            root.magnifyMousePos = root.vertical ? mouse.y : mouse.x
+        }
+        onExited: root.magnifyMousePos = -1
+        // Reset when drag starts (enabled becomes false)
+        onEnabledChanged: if (!enabled) root.magnifyMousePos = -1
+    }
+
     StyledListView {
         id: listView
         spacing: 2
@@ -542,8 +585,34 @@ Item {
             vertical: root.vertical
             dockPosition: root.dockPosition
 
-            anchors.verticalCenter: !root.vertical ? parent?.verticalCenter : undefined
-            anchors.horizontalCenter: root.vertical ? parent?.horizontalCenter : undefined
+            // ─── Magnification Scale ─────────────────────────────────
+            magnifyScale: {
+                if (!root.magnifyEnabled || root.dragActive) return 1.0
+                const mousePos = root.magnifyMousePos
+                if (mousePos < 0) return 1.0
+
+                // Icon center along the dock axis (delegate coords ≈ ListView coords)
+                const myCenter = root.vertical ? (y + height / 2) : (x + width / 2)
+                const distance = Math.abs(mousePos - myCenter)
+                const spread = root.magnifySpread
+
+                return 1 + (root.magnifyMaxScale - 1) * Math.exp(-(distance * distance) / (2 * spread * spread))
+            }
+
+            Behavior on magnifyScale {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation {
+                    duration: Appearance.animation.elementMoveFast.duration
+                    easing.type: Appearance.animation.elementMoveFast.type
+                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                }
+            }
+
+            // Edge-aligned so magnified icons pop toward screen center
+            anchors.bottom: root.dockPosition === "bottom" ? parent?.bottom : undefined
+            anchors.top: root.dockPosition === "top" ? parent?.top : undefined
+            anchors.right: root.dockPosition === "right" ? parent?.right : undefined
+            anchors.left: root.dockPosition === "left" ? parent?.left : undefined
 
             // Sin insets - el tamaño viene del DockButton
             topInset: 0
