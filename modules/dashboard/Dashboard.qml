@@ -112,6 +112,7 @@ Scope {
             width: Math.min(parent.width * 0.65, 1100)
             height: Math.min(parent.height * 0.75, 800)
 
+            clip: true
             color: Qt.rgba(0.055, 0.055, 0.102, 0.96)
             radius: 24
             border.width: 1

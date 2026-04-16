@@ -6,6 +6,8 @@ import qs.modules.common.functions
 
 // Shared card container for all dashboard cards.
 // Provides consistent background, border, radius, padding, and optional header.
+// Height is content-driven by default; cards that need to fill remaining space
+// should set Layout.fillHeight: true on themselves.
 Rectangle {
     id: root
 
@@ -13,6 +15,11 @@ Rectangle {
     property bool showHeader: headerText !== ""
     default property alias content: contentColumn.data
 
+    // Content-driven sizing: the card is as tall as its content needs
+    implicitHeight: cardLayout.implicitHeight + 2 * cardLayout.anchors.topMargin
+    implicitWidth: 200
+
+    clip: true
     color: Qt.rgba(1, 1, 1, 0.025)
     border.width: 1
     border.color: hoverHandler.hovered ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
