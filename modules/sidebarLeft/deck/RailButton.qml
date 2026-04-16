@@ -19,11 +19,11 @@ Item {
     // Active indicator bar (left edge, positioned relative to rail parent)
     Rectangle {
         x: -root.x  // Align to rail's left edge
-        width: 2
+        width: 2.5
         height: 18
         anchors.verticalCenter: parent.verticalCenter
         radius: 1
-        color: "#ff1100"
+        color: Appearance.colors.colPrimary
         opacity: root.active ? 1 : 0
         Behavior on opacity {
             enabled: Appearance.animationsEnabled
@@ -38,7 +38,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Appearance.rounding.normal
-        color: root.active ? Qt.rgba(1, 0.067, 0, 0.08)
+        color: root.active ? Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.10)
              : mouseArea.containsMouse ? Appearance.colors.colLayer1Hover
              : "transparent"
         Behavior on color {
@@ -53,7 +53,7 @@ Item {
         anchors.centerIn: parent
         text: root.iconName
         iconSize: 18
-        color: root.active ? "#ff1100"
+        color: root.active ? Appearance.colors.colPrimary
              : Qt.rgba(
                  Appearance.colors.colOnSurfaceVariant.r,
                  Appearance.colors.colOnSurfaceVariant.g,
