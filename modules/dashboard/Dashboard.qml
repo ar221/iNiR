@@ -109,8 +109,8 @@ Scope {
             // Offset slightly toward top (closer to bar)
             anchors.verticalCenterOffset: -(parent.height * 0.04)
 
-            width: Math.min(parent.width * 0.65, 1100)
-            height: Math.min(parent.height * 0.75, 800)
+            width: Math.min(parent.width * 0.7, 1200)
+            height: Math.min(parent.height * 0.85, 940)
 
             clip: true
             color: Qt.rgba(0.055, 0.055, 0.102, 0.96)

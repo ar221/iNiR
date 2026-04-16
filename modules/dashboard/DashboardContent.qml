@@ -27,34 +27,40 @@ Item {
         spacing: 20
 
         // ════════════════════════════════════════════
-        // LEFT COLUMN — Identity & Controls
+        // LEFT COLUMN — Identity & Controls (scrollable)
         // ════════════════════════════════════════════
-        ColumnLayout {
+        Flickable {
             Layout.preferredWidth: root.leftColumnWidth
             Layout.fillHeight: true
-            spacing: 12
+            contentHeight: leftColumn.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            ProfileCard {
-                Layout.fillWidth: true
-                visible: root.sectionProfile
+            ColumnLayout {
+                id: leftColumn
+                width: parent.width
+                spacing: 12
+
+                ProfileCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionProfile
+                }
+
+                SystemInfoCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionSystemInfo
+                }
+
+                QuickTogglesCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionQuickToggles
+                }
+
+                MediaCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionMedia
+                }
             }
-
-            SystemInfoCard {
-                Layout.fillWidth: true
-                visible: root.sectionSystemInfo
-            }
-
-            QuickTogglesCard {
-                Layout.fillWidth: true
-                visible: root.sectionQuickToggles
-            }
-
-            MediaCard {
-                Layout.fillWidth: true
-                visible: root.sectionMedia
-            }
-
-            Item { Layout.fillHeight: true }
         }
 
         // ════════════════════════════════════════════
@@ -194,27 +200,34 @@ Item {
         }
 
         // ════════════════════════════════════════════
-        // RIGHT COLUMN — Calendar, Weather, Notifications
+        // RIGHT COLUMN — Calendar, Weather, Notifications (scrollable)
         // ════════════════════════════════════════════
-        ColumnLayout {
+        Flickable {
             Layout.preferredWidth: root.rightColumnWidth
             Layout.fillHeight: true
-            spacing: 12
+            contentHeight: rightColumn.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            CalendarCard {
-                Layout.fillWidth: true
-                visible: root.sectionCalendar
-            }
+            ColumnLayout {
+                id: rightColumn
+                width: parent.width
+                spacing: 12
 
-            WeatherCard {
-                Layout.fillWidth: true
-                visible: root.sectionWeather
-            }
+                CalendarCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionCalendar
+                }
 
-            NotificationsCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                visible: root.sectionNotifications
+                WeatherCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionWeather
+                }
+
+                NotificationsCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionNotifications
+                }
             }
         }
     }
