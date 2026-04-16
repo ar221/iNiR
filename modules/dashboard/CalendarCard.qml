@@ -16,7 +16,7 @@ DashboardCard {
 
     // ── Hero date display ──
     RowLayout {
-        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
         spacing: 12
 
         // Large day number

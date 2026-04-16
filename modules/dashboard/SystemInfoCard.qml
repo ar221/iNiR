@@ -79,21 +79,21 @@ DashboardCard {
 
                 StyledText {
                     text: infoRow.modelData.label
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                     font.weight: Font.DemiBold
                     font.letterSpacing: 0.5
                     color: Qt.rgba(1, 1, 1, 0.3)
-                    Layout.preferredWidth: 70
+                    Layout.preferredWidth: 74
                 }
 
                 Item { Layout.fillWidth: true }
 
                 StyledText {
                     text: infoRow.modelData.value
-                    font.pixelSize: 11
+                    font.pixelSize: 13
                     color: Qt.rgba(1, 1, 1, 0.7)
                     elide: Text.ElideRight
-                    Layout.maximumWidth: 150
+                    Layout.maximumWidth: 160
                     horizontalAlignment: Text.AlignRight
                 }
             }

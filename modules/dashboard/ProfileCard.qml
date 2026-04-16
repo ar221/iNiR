@@ -116,7 +116,8 @@ DashboardCard {
 
     // ── Display name ──
     StyledText {
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignHCenter
         text: root.displayName
         font.pixelSize: 18
         font.weight: Font.DemiBold
@@ -125,7 +126,8 @@ DashboardCard {
 
     // ── Subtitle ──
     StyledText {
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignHCenter
         text: root.subtitle
         font.pixelSize: 11
         color: Qt.rgba(1, 1, 1, 0.35)
