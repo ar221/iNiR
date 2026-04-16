@@ -257,7 +257,7 @@ Item {
 
             RowLayout {
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: 16
 
                 // Shuffle
                 RippleButton {
@@ -274,7 +274,7 @@ Item {
                         text: "shuffle"
                         iconSize: 18
                         color: MprisController.hasShuffle
-                            ? "#ff1100"
+                            ? Appearance.colors.colPrimary
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
@@ -303,17 +303,17 @@ Item {
                     }
                 }
 
-                // Play / Pause — hand-rolled with #ff1100 border
+                // Play / Pause — hero control with colPrimary accent
                 Rectangle {
                     id: playPauseCard
                     implicitWidth: 44
                     implicitHeight: 44
                     radius: 4
                     color: playPauseMouse.containsMouse
-                        ? ColorUtils.applyAlpha("#ff1100", 0.15)
-                        : "transparent"
-                    border.width: 1
-                    border.color: "#ff1100"
+                        ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.15)
+                        : ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.06)
+                    border.width: 1.5
+                    border.color: Appearance.colors.colPrimary
 
                     Behavior on color {
                         enabled: Appearance.animationsEnabled
@@ -325,7 +325,7 @@ Item {
                         anchors.centerIn: parent
                         text: "play_arrow"
                         iconSize: 24
-                        color: "#ff1100"
+                        color: Appearance.colors.colPrimary
                         opacity: MprisController.isPlaying ? 0.0 : 1.0
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
@@ -338,7 +338,7 @@ Item {
                         anchors.centerIn: parent
                         text: "pause"
                         iconSize: 24
-                        color: "#ff1100"
+                        color: Appearance.colors.colPrimary
                         opacity: MprisController.isPlaying ? 1.0 : 0.0
                         Behavior on opacity {
                             enabled: Appearance.animationsEnabled
@@ -392,7 +392,7 @@ Item {
                             : "repeat"
                         iconSize: 18
                         color: MprisController.loopState !== MprisLoopState.None
-                            ? "#ff1100"
+                            ? Appearance.colors.colPrimary
                             : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
@@ -449,7 +449,7 @@ Item {
                         MprisController.activePosition / MprisController.activeLength))
                     : 0.0
 
-                // Fill — linear gradient #ff1100 → #ff3300
+                // Fill — colPrimary gradient (base → lighter)
                 Rectangle {
                     id: progressFill
                     anchors.left: parent.left
@@ -461,24 +461,29 @@ Item {
 
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "#ff1100" }
-                        GradientStop { position: 1.0; color: "#ff3300" }
+                        GradientStop { position: 0.0; color: Appearance.colors.colPrimary }
+                        GradientStop { position: 1.0; color: Qt.lighter(Appearance.colors.colPrimary, 1.15) }
                     }
                 }
 
-                // Scrub dot — appears on hover
+                // Scrub dot — always visible with glow halo
                 Rectangle {
                     id: scrubDot
-                    width: 9
-                    height: 9
+                    width: 10
+                    height: 10
                     radius: 5
-                    color: "#ff1100"
+                    color: Appearance.colors.colPrimary
                     anchors.verticalCenter: parent.verticalCenter
                     x: progressTrack.width * progressTrack._ratio - width / 2
-                    opacity: progressMouseArea.containsMouse ? 1.0 : 0.0
-                    Behavior on opacity {
-                        enabled: Appearance.animationsEnabled
-                        NumberAnimation { duration: 100 }
+
+                    // Glow halo
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width + 8
+                        height: parent.height + 8
+                        radius: width / 2
+                        color: Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.35)
+                        z: -1
                     }
                 }
 
