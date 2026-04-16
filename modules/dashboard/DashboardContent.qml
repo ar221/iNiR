@@ -7,7 +7,7 @@ import qs.modules.dashboard
 import qs.services
 
 // Three-column layout assembling all dashboard cards.
-// Left: identity & controls. Center: Phase 3 placeholder. Right: calendar/weather/notifications.
+// Left: identity & controls. Center: performance + activity console. Right: calendar/weather/notifications.
 Item {
     id: root
 
@@ -21,6 +21,7 @@ Item {
     readonly property bool sectionCalendar: Config.options?.dashboard?.sections?.calendar ?? true
     readonly property bool sectionWeather: Config.options?.dashboard?.sections?.weather ?? true
     readonly property bool sectionNotifications: Config.options?.dashboard?.sections?.notifications ?? true
+    readonly property bool sectionActivityConsole: Config.options?.dashboard?.activityConsole?.enable ?? true
 
     RowLayout {
         anchors.fill: parent
@@ -69,7 +70,7 @@ Item {
         }
 
         // ════════════════════════════════════════════
-        // CENTER COLUMN — Performance & Network
+        // CENTER COLUMN — Performance, Network & Activity
         // ════════════════════════════════════════════
         ColumnLayout {
             Layout.fillWidth: true
@@ -78,13 +79,19 @@ Item {
 
             PerformanceBarsCard {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.preferredHeight: 200
                 visible: root.sectionPerformance
             }
 
             NetworkSparklinesCard {
                 Layout.fillWidth: true
                 visible: root.sectionPerformance
+            }
+
+            ActivityConsoleCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.sectionActivityConsole
             }
 
             TemperatureStrip {

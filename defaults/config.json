@@ -547,6 +547,33 @@
   "crosshair": {
     "code": "0;P;d;1;0l;10;0o;2;1b;0"
   },
+  "dashboard": {
+    "layout": {
+      "leftColumnWidth": 260,
+      "rightColumnWidth": 240
+    },
+    "sections": {
+      "profile": true,
+      "systemInfo": true,
+      "quickToggles": true,
+      "media": true,
+      "performance": true,
+      "calendar": true,
+      "weather": true,
+      "notifications": true
+    },
+    "activityConsole": {
+      "enable": true,
+      "maxAge": 86400,
+      "sources": {
+        "claude": true,
+        "git": true,
+        "pacman": true,
+        "system": true
+      },
+      "repos": ["~/Github/inir", "~/Github/dotfiles"]
+    }
+  },
   "display": {
     "primaryMonitor": ""
   },
