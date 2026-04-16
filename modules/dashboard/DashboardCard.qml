@@ -1,0 +1,55 @@
+import QtQuick
+import QtQuick.Layouts
+import qs.modules.common
+import qs.modules.common.widgets
+import qs.modules.common.functions
+
+// Shared card container for all dashboard cards.
+// Provides consistent background, border, radius, padding, and optional header.
+Rectangle {
+    id: root
+
+    property string headerText: ""
+    property bool showHeader: headerText !== ""
+    default property alias content: contentColumn.data
+
+    color: Qt.rgba(1, 1, 1, 0.025)
+    border.width: 1
+    border.color: hoverHandler.hovered ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
+    radius: 16
+
+    Behavior on border.color {
+        enabled: Appearance.animationsEnabled
+        ColorAnimation { duration: 150 }
+    }
+
+    HoverHandler {
+        id: hoverHandler
+    }
+
+    ColumnLayout {
+        id: cardLayout
+        anchors.fill: parent
+        anchors.margins: 18
+        spacing: 12
+
+        // Section header (optional)
+        StyledText {
+            visible: root.showHeader
+            text: root.headerText.toUpperCase()
+            font.pixelSize: 10
+            font.weight: Font.DemiBold
+            font.letterSpacing: 1.5
+            color: Qt.rgba(1, 1, 1, 0.3)
+            Layout.fillWidth: true
+        }
+
+        // Card content slot
+        ColumnLayout {
+            id: contentColumn
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 8
+        }
+    }
+}
