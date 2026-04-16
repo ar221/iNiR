@@ -390,7 +390,7 @@
     "borderless": true,
     "bottom": false,
     "cornerStyle": 1,
-    "height": -1,
+    "height": 54,
     "customRounding": -1,
     "edgeModulesLayout": {
       "leftOrder": [
