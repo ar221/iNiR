@@ -74,8 +74,8 @@ Item {
         if (root.useCava) configWriter.running = true
     }
 
-    // Container height: 130px bars + 20px reflection + 4px gap
-    readonly property int _barHeight: 130
+    // Container height: 160px bars + 20px reflection + 4px gap
+    readonly property int _barHeight: 160
     readonly property int _reflHeight: 20
     readonly property int _edgePad: 3  // inner padding from container edges
     readonly property int _totalHeight: _barHeight + _reflHeight + 4

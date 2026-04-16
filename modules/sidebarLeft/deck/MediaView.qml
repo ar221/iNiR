@@ -125,7 +125,7 @@ Item {
         Item {
             id: artWrapper
             Layout.fillWidth: true
-            Layout.preferredHeight: 160
+            Layout.preferredHeight: 200
             visible: root._hasTrack
 
             // Radial glow behind art — dominant color at 30% opacity
@@ -144,8 +144,8 @@ Item {
                 id: artCard
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
-                width: 160
-                height: 160
+                width: 200
+                height: 200
                 radius: 6
                 color: "transparent"
                 clip: true
@@ -225,12 +225,12 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            // Artist — 14px subdued, centered
+            // Artist — 14px, readable but subordinate to title
             Text {
                 Layout.fillWidth: true
                 text: MprisController.activeTrack?.artist ?? ""
                 font.pixelSize: 14
-                color: Appearance.colors.colOnSurfaceVariant
+                color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, 0.70)
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 maximumLineCount: 1
@@ -242,7 +242,7 @@ Item {
                 text: MprisController.activeTrack?.album ?? ""
                 font.pixelSize: 12
                 font.italic: true
-                color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.50)
+                color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, 0.50)
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 maximumLineCount: 1
