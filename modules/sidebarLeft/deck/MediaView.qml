@@ -32,9 +32,31 @@ Item {
     readonly property bool _hasTrack: MprisController.activePlayer !== null
 
     // ── Art URL ───────────────────────────────────────────────────────────
-    readonly property string artUrlSanitized: _hasTrack && MprisController.activeTrack
+    // MPRIS artUrl (direct from player metadata)
+    readonly property string _mprisArtUrl: _hasTrack && MprisController.activeTrack
         ? MprisController.sanitizeArtUrl(MprisController.activeTrack.artUrl ?? "")
         : ""
+
+    // YouTube thumbnail fallback — derive from xesam:url when MPRIS provides no art.
+    // Firefox's MPRIS doesn't include mpris:artUrl for YouTube videos, but does
+    // provide xesam:url. We extract the video ID and construct the thumbnail URL.
+    readonly property string _trackUrl: _hasTrack
+        ? (MprisController.activePlayer?.metadata?.["xesam:url"] ?? "")
+        : ""
+    readonly property string _youtubeArt: {
+        const url = root._trackUrl
+        if (!url) return ""
+        const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+        return m ? "https://i.ytimg.com/vi/" + m[1] + "/maxresdefault.jpg" : ""
+    }
+    readonly property string _youtubeArtFallback: _youtubeArt.length > 0
+        ? _youtubeArt.replace("maxresdefault", "hqdefault") : ""
+
+    // Effective art: MPRIS artUrl → YouTube thumbnail → empty
+    // Named artUrlSanitized so existing onArtUrlSanitizedChanged handler works
+    // (underscore-prefixed change handlers are unreliable in Quickshell)
+    readonly property string artUrlSanitized: _mprisArtUrl.length > 0
+        ? _mprisArtUrl : _youtubeArt
     readonly property bool _hasArt: artUrlSanitized.length > 0
 
     // ── Accent color extraction (dominant color from album art) ───────────
@@ -55,6 +77,8 @@ Item {
     property string _artUrlB:  ""
 
     onArtUrlSanitizedChanged: {
+        // Reset aspect ratio when art clears (no track / no art URL)
+        if (artUrlSanitized.length === 0) _currentAspectRatio = 1.0
         if (_artSlotA) {
             _artUrlB = artUrlSanitized
         } else {
@@ -62,6 +86,11 @@ Item {
         }
         _artSlotA = !_artSlotA
     }
+
+    // ── Dynamic aspect ratio ──────────────────────────────────────────────
+    // Driven by whichever slot last reported a ready image matching the
+    // current artUrlSanitized. Resets to 1.0 when art URL clears (no track).
+    property real _currentAspectRatio: 1.0
 
     // ── Time formatter ────────────────────────────────────────────────────
     function formatTime(seconds: real): string {
@@ -125,7 +154,8 @@ Item {
         Item {
             id: artWrapper
             Layout.fillWidth: true
-            Layout.preferredHeight: 200
+            // Height tracks artCard so ColumnLayout reflows smoothly as aspect ratio changes
+            Layout.preferredHeight: artCard.height
             visible: root._hasTrack
 
             // Radial glow behind art — dominant color at 30% opacity
@@ -139,22 +169,55 @@ Item {
                 }
             }
 
-            // Art card — centered, square, clipped, rounded
+            // Art card — centered, dynamic aspect ratio, clipped, rounded
             Rectangle {
                 id: artCard
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
-                width: 200
-                height: 200
+
+                // ── Dynamic sizing ──────────────────────────────────────
+                // Max usable width = artWrapper minus 8px padding each side.
+                // Landscape: grow to fill available width (capped at _maxW).
+                // Portrait:  hold at _base width, grow taller.
+                readonly property real _maxW: artWrapper.width - 16
+                readonly property real _base: 200
+                readonly property real _w: root._currentAspectRatio >= 1.0
+                    ? Math.min(_maxW, _base * root._currentAspectRatio)
+                    : _base
+                readonly property real _h: _w / root._currentAspectRatio
+
+                width: _w
+                height: _h
+
+                // Animate both dimensions using the resize token (300ms, emphasized bezier)
+                Behavior on width {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation {
+                        duration: Appearance.animation.elementResize.duration
+                        easing.type: Appearance.animation.elementResize.type
+                        easing.bezierCurve: Appearance.animation.elementResize.bezierCurve
+                    }
+                }
+                Behavior on height {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation {
+                        duration: Appearance.animation.elementResize.duration
+                        easing.type: Appearance.animation.elementResize.type
+                        easing.bezierCurve: Appearance.animation.elementResize.bezierCurve
+                    }
+                }
+
                 radius: 6
                 color: "transparent"
                 clip: true
                 border.width: 1
                 border.color: Appearance.colors.colLayer1
 
-                // Fallback: colSecondaryContainer + music_note
+                // Fallback: colSecondaryContainer + music_note — always 200×200 square
                 Rectangle {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
+                    width: 200
+                    height: 200
                     radius: parent.radius
                     color: Appearance.colors.colSecondaryContainer
                     z: 0
@@ -173,9 +236,20 @@ Item {
                     id: artImageA
                     anchors.fill: parent
                     source: root._artUrlA
-                    fillMode: Image.PreserveAspectCrop
+                    fallbacks: root._youtubeArtFallback.length > 0 ? [root._youtubeArtFallback] : []
+                    fillMode: Image.PreserveAspectFit
                     opacity: (root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
                     z: root._artSlotA ? 2 : 1
+
+                    onStatusChanged: {
+                        if (status === Image.Ready && source == root.artUrlSanitized) {
+                            const r = implicitHeight > 0
+                                ? implicitWidth / implicitHeight
+                                : 1.0
+                            root._currentAspectRatio = r
+                        }
+                    }
+
                     Behavior on opacity {
                         enabled: Appearance.animationsEnabled
                         NumberAnimation {
@@ -191,9 +265,20 @@ Item {
                     id: artImageB
                     anchors.fill: parent
                     source: root._artUrlB
-                    fillMode: Image.PreserveAspectCrop
+                    fallbacks: root._youtubeArtFallback.length > 0 ? [root._youtubeArtFallback] : []
+                    fillMode: Image.PreserveAspectFit
                     opacity: (!root._artSlotA && status === Image.Ready) ? 1.0 : 0.0
                     z: root._artSlotA ? 1 : 2
+
+                    onStatusChanged: {
+                        if (status === Image.Ready && source == root.artUrlSanitized) {
+                            const r = implicitHeight > 0
+                                ? implicitWidth / implicitHeight
+                                : 1.0
+                            root._currentAspectRatio = r
+                        }
+                    }
+
                     Behavior on opacity {
                         enabled: Appearance.animationsEnabled
                         NumberAnimation {
@@ -207,16 +292,18 @@ Item {
         }
 
         // ── Track Info (centered text below art) ─────────────────────────
+        // Online (YouTube): bigger title, no album line — video titles need room.
+        // Local audio: standard title + artist + album hierarchy.
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 2
             visible: root._hasTrack
 
-            // Track title — 17px bold, centered
+            // Track title — bigger for YouTube (20px), standard for local (17px)
             Text {
                 Layout.fillWidth: true
                 text: MprisController.activeTrack?.title ?? ""
-                font.pixelSize: 17
+                font.pixelSize: root._youtubeArt.length > 0 ? 20 : 17
                 font.bold: true
                 color: Appearance.colors.colOnLayer1
                 elide: Text.ElideRight
@@ -236,7 +323,7 @@ Item {
                 maximumLineCount: 1
             }
 
-            // Album — 12px dim italic, centered
+            // Album — 12px dim italic, centered (hidden for YouTube — videos don't have albums)
             Text {
                 Layout.fillWidth: true
                 text: MprisController.activeTrack?.album ?? ""
@@ -246,6 +333,7 @@ Item {
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 maximumLineCount: 1
+                visible: root._youtubeArt.length === 0
             }
         }
 

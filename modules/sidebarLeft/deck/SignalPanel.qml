@@ -10,11 +10,17 @@ import qs.services
 /**
  * SignalPanel — Audio signal metadata instrument cluster.
  *
- * Primary: reads MPRIS metadata for FORMAT / RATE / DEPTH / CH / BITRATE.
- * Fallback: when MPRIS metadata is sparse (most players), runs ffprobe on
- * the track URL (local files only) to extract codec details directly.
+ * Local mode (file://):
+ *   Primary: reads MPRIS metadata for FORMAT / RATE / DEPTH / CH / BITRATE.
+ *   Fallback: ffprobe on the track URL to extract codec details directly.
+ *   ffprobe runs once per track change, gated on sidebar visibility.
  *
- * ffprobe runs once per track change, gated on sidebar visibility.
+ * Online mode (youtube.com / youtu.be):
+ *   Shows: Author · Platform · Duration
+ *   Author: oEmbed author_name → MPRIS artist → "—"
+ *   Platform: "YouTube Music" for music.youtube.com, "YouTube" otherwise.
+ *   Duration: from MprisController.activeLength.
+ *   oEmbed runs once per URL change via curl, cached by URL.
  */
 Item {
     id: root
@@ -28,6 +34,76 @@ Item {
     readonly property var _meta: MprisController.activePlayer?.metadata ?? null
     // No underscore — so onTrackUrlChanged handler works in Quickshell
     readonly property string trackUrl: _meta?.["xesam:url"] ?? ""
+
+    // ── Mode detection ───────────────────────────────────────────────────
+    readonly property bool _isOnline: {
+        const u = trackUrl
+        return u.includes("youtube.com") || u.includes("youtu.be")
+    }
+
+    // ── Online strip data ────────────────────────────────────────────────
+    readonly property string _platform: {
+        if (trackUrl.includes("music.youtube.com")) return "YouTube Music"
+        if (trackUrl.includes("youtube.com") || trackUrl.includes("youtu.be")) return "YouTube"
+        return ""
+    }
+
+    // oEmbed cache
+    property string _oembedAuthor: ""
+    property string _lastOembedUrl: ""
+
+    // Resolved author: oEmbed → MPRIS artist → "—"
+    readonly property string _author: {
+        if (_oembedAuthor) return _oembedAuthor
+        const artist = MprisController.activeTrack?.artist ?? ""
+        return artist || "—"
+    }
+
+    // Duration format: M:SS or H:MM:SS
+    function _formatDuration(seconds: real): string {
+        const s = Math.max(0, Math.floor(seconds))
+        const h = Math.floor(s / 3600)
+        const m = Math.floor((s % 3600) / 60)
+        const sec = s % 60
+        if (h > 0)
+            return h + ":" + String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0")
+        return m + ":" + String(sec).padStart(2, "0")
+    }
+
+    // ── oEmbed fetch ─────────────────────────────────────────────────────
+    function _tryOembed(): void {
+        const url = trackUrl
+        if (!_isOnline) {
+            _oembedAuthor = ""
+            _lastOembedUrl = ""
+            return
+        }
+        if (url === _lastOembedUrl) return
+        _lastOembedUrl = url
+        _oembedAuthor = ""   // clear stale while fetching
+        oembedProc.command = [
+            "curl", "-sf",
+            "https://www.youtube.com/oembed?url=" + encodeURIComponent(url) + "&format=json"
+        ]
+        oembedProc.running = true
+    }
+
+    Process {
+        id: oembedProc
+        command: ["true"]
+        running: false
+        stdout: StdioCollector {
+            id: oembedCollector
+            onStreamFinished: {
+                try {
+                    const d = JSON.parse(oembedCollector.text)
+                    if (d.author_name) root._oembedAuthor = d.author_name
+                } catch (e) {
+                    // oEmbed failed — silent, fallback to MPRIS artist
+                }
+            }
+        }
+    }
 
     // ── ffprobe fallback data ────────────────────────────────────────────
     property string _probeCodec: ""
@@ -53,14 +129,23 @@ Item {
         probeProc.running = true
     }
 
-    onTrackUrlChanged: tryProbe()
+    onTrackUrlChanged: {
+        tryProbe()
+        _tryOembed()
+    }
 
     // Also trigger when becoming visible (URL may already be set when sidebar opens)
     onVisibleChanged: {
-        if (visible && trackUrl && _lastProbedUrl !== trackUrl) tryProbe()
+        if (visible && trackUrl) {
+            if (_lastProbedUrl !== trackUrl) tryProbe()
+            if (_lastOembedUrl !== trackUrl) _tryOembed()
+        }
     }
     Component.onCompleted: {
-        if (trackUrl) tryProbe()
+        if (trackUrl) {
+            tryProbe()
+            _tryOembed()
+        }
     }
 
     function _clearProbe() {
@@ -102,7 +187,7 @@ Item {
         }
     }
 
-    // ── Resolved values: MPRIS first, ffprobe fallback ───────────────────
+    // ── Resolved local values: MPRIS first, ffprobe fallback ─────────────
 
     // Format: MPRIS url extension → ffprobe codec
     readonly property string _format: {
@@ -192,12 +277,32 @@ Item {
         width: parent.width
         spacing: 4
 
+        // ── Online instrument grid (YouTube / YouTube Music) ──────────────
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3
+            columnSpacing: 4
+            rowSpacing: 0
+            visible: root._isOnline
+
+            InstrumentCell { label: "CHANNEL";  value: root._author }
+            InstrumentCell { label: "SOURCE";   value: root._platform || "—" }
+            InstrumentCell {
+                label: "DURATION"
+                value: MprisController.activeLength > 0
+                    ? root._formatDuration(MprisController.activeLength) : "—"
+            }
+        }
+
+        // ── Local instrument grid (file:// sources) ───────────────────────
+
         // Top row: FORMAT / RATE / DEPTH / CH
         GridLayout {
             Layout.fillWidth: true
             columns: 4
             columnSpacing: 4
             rowSpacing: 0
+            visible: !root._isOnline
 
             InstrumentCell { label: "FORMAT"; value: root._format }
             InstrumentCell { label: "RATE";   value: root._rate   }
@@ -209,6 +314,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
+            visible: !root._isOnline
 
             InstrumentCell { label: "BITRATE"; value: root._bitrate }
             InstrumentCell { label: "QUEUE";   value: root._queue   }
