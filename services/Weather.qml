@@ -41,6 +41,15 @@ Singleton {
         temp: "--°C",
         tempFeelsLike: "--°C"
     })
+
+    // Hourly strip: next 12 hours
+    // Each entry: { time: "3pm", hour: 15, temp: "21°C", tempRaw: 21, wCode: "113", isDay: true, precipChance: 10 }
+    property var hourly: []
+
+    // 7-day forecast
+    // Each entry: { date: "2026-04-16", day: "Today"|"Mon", tempMaxRaw: 25, tempMax: "25°C",
+    //               tempMinRaw: 14, tempMin: "14°C", wCode: "113", precipChance: 20, sunrise: "06:12", sunset: "19:44" }
+    property var daily: []
     readonly property string visibleCity: {
         if (root.hideLocation)
             return ""
@@ -179,6 +188,145 @@ Singleton {
         const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
         const idx = Math.round(((deg % 360) / 22.5)) % 16
         return dirs[idx]
+    }
+
+    // Translate WMO weather codes (0-99, used by Open-Meteo) to wttr.in codes (113-395)
+    // so that Icons.getWeatherIcon() and describeWeather() work correctly.
+    function _wmoToWttr(wmo): string {
+        const code = Number(wmo ?? 0)
+        if (code === 0)              return "113"  // Clear sky
+        if (code === 1 || code === 2) return "116" // Mainly clear / partly cloudy
+        if (code === 3)              return "119"  // Overcast
+        if (code === 45 || code === 48) return "143" // Fog / rime fog
+        if (code === 51)             return "263"  // Light drizzle
+        if (code === 53)             return "266"  // Moderate drizzle
+        if (code === 55)             return "266"  // Dense drizzle
+        if (code === 56 || code === 57) return "281" // Freezing drizzle
+        if (code === 61)             return "293"  // Light rain
+        if (code === 63)             return "299"  // Moderate rain
+        if (code === 65)             return "302"  // Heavy rain
+        if (code === 66 || code === 67) return "311" // Freezing rain
+        if (code === 71)             return "320"  // Light snow
+        if (code === 73)             return "329"  // Moderate snow
+        if (code === 75)             return "335"  // Heavy snow
+        if (code === 77)             return "374"  // Snow grains → ice pellets
+        if (code === 80)             return "353"  // Light showers
+        if (code === 81)             return "356"  // Moderate showers
+        if (code === 82)             return "359"  // Heavy showers
+        if (code === 85)             return "368"  // Light snow showers
+        if (code === 86)             return "371"  // Heavy snow showers
+        if (code === 95)             return "200"  // Thunderstorm
+        if (code === 96 || code === 99) return "386" // Thunderstorm + hail
+        return "113"  // Fallback: clear
+    }
+
+    // Translate hour 0-23 to "12am"/"1pm" style label
+    function _hourLabel(h): string {
+        if (h === 0)  return "12am"
+        if (h < 12)  return h + "am"
+        if (h === 12) return "12pm"
+        return (h - 12) + "pm"
+    }
+
+    // Translate YYYY-MM-DD date string to "Today" (index 0) or short day abbreviation
+    function _dayLabel(dateStr, index): string {
+        if (index === 0) return "Today"
+        const d = new Date(dateStr + "T12:00:00")  // noon to avoid DST edge
+        return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]
+    }
+
+    function refineForecastData(apiData): void {
+        const hourlyRaw = apiData?.hourly
+        const dailyRaw = apiData?.daily
+        const units = apiData?.hourly_units ?? {}
+        const tempSuffix = root.useUSCS ? "°F" : "°C"
+
+        // Build hourly strip — next 12 hours from now
+        if (hourlyRaw?.time) {
+            const nowH = new Date()
+            nowH.setMinutes(0, 0, 0)
+            const nowTs = nowH.getTime()
+
+            let hourlyResult = []
+            const times = hourlyRaw.time
+            const temps = hourlyRaw.temperature_2m
+            const codes = hourlyRaw.weather_code
+            const isDay = hourlyRaw.is_day
+            const precip = hourlyRaw.precipitation_probability
+
+            for (let i = 0; i < times.length && hourlyResult.length < 12; i++) {
+                // Open-Meteo returns "YYYY-MM-DDTHH:00" local time (timezone=auto)
+                const entryTs = new Date(times[i]).getTime()
+                if (entryTs < nowTs) continue
+
+                const hour = new Date(times[i]).getHours()
+                const tempRaw = Math.round(temps?.[i] ?? 0)
+                const wmo = codes?.[i] ?? 0
+                hourlyResult.push({
+                    time: root._hourLabel(hour),
+                    hour: hour,
+                    temp: tempRaw + tempSuffix,
+                    tempRaw: tempRaw,
+                    wCode: root._wmoToWttr(wmo),
+                    isDay: (isDay?.[i] ?? 1) === 1,
+                    precipChance: precip?.[i] ?? 0
+                })
+            }
+            root.hourly = hourlyResult
+        }
+
+        // Build 7-day row
+        if (dailyRaw?.time) {
+            const times7 = dailyRaw.time
+            const maxTemps = dailyRaw.temperature_2m_max
+            const minTemps = dailyRaw.temperature_2m_min
+            const codes7 = dailyRaw.weather_code
+            const precipMax = dailyRaw.precipitation_probability_max
+            const sunrises = dailyRaw.sunrise
+            const sunsets = dailyRaw.sunset
+
+            let dailyResult = []
+            for (let j = 0; j < Math.min(times7.length, 7); j++) {
+                const maxRaw = Math.round(maxTemps?.[j] ?? 0)
+                const minRaw = Math.round(minTemps?.[j] ?? 0)
+                const wmo7 = codes7?.[j] ?? 0
+                const riseStr = sunrises?.[j] ?? ""
+                const setStr = sunsets?.[j] ?? ""
+                dailyResult.push({
+                    date: times7[j],
+                    day: root._dayLabel(times7[j], j),
+                    tempMaxRaw: maxRaw,
+                    tempMax: maxRaw + tempSuffix,
+                    tempMinRaw: minRaw,
+                    tempMin: minRaw + tempSuffix,
+                    wCode: root._wmoToWttr(wmo7),
+                    precipChance: precipMax?.[j] ?? 0,
+                    sunrise: riseStr ? riseStr.split("T")[1] ?? riseStr : "--:--",
+                    sunset: setStr ? setStr.split("T")[1] ?? setStr : "--:--"
+                })
+            }
+            root.daily = dailyResult
+        }
+
+        console.info("[Weather] Forecast updated — hourly:", root.hourly.length, "h, daily:", root.daily.length, "days")
+    }
+
+    function fetchForecast(): void {
+        const lat = root.location.lat
+        const lon = root.location.lon
+        if (!root.location.valid || (lat === 0 && lon === 0) || forecastFetcher.running) return
+
+        const tempUnit = root.useUSCS ? "fahrenheit" : "celsius"
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat
+            + "&longitude=" + lon
+            + "&hourly=temperature_2m,weather_code,is_day,precipitation_probability"
+            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
+            + "&forecast_days=7"
+            + "&timezone=auto"
+            + "&temperature_unit=" + tempUnit
+
+        forecastFetcher.command = ["/usr/bin/curl", "-s", "--max-time", "15", url]
+        forecastFetcher.running = true
     }
 
     function refineOpenMeteoData(apiData): void {
@@ -411,7 +559,17 @@ Singleton {
         }
     }
     onUseUSCSChanged: {
-        if (root.location.valid) fetchWeather();
+        if (root.location.valid) {
+            fetchWeather();
+            fetchForecast();
+        }
+    }
+
+    // Fire forecast fetch whenever location becomes valid (covers all resolution paths)
+    onLocationChanged: {
+        if (root.location.valid && root.enabled) {
+            Qt.callLater(() => root.fetchForecast())
+        }
     }
 
     // Re-resolve when manual location config changes (debounced)
@@ -783,14 +941,44 @@ Singleton {
         }
     }
 
+    // Parallel fetcher for hourly + 7-day forecast (Open-Meteo, keyless)
+    Process {
+        id: forecastFetcher
+        command: ["/usr/bin/curl", "-s", "--max-time", "15", ""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const payload = text.trim()
+                if (payload.length === 0) {
+                    console.warn("[Weather] Forecast fetch returned empty response")
+                    return
+                }
+                try {
+                    root.refineForecastData(JSON.parse(payload))
+                } catch (e) {
+                    console.warn("[Weather] Forecast parse error:", e.message)
+                }
+            }
+        }
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("[Weather] Forecast fetch failed, code:", code)
+        }
+    }
+
     Timer {
         id: fetchTimer
         running: root.enabled && Config.ready
         repeat: true
         interval: root.fetchInterval > 0 ? root.fetchInterval : 600000
-        onTriggered: root.getData()
+        onTriggered: {
+            root.getData()
+            root.fetchForecast()
+        }
         onRunningChanged: {
-            if (running) Qt.callLater(() => root.getData())
+            if (running) Qt.callLater(() => {
+                root.getData()
+                root.fetchForecast()
+            })
         }
     }
 }
