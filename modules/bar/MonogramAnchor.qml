@@ -72,8 +72,8 @@ RippleButton {
     }
 
     // Market-aware gradient tinting
-    property color _gradStart: marketState === "open" ? ColorUtils.mix(Appearance.colors.colPersonalAccent, "#ffffff", 0.6) : "#fb923c"
-    property color _gradEnd: marketState === "open" ? Appearance.colors.colPersonalAccent : "#f472b6"
+    property color _gradStart: marketState === "open" ? ColorUtils.mix(Appearance.colors.colPersonalAccent, "#ffffff", 0.6) : Qt.rgba(1, 1, 1, 0.55)
+    property color _gradEnd: marketState === "open" ? Appearance.colors.colPersonalAccent : Qt.rgba(1, 1, 1, 0.28)
 
     Rectangle {
         id: monogramCircle
