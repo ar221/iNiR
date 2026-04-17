@@ -80,7 +80,7 @@ DashboardCard {
             spacing: 4
             MaterialSymbol { text: "humidity_percentage"; iconSize: 14; color: Appearance.colors.colSubtext }
             StyledText {
-                text: (Weather.data?.humidity ?? "--") + "%"
+                text: Weather.data?.humidity ?? "--"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 color: Appearance.colors.colSubtext
             }
