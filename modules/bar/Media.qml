@@ -215,8 +215,8 @@ Item {
             value: (activePlayer && activePlayer.length > 0) ? (activePlayer.position / activePlayer.length) : 0
             implicitSize: 22
             colPrimary: Appearance.inirEverywhere ? Appearance.inir.colPrimary
-                : Appearance.auroraEverywhere ? Appearance.colors.colPrimary
-                : Appearance.colors.colOnSecondaryContainer
+                : Appearance.auroraEverywhere ? Appearance.colors.colSecondary
+                : Appearance.colors.colSecondary
             enableAnimation: activePlayer?.playbackState === MprisPlaybackState.Playing
 
             Item {
@@ -231,7 +231,7 @@ Item {
                     iconSize: Appearance.font.pixelSize.normal
                     color: Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
                         : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer0
-                        : Appearance.m3colors.m3onSecondaryContainer
+                        : Appearance.colors.colOnSecondary
                 }
             }
         }
