@@ -28,7 +28,7 @@ DashboardCard {
     }
     Process {
         id: gpuProc
-        command: ["/usr/bin/bash", "-c", "lspci 2>/dev/null | grep -E 'VGA compatible controller|3D controller|Display controller' | sed 's/.*: //' | head -1 | cut -c1-40"]
+        command: ["/usr/bin/bash", "-c", "lspci 2>/dev/null | grep -E 'VGA compatible controller|3D controller|Display controller' | sed 's/.*\\[AMD\\/ATI\\] //; s/ (rev [0-9a-f]*)$//; s/\\[//g; s/\\]//g' | head -1"]
         stdout: SplitParser { splitMarker: ""; onRead: data => { root._gpuName = data.trim() || "Unknown" } }
     }
 
