@@ -39,6 +39,20 @@ MouseArea {
 
     readonly property bool paused: root.anyActive && !root.currentRunning
 
+    // Seconds remaining for countdown-style timers (pomodoro + countdown).
+    // Stopwatch has no "remaining" concept — always -1.
+    readonly property int secondsLeft: {
+        if (root.pomodoroActive) return TimerService?.pomodoroSecondsLeft ?? -1
+        if (root.countdownActive) return TimerService?.countdownSecondsLeft ?? -1
+        return -1
+    }
+
+    // True when a countdown-style timer is running (not paused) and < 60 s remain.
+    // secondsLeft > 0 prevents the pill staying red after countdownFinished.
+    readonly property bool lowTime: root.currentRunning && !root.paused
+        && root.secondsLeft > 0 && root.secondsLeft < 60
+        && (root.pomodoroActive || root.countdownActive)
+
     readonly property string timeText: {
         if (pomodoroActive) {
             const secs = TimerService?.pomodoroSecondsLeft ?? 0
@@ -205,8 +219,18 @@ MouseArea {
             font.pixelSize: Appearance.font.pixelSize.small
             color: root.paused
                 ? (Appearance.inirEverywhere ? Appearance.inir.colTextMuted : Appearance.colors.colOnLayer1Inactive)
-                : Appearance.colors.colOnLayer1
+                : root.lowTime
+                    ? Appearance.colors.colError
+                    : Appearance.colors.colOnLayer1
             Layout.alignment: Qt.AlignVCenter
+
+            Behavior on color {
+                enabled: Appearance.animationsEnabled
+                animation: ColorAnimation {
+                    duration: Appearance.animation.elementMoveFast.duration
+                    easing.type: Appearance.animation.elementMoveFast.type
+                }
+            }
         }
 
         MaterialSymbol {
