@@ -80,7 +80,7 @@ DashboardCard {
                 StyledText {
                     text: infoRow.modelData.value
                     font.pixelSize: 13
-                    color: Qt.rgba(1, 1, 1, 0.7)
+                    color: Appearance.colors.colTertiary
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignRight
