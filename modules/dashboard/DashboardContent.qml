@@ -59,12 +59,8 @@ Item {
 
                 MediaCard {
                     Layout.fillWidth: true
-                    // Combine section toggle with MPRIS state check — MediaCard's own
-                    // visible binding is overridden by setting it here, so we must
-                    // include the "has active media" condition inline.
+                    // Section toggle only — playing/idle state handled internally by MediaCard.
                     visible: root.sectionMedia
-                        && MprisController.activePlayer !== null
-                        && (MprisController.activePlayer?.trackTitle ?? "") !== ""
                 }
             }
         }
