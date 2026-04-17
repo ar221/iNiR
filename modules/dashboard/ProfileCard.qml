@@ -7,20 +7,23 @@ import qs.modules.common.functions
 import qs.modules.dashboard
 import qs.services
 
-DashboardCard {
+// Identity strip — lean horizontal badge at the top of the left column.
+// No DashboardCard chrome; reads as the column's header, not a card-in-list.
+Item {
     id: root
-    headerText: ""
+
+    // Layout contract: fixed height so the strip is always a stable anchor
+    Layout.fillWidth: true
+    implicitHeight: 72
 
     // Config-driven profile data
     readonly property string displayName: {
         const configured = Config.options?.dashboard?.profile?.displayName ?? ""
         const raw = configured !== "" ? configured : root._userName
-        // Capitalize first letter of each word for display — system usernames are lowercase
         return raw.replace(/\b\w/g, c => c.toUpperCase())
     }
     readonly property string avatarPath: Config.options?.dashboard?.profile?.avatarPath ?? ""
 
-    // System info for subtitle template
     property string _userName: "user"
     property string _hostName: "host"
     property string _wmName: "niri"
@@ -62,63 +65,70 @@ DashboardCard {
         shellProc.running = true
     }
 
-    // ── Avatar ──
-    Item {
-        Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: 4
-        implicitWidth: 72
-        implicitHeight: 72
+    RowLayout {
+        anchors.fill: parent
+        spacing: 12
 
-        // Neutral placeholder circle — no glow, no accent
-        Rectangle {
-            id: avatarBg
-            anchors.fill: parent
-            radius: width / 2
-            color: Qt.rgba(1, 1, 1, 0.08)
+        // ── Avatar 40×40 ──
+        Item {
+            implicitWidth: 40
+            implicitHeight: 40
 
-            // Avatar image (overrides gradient when loaded)
-            Image {
-                id: avatarImage
+            Rectangle {
+                id: avatarBg
                 anchors.fill: parent
-                source: root.avatarPath !== "" ? ("file://" + root.avatarPath) : "file:///home/" + root._userName + "/.face"
-                fillMode: Image.PreserveAspectCrop
-                visible: status === Image.Ready
-            }
+                radius: width / 2
+                color: Qt.rgba(1, 1, 1, 0.08)
 
-            // Fallback monogram initials
-            StyledText {
-                anchors.centerIn: parent
-                visible: avatarImage.status !== Image.Ready
-                text: {
-                    const name = root.displayName
-                    if (name.length === 0) return "?"
-                    const parts = name.split(" ")
-                    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-                    return name.substring(0, 2).toUpperCase()
+                Image {
+                    id: avatarImage
+                    anchors.fill: parent
+                    source: root.avatarPath !== "" ? ("file://" + root.avatarPath) : "file:///home/" + root._userName + "/.face"
+                    fillMode: Image.PreserveAspectCrop
+                    visible: status === Image.Ready
+                    layer.enabled: true
+                    layer.effect: null
                 }
-                font.pixelSize: 24
-                font.weight: Font.Bold
-                color: Qt.rgba(1, 1, 1, 0.9)
+
+                // Fallback monogram
+                StyledText {
+                    anchors.centerIn: parent
+                    visible: avatarImage.status !== Image.Ready
+                    text: {
+                        const name = root.displayName
+                        if (name.length === 0) return "?"
+                        const parts = name.split(" ")
+                        if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                        return name.substring(0, 2).toUpperCase()
+                    }
+                    font.pixelSize: 16
+                    font.weight: Font.Bold
+                    color: Qt.rgba(1, 1, 1, 0.9)
+                }
             }
         }
-    }
 
-    // ── Display name ──
-    StyledText {
-        Layout.fillWidth: true
-        horizontalAlignment: Text.AlignHCenter
-        text: root.displayName
-        font.pixelSize: 18
-        font.weight: Font.DemiBold
-        color: Appearance.colors.colOnLayer0
-    }
+        // ── Name + subtitle stack ──
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
 
-    // ── Subtitle ──
-    StyledText {
-        Layout.fillWidth: true
-        horizontalAlignment: Text.AlignHCenter
-        text: root.subtitle
-        font.pixelSize: 11
-        color: Qt.rgba(1, 1, 1, 0.35)
+            StyledText {
+                Layout.fillWidth: true
+                text: root.displayName
+                font.pixelSize: 18
+                font.weight: Font.DemiBold
+                color: Appearance.colors.colOnLayer0
+                elide: Text.ElideRight
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: root.subtitle
+                font.pixelSize: 11
+                color: Qt.rgba(1, 1, 1, 0.35)
+                elide: Text.ElideRight
+            }
+        }
     }
 }
