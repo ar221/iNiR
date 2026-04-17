@@ -9,7 +9,7 @@ import qs.modules.common
  *
  * Shows: label (left) | "used / total unit" (right)
  * Bar: 8px tall, 2px radius, colLayer1 track, colPrimary fill.
- * Hot: ratio >= hotThreshold → #ff3333.
+ * Hot: ratio >= hotThreshold → #ff1100.
  */
 Item {
     id: root
@@ -28,7 +28,7 @@ Item {
         : 0
 
     readonly property color _fillColor: root._ratio >= root.hotThreshold
-        ? "#ff3333"
+        ? "#ff1100"
         : Appearance.colors.colPrimary
 
     // Behavior-gated intermediaries

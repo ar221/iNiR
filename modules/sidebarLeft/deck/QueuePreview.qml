@@ -157,7 +157,7 @@ Item {
 
                     onContainsMouseChanged: {
                         parent.color = containsMouse
-                            ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.06)
+                            ? ColorUtils.applyAlpha("#ff1100", 0.06)
                             : "transparent"
                     }
 

@@ -306,7 +306,7 @@ Item {
                         font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
                         font.pixelSize: 12
                         font.bold: true
-                        color: parseFloat(modelData.cpu) > 50 ? "#ff3333" : Appearance.colors.colOnLayer1
+                        color: parseFloat(modelData.cpu) > 50 ? "#ff1100" : Appearance.colors.colOnLayer1
                     }
                 }
             }

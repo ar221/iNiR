@@ -53,7 +53,7 @@ RowLayout {
                 text: cell.value
                 font.pixelSize: 13
                 font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
-                color: cell.hot ? "#ff3333" : Appearance.colors.colOnSurfaceVariant
+                color: cell.hot ? "#ff1100" : Appearance.colors.colOnSurfaceVariant
                 Behavior on color {
                     enabled: Appearance.animationsEnabled
                     ColorAnimation { duration: Appearance.animation.elementMoveEnter.duration }

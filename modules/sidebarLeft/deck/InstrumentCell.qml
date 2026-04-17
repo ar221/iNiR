@@ -39,7 +39,7 @@ Rectangle {
             font.pixelSize: 15
             font.family: Appearance.font.numbers?.family ?? Appearance.font.family.main
             font.bold: true
-            color: root.available ? Appearance.colors.colPrimary
+            color: root.available ? "#ff1100"
                  : Qt.rgba(
                      Appearance.colors.colOnSurfaceVariant.r,
                      Appearance.colors.colOnSurfaceVariant.g,
