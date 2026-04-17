@@ -75,6 +75,15 @@ RippleButton {
     property color _gradStart: marketState === "open" ? ColorUtils.mix(Appearance.colors.colPersonalAccent, "#ffffff", 0.6) : Qt.rgba(1, 1, 1, 0.55)
     property color _gradEnd: marketState === "open" ? Appearance.colors.colPersonalAccent : Qt.rgba(1, 1, 1, 0.28)
 
+    Behavior on _gradStart {
+        enabled: Appearance.animationsEnabled
+        ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+    Behavior on _gradEnd {
+        enabled: Appearance.animationsEnabled
+        ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+    }
+
     Rectangle {
         id: monogramCircle
         anchors.centerIn: parent
