@@ -69,25 +69,12 @@ DashboardCard {
         implicitWidth: 72
         implicitHeight: 72
 
-        // Soft glow behind avatar
-        Rectangle {
-            anchors.centerIn: avatarBg
-            width: avatarBg.width + 16
-            height: avatarBg.height + 16
-            radius: width / 2
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
-            z: -1
-        }
-
-        // Accent-colored circle (gradient requires OpacityMask — revisit Phase 3)
+        // Neutral placeholder circle — no glow, no accent
         Rectangle {
             id: avatarBg
             anchors.fill: parent
             radius: width / 2
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Appearance.colors.colPrimary }
-                GradientStop { position: 1.0; color: Appearance.colors.colTertiary }
-            }
+            color: Qt.rgba(1, 1, 1, 0.08)
 
             // Avatar image (overrides gradient when loaded)
             Image {

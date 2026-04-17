@@ -61,7 +61,7 @@ DashboardCard {
                     implicitWidth: 28
                     implicitHeight: 28
                     radius: 6
-                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.88)
+                    color: Qt.rgba(1, 1, 1, 0.06)
                     Layout.alignment: Qt.AlignTop
 
                     MaterialSymbol {
@@ -76,7 +76,7 @@ DashboardCard {
                             return "notifications"
                         }
                         iconSize: 16
-                        color: Appearance.colors.colPrimary
+                        color: Qt.rgba(1, 1, 1, 0.45)
                     }
                 }
 

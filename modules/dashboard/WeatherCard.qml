@@ -20,7 +20,7 @@ DashboardCard {
         MaterialSymbol {
             text: Icons.getWeatherIcon(Weather.data?.wCode, Weather.isNightNow()) ?? "cloud"
             iconSize: 36
-            color: Appearance.colors.colPrimary
+            color: Appearance.colors.colSubtext
         }
 
         ColumnLayout {
@@ -32,7 +32,7 @@ DashboardCard {
                 font.pixelSize: 28
                 font.weight: Font.Bold
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.colors.colPrimary
             }
 
             StyledText {
@@ -67,7 +67,7 @@ DashboardCard {
         // Wind
         RowLayout {
             spacing: 4
-            MaterialSymbol { text: "air"; iconSize: 14; color: Appearance.colors.colSecondary }
+            MaterialSymbol { text: "air"; iconSize: 14; color: Appearance.colors.colSubtext }
             StyledText {
                 text: (Weather.data?.windSpeed ?? "--") + " km/h"
                 font.pixelSize: Appearance.font.pixelSize.smallest
@@ -78,7 +78,7 @@ DashboardCard {
         // Humidity
         RowLayout {
             spacing: 4
-            MaterialSymbol { text: "humidity_percentage"; iconSize: 14; color: Appearance.colors.colSecondary }
+            MaterialSymbol { text: "humidity_percentage"; iconSize: 14; color: Appearance.colors.colSubtext }
             StyledText {
                 text: (Weather.data?.humidity ?? "--") + "%"
                 font.pixelSize: Appearance.font.pixelSize.smallest
@@ -89,7 +89,7 @@ DashboardCard {
         // City
         RowLayout {
             spacing: 4
-            MaterialSymbol { text: "location_on"; iconSize: 14; color: Appearance.colors.colSecondary }
+            MaterialSymbol { text: "location_on"; iconSize: 14; color: Appearance.colors.colSubtext }
             StyledText {
                 text: Weather.data?.city ?? ""
                 font.pixelSize: Appearance.font.pixelSize.smallest

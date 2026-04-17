@@ -87,12 +87,12 @@ DashboardCard {
                 Layout.fillWidth: true
                 spacing: 10
 
-                // Color dot
+                // Bullet dot — achromatic, matches secondary-info opacity tier
                 Rectangle {
                     implicitWidth: 8
                     implicitHeight: 8
                     radius: 4
-                    color: Appearance.colors.colPrimary
+                    color: Qt.rgba(1, 1, 1, 0.25)
                     Layout.alignment: Qt.AlignVCenter
                 }
 

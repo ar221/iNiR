@@ -131,7 +131,7 @@ DashboardCard {
                         text: toggleBtn.modelData.icon
                         iconSize: 20
                         color: toggleBtn.modelData.toggled
-                            ? Appearance.colors.colPrimary
+                            ? Qt.rgba(1, 1, 1, 0.9)
                             : Qt.rgba(1, 1, 1, 0.45)
                     }
 
@@ -141,7 +141,7 @@ DashboardCard {
                         font.pixelSize: 10
                         font.weight: Font.DemiBold
                         color: toggleBtn.modelData.toggled
-                            ? Appearance.colors.colPrimary
+                            ? Qt.rgba(1, 1, 1, 0.7)
                             : Qt.rgba(1, 1, 1, 0.35)
                     }
                 }
