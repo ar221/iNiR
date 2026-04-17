@@ -10,9 +10,13 @@ import qs.services
 
 // Terminal-styled activity feed card for the dashboard center column.
 // Watches ~/.local/state/inir/activity-feed.jsonl and renders entries
-// with per-source color coding (claude=amber, git=pink, pacman=green, system=cyan).
-// The backend script that writes that file is responsible for keeping it sorted
-// newest-first; this card assumes that ordering.
+// with per-source palette-tinted color coding (matugen vocabulary).
+// Backend script writes JSONL sorted newest-first; this card assumes that ordering.
+//
+// v2 features:
+//   - Click-through: opens relevant terminal action per source
+//   - Incremental model diffing: only new entries animate on refresh
+//   - Palette-tinted source tags: matugen tokens instead of hardcoded hex
 DashboardCard {
     id: root
     // Header is custom (needs liveness dot) — suppress base class header
@@ -30,13 +34,19 @@ DashboardCard {
 
     visible: consoleEnabled
 
-    // Source color map — hardcoded semantic identifiers, not theme tokens
+    // -------------------------------------------------------------------------
+    // Palette-tinted source color map — matugen vocabulary, distinct per source
+    //   claude  → colPrimary    (identity — current session's work)
+    //   git     → colSecondary  (creative output register)
+    //   pacman  → colTertiary   (system ops, matches SystemInfoCard family)
+    //   system  → colError      (warnings/noise tone — degraded gracefully)
+    // -------------------------------------------------------------------------
     function sourceColor(src) {
         switch (src) {
-            case "claude":  return "#fbbf24"  // amber
-            case "git":     return "#f472b6"  // pink
-            case "pacman":  return "#4ade80"  // green
-            case "system":  return "#22d3ee"  // cyan
+            case "claude":  return Appearance.colors.colPrimary
+            case "git":     return Appearance.colors.colSecondary
+            case "pacman":  return Appearance.colors.colTertiary
+            case "system":  return Appearance.colors.colError
             default:        return Qt.rgba(1, 1, 1, 0.5)
         }
     }
@@ -48,29 +58,152 @@ DashboardCard {
         return h + ":" + m
     }
 
+    // -------------------------------------------------------------------------
+    // Click-through: spawn kitty for per-source action
+    //   claude  → kitty at project cwd (falls back to HOME)
+    //   git     → kitty --hold -e git -C <repo> show --stat <sha>
+    //   pacman  → kitty --hold -e pacman -Qi <pkg>  (fallback: less pacman.log)
+    //   system  → kitty --hold -e journalctl [--user] -u <unit> -n 50
+    // No-op if required metadata is missing.
+    // -------------------------------------------------------------------------
+    function openEntryAction(entry) {
+        const home = Quickshell.env("HOME")
+        switch (entry.source) {
+            case "claude": {
+                const dir = (entry.cwd && entry.cwd !== "") ? entry.cwd : home
+                Quickshell.execDetached(["kitty", "--working-directory", dir])
+                break
+            }
+            case "git": {
+                if (!entry.repo || entry.repo === "" || !entry.sha || entry.sha === "") return
+                Quickshell.execDetached([
+                    "kitty", "--hold", "-e",
+                    "git", "-C", entry.repo, "show", "--stat", entry.sha
+                ])
+                break
+            }
+            case "pacman": {
+                if (entry.pkg && entry.pkg !== "") {
+                    Quickshell.execDetached([
+                        "kitty", "--hold", "-e",
+                        "pacman", "-Qi", entry.pkg
+                    ])
+                } else {
+                    // Multi-pkg group fallback: open pacman log at end
+                    Quickshell.execDetached([
+                        "kitty", "--hold", "-e",
+                        "less", "+G", "/var/log/pacman.log"
+                    ])
+                }
+                break
+            }
+            case "system": {
+                if (!entry.unit || entry.unit === "") return
+                const args = ["kitty", "--hold", "-e", "journalctl"]
+                if (entry.is_user_unit) args.push("--user")
+                args.push("-u", entry.unit, "-n", "50")
+                Quickshell.execDetached(args)
+                break
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Incremental model diffing
+    // _seenIds: Set of entry ids from prior loads — identifies NEW entries only
+    // _firstLoadDone: gate that suppresses animation on initial population
+    // Entry id = ts + "|" + source + "|" + summary (stable across refreshes)
+    // -------------------------------------------------------------------------
+    property var _seenIds: new Set()
+    property bool _firstLoadDone: false
+    // Toggled to gate the ListView add transition — only true during actual inserts
+    property bool _animateInserts: false
+
+    function _entryId(entry) {
+        return entry.ts + "|" + entry.source + "|" + entry.summary
+    }
+
     function parseEntries(text) {
         if (!text || text.trim() === "") {
             entryModel.clear()
+            _seenIds = new Set()
+            _firstLoadDone = false
             return
         }
         const sources = Config.options?.dashboard?.activityConsole?.sources
-        const lines = text.trim().split("\n")
-        const entries = []
-        for (const line of lines) {
+
+        // Parse all valid lines into an array
+        const rawEntries = []
+        for (const line of text.trim().split("\n")) {
             if (!line.trim()) continue
             try {
                 const entry = JSON.parse(line)
-                // Per-source toggle: if the key is explicitly false, skip
+                // Per-source toggle
                 if (sources && sources[entry.source] === false) continue
-                entries.push(entry)
+                // Normalize: ensure all click-through fields exist (backward compat
+                // with entries written before the v2 backend was deployed)
+                entry.cwd          = entry.cwd          ?? ""
+                entry.repo         = entry.repo         ?? ""
+                entry.sha          = entry.sha          ?? ""
+                entry.pkg          = entry.pkg          ?? ""
+                entry.action       = entry.action       ?? ""
+                entry.unit         = entry.unit         ?? ""
+                entry.is_user_unit = entry.is_user_unit === true
+                rawEntries.push(entry)
             } catch (e) {
                 // Skip malformed JSONL lines silently
             }
         }
-        entryModel.clear()
-        for (const e of entries) {
-            entryModel.append(e)
+
+        if (!_firstLoadDone) {
+            // First load: populate without animation, seed _seenIds
+            _animateInserts = false
+            entryModel.clear()
+            const newSeen = new Set()
+            for (const e of rawEntries) {
+                entryModel.append(e)
+                newSeen.add(_entryId(e))
+            }
+            _seenIds = newSeen
+            _firstLoadDone = true
+            return
         }
+
+        // Subsequent loads: diff against _seenIds
+        const currentIds = new Set()
+        for (const e of rawEntries) {
+            currentIds.add(_entryId(e))
+        }
+
+        // Entries not seen before = new
+        const newEntries = rawEntries.filter(e => !_seenIds.has(_entryId(e)))
+
+        if (newEntries.length === 0) {
+            // No new entries — update seenIds in case some aged out
+            _seenIds = currentIds
+            return
+        }
+
+        // Enable insert animation for the upcoming inserts
+        _animateInserts = true
+
+        // Insert new entries at the top (index 0), newest-first.
+        // newEntries is newest-first (mirrors rawEntries/JSONL order).
+        // Insert in reverse so they land in the correct order at position 0.
+        for (let i = newEntries.length - 1; i >= 0; i--) {
+            entryModel.insert(0, newEntries[i])
+        }
+
+        // Remove entries that aged out (no longer in current parse)
+        for (let i = entryModel.count - 1; i >= 0; i--) {
+            if (!currentIds.has(_entryId(entryModel.get(i)))) {
+                entryModel.remove(i, 1)
+            }
+        }
+
+        _seenIds = currentIds
+        // Clear the animation gate after inserts commit — next cycle is clean
+        Qt.callLater(() => { _animateInserts = false })
     }
 
     // -------------------------------------------------------------------------
@@ -164,10 +297,28 @@ DashboardCard {
             boundsBehavior: Flickable.StopAtBounds
             flickDeceleration: 2500
 
-            // NOTE: add transition intentionally omitted. parseEntries() does
-            // clear()+append() on every FileView reload (every ~30s), which
-            // would re-animate ALL entries simultaneously. Proper incremental
-            // diffing is a v2 concern.
+            // New-entry insertion animation: slide down from above + fade in.
+            // Only fires when root._animateInserts is true (incremental diff path).
+            // Static entries and first-load population are never animated.
+            add: Transition {
+                enabled: root._animateInserts
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 400
+                        easing.type: Easing.OutQuart
+                    }
+                    NumberAnimation {
+                        property: "y"
+                        from: -8
+                        to: 0
+                        duration: 400
+                        easing.type: Easing.OutQuart
+                    }
+                }
+            }
 
             delegate: Item {
                 id: entryDelegate
@@ -178,9 +329,60 @@ DashboardCard {
                 required property string source
                 required property string summary
                 required property string context
+                // click-through metadata (may be "" / false for old entries)
+                required property string cwd
+                required property string repo
+                required property string sha
+                required property string pkg
+                required property string action
+                required property string unit
+                required property bool is_user_unit
 
                 width: feedList.width
                 height: entryRow.implicitHeight + 4  // 2px padding top + bottom
+
+                // Whether this row has actionable click-through metadata
+                readonly property bool isClickable: {
+                    switch (source) {
+                        case "claude":  return true  // always opens kitty at some dir
+                        case "git":     return repo !== "" && sha !== ""
+                        case "pacman":  return true  // pkg or fallback to log
+                        case "system":  return unit !== ""
+                        default:        return false
+                    }
+                }
+
+                property bool hovered: false
+
+                HoverHandler {
+                    enabled: entryDelegate.isClickable
+                    cursorShape: Qt.PointingHandCursor
+                    onHoveredChanged: entryDelegate.hovered = hovered
+                }
+
+                TapHandler {
+                    enabled: entryDelegate.isClickable
+                    onTapped: {
+                        root.openEntryAction({
+                            source:       entryDelegate.source,
+                            cwd:          entryDelegate.cwd,
+                            repo:         entryDelegate.repo,
+                            sha:          entryDelegate.sha,
+                            pkg:          entryDelegate.pkg,
+                            action:       entryDelegate.action,
+                            unit:         entryDelegate.unit,
+                            is_user_unit: entryDelegate.is_user_unit,
+                        })
+                    }
+                }
+
+                // Subtle hover highlight — 5% white overlay, respects Campaign G density
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 3
+                    color: Qt.rgba(1, 1, 1, entryDelegate.hovered ? 0.05 : 0)
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                }
 
                 RowLayout {
                     id: entryRow
@@ -200,7 +402,7 @@ DashboardCard {
                         Layout.preferredWidth: 34  // wide enough for "00:00"
                     }
 
-                    // Source label — fixed width column (longest: "pacman"/"claude" ~64px)
+                    // Source label — palette-tinted, fixed width column
                     Text {
                         text: entryDelegate.source
                         font.family: Appearance.font.family.numbers
