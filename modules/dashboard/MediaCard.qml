@@ -115,8 +115,8 @@ DashboardCard {
 
                 RippleButton {
                     implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
-                    colBackground: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
-                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
+                    colBackground: ColorUtils.transparentize(Appearance.colors.colSecondary, 0.85)
+                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colSecondary, 0.75)
                     enabled: MprisController.canTogglePlaying
                     onClicked: MprisController.activePlayer?.togglePlaying()
                     contentItem: MaterialSymbol {
