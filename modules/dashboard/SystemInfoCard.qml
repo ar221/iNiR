@@ -12,16 +12,10 @@ DashboardCard {
     id: root
     headerText: "System"
 
-    property string _osName: "..."
     property string _kernelVersion: "..."
     property string _packageCount: "..."
     property string _gpuName: "..."
 
-    Process {
-        id: osProc
-        command: ["/usr/bin/bash", "-c", "grep -oP '(?<=^NAME=).+' /etc/os-release | tr -d '\"'"]
-        stdout: SplitParser { splitMarker: ""; onRead: data => { root._osName = data.trim() || "Linux" } }
-    }
     Process {
         id: kernelProc
         command: ["/usr/bin/uname", "-r"]
@@ -39,21 +33,18 @@ DashboardCard {
     }
 
     Component.onCompleted: {
-        osProc.running = true
         kernelProc.running = true
         pkgProc.running = true
         gpuProc.running = true
     }
 
-    // ── Key-value rows ──
+    // ── Key-value rows (4 glance rows) ──
     Repeater {
         model: [
-            { label: "UPTIME", value: DateTime.uptime },
-            { label: "KERNEL", value: root._kernelVersion },
+            { label: "KERNEL",   value: root._kernelVersion },
+            { label: "UPTIME",   value: DateTime.uptime },
             { label: "PACKAGES", value: root._packageCount },
-            { label: "SHELL", value: "fish" },
-            { label: "GPU", value: root._gpuName },
-            { label: "WM", value: "niri" }
+            { label: "GPU",      value: root._gpuName }
         ]
 
         ColumnLayout {
@@ -73,8 +64,8 @@ DashboardCard {
 
             RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: 6
-                Layout.bottomMargin: 6
+                Layout.topMargin: 8
+                Layout.bottomMargin: 8
                 spacing: 8
 
                 StyledText {
