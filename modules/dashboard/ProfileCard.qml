@@ -78,7 +78,7 @@ Item {
                 id: avatarBg
                 anchors.fill: parent
                 radius: width / 2
-                color: Qt.rgba(1, 1, 1, 0.08)
+                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
 
                 Image {
                     id: avatarImage
@@ -103,7 +103,7 @@ Item {
                     }
                     font.pixelSize: 16
                     font.weight: Font.Bold
-                    color: Qt.rgba(1, 1, 1, 0.9)
+                    color: Appearance.colors.colPrimary
                 }
             }
         }
