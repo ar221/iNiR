@@ -113,7 +113,7 @@ Scope {
             height: Math.min(parent.height * 0.85, 940)
 
             clip: true
-            color: Qt.rgba(0.055, 0.055, 0.102, 0.96)
+            color: Appearance.m3colors.m3surface
             radius: 24
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.06)
