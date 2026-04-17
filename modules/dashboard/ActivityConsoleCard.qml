@@ -110,13 +110,13 @@ DashboardCard {
         Layout.fillWidth: true
         spacing: 6
 
-        // Liveness pulse dot — heartbeat, not a party
+        // Liveness pulse dot — system heartbeat, tertiary register (matches system info family)
         Rectangle {
             id: liveDot
             implicitWidth: 6
             implicitHeight: 6
             radius: 3
-            color: Appearance.colors.colPrimary
+            color: Appearance.colors.colTertiary
             Layout.alignment: Qt.AlignVCenter
 
             SequentialAnimation on opacity {
