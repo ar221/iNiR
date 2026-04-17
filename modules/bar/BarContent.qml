@@ -682,7 +682,7 @@ Item { // Bar content region
                             text: "dns"
                             fill: 1
                             iconSize: Appearance.font.pixelSize.larger
-                            color: "#ff1100"
+                            color: Appearance.colors.colPersonalAccent
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
                                 ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -745,7 +745,7 @@ Item { // Bar content region
                                 text: _raw.length > 18 ? _raw.substring(0, 17) + "…" : _raw
                                 font.family: Appearance.font.family.main
                                 font.pixelSize: Appearance.font.pixelSize.small
-                                color: calEventRevealer.imminent ? "#ff1100" : rightSidebarButton.colText
+                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
                                     ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -755,7 +755,7 @@ Item { // Bar content region
                                 text: calEventRevealer._deltaText
                                 font.family: Appearance.font.family.main
                                 font.pixelSize: Appearance.font.pixelSize.small
-                                color: calEventRevealer.imminent ? "#ff1100" : rightSidebarButton.colText
+                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
                                     ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }

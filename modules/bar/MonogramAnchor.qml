@@ -7,7 +7,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 // MonogramAnchor — two-letter identity badge, replaces LeftSidebarButton.
-// Tints #ff1100 during NA equities market hours (9:30–16:00 ET, Mon–Fri).
+// Tints colPersonalAccent during NA equities market hours (9:30–16:00 ET, Mon–Fri).
 // Market state is written by the market-state systemd timer every minute;
 // watched via FileView — no QML Timer polling.
 RippleButton {
@@ -16,7 +16,7 @@ RippleButton {
     property string monogramText: Config.options?.bar?.identity?.monogram?.text ?? "AR"
     property string marketState: "closed" // "open" | "closed"
 
-    readonly property color marketOpenColor: "#ff1100"
+    readonly property color marketOpenColor: Appearance.colors.colPersonalAccent
     readonly property color marketClosedColor: Appearance.angelEverywhere ? Appearance.angel.colText
         : Appearance.inirEverywhere ? Appearance.inir.colText
         : Appearance.colors.colOnLayer1
@@ -72,8 +72,8 @@ RippleButton {
     }
 
     // Market-aware gradient tinting
-    property color _gradStart: marketState === "open" ? "#ff4444" : "#fb923c"
-    property color _gradEnd: marketState === "open" ? "#ff1100" : "#f472b6"
+    property color _gradStart: marketState === "open" ? ColorUtils.mix(Appearance.colors.colPersonalAccent, "#ffffff", 0.6) : "#fb923c"
+    property color _gradEnd: marketState === "open" ? Appearance.colors.colPersonalAccent : "#f472b6"
 
     Rectangle {
         id: monogramCircle

@@ -330,6 +330,8 @@ Singleton {
         property color colErrorContainerHover: ColorUtils.mix(m3colors.m3errorContainer, m3colors.m3onErrorContainer, 0.90)
         property color colErrorContainerActive: ColorUtils.mix(m3colors.m3errorContainer, m3colors.m3onErrorContainer, 0.70)
         property color colOnErrorContainer: m3colors.m3onErrorContainer
+        // Personal identity signal — distinct from colError (danger) and colPrimary (palette)
+        property color colPersonalAccent: "#ff1100"
     }
 
     rounding: QtObject {
@@ -671,9 +673,11 @@ Singleton {
         readonly property color colError: root.m3colors.m3error
         readonly property color colOnError: root.m3colors.m3onError
         readonly property color colErrorContainer: ColorUtils.transparentize(root.m3colors.m3errorContainer, 0.3)
-        
+
         readonly property color colWarning: root.m3colors.m3tertiary
         readonly property color colInfo: root.m3colors.m3secondary
+        // Personal identity signal — distinct from colError (danger) and colPrimary (palette)
+        readonly property color colPersonalAccent: "#ff1100"
         
         // ═══════════════════════════════════════════════════════════════
         // COMPONENT ALIASES
