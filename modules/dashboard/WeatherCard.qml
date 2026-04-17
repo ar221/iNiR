@@ -12,6 +12,17 @@ DashboardCard {
 
     visible: Weather.enabled
 
+    // Heat-gradient: cool → warm → hot across palette.
+    // Maps parsed integer temp (°C) from 0°C (colSubtext) to 40°C+ (colError).
+    // Mirrors bar's weather temp color logic and PerformanceBarsCard.tempColor().
+    function tempColor(tempStr) {
+        // Strip unit suffix and parse to int
+        const n = parseInt(tempStr)
+        if (isNaN(n)) return Appearance.colors.colSubtext
+        const t = Math.min(1, Math.max(0, n / 40))
+        return ColorUtils.mix(Appearance.colors.colError, Appearance.colors.colSubtext, 1 - t)
+    }
+
     // ── Temperature + icon hero row ──
     RowLayout {
         Layout.fillWidth: true
@@ -32,7 +43,7 @@ DashboardCard {
                 font.pixelSize: 28
                 font.weight: Font.Bold
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colPrimary
+                color: root.tempColor(Weather.data?.temp ?? "")
             }
 
             StyledText {
