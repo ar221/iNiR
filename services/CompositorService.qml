@@ -117,6 +117,13 @@ Singleton {
         target: NiriService
         enabled: root.isNiri
         function onWindowsChanged() { root.scheduleSort() }
+        // Re-enrich toplevels with fresh niriWorkspaceId when the focused
+        // workspace changes. Without this, consumers filtering by
+        // niriWorkspaceId (e.g. Dock in workspace-scope mode) see stale
+        // workspace tags on the first rebuild after a workspace switch
+        // and filter their entire list to empty until the next windows
+        // event. Causes dock icons to briefly vanish on every switch.
+        function onFocusedWorkspaceIdChanged() { root.scheduleSort() }
     }
     Component.onCompleted: {
         detectCompositor()
