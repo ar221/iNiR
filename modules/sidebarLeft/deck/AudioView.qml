@@ -147,25 +147,57 @@ Item {
                     }
                     spacing: 8
 
-                    // Connection status dot.
-                    // - colPrimary  → socket connected, ready
+                    // Connection status dot with pulse animation
+                    // - colPrimary  → socket connected, ready (pulses)
                     // - colTertiary → daemon detected but socket not yet up
                     // - dim         → daemon not running
-                    // Using theme tokens so the dot still reads "different state"
-                    // across every wallpaper palette.
-                    Rectangle {
+                    Item {
                         width: 8
                         height: 8
-                        radius: 4
-                        color: {
-                            if (EasyEffects.socketConnected) return Appearance.colors.colPrimary
-                            if (EasyEffects.active)          return Appearance.m3colors.m3tertiary
-                            return ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
+
+                        // Pulsing outer ring when connected
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width * (EasyEffects.socketConnected ? 1.8 : 1.0)
+                            height: parent.height * (EasyEffects.socketConnected ? 1.8 : 1.0)
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Appearance.colors.colPrimary
+                            opacity: EasyEffects.socketConnected ? 0.0 : 0.0
+                            visible: EasyEffects.socketConnected
+
+                            SequentialAnimation on opacity {
+                                running: EasyEffects.socketConnected
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.5; to: 0.0; duration: 1200; easing.type: Easing.OutCubic }
+                                PauseAnimation { duration: 300 }
+                            }
+
+                            SequentialAnimation on scale {
+                                running: EasyEffects.socketConnected
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 1.0; to: 1.4; duration: 1200; easing.type: Easing.OutCubic }
+                                PauseAnimation { duration: 300 }
+                            }
                         }
 
-                        Behavior on color {
-                            enabled: Appearance.animationsEnabled
-                            ColorAnimation { duration: 200 }
+                        // Core dot
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 8
+                            height: 8
+                            radius: 4
+                            color: {
+                                if (EasyEffects.socketConnected) return Appearance.colors.colPrimary
+                                if (EasyEffects.active)          return Appearance.m3colors.m3tertiary
+                                return ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
+                            }
+
+                            Behavior on color {
+                                enabled: Appearance.animationsEnabled
+                                ColorAnimation { duration: 200 }
+                            }
                         }
                     }
 
@@ -182,57 +214,105 @@ Item {
                         elide: Text.ElideRight
                     }
 
-                    // Bypass toggle button
+                    // Bypass toggle button — instrument panel style
                     Rectangle {
                         id: bypassBtn
-                        implicitWidth: bypassRow.implicitWidth + 16
-                        implicitHeight: 28
-                        radius: Appearance.rounding.normal
+                        implicitWidth: bypassRow.implicitWidth + 20
+                        implicitHeight: 32
+                        radius: Appearance.rounding.small
 
                         // Active = NOT bypassed (chain is processing)
                         readonly property bool _isActive: EasyEffects.socketConnected && !EasyEffects.bypassed
+                        property bool _toggleFlash: false
 
                         color: _isActive
-                            ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, bypassMouse.containsMouse ? 0.20 : 0.12)
-                            : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, bypassMouse.containsMouse ? 0.15 : 0.08)
+                            ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, bypassMouse.containsMouse ? 0.25 : 0.18)
+                            : Appearance.colors.colSurfaceContainerHigh
 
-                        border.width: 1
+                        border.width: _isActive ? 2 : 1
                         border.color: _isActive
                             ? Appearance.colors.colPrimary
-                            : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
+                            : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.25)
 
                         opacity: EasyEffects.active ? 1.0 : 0.5
 
+                        // Inset shadow for inactive state
+                        layer.enabled: !_isActive
+                        layer.effect: Item {
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "transparent"
+                                border.width: 1
+                                border.color: ColorUtils.applyAlpha("#000000", 0.20)
+                                radius: parent.radius
+                            }
+                        }
+
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: 150 }
                         }
                         Behavior on border.color {
                             enabled: Appearance.animationsEnabled
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: 150 }
+                        }
+                        Behavior on border.width {
+                            enabled: Appearance.animationsEnabled
+                            NumberAnimation { duration: 150 }
+                        }
+
+                        // Outer glow when active
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: -2
+                            radius: parent.radius + 1
+                            color: "transparent"
+                            border.width: 2
+                            border.color: ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.35)
+                            visible: parent._isActive
+                            opacity: parent._isActive ? 1.0 : 0.0
+
+                            Behavior on opacity {
+                                enabled: Appearance.animationsEnabled
+                                NumberAnimation { duration: 200 }
+                            }
+                        }
+
+                        // Flash effect on toggle
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: parent.radius
+                            color: Appearance.colors.colPrimary
+                            opacity: parent._toggleFlash ? 0.4 : 0.0
+
+                            Behavior on opacity {
+                                enabled: Appearance.animationsEnabled
+                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
                         }
 
                         RowLayout {
                             id: bypassRow
                             anchors.centerIn: parent
-                            spacing: 6
+                            spacing: 7
 
                             MaterialSymbol {
                                 text: "power_settings_new"
-                                iconSize: 14
+                                iconSize: 16
                                 color: bypassBtn._isActive
                                     ? Appearance.colors.colPrimary
-                                    : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
+                                    : Appearance.colors.colOnSurface
                             }
 
                             Text {
-                                text: EasyEffects.bypassed ? "Bypassed" : "Active"
+                                text: EasyEffects.bypassed ? "BYPASSED" : "ACTIVE"
                                 font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.weight: Font.Medium
-                                font.family: Appearance.font.family.main
+                                font.weight: Font.DemiBold
+                                font.family: Appearance.font.family.mono
+                                font.letterSpacing: 0.5
                                 color: bypassBtn._isActive
                                     ? Appearance.colors.colPrimary
-                                    : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
+                                    : Appearance.colors.colOnSurface
                             }
                         }
 
@@ -242,112 +322,191 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: EasyEffects.active
-                            onClicked: EasyEffects.toggleBypass()
+                            onClicked: {
+                                EasyEffects.toggleBypass()
+                                // Trigger flash effect
+                                bypassBtn._toggleFlash = true
+                                flashTimer.start()
+                            }
+                        }
+
+                        Timer {
+                            id: flashTimer
+                            interval: 200
+                            onTriggered: bypassBtn._toggleFlash = false
                         }
                     }
                 }
             }
 
             // ── Live audio meter ──────────────────────────────────────────
-            // Tiny gap above the meter so it doesn't kiss the status card.
-            Item { Layout.fillWidth: true; implicitHeight: 8 }
+            Item { Layout.fillWidth: true; implicitHeight: 6 }
 
-            SectionHeader { text: "LIVE" }
-
-            AudioMeter {
+            Rectangle {
                 Layout.fillWidth: true
-                active: root.visible
+                implicitHeight: meterColumn.implicitHeight + 20
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.normal
+
+                ColumnLayout {
+                    id: meterColumn
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
+                    spacing: 6
+
+                    SectionHeader { text: "LIVE" }
+
+                    AudioMeter {
+                        Layout.fillWidth: true
+                        active: root.visible
+                    }
+                }
             }
 
             // ── Preset Switcher ───────────────────────────────────────────
-            Item { Layout.fillWidth: true; implicitHeight: 8 }
+            Item { Layout.fillWidth: true; implicitHeight: 6 }
 
-            SectionHeader { text: "PRESETS" }
-
-            // Empty state — covers two cases: no presets on disk, OR daemon
-            // not yet running so we haven't been able to scan.
-            Text {
+            Rectangle {
                 Layout.fillWidth: true
-                visible: EasyEffects.presets.length === 0
-                text: EasyEffects.socketConnected
-                    ? "No presets saved — create one in EasyEffects"
-                    : (EasyEffects.active
-                        ? "Connecting to EasyEffects…"
-                        : "EasyEffects daemon not running")
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                font.family: Appearance.font.family.main
-                color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-                topPadding: 4
-                bottomPadding: 4
-            }
+                implicitHeight: presetsColumn.implicitHeight + 20
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.normal
 
-            // Horizontal chip row
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: presetScroll.implicitHeight
-                visible: EasyEffects.presets.length > 0
+                ColumnLayout {
+                    id: presetsColumn
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
+                    spacing: 6
 
-                Flickable {
-                    id: presetScroll
-                    anchors.fill: parent
-                    implicitHeight: presetRow.implicitHeight
-                    contentWidth: presetRow.implicitWidth
-                    contentHeight: presetRow.implicitHeight
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    flickableDirection: Flickable.HorizontalFlick
+                    SectionHeader { text: "PRESETS" }
 
-                    Row {
-                        id: presetRow
-                        spacing: 6
+                    // Empty state — covers two cases: no presets on disk, OR daemon
+                    // not yet running so we haven't been able to scan.
+                    Text {
+                        Layout.fillWidth: true
+                        visible: EasyEffects.presets.length === 0
+                        text: EasyEffects.socketConnected
+                            ? "No presets saved — create one in EasyEffects"
+                            : (EasyEffects.active
+                                ? "Connecting to EasyEffects…"
+                                : "EasyEffects daemon not running")
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.family: Appearance.font.family.main
+                        color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        topPadding: 4
+                        bottomPadding: 4
+                    }
 
-                        Repeater {
-                            model: EasyEffects.presets
+                    // Horizontal chip row
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: presetScroll.implicitHeight
+                        visible: EasyEffects.presets.length > 0
 
-                            Rectangle {
-                                required property string modelData
-                                required property int index
+                        Flickable {
+                            id: presetScroll
+                            anchors.fill: parent
+                            implicitHeight: presetRow.implicitHeight
+                            contentWidth: presetRow.implicitWidth
+                            contentHeight: presetRow.implicitHeight
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.HorizontalFlick
 
-                                readonly property bool _isActive: EasyEffects.currentPreset === modelData
+                            Row {
+                                id: presetRow
+                                spacing: 6
 
-                                implicitWidth: chipLabel.implicitWidth + 20
-                                implicitHeight: 28
-                                radius: 14  // pill shape
+                                Repeater {
+                                    model: EasyEffects.presets
 
-                                color: _isActive
-                                    ? Appearance.colors.colPrimary
-                                    : Appearance.colors.colLayer1
+                                    Rectangle {
+                                        required property string modelData
+                                        required property int index
 
-                                border.width: 1
-                                border.color: _isActive
-                                    ? Appearance.colors.colPrimary
-                                    : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.20)
+                                        readonly property bool _isActive: EasyEffects.currentPreset === modelData
 
-                                Behavior on color {
-                                    enabled: Appearance.animationsEnabled
-                                    ColorAnimation { duration: 150 }
-                                }
+                                        implicitWidth: chipLabel.implicitWidth + 20
+                                        implicitHeight: 32
+                                        radius: Appearance.rounding.small
 
-                                Text {
-                                    id: chipLabel
-                                    anchors.centerIn: parent
-                                    text: modelData
-                                    font.pixelSize: Appearance.font.pixelSize.smaller
-                                    font.weight: Font.Medium
-                                    font.family: Appearance.font.family.main
-                                    color: parent._isActive
-                                        ? Appearance.m3colors.m3onPrimary
-                                        : Appearance.colors.colOnSurfaceVariant
-                                }
+                                        color: _isActive
+                                            ? Appearance.colors.colPrimary
+                                            : Appearance.colors.colSurfaceContainerHigh
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    enabled: EasyEffects.socketConnected
-                                    onClicked: EasyEffects.loadPreset(modelData)
+                                        border.width: _isActive ? 2 : 1
+                                        border.color: _isActive
+                                            ? Appearance.colors.colPrimary
+                                            : ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.20)
+
+                                        // Inset shadow for inactive (pressable surface)
+                                        layer.enabled: !_isActive
+                                        layer.effect: Item {
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                color: "transparent"
+                                                border.width: 1
+                                                border.color: ColorUtils.applyAlpha("#000000", 0.15)
+                                                radius: parent.radius
+                                            }
+                                        }
+
+                                        Behavior on color {
+                                            enabled: Appearance.animationsEnabled
+                                            ColorAnimation { duration: 150 }
+                                        }
+                                        Behavior on border.width {
+                                            enabled: Appearance.animationsEnabled
+                                            NumberAnimation { duration: 150 }
+                                        }
+
+                                        // Glow effect for active preset
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: -2
+                                            radius: parent.radius + 1
+                                            color: "transparent"
+                                            border.width: 2
+                                            border.color: ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.3)
+                                            visible: parent._isActive
+                                            opacity: parent._isActive ? 1.0 : 0.0
+
+                                            Behavior on opacity {
+                                                enabled: Appearance.animationsEnabled
+                                                NumberAnimation { duration: 150 }
+                                            }
+                                        }
+
+                                        Text {
+                                            id: chipLabel
+                                            anchors.centerIn: parent
+                                            text: modelData
+                                            font.pixelSize: Appearance.font.pixelSize.smaller
+                                            font.weight: Font.DemiBold
+                                            font.family: Appearance.font.family.mono
+                                            color: parent._isActive
+                                                ? Appearance.m3colors.m3onPrimary
+                                                : Appearance.colors.colOnSurface
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            enabled: EasyEffects.socketConnected
+                                            onClicked: EasyEffects.loadPreset(modelData)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -356,27 +515,63 @@ Item {
             }
 
             // ── Active Preset: EQ curve ────────────────────────────────────
-            Item { Layout.fillWidth: true; implicitHeight: 8; opacity: root._chainAlpha }
+            Item { Layout.fillWidth: true; implicitHeight: 6 }
 
-            SectionHeader { text: "CURVE"; opacity: root._chainAlpha }
-
-            EqCurveViz {
+            Rectangle {
                 Layout.fillWidth: true
+                implicitHeight: curveColumn.implicitHeight + 20
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.normal
                 opacity: root._chainAlpha
+
+                ColumnLayout {
+                    id: curveColumn
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
+                    spacing: 6
+
+                    SectionHeader { text: "CURVE" }
+
+                    EqCurveViz {
+                        Layout.fillWidth: true
+                    }
+                }
             }
 
             // ── Active Preset: Plugin chain ────────────────────────────────
-            Item { Layout.fillWidth: true; implicitHeight: 8; opacity: root._chainAlpha }
+            Item { Layout.fillWidth: true; implicitHeight: 6 }
 
-            SectionHeader { text: "CHAIN"; opacity: root._chainAlpha }
-
-            PluginChainStrip {
+            Rectangle {
                 Layout.fillWidth: true
+                implicitHeight: chainColumn.implicitHeight + 20
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.normal
                 opacity: root._chainAlpha
+
+                ColumnLayout {
+                    id: chainColumn
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
+                    spacing: 6
+
+                    SectionHeader { text: "CHAIN" }
+
+                    PluginChainStrip {
+                        Layout.fillWidth: true
+                    }
+                }
             }
 
             // Bottom spacer
-            Item { implicitHeight: 8 }
+            Item { implicitHeight: 6 }
         }
     }
 }
