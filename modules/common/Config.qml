@@ -1375,6 +1375,36 @@ Singleton {
                     // Initial slot on sidebar open. Options: "projectPulse" | "steamStatus" | "nextUp"
                     property string defaultWidget: "projectPulse"
                 }
+
+                // Deck — left-sidebar nav-rail composition (DeckSurface).
+                // Owned by The Deck Campaign 2026-04 and the EasyEffects v1
+                // build that follows. Views are indexed in NavigationRail.qml:
+                //   0 = Media, 1 = Wallhaven, 2 = System, 3 = AudioFX
+                property JsonObject deck: JsonObject {
+                    // Which view loads first when the sidebar opens.
+                    property int defaultView: 0
+
+                    // Audio FX tab — EasyEffects bypass + preset switcher.
+                    // Plugin cards default off; the socket protocol exposes
+                    // bypass + preset load only, not per-plugin parameter
+                    // mutation. Re-enabling cards via these toggles will
+                    // surface stub-warning controls until preset-mutation
+                    // support lands.
+                    property JsonObject audioFX: JsonObject {
+                        // Master toggle for the AudioFX rail button.
+                        property bool enable: true
+                        // Card-level toggles (default off — see note above).
+                        property bool showSliders: false
+                        property bool showEqEditor: false
+                        property JsonObject plugins: JsonObject {
+                            property bool equalizer: false
+                            property bool compressor: false
+                            property bool limiter: false
+                            property bool reverb: false
+                            property bool crystalizer: false
+                        }
+                    }
+                }
             }
 
             property JsonObject sounds: JsonObject {

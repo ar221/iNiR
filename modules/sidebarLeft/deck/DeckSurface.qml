@@ -46,10 +46,18 @@ Item {
     }
 
     // ── Keyboard ──────────────────────────────────────────────────────────
+    // 4 sets the AudioFX view only when audioFX is enabled — otherwise it
+    // would land on a hidden tab and look broken.
+    readonly property bool _audioFXEnabled:
+        Config.options?.sidebar?.deck?.audioFX?.enable ?? true
+
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_1) { root.currentView = 0; event.accepted = true }
         else if (event.key === Qt.Key_2) { root.currentView = 1; event.accepted = true }
         else if (event.key === Qt.Key_3) { root.currentView = 2; event.accepted = true }
+        else if (event.key === Qt.Key_4 && root._audioFXEnabled) {
+            root.currentView = 3; event.accepted = true
+        }
         else if (event.key === Qt.Key_Escape && root.expanded) {
             root.collapse()
             event.accepted = true
@@ -165,6 +173,31 @@ Item {
                 anchors.margins: 12
                 visible: root.currentView === 2
                 opacity: root.currentView === 2 ? 1 : 0
+                Behavior on opacity {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation {
+                        duration: Appearance.animation.elementMoveEnter.duration
+                        easing.type: Appearance.animation.elementMoveEnter.type
+                        easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve
+                    }
+                }
+            }
+
+            // View 3: AudioFX (EasyEffects)
+            // Gated on Config.sidebar.deck.audioFX.enable. When disabled, the
+            // view never instantiates and the rail hides its button.
+            Loader {
+                anchors.fill: parent
+                anchors.margins: 12
+                active: root._audioFXEnabled
+                visible: root.currentView === 3 && active
+                opacity: visible ? 1 : 0
+                asynchronous: false
+                sourceComponent: AudioView {
+                    onEditEqRequested: {
+                        // EQ editor expand-in-place is post-v1; placeholder.
+                    }
+                }
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
                     NumberAnimation {

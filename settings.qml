@@ -70,6 +70,11 @@ ApplicationWindow {
             component: "modules/settings/SidebarsConfig.qml"
         },
         {
+            name: Translation.tr("Audio FX"),
+            icon: "equalizer",
+            component: "modules/settings/AudioEffectsConfig.qml"
+        },
+        {
             name: Translation.tr("Shell Widgets"),
             icon: "widgets",
             component: "modules/settings/ShellWidgetsConfig.qml"

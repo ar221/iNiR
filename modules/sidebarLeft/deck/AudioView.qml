@@ -1,8 +1,11 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.services
 
@@ -11,28 +14,65 @@ import qs.services
  *
  * Binds entirely to the EasyEffects singleton. No direct socket access.
  *
- * Layout:
- *   Status row: connection dot + label + bypass toggle
- *   Preset chips (horizontal scroll)
- *   Plugin cards (equalizer, compressor, limiter, reverb, crystalizer)
- *     gated by Config.options?.sidebar?.deck?.audioFX?.plugins
+ * v1 scope:
+ *   - Bypass toggle (works via socket)
+ *   - Preset chip switcher (works via socket)
+ *   - Plugin cards: NOT WIRED. The EasyEffects socket protocol exposes
+ *     load_preset / toggle_global_bypass but NOT per-plugin bypass or
+ *     per-property mutation — those live inside preset JSONs. The PluginCard
+ *     component is kept here so re-enabling it via config is one toggle, but
+ *     all plugin defaults in config.json ship as `false`. EasyEffects.qml's
+ *     setPluginBypass/setPluginProperty stubs warn-and-noop so misconfigured
+ *     enables don't crash.
+ *
+ * Lifecycle:
+ *   onVisibleChanged drives EasyEffects.pollEnabled — the 1.5s state poll
+ *   only runs while this view is on-screen, so we don't burn cycles for the
+ *   other Deck tabs.
  *
  * Signals:
- *   editEqRequested() — wired in DeckSurface to expand the EQ editor
+ *   editEqRequested() — wired in DeckSurface to expand the EQ editor (future)
  */
 Item {
     id: root
 
+    // Kept as a noop signal — DeckSurface still references it. PluginCard
+    // (the consumer that emitted this) was cut from v1; re-add together
+    // if/when EQ editor flow returns.
     signal editEqRequested()
 
-    // ── Config helpers ────────────────────────────────────────────────────────
-    readonly property bool _showSliders:    Config.options?.sidebar?.deck?.audioFX?.showSliders    ?? true
-    readonly property bool _showEqEditor:   Config.options?.sidebar?.deck?.audioFX?.showEqEditor   ?? true
-    readonly property bool _showEqualizer:  Config.options?.sidebar?.deck?.audioFX?.plugins?.equalizer  ?? true
-    readonly property bool _showCompressor: Config.options?.sidebar?.deck?.audioFX?.plugins?.compressor ?? true
-    readonly property bool _showLimiter:    Config.options?.sidebar?.deck?.audioFX?.plugins?.limiter    ?? true
-    readonly property bool _showReverb:     Config.options?.sidebar?.deck?.audioFX?.plugins?.reverb     ?? false
-    readonly property bool _showCrystalizer:Config.options?.sidebar?.deck?.audioFX?.plugins?.crystalizer?? false
+    // ── Bypass dim ────────────────────────────────────────────────────────
+    // When the chain is bypassed, CURVE + CHAIN sections dim — they show
+    // "what the chain WOULD do" but nothing's happening right now. LIVE meter
+    // stays lit (system audio plays regardless of EE state) and PRESETS stays
+    // lit + interactive (user may want to switch presets even while bypassed).
+    property real _chainAlpha: EasyEffects.bypassed ? 0.35 : 1.0
+
+    Behavior on _chainAlpha {
+        enabled: Appearance.animationsEnabled
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+
+    // ── Poll lifecycle: only ping the daemon while we're on-screen ──────────
+    onVisibleChanged: {
+        EasyEffects.pollEnabled = root.visible
+        if (root.visible) {
+            // Trigger an immediate refresh so the UI populates without waiting
+            // for the next 1.5s tick.
+            EasyEffects.refreshState()
+            EasyEffects.refreshPresets()
+        }
+    }
+    Component.onCompleted: {
+        if (root.visible) {
+            EasyEffects.pollEnabled = true
+            EasyEffects.refreshState()
+            EasyEffects.refreshPresets()
+        }
+    }
+    Component.onDestruction: {
+        EasyEffects.pollEnabled = false
+    }
 
     // ── Not-available empty state ─────────────────────────────────────────────
     Item {
@@ -53,7 +93,7 @@ Item {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: "EasyEffects not found"
-                font.pixelSize: 13
+                font.pixelSize: Appearance.font.pixelSize.smallie
                 font.weight: Font.Medium
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
             }
@@ -62,7 +102,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.maximumWidth: 200
                 text: "Install EasyEffects to use Audio FX controls"
-                font.pixelSize: 11
+                font.pixelSize: Appearance.font.pixelSize.smaller
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.35)
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
@@ -72,6 +112,7 @@ Item {
 
     // ── Main content ──────────────────────────────────────────────────────────
     Flickable {
+        id: mainFlick
         anchors.fill: parent
         visible: EasyEffects.available
         contentWidth: width
@@ -80,18 +121,18 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: StyledScrollBar {
-            policy: contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+            policy: mainFlick.contentHeight > mainFlick.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
         }
 
         ColumnLayout {
             id: mainColumn
             width: parent.width
-            spacing: 8
+            spacing: 2
 
             // ── Status + Bypass header ────────────────────────────────────
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: statusRow.implicitHeight + 16
+                implicitHeight: statusRow.implicitHeight + 10
                 color: Appearance.colors.colLayer1
                 radius: Appearance.rounding.normal
 
@@ -106,14 +147,19 @@ Item {
                     }
                     spacing: 8
 
-                    // Connection status dot
+                    // Connection status dot.
+                    // - colPrimary  → socket connected, ready
+                    // - colTertiary → daemon detected but socket not yet up
+                    // - dim         → daemon not running
+                    // Using theme tokens so the dot still reads "different state"
+                    // across every wallpaper palette.
                     Rectangle {
                         width: 8
                         height: 8
                         radius: 4
                         color: {
-                            if (EasyEffects.socketConnected) return "#4caf50"
-                            if (EasyEffects.active)          return "#ff9800"
+                            if (EasyEffects.socketConnected) return Appearance.colors.colPrimary
+                            if (EasyEffects.active)          return Appearance.m3colors.m3tertiary
                             return ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.30)
                         }
 
@@ -123,21 +169,24 @@ Item {
                         }
                     }
 
-                    // Label
+                    // Label — show preset name if loaded, else the brand name.
                     Text {
                         Layout.fillWidth: true
-                        text: "EasyEffects"
-                        font.pixelSize: 13
+                        text: EasyEffects.currentPreset.length > 0
+                            ? EasyEffects.currentPreset
+                            : "EasyEffects"
+                        font.pixelSize: Appearance.font.pixelSize.smallie
                         font.weight: Font.Medium
                         font.family: Appearance.font.family.main
                         color: Appearance.colors.colOnSurface
+                        elide: Text.ElideRight
                     }
 
                     // Bypass toggle button
                     Rectangle {
                         id: bypassBtn
                         implicitWidth: bypassRow.implicitWidth + 16
-                        implicitHeight: 30
+                        implicitHeight: 28
                         radius: Appearance.rounding.normal
 
                         // Active = NOT bypassed (chain is processing)
@@ -178,7 +227,7 @@ Item {
 
                             Text {
                                 text: EasyEffects.bypassed ? "Bypassed" : "Active"
-                                font.pixelSize: 11
+                                font.pixelSize: Appearance.font.pixelSize.smaller
                                 font.weight: Font.Medium
                                 font.family: Appearance.font.family.main
                                 color: bypassBtn._isActive
@@ -199,17 +248,33 @@ Item {
                 }
             }
 
+            // ── Live audio meter ──────────────────────────────────────────
+            // Tiny gap above the meter so it doesn't kiss the status card.
+            Item { Layout.fillWidth: true; implicitHeight: 8 }
+
+            SectionHeader { text: "LIVE" }
+
+            AudioMeter {
+                Layout.fillWidth: true
+                active: root.visible
+            }
+
             // ── Preset Switcher ───────────────────────────────────────────
-            DeckDivider {}
+            Item { Layout.fillWidth: true; implicitHeight: 8 }
 
-            DeckLabel { text: "PRESETS" }
+            SectionHeader { text: "PRESETS" }
 
-            // Empty state
+            // Empty state — covers two cases: no presets on disk, OR daemon
+            // not yet running so we haven't been able to scan.
             Text {
                 Layout.fillWidth: true
                 visible: EasyEffects.presets.length === 0
-                text: "No presets saved — create one in EasyEffects"
-                font.pixelSize: 11
+                text: EasyEffects.socketConnected
+                    ? "No presets saved — create one in EasyEffects"
+                    : (EasyEffects.active
+                        ? "Connecting to EasyEffects…"
+                        : "EasyEffects daemon not running")
+                font.pixelSize: Appearance.font.pixelSize.smaller
                 font.family: Appearance.font.family.main
                 color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
                 wrapMode: Text.WordWrap
@@ -269,7 +334,7 @@ Item {
                                     id: chipLabel
                                     anchors.centerIn: parent
                                     text: modelData
-                                    font.pixelSize: 11
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
                                     font.weight: Font.Medium
                                     font.family: Appearance.font.family.main
                                     color: parent._isActive
@@ -290,320 +355,28 @@ Item {
                 }
             }
 
-            // ── Plugin Cards ──────────────────────────────────────────────
-            DeckDivider {}
+            // ── Active Preset: EQ curve ────────────────────────────────────
+            Item { Layout.fillWidth: true; implicitHeight: 8; opacity: root._chainAlpha }
 
-            DeckLabel { text: "PLUGINS" }
+            SectionHeader { text: "CURVE"; opacity: root._chainAlpha }
 
-            // Equalizer card
-            PluginCard {
+            EqCurveViz {
                 Layout.fillWidth: true
-                visible: root._showEqualizer
-                pluginName: "equalizer"
-                displayName: "Equalizer"
-                iconName: "equalizer"
-                showEqEditorButton: root._showEqEditor
-                onEditEqRequested: root.editEqRequested()
+                opacity: root._chainAlpha
             }
 
-            // Compressor card
-            PluginCard {
-                Layout.fillWidth: true
-                visible: root._showCompressor
-                pluginName: "compressor"
-                displayName: "Compressor"
-                iconName: "compress"
-                showSliders: root._showSliders
-                sliders: [
-                    { prop: "threshold", label: "Threshold", min: -60, max: 0, suffix: " dB" },
-                    { prop: "ratio",     label: "Ratio",     min: 1,   max: 20, suffix: ":1" }
-                ]
-            }
+            // ── Active Preset: Plugin chain ────────────────────────────────
+            Item { Layout.fillWidth: true; implicitHeight: 8; opacity: root._chainAlpha }
 
-            // Limiter card
-            PluginCard {
-                Layout.fillWidth: true
-                visible: root._showLimiter
-                pluginName: "limiter"
-                displayName: "Limiter"
-                iconName: "volume_down"
-                showSliders: root._showSliders
-                sliders: [
-                    { prop: "threshold", label: "Threshold", min: -60, max: 0, suffix: " dB" }
-                ]
-            }
+            SectionHeader { text: "CHAIN"; opacity: root._chainAlpha }
 
-            // Reverb card
-            PluginCard {
+            PluginChainStrip {
                 Layout.fillWidth: true
-                visible: root._showReverb
-                pluginName: "reverb"
-                displayName: "Reverb"
-                iconName: "waves"
-                showSliders: root._showSliders
-                sliders: [
-                    { prop: "room_size", label: "Room Size", min: 0, max: 1, suffix: "" }
-                ]
-            }
-
-            // Crystalizer card
-            PluginCard {
-                Layout.fillWidth: true
-                visible: root._showCrystalizer
-                pluginName: "crystalizer"
-                displayName: "Crystalizer"
-                iconName: "diamond"
+                opacity: root._chainAlpha
             }
 
             // Bottom spacer
             Item { implicitHeight: 8 }
-        }
-    }
-
-    // ── PluginCard — inline component ─────────────────────────────────────────
-    component PluginCard: Rectangle {
-        id: card
-
-        required property string pluginName
-        required property string displayName
-        required property string iconName
-
-        property bool   showSliders: false
-        property bool   showEqEditorButton: false
-        property var    sliders: []
-        signal editEqRequested()
-
-        // Local bypass state (start true = not bypassed = active)
-        property bool _pluginBypassed: false
-
-        implicitHeight: cardColumn.implicitHeight + 20
-        color: Appearance.colors.colLayer1
-        radius: Appearance.rounding.normal
-
-        ColumnLayout {
-            id: cardColumn
-            anchors {
-                left: parent.left
-                right: parent.right
-                verticalCenter: parent.verticalCenter
-                leftMargin: 12
-                rightMargin: 12
-            }
-            spacing: 8
-
-            // Card header: icon + name + bypass toggle
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                MaterialSymbol {
-                    text: card.iconName
-                    iconSize: 16
-                    color: card._pluginBypassed
-                        ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.40)
-                        : Appearance.colors.colPrimary
-
-                    Behavior on color {
-                        enabled: Appearance.animationsEnabled
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: card.displayName
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
-                    font.family: Appearance.font.family.main
-                    color: card._pluginBypassed
-                        ? ColorUtils.applyAlpha(Appearance.colors.colOnSurface, 0.50)
-                        : Appearance.colors.colOnSurface
-
-                    Behavior on color {
-                        enabled: Appearance.animationsEnabled
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-
-                // Bypass toggle — small icon button
-                Rectangle {
-                    implicitWidth: 26
-                    implicitHeight: 26
-                    radius: 6
-
-                    color: card._pluginBypassed
-                        ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, pluginBypassMouse.containsMouse ? 0.15 : 0.08)
-                        : ColorUtils.applyAlpha(Appearance.colors.colPrimary, pluginBypassMouse.containsMouse ? 0.20 : 0.10)
-
-                    border.width: 1
-                    border.color: card._pluginBypassed
-                        ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.25)
-                        : ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.50)
-
-                    opacity: EasyEffects.socketConnected ? 1.0 : 0.4
-
-                    Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: 120 } }
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: card._pluginBypassed ? "pause_circle" : "play_circle"
-                        iconSize: 14
-                        color: card._pluginBypassed
-                            ? ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
-                            : Appearance.colors.colPrimary
-                    }
-
-                    MouseArea {
-                        id: pluginBypassMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: EasyEffects.socketConnected
-                        onClicked: {
-                            card._pluginBypassed = !card._pluginBypassed
-                            EasyEffects.setPluginBypass(card.pluginName, card._pluginBypassed)
-                        }
-                    }
-                }
-            }
-
-            // Property sliders
-            Repeater {
-                model: (card.showSliders && card.sliders.length > 0) ? card.sliders : []
-
-                ColumnLayout {
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-                    spacing: 2
-
-                    property real _sliderValue: (modelData.min + modelData.max) / 2
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: modelData.label
-                            font.pixelSize: 10
-                            font.family: Appearance.font.family.monospace
-                            color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
-                        }
-
-                        Text {
-                            text: _sliderValue.toFixed(modelData.suffix.includes(":") ? 0 : 1) + modelData.suffix
-                            font.pixelSize: 10
-                            font.family: Appearance.font.family.numbers?.family ?? Appearance.font.family.monospace
-                            color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
-                        }
-                    }
-
-                    // Track + fill
-                    Item {
-                        Layout.fillWidth: true
-                        implicitHeight: 14
-
-                        Rectangle {
-                            id: sliderTrack
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 3
-                            radius: 2
-                            color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.15)
-
-                            // Fill
-                            Rectangle {
-                                width: sliderTrack.width * Math.max(0, Math.min(1,
-                                    (_sliderValue - modelData.min) / (modelData.max - modelData.min)))
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                radius: parent.radius
-                                color: card._pluginBypassed
-                                    ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.35)
-                                    : Appearance.colors.colPrimary
-                            }
-
-                            // Drag handle
-                            Rectangle {
-                                width: 10
-                                height: 10
-                                radius: 5
-                                color: Appearance.colors.colPrimary
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: sliderTrack.width * Math.max(0, Math.min(1,
-                                    (_sliderValue - modelData.min) / (modelData.max - modelData.min))) - width / 2
-                                opacity: card._pluginBypassed ? 0.5 : 1.0
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                anchors.topMargin: -5
-                                anchors.bottomMargin: -5
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: EasyEffects.socketConnected && !card._pluginBypassed
-
-                                function _seek(mx) {
-                                    const ratio = Math.max(0, Math.min(1, mx / sliderTrack.width))
-                                    const val = modelData.min + ratio * (modelData.max - modelData.min)
-                                    _sliderValue = val
-                                    EasyEffects.setPluginProperty(card.pluginName, modelData.prop,
-                                        modelData.suffix.includes(":") ? Math.round(val).toString() : val.toFixed(2))
-                                }
-
-                                onClicked: (e) => { _seek(e.x) }
-                                onPositionChanged: (e) => { if (pressed) _seek(e.x) }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // EQ editor button (equalizer card only)
-            Rectangle {
-                Layout.fillWidth: true
-                visible: card.showEqEditorButton
-                implicitHeight: 28
-                radius: Appearance.rounding.normal
-                color: eqEditorMouse.containsMouse
-                    ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.12)
-                    : ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.06)
-                border.width: 1
-                border.color: ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.30)
-                opacity: EasyEffects.socketConnected ? 1.0 : 0.4
-
-                Behavior on color { enabled: Appearance.animationsEnabled; ColorAnimation { duration: 120 } }
-
-                RowLayout {
-                    anchors.centerIn: parent
-                    spacing: 6
-
-                    MaterialSymbol {
-                        text: "open_in_full"
-                        iconSize: 13
-                        color: Appearance.colors.colPrimary
-                    }
-
-                    Text {
-                        text: "Open EQ Editor"
-                        font.pixelSize: 11
-                        font.weight: Font.Medium
-                        font.family: Appearance.font.family.main
-                        color: Appearance.colors.colPrimary
-                    }
-                }
-
-                MouseArea {
-                    id: eqEditorMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: card.editEqRequested()
-                }
-            }
         }
     }
 }

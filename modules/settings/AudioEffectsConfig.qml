@@ -7,8 +7,8 @@ import qs.modules.common.widgets
 import qs.services
 
 ContentPage {
-    settingsPageIndex: 2
-    settingsPageName: Translation.tr("Audio Effects")
+    settingsPageIndex: 18
+    settingsPageName: Translation.tr("Audio FX")
     settingsPageIcon: "equalizer"
 
     // ── EasyEffects Integration ───────────────────────────────────────────────

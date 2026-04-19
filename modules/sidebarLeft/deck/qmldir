@@ -4,6 +4,10 @@ AmbientBackground 1.0 AmbientBackground.qml
 DeckSurface 1.0 DeckSurface.qml
 DeckDivider 1.0 DeckDivider.qml
 DeckLabel 1.0 DeckLabel.qml
+SectionHeader 1.0 SectionHeader.qml
+AudioMeter 1.0 AudioMeter.qml
+EqCurveViz 1.0 EqCurveViz.qml
+PluginChainStrip 1.0 PluginChainStrip.qml
 SystemStrip 1.0 SystemStrip.qml
 MediaView 1.0 MediaView.qml
 NavigationRail 1.0 NavigationRail.qml
@@ -16,5 +20,6 @@ ArcGauge 1.0 ArcGauge.qml
 UsageBar 1.0 UsageBar.qml
 ContextCards 1.0 ContextCards.qml
 SystemView 1.0 SystemView.qml
+AudioView 1.0 AudioView.qml
 PaletteExtractBar 1.0 PaletteExtractBar.qml
 ExpandedSurface 1.0 ExpandedSurface.qml

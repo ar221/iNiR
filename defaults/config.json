@@ -961,6 +961,21 @@
     "contextStrip": {
       "enable": true,
       "defaultWidget": "projectPulse"
+    },
+    "deck": {
+      "defaultView": 0,
+      "audioFX": {
+        "enable": true,
+        "showSliders": false,
+        "showEqEditor": false,
+        "plugins": {
+          "equalizer": false,
+          "compressor": false,
+          "limiter": false,
+          "reverb": false,
+          "crystalizer": false
+        }
+      }
     }
   },
   "sounds": {

@@ -1658,6 +1658,13 @@ Scope {
             component: Quickshell.shellPath("modules/settings/SidebarsConfig.qml")
         },
         {
+            name: Translation.tr("Audio FX"),
+            shortName: "",
+            icon: "equalizer",
+            desc: Translation.tr("EasyEffects bypass + presets"),
+            component: Quickshell.shellPath("modules/settings/AudioEffectsConfig.qml")
+        },
+        {
             name: Translation.tr("Shell Widgets"),
             shortName: "",
             icon: "widgets",

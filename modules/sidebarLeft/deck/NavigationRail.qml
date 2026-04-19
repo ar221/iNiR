@@ -11,6 +11,10 @@ Rectangle {
     required property int currentView
     signal viewRequested(int index)
 
+    // AudioFX gated on config — keeps the rail at 3 buttons if user disables it.
+    readonly property bool _audioFXEnabled:
+        Config.options?.sidebar?.deck?.audioFX?.enable ?? true
+
     width: 40
     color: Appearance.colors.colLayer0
     border.width: 0
@@ -52,6 +56,16 @@ Rectangle {
             active: root.currentView === 2
             tooltip: "System"
             onClicked: root.viewRequested(2)
+        }
+
+        // View 3: AudioFX (EasyEffects). Hidden if disabled in config.
+        RailButton {
+            Layout.alignment: Qt.AlignHCenter
+            visible: root._audioFXEnabled
+            iconName: "equalizer"
+            active: root.currentView === 3
+            tooltip: "Audio FX"
+            onClicked: root.viewRequested(3)
         }
 
         Item { Layout.fillHeight: true }
