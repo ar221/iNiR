@@ -496,7 +496,7 @@ Item {
                                             font.family: Appearance.font.family.mono
                                             color: parent._isActive
                                                 ? Appearance.m3colors.m3onPrimary
-                                                : Appearance.colors.colOnSurface
+                                                : Qt.rgba(1, 1, 1, 0.95)
                                         }
 
                                         MouseArea {
@@ -566,6 +566,232 @@ Item {
 
                     PluginChainStrip {
                         Layout.fillWidth: true
+                    }
+                }
+            }
+
+            // ── Output Level Meter + Control ───────────────────────────────
+            Item { Layout.fillWidth: true; implicitHeight: 6 }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: outputColumn.implicitHeight + 20
+                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.normal
+
+                ColumnLayout {
+                    id: outputColumn
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
+                    spacing: 10
+
+                    SectionHeader { text: "OUTPUT" }
+
+                    // VU meters - reactive to audio (fed by the AudioMeter's CAVA data)
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: 50
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 6
+
+                            Repeater {
+                                model: ["L", "R"]
+
+                                RowLayout {
+                                    required property string modelData
+                                    required property int index
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    // Channel label
+                                    Text {
+                                        text: modelData
+                                        font.pixelSize: 10
+                                        font.weight: Font.Bold
+                                        font.family: Appearance.font.family.mono
+                                        color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
+                                        Layout.preferredWidth: 12
+                                    }
+
+                                    // VU bar container
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 20
+                                        radius: 2
+                                        color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.08)
+                                        border.width: 1
+                                        border.color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.15)
+
+                                        // Peak hold marker
+                                        property real peakLevel: 0
+                                        property real currentLevel: {
+                                            // Use CAVA data from the AudioMeter above
+                                            // Average the appropriate half of the spectrum
+                                            const meterRef = mainColumn.children[1].children[0].children[1]
+                                            if (!meterRef || !meterRef.values) return 0
+                                            
+                                            const vals = meterRef.values
+                                            const start = index === 0 ? 0 : 5
+                                            const end = index === 0 ? 5 : 10
+                                            let sum = 0
+                                            for (let i = start; i < end; i++) {
+                                                sum += vals[i] || 0
+                                            }
+                                            return (sum / 5) / 100.0
+                                        }
+
+                                        onCurrentLevelChanged: {
+                                            if (currentLevel > peakLevel) {
+                                                peakLevel = currentLevel
+                                                peakHoldTimer.restart()
+                                            }
+                                        }
+
+                                        Timer {
+                                            id: peakHoldTimer
+                                            interval: 1500
+                                            onTriggered: parent.peakLevel = 0
+                                        }
+
+                                        // Animated fill bar
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            anchors.margins: 2
+                                            width: Math.max(2, parent.width * parent.currentLevel)
+                                            radius: 1
+
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: Appearance.colors.colPrimary }
+                                                GradientStop { position: 0.7; color: Appearance.colors.colSecondary }
+                                                GradientStop { position: 0.95; color: Appearance.colors.colError }
+                                            }
+
+                                            Behavior on width {
+                                                enabled: Appearance.animationsEnabled
+                                                NumberAnimation { duration: 50; easing.type: Easing.Linear }
+                                            }
+                                        }
+
+                                        // Peak hold line
+                                        Rectangle {
+                                            visible: parent.peakLevel > 0.05
+                                            x: parent.width * parent.peakLevel - 1
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            anchors.margins: 2
+                                            width: 2
+                                            color: Appearance.colors.colError
+                                            opacity: 0.8
+                                        }
+
+                                        // Scale markers
+                                        Row {
+                                            anchors.fill: parent
+                                            anchors.margins: 2
+                                            spacing: 0
+
+                                            Repeater {
+                                                model: [0.4, 0.7, 0.95]
+
+                                                Rectangle {
+                                                    required property real modelData
+                                                    height: parent.height
+                                                    width: 1
+                                                    x: parent.width * modelData
+                                                    color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.25)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Peak dB readout
+                                    Text {
+                                        text: {
+                                            const level = parent.parent.parent.parent.children[index].peakLevel
+                                            if (level < 0.01) return "--"
+                                            const db = 20 * Math.log10(level)
+                                            return Math.round(db) + "dB"
+                                        }
+                                        font.pixelSize: 9
+                                        font.weight: Font.Bold
+                                        font.family: Appearance.font.family.mono
+                                        color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
+                                        Layout.preferredWidth: 36
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Volume control slider
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
+                            iconSize: 16
+                            color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
+                        }
+
+                        Slider {
+                            id: volumeSlider
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 1.5
+                            value: Audio.value
+                            
+                            onMoved: {
+                                if (Audio.sink?.audio) {
+                                    Audio.sink.audio.volume = value
+                                }
+                            }
+
+                            background: Rectangle {
+                                x: volumeSlider.leftPadding
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: volumeSlider.availableWidth
+                                height: 4
+                                radius: 2
+                                color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.15)
+
+                                Rectangle {
+                                    width: volumeSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    radius: 2
+                                    color: Appearance.colors.colPrimary
+                                }
+                            }
+
+                            handle: Rectangle {
+                                x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: 16
+                                height: 16
+                                radius: 8
+                                color: volumeSlider.pressed ? Appearance.colors.colPrimary : Appearance.colors.colSurfaceContainerHigh
+                                border.width: 2
+                                border.color: Appearance.colors.colPrimary
+                            }
+                        }
+
+                        Text {
+                            text: Math.round(Audio.value * 100) + "%"
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            font.family: Appearance.font.family.mono
+                            color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
+                            Layout.preferredWidth: 40
+                        }
                     }
                 }
             }
