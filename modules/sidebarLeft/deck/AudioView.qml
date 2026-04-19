@@ -361,6 +361,7 @@ Item {
                     SectionHeader { text: "LIVE" }
 
                     AudioMeter {
+                        id: liveAudioMeter
                         Layout.fillWidth: true
                         active: root.visible
                     }
@@ -631,12 +632,11 @@ Item {
                                         // Peak hold marker
                                         property real peakLevel: 0
                                         property real currentLevel: {
-                                            // Use CAVA data from the AudioMeter above
+                                            // Use CAVA data from liveAudioMeter above
                                             // Average the appropriate half of the spectrum
-                                            const meterRef = mainColumn.children[1].children[0].children[1]
-                                            if (!meterRef || !meterRef.values) return 0
+                                            if (!liveAudioMeter || !liveAudioMeter.values) return 0
                                             
-                                            const vals = meterRef.values
+                                            const vals = liveAudioMeter.values
                                             const start = index === 0 ? 0 : 5
                                             const end = index === 0 ? 5 : 10
                                             let sum = 0
