@@ -618,6 +618,19 @@ Singleton {
                         property real cardOpacity: 0.85
                         property real cardWidth: 280
                     }
+                    property JsonObject fileExplorer: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 40
+                        property real y: 200
+                        property real widgetWidth: 220
+                        property real widgetHeight: 320
+                        property real fontScale: 1.15
+                        property string fileManager: "dolphin"
+                        property string terminal: "kitty"
+                        property bool showHiddenFiles: false
+                        property list<var> bookmarks: []
+                    }
                 }
                 property bool externalWallpaper: false // Hide internal wallpaper for external WE (linux-wallpaperengine)
                 property string wallpaperPath: ""

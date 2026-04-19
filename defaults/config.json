@@ -365,6 +365,40 @@
         "avatarPath": "",
         "showVisualizer": false,
         "opacity": 0.85
+      },
+      "fileExplorer": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 40,
+        "y": 200,
+        "widgetWidth": 220,
+        "widgetHeight": 320,
+        "fontScale": 1.15,
+        "fileManager": "dolphin",
+        "terminal": "kitty",
+        "showHiddenFiles": false,
+        "bookmarks": [
+          {
+            "label": "Home",
+            "path": "/home/ayaz",
+            "icon": "home"
+          },
+          {
+            "label": "Documents",
+            "path": "/home/ayaz/Documents",
+            "icon": "description"
+          },
+          {
+            "label": "Downloads",
+            "path": "/home/ayaz/Downloads",
+            "icon": "download"
+          },
+          {
+            "label": "Github",
+            "path": "/home/ayaz/Github",
+            "icon": "code"
+          }
+        ]
       }
     },
     "multiMonitor": {
@@ -571,7 +605,10 @@
         "pacman": true,
         "system": true
       },
-      "repos": ["~/Github/inir", "~/Github/dotfiles"]
+      "repos": [
+        "~/Github/inir",
+        "~/Github/dotfiles"
+      ]
     }
   },
   "display": {

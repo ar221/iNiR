@@ -1773,6 +1773,211 @@ ContentPage {
     }
 
     SettingsCardSection {
+        expanded: false
+        icon: "folder_open"
+        title: Translation.tr("Widget: File Explorer")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options?.background?.widgets?.fileExplorer?.enable ?? false
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.fileExplorer.enable", checked)
+                    }
+                }
+            }
+
+            ConfigRow {
+                Layout.fillWidth: true
+
+                ConfigSpinBox {
+                    Layout.fillWidth: true
+                    text: Translation.tr("Width")
+                    from: 160
+                    to: 400
+                    stepSize: 10
+                    value: Config.options?.background?.widgets?.fileExplorer?.widgetWidth ?? 220
+                    onValueChanged: Config.setNestedValue("background.widgets.fileExplorer.widgetWidth", value)
+                }
+
+                ConfigSpinBox {
+                    Layout.fillWidth: true
+                    text: Translation.tr("Height")
+                    from: 200
+                    to: 600
+                    stepSize: 10
+                    value: Config.options?.background?.widgets?.fileExplorer?.widgetHeight ?? 320
+                    onValueChanged: Config.setNestedValue("background.widgets.fileExplorer.widgetHeight", value)
+                }
+            }
+
+            ConfigSpinBox {
+                Layout.fillWidth: true
+                text: Translation.tr("Font scale (%)")
+                from: 70
+                to: 150
+                stepSize: 5
+                value: Math.round((Config.options?.background?.widgets?.fileExplorer?.fontScale ?? 1.0) * 100)
+                onValueChanged: Config.setNestedValue("background.widgets.fileExplorer.fontScale", value / 100)
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Applications")
+
+                ConfigRow {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        Layout.preferredWidth: 90
+                        text: Translation.tr("File manager")
+                        color: Appearance.colors.colOnSecondaryContainer
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+
+                    MaterialTextField {
+                        Layout.fillWidth: true
+                        text: Config.options?.background?.widgets?.fileExplorer?.fileManager ?? "dolphin"
+                        onEditingFinished: Config.setNestedValue("background.widgets.fileExplorer.fileManager", text)
+                    }
+                }
+
+                ConfigRow {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        Layout.preferredWidth: 90
+                        text: Translation.tr("Terminal")
+                        color: Appearance.colors.colOnSecondaryContainer
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+
+                    MaterialTextField {
+                        Layout.fillWidth: true
+                        text: Config.options?.background?.widgets?.fileExplorer?.terminal ?? "kitty"
+                        onEditingFinished: Config.setNestedValue("background.widgets.fileExplorer.terminal", text)
+                    }
+                }
+            }
+
+            SettingsSwitch {
+                buttonIcon: "visibility"
+                text: Translation.tr("Show hidden files")
+                checked: Config.options?.background?.widgets?.fileExplorer?.showHiddenFiles ?? false
+                onCheckedChanged: Config.setNestedValue("background.widgets.fileExplorer.showHiddenFiles", checked)
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Bookmarks")
+
+                // Bookmark list
+                Repeater {
+                    model: Config.options?.background?.widgets?.fileExplorer?.bookmarks ?? []
+
+                    delegate: ConfigRow {
+                        required property var modelData
+                        required property int index
+
+                        Layout.fillWidth: true
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: modelData.label + " — " + modelData.path
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Appearance.colors.colOnLayer1
+                            elide: Text.ElideRight
+                        }
+
+                        RippleButton {
+                            Layout.fillWidth: false
+                            buttonText: Translation.tr("Remove")
+                            onClicked: {
+                                const arr = [...(Config.options?.background?.widgets?.fileExplorer?.bookmarks ?? [])]
+                                arr.splice(index, 1)
+                                Config.setNestedValue("background.widgets.fileExplorer.bookmarks", arr)
+                            }
+                        }
+                    }
+                }
+
+                // Add bookmark form
+                Item {
+                    id: addBookmarkForm
+                    Layout.fillWidth: true
+                    implicitHeight: addBookmarkLayout.implicitHeight
+
+                    property bool addMode: false
+
+                    ColumnLayout {
+                        id: addBookmarkLayout
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 6
+
+                        RippleButton {
+                            visible: !addBookmarkForm.addMode
+                            Layout.alignment: Qt.AlignLeft
+                            buttonText: Translation.tr("+ Add bookmark")
+                            onClicked: addBookmarkForm.addMode = true
+                        }
+
+                        Column {
+                            id: addBookmarkFields
+                            visible: addBookmarkForm.addMode
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            property string newLabel: ""
+                            property string newPath: ""
+
+                            MaterialTextField {
+                                width: parent.width
+                                placeholderText: Translation.tr("Label (e.g. Home)")
+                                onTextChanged: addBookmarkFields.newLabel = text
+                            }
+
+                            MaterialTextField {
+                                width: parent.width
+                                placeholderText: Translation.tr("Path (e.g. /home/ayaz)")
+                                onTextChanged: addBookmarkFields.newPath = text
+                            }
+
+                            RowLayout {
+                                width: parent.width
+
+                                RippleButton {
+                                    Layout.fillWidth: true
+                                    buttonText: Translation.tr("Add")
+                                    onClicked: {
+                                        const lbl = addBookmarkFields.newLabel.trim()
+                                        const pth = addBookmarkFields.newPath.trim()
+                                        if (lbl.length > 0 && pth.length > 0) {
+                                            const arr = [...(Config.options?.background?.widgets?.fileExplorer?.bookmarks ?? [])]
+                                            arr.push({ label: lbl, path: pth, icon: "folder" })
+                                            Config.setNestedValue("background.widgets.fileExplorer.bookmarks", arr)
+                                            addBookmarkForm.addMode = false
+                                        }
+                                    }
+                                }
+
+                                RippleButton {
+                                    Layout.fillWidth: true
+                                    buttonText: Translation.tr("Cancel")
+                                    onClicked: addBookmarkForm.addMode = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
         expanded: true
         icon: "notifications"
         title: Translation.tr("Notifications")

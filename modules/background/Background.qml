@@ -27,6 +27,7 @@ import qs.modules.background.widgets.network
 import qs.modules.background.widgets.lissajous
 import qs.modules.background.widgets.thermalBloom
 import qs.modules.background.widgets.waveformFossil
+import qs.modules.background.widgets.fileExplorer
 import "root:modules/common/functions/parallax.js" as ParallaxMath
 
 Variants {
@@ -1161,6 +1162,17 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.waveformFossil?.enable ?? false
                     sourceComponent: WaveformFossilWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.fileExplorer?.enable ?? false
+                    sourceComponent: FileExplorerWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width
