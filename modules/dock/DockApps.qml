@@ -334,17 +334,16 @@ Item {
                 : ToplevelManager.toplevels.values;
         }
 
-        // Workspace-scoped filtering (Niri only)
+        // Workspace-scoped filtering (Niri only).
+        // Use NiriService's live workspace map instead of relying on transient
+        // niriWorkspaceId tags in sortedToplevels, which can briefly go stale
+        // during workspace switches and flash the dock empty.
         const dockScope = Config.options?.dock?.scope ?? "workspace";
-        const focusedWsId = NiriService.focusedWorkspaceId;
-        const wsFilterActive = dockScope === "workspace"
-            && CompositorService.isNiri
-            && focusedWsId !== ""
-            && allToplevels.length > 0
-            && allToplevels[0]?.niriWorkspaceId !== undefined;
-        const filteredToplevels = wsFilterActive
-            ? allToplevels.filter(t => t.niriWorkspaceId == focusedWsId)
-            : allToplevels;
+        let filteredToplevels = allToplevels;
+        if (dockScope === "workspace" && CompositorService.isNiri) {
+            const screenName = root.parentWindow?.screen?.name ?? "";
+            filteredToplevels = NiriService.filterCurrentWorkspace(allToplevels, screenName);
+        }
 
         // Build map of running apps (apps with open windows).
         // insertionOrder tracks first-seen position in filteredToplevels so that
