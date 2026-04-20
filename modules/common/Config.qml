@@ -6,7 +6,22 @@ import Quickshell.Io
 
 Singleton {
     id: root
-    property string filePath: Directories.shellConfigPath
+    // Resolve the config path from the HOME env var directly.
+    // Both Directories.shellConfigPath and QtCore.StandardPaths hit a
+    // cold-start race where the binding evaluates before the backing data is
+    // ready, leaving filePath empty — which silently breaks every FileView
+    // write (wallpaper path never hits disk, colors regen but wallpaper
+    // doesn't change). Quickshell.env is available at Singleton construction
+    // time with no plugin-init ordering.
+    property string filePath: {
+        const home = Quickshell.env("HOME") || ""
+        if (home.length === 0) {
+            console.warn("[Config] HOME env empty at binding-eval — writes will silently fail")
+            return ""
+        }
+        const xdg = Quickshell.env("XDG_CONFIG_HOME") || (home + "/.config")
+        return xdg + "/illogical-impulse/config.json"
+    }
     property alias options: configOptionsJsonAdapter
     property bool ready: false
     property bool isSettingsProcess: (Quickshell.env("QS_NO_RELOAD_POPUP") ?? "") === "1"
