@@ -380,14 +380,20 @@ Singleton {
         root._applyInProgress = true
         _applySuppressTimer.restart()
         applyProc.activeRequestKey = root._applyRequestKey(normalizedPath, darkMode, noSwitch)
+        // NOTE: we intentionally do NOT pass --skip-config-write. In QS sessions
+        // where the Config Singleton caught a cold-start binding race, FileView
+        // ends up with an empty path and writeAdapter() silently drops every
+        // call — so relying on QML to persist the wallpaper leaves config.json
+        // stale and the old wallpaper stays on screen. Letting switchwall.sh
+        // write config.json is the reliable path; QML's JsonAdapter picks the
+        // change back up via FileView.watchChanges.
         const command = [
             Directories.wallpaperSwitchScriptPath,
             "--image", normalizedPath,
-            "--mode", (darkMode ? "dark" : "light"),
-            "--skip-config-write"
+            "--mode", (darkMode ? "dark" : "light")
         ]
         if (noSwitch)
-            command.splice(command.length - 1, 0, "--noswitch")
+            command.push("--noswitch")
         applyProc.exec(command)
     }
 
