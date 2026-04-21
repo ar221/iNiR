@@ -154,6 +154,7 @@ bootstrap_skin() {
 deploy_css() {
   local css_source="$1"
   local deployed=0
+  local import_line="@import url(\"https://steamloopback.host/adwaita/colorthemes/$THEME_NAME/$THEME_NAME.css\");"
 
   # AdwSteamGtk's extracted cache (so future -i runs pick up our colors)
   if [[ -d "$ADWSTEAM_COLORTHEMES" ]]; then
@@ -176,10 +177,21 @@ deploy_css() {
     mkdir -p "$dir/steamui/adwaita/custom"
     cp "$css_source" "$dir/steamui/adwaita/custom/custom.css"
 
-    # Ensure libraryroot.custom.css imports our colortheme
+    # Ensure libraryroot.custom.css imports our colortheme.
+    # Replace an existing colortheme import when present; otherwise insert ours.
     lcss="$dir/steamui/libraryroot.custom.css"
-    if [[ -f "$lcss" ]] && ! grep -q "colorthemes/$THEME_NAME/" "$lcss"; then
-      sed -i "s|colorthemes/[^/]*/[^\"]*\.css|colorthemes/$THEME_NAME/$THEME_NAME.css|" "$lcss"
+    if [[ -f "$lcss" ]]; then
+      if ! grep -q "colorthemes/$THEME_NAME/$THEME_NAME.css" "$lcss"; then
+        sed -i "s|colorthemes/[^/]*/[^\"]*\\.css|colorthemes/$THEME_NAME/$THEME_NAME.css|g" "$lcss"
+      fi
+
+      if ! grep -q "colorthemes/$THEME_NAME/$THEME_NAME.css" "$lcss"; then
+        if grep -q '^@import.*fonts.*adwaita\\.css' "$lcss"; then
+          sed -i '/^@import.*fonts.*adwaita\.css/a \\n/* iNiR Material You Color Theme */\n'"$import_line" "$lcss"
+        else
+          printf '\n/* iNiR Material You Color Theme */\n%s\n' "$import_line" >> "$lcss"
+        fi
+      fi
     fi
 
     deployed=$((deployed + 1))
