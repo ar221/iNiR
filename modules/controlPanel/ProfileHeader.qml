@@ -98,13 +98,27 @@ Item {
                     readonly property string primaryWatch: Directories.userAvatarSourcePrimary
                     onPrimaryWatchChanged: avatarIndex = 0
 
-                    readonly property int imgStatus: avatarImg.status
-                    onImgStatusChanged: {
-                        if (imgStatus === Image.Error) {
-                            const nextIdx = avatarIndex + 1
-                            if (nextIdx < Directories.userAvatarPaths.length)
-                                avatarIndex = nextIdx
-                        }
+                    property bool _errorAdvanceScheduled: false
+                    function _advanceOnError(): void {
+                        if (profileAvatarResolver._errorAdvanceScheduled)
+                            return
+                        profileAvatarResolver._errorAdvanceScheduled = true
+                        Qt.callLater(() => {
+                            profileAvatarResolver._errorAdvanceScheduled = false
+                            if (avatarImg.status !== Image.Error)
+                                return
+                            const nextIdx = profileAvatarResolver.avatarIndex + 1
+                            if (nextIdx < Directories.availableUserAvatarPaths.length)
+                                profileAvatarResolver.avatarIndex = nextIdx
+                        })
+                    }
+                }
+
+                Connections {
+                    target: avatarImg
+                    function onStatusChanged() {
+                        if (avatarImg.status === Image.Error)
+                            profileAvatarResolver._advanceOnError()
                     }
                 }
                 

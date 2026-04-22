@@ -7,7 +7,7 @@ SHELL_INSTALL_DIR = $(SHAREDIR)/quickshell/inir
 DOC_DIR = $(SHAREDIR)/doc/inir-shell
 SYSTEMD_USER_DIR ?= $(PREFIX)/lib/systemd/user
 
-.PHONY: all build test-local install install-bin install-shell install-systemd install-icon install-desktop install-docs uninstall uninstall-bin uninstall-shell uninstall-systemd uninstall-icon uninstall-desktop uninstall-docs
+.PHONY: all build test-local perf-smoke install install-bin install-shell install-systemd install-icon install-desktop install-docs uninstall uninstall-bin uninstall-shell uninstall-systemd uninstall-icon uninstall-desktop uninstall-docs
 
 all: build
 
@@ -19,6 +19,9 @@ build:
 
 test-local: build
 	@bash scripts/test-local-distribution.sh
+
+perf-smoke: build
+	@bash scripts/perf-smoke.sh
 
 install-bin:
 	@install -Dm755 scripts/inir $(BINDIR)/inir

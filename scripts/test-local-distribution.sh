@@ -60,6 +60,11 @@ step "launcher resolution"
 bash "$launcher" path >/dev/null
 bash "$launcher" status >/dev/null
 
+if [[ -x "$runtime_root/scripts/perf-smoke.sh" ]]; then
+    step "perf smoke"
+    INIR_PERF_HYPERFINE_RUNS=2 bash "$runtime_root/scripts/perf-smoke.sh" >/dev/null || true
+fi
+
 if command -v python3 &>/dev/null && [[ -f "$runtime_root/scripts/lib/generate-ipc-registry.py" ]]; then
     step "IPC registry freshness"
     python3 "$runtime_root/scripts/lib/generate-ipc-registry.py" --check

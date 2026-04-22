@@ -6,6 +6,7 @@ import qs.services
 import QtCore
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     id: root
@@ -52,6 +53,7 @@ Singleton {
         userAvatarPathRicersAndWeirdSystems,
         userAvatarPathRicersAndWeirdSystems2
     ]
+    property var availableUserAvatarPaths: []
     readonly property string userAvatarSourcePrimary: avatarSourceAt(0)
     property string coverArt: `${Directories.cachePath}/media/coverart`
     property string tempImages: "/tmp/quickshell/media/images"
@@ -97,25 +99,71 @@ Singleton {
     }
 
     function avatarSourceAt(index: int): string {
-        if (index < 0 || index >= userAvatarPaths.length)
+        if (index < 0 || index >= availableUserAvatarPaths.length)
             return ""
 
-        const path = String(userAvatarPaths[index] ?? "").trim()
+        const path = String(availableUserAvatarPaths[index] ?? "").trim()
         return path.length > 0 ? `file://${path}` : ""
     }
 
     function nextAvatarSource(currentSource: string): string {
         const normalized = String(currentSource ?? "").replace(/^file:\/\//, "")
 
-        for (let i = 0; i < userAvatarPaths.length; ++i) {
-            if (String(userAvatarPaths[i] ?? "") === normalized)
+        for (let i = 0; i < availableUserAvatarPaths.length; ++i) {
+            if (String(availableUserAvatarPaths[i] ?? "") === normalized)
                 return avatarSourceAt(i + 1)
         }
 
         return userAvatarSourcePrimary
     }
+
+    function refreshAvailableAvatarPaths(): void {
+        if (avatarProbeProc.running)
+            return
+
+        const cmd = [
+            "/usr/bin/bash",
+            "-c",
+            "for p in \"$@\"; do [ -f \"$p\" ] && printf '%s\\n' \"$p\"; done",
+            "avatar-probe"
+        ]
+
+        for (let i = 0; i < root.userAvatarPaths.length; ++i) {
+            const candidate = String(root.userAvatarPaths[i] ?? "").trim()
+            if (candidate.length > 0)
+                cmd.push(candidate)
+        }
+
+        if (cmd.length <= 4) {
+            root.availableUserAvatarPaths = []
+            return
+        }
+
+        avatarProbeProc.command = cmd
+        avatarProbeProc.running = true
+    }
+
+    Process {
+        id: avatarProbeProc
+        running: false
+        command: []
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = String(text ?? "")
+                    .split("\n")
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0)
+                root.availableUserAvatarPaths = lines
+            }
+        }
+        onExited: (exitCode) => {
+            if (exitCode !== 0)
+                root.availableUserAvatarPaths = []
+        }
+    }
     // Cleanup on init
     Component.onCompleted: {
+        root.refreshAvailableAvatarPaths()
         Quickshell.execDetached(["mkdir", "-p", `${shellConfig}`])
         Quickshell.execDetached(["mkdir", "-p", `${stateUserPath}`])
         Quickshell.execDetached(["mkdir", "-p", `${favicons}`])
