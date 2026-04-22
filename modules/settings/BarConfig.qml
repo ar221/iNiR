@@ -195,8 +195,8 @@ ContentPage {
                             Config.setNestedValue("bar.laneSeparator", newValue);
                         }
                         options: [
-                            { displayName: Translation.tr("Off"), icon: "horizontal_rule", value: "off" },
-                            { displayName: Translation.tr("Subtle (recommended)"), icon: "remove", value: "subtle" },
+                            { displayName: Translation.tr("Off (recommended)"), icon: "horizontal_rule", value: "off" },
+                            { displayName: Translation.tr("Subtle"), icon: "remove", value: "subtle" },
                             { displayName: Translation.tr("Strong"), icon: "drag_handle", value: "strong" }
                         ]
                     }
@@ -214,9 +214,9 @@ ContentPage {
                             Config.setNestedValue("bar.ambientVisibility", newValue);
                         }
                         options: [
-                            { displayName: Translation.tr("Auto (recommended)"), icon: "width_normal", value: "auto" },
+                            { displayName: Translation.tr("Auto"), icon: "width_normal", value: "auto" },
                             { displayName: Translation.tr("Always"), icon: "visibility", value: "always" },
-                            { displayName: Translation.tr("Hidden"), icon: "visibility_off", value: "hidden" }
+                            { displayName: Translation.tr("Hidden (recommended)"), icon: "visibility_off", value: "hidden" }
                         ]
                     }
                 }

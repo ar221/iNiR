@@ -427,8 +427,8 @@
     "height": 54,
     "density": "compact",
     "stylePreset": "dusky",
-    "laneSeparator": "subtle",
-    "ambientVisibility": "auto",
+    "laneSeparator": "off",
+    "ambientVisibility": "hidden",
     "customRounding": -1,
     "edgeModulesLayout": {
       "leftOrder": [

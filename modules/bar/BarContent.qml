@@ -77,15 +77,15 @@ Item { // Bar content region
         return (preset === "clean" || preset === "glass") ? preset : "dusky"
     }
     // Density tokens (compact/default/airy)
-    readonly property int sideClusterGap: barDensity === "compact" ? 6 : (barDensity === "airy" ? 10 : 8)
-    readonly property int centerSegmentGap: barDensity === "compact" ? 4 : (barDensity === "airy" ? 8 : 6)
-    readonly property int missionClusterPadding: barDensity === "compact" ? 4 : (barDensity === "airy" ? 6 : 5)
-    readonly property int utilityClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 5 : 4)
-    readonly property int ambientClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 5 : 4)
+    readonly property int sideClusterGap: barDensity === "compact" ? 5 : (barDensity === "airy" ? 10 : 8)
+    readonly property int centerSegmentGap: barDensity === "compact" ? 3 : (barDensity === "airy" ? 8 : 6)
+    readonly property int missionClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 6 : 5)
+    readonly property int utilityClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
+    readonly property int ambientClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
     // Style tokens (dusky/clean/glass)
-    readonly property int rightChipHorizontalPadding: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 9)
-    readonly property int rightChipVerticalPadding: barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 4)
-    readonly property int rightIndicatorSpacing: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 12)
+    readonly property int rightChipHorizontalPadding: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 8)
+    readonly property int rightChipVerticalPadding: barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 3)
+    readonly property int rightIndicatorSpacing: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 8)
     readonly property real rightChipBackgroundAlpha: barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92)
     readonly property int rightIndicatorIconSize: barStylePreset === "clean"
         ? Appearance.font.pixelSize.normal
@@ -93,7 +93,7 @@ Item { // Bar content region
     readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
         ? Appearance.font.pixelSize.smaller
         : Appearance.font.pixelSize.small
-    readonly property int calendarTitleMaxChars: root.useShortenedForm === 2 ? 10 : (root.useShortenedForm === 1 ? 13 : (barDensity === "compact" ? 15 : 18))
+    readonly property int calendarTitleMaxChars: root.useShortenedForm === 2 ? 9 : (root.useShortenedForm === 1 ? 12 : (barDensity === "compact" ? 13 : 18))
     readonly property string laneSeparatorMode: {
         const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
         return (mode === "off" || mode === "strong") ? mode : "subtle"
