@@ -1,0 +1,88 @@
+# Apollo preset — yazi flavor
+# Hand-authored; deployed in place of ii-generator output when Apollo is active.
+
+[mgr]
+cwd = { fg = "#FFB648" }
+hovered         = { fg = "#0E0B08", bg = "#FFB648" }
+preview_hovered = { underline = true }
+find_keyword    = { fg = "#FFB648", italic = true }
+find_position   = { fg = "#D28BD8", bg = "reset", italic = true }
+marker_selected = { fg = "#A8C97B", bg = "#A8C97B" }
+marker_copied   = { fg = "#FFB648", bg = "#FFB648" }
+marker_cut      = { fg = "#FF5A4E", bg = "#FF5A4E" }
+tab_active      = { fg = "#0E0B08", bg = "#1C150C" }
+tab_inactive    = { fg = "#F2E3C6", bg = "#1C150C" }
+tab_width       = 1
+border_symbol   = "│"
+border_style    = { fg = "#98876F" }
+count_copied    = { fg = "#0E0B08", bg = "#FFB648" }
+count_cut       = { fg = "#0E0B08", bg = "#FF5A4E" }
+count_selected  = { fg = "#0E0B08", bg = "#FFB648" }
+
+[mode]
+normal_main = { fg = "#0E0B08", bg = "#FFB648", bold = true }
+normal_alt  = { fg = "#0E0B08", bg = "#FFB648", bold = true }
+select_main = { fg = "#0E0B08", bg = "#A8C97B", bold = true }
+select_alt  = { fg = "#0E0B08", bg = "#A8C97B", bold = true }
+unset_main  = { fg = "#0E0B08", bg = "#D28BD8", bold = true }
+unset_alt   = { fg = "#0E0B08", bg = "#D28BD8", bold = true }
+
+[status]
+separator_open  = ""
+separator_close = ""
+separator_style = { fg = "#1C150C", bg = "#1C150C" }
+progress_label  = { fg = "#FFFBEE", bold = true }
+progress_normal = { fg = "#FFB648", bg = "#1C150C" }
+progress_error  = { fg = "#FF5A4E", bg = "#1C150C" }
+permissions_t   = { fg = "#FFB648" }
+permissions_r   = { fg = "#FFB648" }
+permissions_w   = { fg = "#FF5A4E" }
+permissions_x   = { fg = "#A8C97B" }
+permissions_s   = { fg = "#98876F" }
+
+[input]
+border   = { fg = "#FFB648" }
+title    = {}
+value    = {}
+selected = { reversed = true }
+
+[select]
+border   = { fg = "#FFB648" }
+active   = { fg = "#D28BD8", bold = true }
+inactive = {}
+
+[tasks]
+border  = { fg = "#FFB648" }
+title   = {}
+hovered = { underline = true }
+
+[which]
+mask            = { bg = "#1C150C" }
+cand            = { fg = "#8FE2DD" }
+rest            = { fg = "#98876F" }
+desc            = { fg = "#D28BD8" }
+separator       = "  "
+separator_style = { fg = "#98876F" }
+
+[help]
+on      = { fg = "#D28BD8" }
+run     = { fg = "#8FE2DD" }
+desc    = { fg = "#98876F" }
+hovered = { bg = "#1C150C", bold = true }
+footer  = { fg = "#1C150C", bg = "#F2E3C6" }
+
+[filetype]
+rules = [
+  { mime = "image/*", fg = "#D28BD8" },
+  { mime = "video/*", fg = "#8FE2DD" },
+  { mime = "audio/*", fg = "#8FE2DD" },
+  { mime = "application/zip",             fg = "#FF5A4E" },
+  { mime = "application/gzip",            fg = "#FF5A4E" },
+  { mime = "application/x-tar",           fg = "#FF5A4E" },
+  { mime = "application/x-bzip",          fg = "#FF5A4E" },
+  { mime = "application/x-bzip2",         fg = "#FF5A4E" },
+  { mime = "application/x-7z-compressed", fg = "#FF5A4E" },
+  { mime = "application/x-rar",           fg = "#FF5A4E" },
+  { name = "*",  fg = "#F2E3C6" },
+  { name = "*/", fg = "#FFB648" },
+]

@@ -855,8 +855,9 @@ WSettingsPage {
                 MouseArea {
                     id: schemeChipMa
                     anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
+                    enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
+                    hoverEnabled: enabled
+                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                     onClicked: {
                         const val = schemeChip.modelData.value
                         Config.setNestedValue("appearance.palette.type", val)

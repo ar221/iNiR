@@ -11,11 +11,13 @@ DashboardCard {
     id: root
     headerText: "Network"
 
-    Component.onCompleted: NetworkUsage.acquire()
-    Component.onDestruction: NetworkUsage.release()
+    Component.onCompleted: NetworkUsage.ensureRunning()
+    Component.onDestruction: NetworkUsage.stop()
 
     Sparkline {
         Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.minimumHeight: 50
         dataPoints: NetworkUsage.downloadHistory
         lineColor: Appearance.colors.colPrimary
         currentSpeed: NetworkUsage.downloadSpeed
@@ -26,6 +28,8 @@ DashboardCard {
 
     Sparkline {
         Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.minimumHeight: 50
         dataPoints: NetworkUsage.uploadHistory
         lineColor: Appearance.colors.colTertiary
         currentSpeed: NetworkUsage.uploadSpeed

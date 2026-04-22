@@ -15,7 +15,7 @@ Rectangle {
     readonly property bool _audioFXEnabled:
         Config.options?.sidebar?.deck?.audioFX?.enable ?? true
 
-    width: 40
+    width: 42
     color: Appearance.colors.colLayer0
     border.width: 0
 
@@ -30,15 +30,17 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 14
-        anchors.bottomMargin: 14
-        spacing: 2
+        anchors.leftMargin: 3
+        anchors.rightMargin: 3
+        anchors.topMargin: 12
+        anchors.bottomMargin: 12
+        spacing: 4
 
         RailButton {
             Layout.alignment: Qt.AlignHCenter
             iconName: "music_note"
             active: root.currentView === 0
-            tooltip: "Media"
+            tooltip: "Listen"
             onClicked: root.viewRequested(0)
         }
 
@@ -46,7 +48,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             iconName: "image"
             active: root.currentView === 1
-            tooltip: "Wallpapers"
+            tooltip: "Look"
             onClicked: root.viewRequested(1)
         }
 
@@ -54,7 +56,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             iconName: "monitoring"
             active: root.currentView === 2
-            tooltip: "System"
+            tooltip: "Pulse"
             onClicked: root.viewRequested(2)
         }
 
@@ -64,7 +66,7 @@ Rectangle {
             visible: root._audioFXEnabled
             iconName: "equalizer"
             active: root.currentView === 3
-            tooltip: "Audio FX"
+            tooltip: "Shape"
             onClicked: root.viewRequested(3)
         }
 

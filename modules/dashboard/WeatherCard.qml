@@ -10,7 +10,7 @@ DashboardCard {
     id: root
     headerText: ""
 
-    visible: Weather.readyForDisplay
+    visible: Weather.enabled
 
     // Heat-gradient: cool → warm → hot across palette.
     // Maps parsed integer temp (°C/°F) from 0°C (colSubtext) to 40°C+ (colError).
@@ -26,11 +26,11 @@ DashboardCard {
     // ── Temperature + icon hero row ──
     RowLayout {
         Layout.fillWidth: true
-        spacing: 14
+        spacing: 16
 
         MaterialSymbol {
             text: Icons.getWeatherIcon(Weather.data?.wCode, Weather.isNightNow()) ?? "cloud"
-            iconSize: 36
+            iconSize: 42
             color: Appearance.colors.colSubtext
         }
 
@@ -40,7 +40,7 @@ DashboardCard {
 
             StyledText {
                 text: Weather.data?.temp ?? "--°C"
-                font.pixelSize: 28
+                font.pixelSize: 34
                 font.weight: Font.Bold
                 font.family: Appearance.font.family.monospace
                 color: root.tempColor(parseInt(Weather.data?.temp ?? "0"))
@@ -48,7 +48,7 @@ DashboardCard {
 
             StyledText {
                 text: Weather.data?.description ?? ""
-                font.pixelSize: 11
+                font.pixelSize: 12
                 color: Qt.rgba(1, 1, 1, 0.35)
                 visible: text !== ""
             }
@@ -58,7 +58,7 @@ DashboardCard {
     // ── Feels like ──
     StyledText {
         text: "Feels like " + (Weather.data?.tempFeelsLike ?? "--")
-        font.pixelSize: Appearance.font.pixelSize.smallest
+        font.pixelSize: Appearance.font.pixelSize.small
         color: Appearance.colors.colSubtext
         Layout.fillWidth: true
     }

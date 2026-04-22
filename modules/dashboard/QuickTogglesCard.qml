@@ -79,12 +79,26 @@ DashboardCard {
             icon: "nightlight",
             toggled: Hyprsunset.active,
             action: () => { Hyprsunset.toggle() }
+        },
+        {
+            id: "claudeCodeProxy",
+            label: "Claude Proxy",
+            icon: "lan",
+            toggled: ClaudeCodeProxy.active,
+            action: () => { ClaudeCodeProxy.toggle() }
+        },
+        {
+            id: "gptProxy",
+            label: "OpenAI Proxy",
+            icon: "hub",
+            toggled: GptProxy.active,
+            action: () => { GptProxy.toggle() }
         }
     ]
 
     // Filter toggles based on config
     readonly property var activeToggles: {
-        const configured = Config.options?.dashboard?.quickToggles?.toggles ?? ["dnd", "darkMode", "wifi", "powerProfile", "bluetooth", "nightLight"]
+        const configured = Config.options?.dashboard?.quickToggles?.toggles ?? ["dnd", "darkMode", "wifi", "powerProfile", "bluetooth", "nightLight", "claudeCodeProxy", "gptProxy"]
         return root.toggleDefs.filter(t => configured.includes(t.id))
     }
 

@@ -25,9 +25,6 @@ Item {
         deck.forceActiveFocus()
     }
 
-    implicitHeight: bg.implicitHeight
-    implicitWidth: bg.implicitWidth
-
     SidebarBackground {
         id: bg
         anchors.fill: parent

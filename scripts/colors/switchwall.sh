@@ -793,6 +793,141 @@ switch() {
     fi
 }
 
+##
+## Preset deployment (Apollo et al.)
+##
+## When `--preset <name>` is passed, bypass matugen's Python quantize/scheme
+## generator and deploy hand-authored Apollo-style assets from
+## `defaults/palettes/<name>/` directly. Falls back to the matugen path if the
+## palette directory is missing (with a warning) so a typo never silently
+## clobbers the user's theming.
+##
+
+PALETTES_DIR="$SHELL_ROOT/defaults/palettes"
+
+_copy_if_exists() {
+    # $1 = src, $2 = dest. Creates parent dir, overwrites, warns on missing src.
+    local src="$1" dest="$2"
+    if [[ -f "$src" ]]; then
+        mkdir -p "$(dirname "$dest")"
+        cp -f "$src" "$dest"
+        return 0
+    else
+        echo "[switchwall.sh] preset: missing source $src (skipped)" >&2
+        return 1
+    fi
+}
+
+deploy_preset() {
+    local preset="$1"
+    local preset_image="${2:-}"
+    local preset_dir="$PALETTES_DIR/$preset"
+
+    if [[ ! -d "$preset_dir" ]]; then
+        echo "[switchwall.sh] preset '$preset' not found at $preset_dir" >&2
+        return 1
+    fi
+
+    echo "[switchwall.sh] deploying preset: $preset (from $preset_dir)"
+
+    # If an image path was passed, still apply the wallpaper change (config write,
+    # thumbnail clear, restore cleanup) so the user's wallpaper selection visually
+    # propagates. Matugen's color-extraction is skipped — Apollo's palette is the
+    # authoritative source, not the wallpaper image.
+    if [[ -n "$preset_image" && -f "$preset_image" ]]; then
+        echo "[switchwall.sh] preset '$preset' also setting wallpaper image: $preset_image"
+        if [[ "$skip_config_write" != "1" ]]; then
+            set_wallpaper_path "$preset_image"
+            set_thumbnail_path ""
+        fi
+        write_generated_wallpaper_path "$preset_image"
+        remove_restore 2>/dev/null || true
+    fi
+
+    # One-shot config read for per-tool enable flags (matches switch()'s pattern).
+    # Defaults match the existing applycolor.sh / matugen defaults.
+    local _cfg="{}"
+    if [[ -f "$SHELL_CONFIG_FILE" ]]; then
+        _cfg=$(jq -c '{
+            enableAppsAndShell: (.appearance.wallpaperTheming.enableAppsAndShell // true),
+            enableTerminal:     (.appearance.wallpaperTheming.enableTerminal     // true),
+            enableQtApps:       (.appearance.wallpaperTheming.enableQtApps       // true),
+            enableChrome:       (.appearance.wallpaperTheming.enableChrome       // true),
+            enableAdwSteam:     (.appearance.wallpaperTheming.enableAdwSteam     // false),
+            enableZed:          (.appearance.wallpaperTheming.enableZed          // true),
+            enableVSCode:       (.appearance.wallpaperTheming.enableVSCode       // true)
+        }' "$SHELL_CONFIG_FILE" 2>/dev/null) || _cfg="{}"
+    fi
+    _preset_cfg() { jq -r ".$1" <<< "$_cfg" 2>/dev/null; }
+
+    local enable_apps_shell enable_terminal
+    enable_apps_shell=$(_preset_cfg enableAppsAndShell)
+    enable_terminal=$(_preset_cfg enableTerminal)
+
+    # Ensure the state dir exists before any copies land.
+    mkdir -p "$STATE_DIR/user/generated"
+
+    # --- State files ---
+    # These ARE the palette. Always deployed — downstream modules read them
+    # regardless of which tool's enable flag is set. Consumer modules self-gate.
+    local state_src="$preset_dir/state"
+    _copy_if_exists "$state_src/colors.json"           "$STATE_DIR/user/generated/colors.json"
+    _copy_if_exists "$state_src/palette.json"          "$STATE_DIR/user/generated/palette.json"
+    _copy_if_exists "$state_src/terminal.json"         "$STATE_DIR/user/generated/terminal.json"
+    _copy_if_exists "$state_src/material_colors.scss"  "$STATE_DIR/user/generated/material_colors.scss"
+    _copy_if_exists "$state_src/theme-meta.json"       "$STATE_DIR/user/generated/theme-meta.json"
+    _copy_if_exists "$state_src/color.txt"             "$STATE_DIR/user/generated/color.txt"
+
+    # --- Template outputs ---
+    # Mirrors defaults/matugen/templates.json output paths. Gated per-tool:
+    #
+    #   gtk-3.0/gtk.css, gtk-4.0/gtk.css  → apply-gtk-theme.sh (20-gtk-kde)
+    #       REGENERATES these from palette.json. Copy is technically redundant
+    #       for the auto pipeline, but we mirror matugen's behavior for parity
+    #       (and for the brief window before applycolor.sh finishes).
+    #   fuzzel_theme.ini                  → no module regenerates; we own it.
+    #   firefox-materialfox.css (state)   → no module regenerates; we own it.
+    #   steam-colortheme.css (state)      → 70-steam.sh *reads* it; we own it.
+    #   color.txt (state)                 → already handled above under state/.
+    local templates_src="$preset_dir/templates"
+
+    if [[ "$enable_apps_shell" == "true" ]]; then
+        _copy_if_exists "$templates_src/gtk-3.0/gtk.css"         "$HOME/.config/gtk-3.0/gtk.css"
+        _copy_if_exists "$templates_src/gtk-4.0/gtk.css"         "$HOME/.config/gtk-4.0/gtk.css"
+        _copy_if_exists "$templates_src/fuzzel/fuzzel_theme.ini" "$HOME/.config/fuzzel/fuzzel_theme.ini"
+    fi
+
+    # Firefox materialfox: pre-rendered CSS to the state dir. Consumed by the
+    # Firefox theming path (chrome module / userContent). Gate on enableChrome.
+    local enable_chrome
+    enable_chrome=$(_preset_cfg enableChrome)
+    if [[ "$enable_chrome" == "true" ]]; then
+        _copy_if_exists "$templates_src/firefox/materialfox.css" \
+            "$STATE_DIR/user/generated/firefox-materialfox.css"
+    fi
+
+    # Steam: 70-steam.sh reads from this state path. Always deploy the CSS so
+    # the module has fresh Apollo colors if its own enable flag flips on later;
+    # the module itself gates on enableAdwSteam before touching Steam.
+    _copy_if_exists "$templates_src/steam/adw-colortheme.css" \
+        "$STATE_DIR/user/generated/steam-colortheme.css"
+
+    # --- Fan-out ---
+    # applycolor.sh invokes every module; each self-gates on its own enable
+    # flag. Modules read the state files we just wrote:
+    #   - 10-terminals   → generate_terminal_configs.py  (terminals + tools)
+    #   - 20-gtk-kde     → apply-gtk-theme.sh            (GTK, KDE, QtCT)
+    #   - 30-editors     → inir-vscode-themegen          (VSCode family)
+    #   - 31-zed         → inir-zed-themegen             (Zed)
+    #   - 40-chrome      → apply-chrome-theme.sh         (Chrome/Firefox)
+    #   - 60-sddm, 70-steam, 80-pear-desktop, etc.
+    # All read from state/palette/terminal.json → Apollo state yields Apollo output.
+    "$SCRIPT_DIR/applycolor.sh" || echo "[switchwall.sh] preset: applycolor.sh reported non-zero exit" >&2
+
+    echo "[switchwall.sh] preset '$preset' deployed"
+    return 0
+}
+
 main() {
     imgpath=""
     mode_flag=""
@@ -802,6 +937,7 @@ main() {
     noswitch_flag=""
     skip_config_write=""
     skip_accent_write=""
+    preset_flag=""
 
     get_type_from_config() {
         jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
@@ -814,6 +950,36 @@ main() {
     set_accent_color() {
         local color="$1"
         _config_locked_write --arg color "$color" '.appearance.palette.accentColor = $color'
+    }
+
+    # Reads the active theme with retries to survive transient config truncation
+    # windows while QML FileView writes are in-flight.
+    # Fallback: use theme-meta scheme if it points at a file-palette preset.
+    read_theme_for_preset_guard() {
+        local retries=12
+        local delay_s="0.03"
+        local i
+        local parsed_theme=""
+        for ((i=0; i<retries; i++)); do
+            parsed_theme=$(jq -er '.appearance.theme // "auto"' "$SHELL_CONFIG_FILE" 2>/dev/null || true)
+            if [[ -n "$parsed_theme" ]]; then
+                printf '%s\n' "$parsed_theme"
+                return 0
+            fi
+            sleep "$delay_s"
+        done
+
+        local meta_file="$STATE_DIR/user/generated/theme-meta.json"
+        if [[ -f "$meta_file" ]]; then
+            parsed_theme=$(jq -r '.scheme // empty' "$meta_file" 2>/dev/null || true)
+            if [[ -n "$parsed_theme" && -d "$PALETTES_DIR/$parsed_theme" ]]; then
+                printf '%s\n' "$parsed_theme"
+                return 0
+            fi
+        fi
+
+        printf '%s\n' "auto"
+        return 1
     }
 
     detect_scheme_type_from_image() {
@@ -872,6 +1038,10 @@ main() {
                 skip_accent_write="1"
                 shift
                 ;;
+            --preset)
+                preset_flag="$2"
+                shift 2
+                ;;
             --monitor)
                 monitor_name="$2"
                 shift 2
@@ -892,6 +1062,33 @@ main() {
                 ;;
         esac
     done
+
+    # Preset short-circuit: skip matugen entirely, deploy hand-authored assets.
+    # Other args (--noswitch, --mode, --color, --type) are accepted but ignored
+    # under --preset; the palette is canonical by definition. If --image is also
+    # passed, the wallpaper change still propagates (deploy_preset handles it).
+    if [[ -n "$preset_flag" ]]; then
+        deploy_preset "$preset_flag" "$imgpath"
+        exit $?
+    fi
+
+    # Apollo auto-guard: if no explicit --preset was passed but config says the
+    # active theme is a file-palette preset (e.g. apollo), automatically route
+    # through the preset-deploy path. This catches every caller that runs
+    # switchwall.sh without --preset (wallpaper change, dark-mode toggle, config
+    # live-regen, etc.) and prevents matugen from clobbering Apollo state.
+    #
+    # A preset is considered file-palette if defaults/palettes/<theme>/ exists.
+    # For presets that DON'T have a file-palette tree (the 30+ M3-slot presets
+    # in ThemePresets.qml), this check is a no-op and matugen runs as before.
+    if [[ -z "$preset_flag" ]]; then
+        auto_theme=$(read_theme_for_preset_guard)
+        if [[ "$auto_theme" != "auto" && -d "$PALETTES_DIR/$auto_theme" ]]; then
+            echo "[switchwall.sh] apollo auto-guard: config theme='$auto_theme' has a file-palette; redirecting to deploy_preset (image: ${imgpath:-<none>})" >&2
+            deploy_preset "$auto_theme" "$imgpath"
+            exit $?
+        fi
+    fi
 
     # If type_flag is not set, get it from config
     if [[ -z "$type_flag" ]]; then

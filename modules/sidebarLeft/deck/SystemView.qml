@@ -27,6 +27,10 @@ import qs.services
  */
 Item {
     id: root
+    readonly property string monoFamily: (Appearance.font && Appearance.font.family && Appearance.font.family.mono)
+        ? Appearance.font.family.mono
+        : "monospace"
+    readonly property int sectionTopMargin: 2
 
     // ── Resource polling gate ──────────────────────────────────────────
     Component.onCompleted: {
@@ -161,7 +165,7 @@ Item {
     // ── Layout ────────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 8
 
         // Arc row: CPU + GPU
         RowLayout {
@@ -184,7 +188,7 @@ Item {
         }
 
         // Memory section
-        DeckLabel { text: "MEMORY" }
+        SectionHeader { text: "Memory" }
 
         // RAM
         UsageBar {
@@ -211,21 +215,24 @@ Item {
 
             Text {
                 text: "▲ " + root._fmtRate(root._netTxBytesPerSec)
-                font.family: Appearance.font.family.monospace
+                font.family: root.monoFamily
                 font.pixelSize: 12
                 color: Appearance.colors.colOnLayer1Inactive
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: "▼ " + root._fmtRate(root._netRxBytesPerSec)
-                font.family: Appearance.font.family.monospace
+                font.family: root.monoFamily
                 font.pixelSize: 12
                 color: Appearance.colors.colOnLayer1Inactive
             }
         }
 
         // Disk section
-        DeckLabel { text: "DISK" }
+        SectionHeader {
+            text: "Disk"
+            Layout.topMargin: root.sectionTopMargin
+        }
 
         // Disk: root
         UsageBar {
@@ -256,9 +263,10 @@ Item {
             hotThreshold: 0.85
         }
 
-        DeckDivider {}
-
-        DeckLabel { text: "SYSTEM" }
+        SectionHeader {
+            text: "System"
+            Layout.topMargin: root.sectionTopMargin
+        }
 
         // 2×3 grid of InstrumentCell
         GridLayout {
@@ -275,14 +283,15 @@ Item {
             InstrumentCell { label: "WM";      value: "niri" }
         }
 
-        DeckDivider {}
-
-        DeckLabel { text: "TOP PROCESSES" }
+        SectionHeader {
+            text: "Top Processes"
+            Layout.topMargin: root.sectionTopMargin
+        }
 
         // Top 3 CPU processes
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: 4
 
             Repeater {
                 model: root._topProcs
@@ -291,12 +300,12 @@ Item {
                     required property var modelData
                     required property int index
                     Layout.fillWidth: true
-                    spacing: 4
+                    spacing: 6
 
                     Text {
                         Layout.fillWidth: true
                         text: modelData.name
-                        font.family: Appearance.font.family.monospace
+                        font.family: root.monoFamily
                         font.pixelSize: 12
                         color: Appearance.colors.colOnLayer1Inactive
                         elide: Text.ElideRight

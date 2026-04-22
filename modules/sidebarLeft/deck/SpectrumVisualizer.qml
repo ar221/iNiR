@@ -238,23 +238,34 @@ Item {
             visible: false
         }
 
-        ShaderEffect {
+        Item {
             anchors.fill: parent
-            property var src: barMirrorSource
-            // Flip vertically and fade to transparent at bottom
-            fragmentShader: "
-                uniform sampler2D src;
-                uniform float qt_Opacity;
-                varying vec2 qt_TexCoord0;
-                void main() {
-                    // Sample from bottom of source (flipped)
-                    float srcY = 1.0 - qt_TexCoord0.y * (float(" + root._reflHeight + ") / float(" + root._barHeight + "));
-                    vec4 col = texture2D(src, vec2(qt_TexCoord0.x, srcY));
-                    // Fade to transparent toward bottom of reflection
-                    float fade = 1.0 - qt_TexCoord0.y;
-                    gl_FragColor = col * fade * qt_Opacity;
+
+            // Qt6-safe fallback: mirror with transform (no runtime GLSL string / .qsb warnings).
+            ShaderEffectSource {
+                id: barMirrorFallback
+                sourceItem: barContainer
+                hideSource: false
+                live: true
+                smooth: true
+                width: parent.width
+                height: barContainer.height
+                y: barContainer.height
+                transform: Scale {
+                    origin.x: barMirrorFallback.width / 2
+                    origin.y: 0
+                    yScale: -1
                 }
-            "
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "#00000000" }
+                    GradientStop { position: 1.0; color: "#B0000000" }
+                }
+            }
         }
     }
 }

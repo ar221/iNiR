@@ -47,9 +47,6 @@ Item {
     // ── Content goes inside the background Rectangle ─────────────
     default property alias content: _bg.data
 
-    implicitHeight: _bg.implicitHeight
-    implicitWidth: _bg.implicitWidth
-
     StyledRectangularShadow {
         target: _bg
         visible: !root.inirEverywhere && !root.gameModeMinimal

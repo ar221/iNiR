@@ -10,13 +10,16 @@ import qs.modules.common.functions
  * Retrofuturism aesthetic — reads like terminal section headers or instrument
  * panel labels.
  *
- * Currently used by AudioView; MediaView/SystemView still use the legacy
- * DeckDivider + DeckLabel pair. Migrate those in a separate pass if/when
- * desired.
+ * Currently used by AudioView, MediaView, and SystemView as the shared
+ * Deck section marker.
  */
 RowLayout {
     id: root
     required property string text
+    readonly property string monoFamily: (Appearance.font && Appearance.font.family && Appearance.font.family.mono)
+        ? Appearance.font.family.mono
+        : "monospace"
+    readonly property real sectionLetterSpacing: 1.25
     Layout.fillWidth: true
     spacing: 8
 
@@ -31,9 +34,9 @@ RowLayout {
     Text {
         text: root.text
         font.pixelSize: 9
-        font.weight: Font.Bold
-        font.letterSpacing: 1.5
-        font.family: Appearance.font.family.mono
+        font.weight: Font.DemiBold
+        font.letterSpacing: root.sectionLetterSpacing
+        font.family: root.monoFamily
         font.capitalization: Font.AllUppercase
         color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
     }

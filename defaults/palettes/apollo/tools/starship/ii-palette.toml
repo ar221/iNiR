@@ -1,0 +1,31 @@
+# Apollo preset — Starship palette
+# Hand-authored; deployed in place of ii-generator output when Apollo is active.
+# Apollo is already tuned — no muting/blending applied.
+
+[palettes.ii]
+primary = '#FFB648'
+onPrimary = '#2B1F10'
+secondary = '#6FC5C0'
+onSecondary = '#0E0B08'
+tertiary = '#D28BD8'
+onTertiary = '#0E0B08'
+surface = '#0E0B08'
+onSurface = '#F2E3C6'
+background = '#0E0B08'
+foreground = '#FFFBEE'
+black = '#0E0B08'
+red = '#FF5A4E'
+green = '#A8C97B'
+yellow = '#FFB648'
+blue = '#6FC5C0'
+magenta = '#D28BD8'
+cyan = '#8FE2DD'
+white = '#F2E3C6'
+bright_black = '#98876F'
+bright_red = '#FF8274'
+bright_green = '#C9E89B'
+bright_yellow = '#FFD080'
+bright_blue = '#8FE2DD'
+bright_magenta = '#EBA9F0'
+bright_cyan = '#A2F1E0'
+bright_white = '#FFFBEE'

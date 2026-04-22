@@ -13,17 +13,17 @@ Item {
 
     signal clicked()
 
-    width: 32
-    height: 32
+    width: 34
+    height: 34
 
     // Active indicator bar (left edge, positioned relative to rail parent)
     Rectangle {
         x: -root.x  // Align to rail's left edge
-        width: 2
-        height: 18
+        width: 2.5
+        height: 20
         anchors.verticalCenter: parent.verticalCenter
-        radius: 1
-        color: "#ff1100"
+        radius: 1.25
+        color: Appearance.colors.colPrimary
         opacity: root.active ? 1 : 0
         Behavior on opacity {
             enabled: Appearance.animationsEnabled
@@ -38,12 +38,39 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Appearance.rounding.normal
-        color: root.active ? Qt.rgba(1, 0.067, 0, 0.08)
-             : mouseArea.containsMouse ? Appearance.colors.colLayer1Hover
-             : "transparent"
+        color: root.active
+            ? Qt.rgba(
+                Appearance.colors.colPrimary.r,
+                Appearance.colors.colPrimary.g,
+                Appearance.colors.colPrimary.b,
+                mouseArea.pressed ? 0.18 : 0.10
+              )
+            : mouseArea.pressed
+                ? Appearance.colors.colLayer2Hover
+                : mouseArea.containsMouse ? Appearance.colors.colLayer1Hover : "transparent"
+        border.width: root.active || mouseArea.containsMouse ? 1 : 0
+        border.color: root.active
+            ? Qt.rgba(
+                Appearance.colors.colPrimary.r,
+                Appearance.colors.colPrimary.g,
+                Appearance.colors.colPrimary.b,
+                0.35
+            )
+            : Qt.rgba(
+                Appearance.colors.colOnSurfaceVariant.r,
+                Appearance.colors.colOnSurfaceVariant.g,
+                Appearance.colors.colOnSurfaceVariant.b,
+                0.14
+            )
         Behavior on color {
             enabled: Appearance.animationsEnabled
             ColorAnimation {
+                duration: Appearance.animation.elementMoveEnter.duration
+            }
+        }
+        Behavior on border.width {
+            enabled: Appearance.animationsEnabled
+            NumberAnimation {
                 duration: Appearance.animation.elementMoveEnter.duration
             }
         }
@@ -53,13 +80,21 @@ Item {
         anchors.centerIn: parent
         text: root.iconName
         iconSize: 18
-        color: root.active ? "#ff1100"
-             : Qt.rgba(
-                 Appearance.colors.colOnSurfaceVariant.r,
-                 Appearance.colors.colOnSurfaceVariant.g,
-                 Appearance.colors.colOnSurfaceVariant.b,
-                 0.4
-               )
+        color: root.active
+            ? Appearance.colors.colPrimary
+            : mouseArea.containsMouse
+                ? Qt.rgba(
+                    Appearance.colors.colOnSurfaceVariant.r,
+                    Appearance.colors.colOnSurfaceVariant.g,
+                    Appearance.colors.colOnSurfaceVariant.b,
+                    0.72
+                  )
+                : Qt.rgba(
+                    Appearance.colors.colOnSurfaceVariant.r,
+                    Appearance.colors.colOnSurfaceVariant.g,
+                    Appearance.colors.colOnSurfaceVariant.b,
+                    0.52
+                  )
         Behavior on color {
             enabled: Appearance.animationsEnabled
             ColorAnimation {

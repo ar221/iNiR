@@ -1,0 +1,34 @@
+# Apollo preset — Alacritty colors
+# Hand-authored; deployed in place of ii-generator output when Apollo is active.
+
+[colors.primary]
+background = '#0E0B08'
+foreground = '#FFFBEE'
+
+[colors.cursor]
+text   = '#0E0B08'
+cursor = '#FFFBEE'
+
+[colors.selection]
+text       = '#0E0B08'
+background = '#FFFBEE'
+
+[colors.normal]
+black   = '#0E0B08'
+red     = '#FF5A4E'
+green   = '#A8C97B'
+yellow  = '#FFB648'
+blue    = '#6FC5C0'
+magenta = '#D28BD8'
+cyan    = '#8FE2DD'
+white   = '#F2E3C6'
+
+[colors.bright]
+black   = '#98876F'
+red     = '#FF8274'
+green   = '#C9E89B'
+yellow  = '#FFD080'
+blue    = '#8FE2DD'
+magenta = '#EBA9F0'
+cyan    = '#A2F1E0'
+white   = '#FFFBEE'

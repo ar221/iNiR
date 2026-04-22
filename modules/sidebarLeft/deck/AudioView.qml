@@ -35,6 +35,9 @@ import qs.services
  */
 Item {
     id: root
+    readonly property string monoFamily: (Appearance.font && Appearance.font.family && Appearance.font.family.mono)
+        ? Appearance.font.family.mono
+        : "monospace"
 
     // Kept as a noop signal — DeckSurface still references it. PluginCard
     // (the consumer that emitted this) was cut from v1; re-add together
@@ -244,7 +247,7 @@ Item {
                                 color: "transparent"
                                 border.width: 1
                                 border.color: ColorUtils.applyAlpha("#000000", 0.20)
-                                radius: parent.radius
+                                radius: bypassBtn.radius
                             }
                         }
 
@@ -308,7 +311,7 @@ Item {
                                 text: EasyEffects.bypassed ? "BYPASSED" : "ACTIVE"
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 font.weight: Font.DemiBold
-                                font.family: Appearance.font.family.mono
+                                font.family: root.monoFamily
                                 font.letterSpacing: 0.5
                                 color: bypassBtn._isActive
                                     ? Appearance.colors.colPrimary
@@ -432,6 +435,7 @@ Item {
                                     model: EasyEffects.presets
 
                                     Rectangle {
+                                        id: presetChip
                                         required property string modelData
                                         required property int index
 
@@ -458,7 +462,7 @@ Item {
                                                 color: "transparent"
                                                 border.width: 1
                                                 border.color: ColorUtils.applyAlpha("#000000", 0.15)
-                                                radius: parent.radius
+                                                radius: presetChip.radius
                                             }
                                         }
 
@@ -494,7 +498,7 @@ Item {
                                             text: modelData
                                             font.pixelSize: Appearance.font.pixelSize.smaller
                                             font.weight: Font.DemiBold
-                                            font.family: Appearance.font.family.mono
+                                            font.family: root.monoFamily
                                             color: parent._isActive
                                                 ? Appearance.m3colors.m3onPrimary
                                                 : Qt.rgba(1, 1, 1, 0.95)
@@ -615,7 +619,7 @@ Item {
                                         text: modelData
                                         font.pixelSize: 10
                                         font.weight: Font.Bold
-                                        font.family: Appearance.font.family.mono
+                                        font.family: root.monoFamily
                                         color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
                                         Layout.preferredWidth: 12
                                     }
@@ -723,7 +727,7 @@ Item {
                                         }
                                         font.pixelSize: 9
                                         font.weight: Font.Bold
-                                        font.family: Appearance.font.family.mono
+                                        font.family: root.monoFamily
                                         color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.55)
                                         Layout.preferredWidth: 36
                                     }
@@ -788,7 +792,7 @@ Item {
                             text: Math.round(Audio.value * 100) + "%"
                             font.pixelSize: 10
                             font.weight: Font.Bold
-                            font.family: Appearance.font.family.mono
+                            font.family: root.monoFamily
                             color: ColorUtils.applyAlpha(Appearance.colors.colOnSurfaceVariant, 0.60)
                             Layout.preferredWidth: 40
                         }

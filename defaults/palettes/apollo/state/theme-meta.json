@@ -1,0 +1,19 @@
+{
+  "source": "preset",
+  "source_path": "defaults/palettes/apollo",
+  "seed_color": "#FFB648",
+  "mode": "dark",
+  "scheme": "apollo",
+  "transparent": false,
+  "soften": false,
+  "term_harmony": 0.0,
+  "term_saturation": 1.0,
+  "term_brightness": 1.0,
+  "term_bg_brightness": 1.0,
+  "color_strength": 1.0,
+  "blend_bg_fg": false,
+  "generated_by": "apollo-preset",
+  "roundingScale": 0.6,
+  "fontStyle": "mono",
+  "borderWidthScale": 1.1
+}

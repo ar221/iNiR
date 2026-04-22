@@ -1,0 +1,77 @@
+/*
+ * GTK Colors — Apollo preset (iNiR)
+ * Hand-authored; deployed in place of matugen-rendered output when Apollo is active.
+ */
+
+@define-color accent_color #FFB648;
+@define-color accent_fg_color #2B1F10;
+@define-color accent_bg_color #FFB648;
+
+@define-color window_bg_color #0E0B08;
+@define-color window_fg_color #F2E3C6;
+
+@define-color headerbar_bg_color #050302;
+@define-color headerbar_fg_color #F2E3C6;
+
+@define-color popover_bg_color #050302;
+@define-color popover_fg_color #F2E3C6;
+
+@define-color view_bg_color #0E0B08;
+@define-color view_fg_color #F2E3C6;
+
+@define-color card_bg_color #0E0B08;
+@define-color card_fg_color #F2E3C6;
+
+@define-color sidebar_bg_color @window_bg_color;
+@define-color sidebar_fg_color @window_fg_color;
+@define-color sidebar_border_color @window_bg_color;
+@define-color sidebar_backdrop_color @window_bg_color;
+
+/* Nautilus sidebar */
+.nautilus-window .sidebar,
+.nautilus-window sidebar,
+.nautilus-window placessidebar,
+.nautilus-window placessidebar list,
+placessidebar,
+placessidebar list {
+    background-color: #1C150C !important;
+    color: #F2E3C6 !important;
+    border-right: none !important;
+}
+
+placessidebar row {
+    background-color: transparent !important;
+    color: #F2E3C6 !important;
+}
+
+placessidebar row:hover {
+    background-color: alpha(#FFB648, 0.14) !important;
+}
+
+placessidebar row:selected,
+placessidebar row:selected:hover {
+    background-color: #FFB648 !important;
+    color: #2B1F10 !important;
+}
+
+.nautilus-window headerbar {
+    background-color: #050302 !important;
+    color: #F2E3C6 !important;
+}
+
+.nautilus-window .view {
+    background-color: #0E0B08 !important;
+    color: #F2E3C6 !important;
+}
+
+placessidebar image {
+    color: #F2E3C6 !important;
+}
+
+placessidebar row:selected image {
+    color: #2B1F10 !important;
+}
+
+separator.sidebar {
+    background-color: transparent !important;
+}

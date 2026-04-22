@@ -1,0 +1,28 @@
+# Apollo preset — lazygit theme
+# Hand-authored; deployed in place of ii-generator output when Apollo is active.
+# This is the theme section for lazygit config.yml
+gui:
+    theme:
+      activeBorderColor:
+        - "#FFB648"
+        - bold
+      inactiveBorderColor:
+        - "#98876F"
+      optionsTextColor:
+        - "#FFB648"
+      selectedLineBgColor:
+        - "#1C150C"
+      selectedRangeBgColor:
+        - "#1C150C"
+      cherryPickedCommitFgColor:
+        - "#FFB648"
+      cherryPickedCommitBgColor:
+        - "#1C150C"
+      markedBaseCommitFgColor:
+        - "#FFB648"
+      markedBaseCommitBgColor:
+        - "#1C150C"
+      unstagedChangesColor:
+        - "#FF5A4E"
+      defaultFgColor:
+        - "#FFFBEE"

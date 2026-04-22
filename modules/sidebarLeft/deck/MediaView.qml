@@ -27,6 +27,7 @@ import qs.services
  */
 Item {
     id: root
+    readonly property int sectionTopMargin: 2
 
     // ── Track detection ───────────────────────────────────────────────────
     readonly property bool _hasTrack: MprisController.activePlayer !== null
@@ -117,7 +118,7 @@ Item {
     // ── Main layout ───────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
-        spacing: 4
+        spacing: 6
 
         // ── Spectrum Visualizer — Task 7 ─────────────────────────────────
         SpectrumVisualizer {
@@ -296,7 +297,7 @@ Item {
         // Local audio: standard title + artist + album hierarchy.
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: 3
             visible: root._hasTrack
 
             // Track title — bigger for YouTube (20px), standard for local (17px)
@@ -601,21 +602,27 @@ Item {
         }
 
         // ── Signal Panel — Task 6 ────────────────────────────────────────
-        DeckDivider { visible: signalPanel.visible }
-        DeckLabel { text: "SIGNAL"; visible: signalPanel.visible }
+        SectionHeader {
+            text: "Signal"
+            visible: signalPanel.visible
+            Layout.topMargin: root.sectionTopMargin
+        }
         SignalPanel {
             id: signalPanel
             Layout.fillWidth: true
         }
 
         // ── Source Info — player identity + metadata ─────────────────────
-        DeckDivider { visible: root._hasTrack }
-        DeckLabel { text: "SOURCE"; visible: root._hasTrack }
+        SectionHeader {
+            text: "Source"
+            visible: root._hasTrack
+            Layout.topMargin: root.sectionTopMargin
+        }
         GridLayout {
             Layout.fillWidth: true
             columns: 2
-            columnSpacing: 4
-            rowSpacing: 4
+            columnSpacing: 6
+            rowSpacing: 6
             visible: root._hasTrack
 
             InstrumentCell {
@@ -630,8 +637,11 @@ Item {
         }
 
         // ── Queue Preview — Task 8 ───────────────────────────────────────
-        DeckDivider { visible: queuePreview._visible }
-        DeckLabel { text: "UP NEXT"; visible: queuePreview._visible }
+        SectionHeader {
+            text: "Up Next"
+            visible: queuePreview._visible
+            Layout.topMargin: root.sectionTopMargin
+        }
         QueuePreview {
             id: queuePreview
             Layout.fillWidth: true

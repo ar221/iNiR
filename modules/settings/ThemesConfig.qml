@@ -534,9 +534,12 @@ ContentPage {
 
     // Scheme Variant Section
     SettingsCardSection {
+        id: schemeVariantSection
         expanded: true
         icon: "tune"
         title: Translation.tr("Scheme Variant")
+
+        readonly property bool _apolloActive: (Config.options?.appearance?.theme ?? "auto") === "apollo"
 
         SettingsGroup {
             StyledText {
@@ -547,30 +550,64 @@ ContentPage {
                 color: Appearance.colors.colSubtext
             }
 
-            ConfigSelectionArray {
-                currentValue: Config.options?.appearance?.palette?.type ?? "auto"
-                onSelected: newValue => {
-                    Config.setNestedValue("appearance.palette.type", newValue)
-                    if (!ThemeService.isAutoTheme) {
-                        // Manual preset: apply variant immediately via MaterialThemeLoader
-                        const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                        const mode = Appearance.m3colors.darkmode ? "dark" : "light"
-                        MaterialThemeLoader.applySchemeVariant(hex, newValue, mode)
+            StyledText {
+                visible: schemeVariantSection._apolloActive
+                text: Translation.tr("Apollo is hand-authored — variants don't apply.")
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: schemeVariantArray.implicitHeight
+                enabled: !schemeVariantSection._apolloActive
+                opacity: enabled ? 1.0 : 0.45
+
+                ConfigSelectionArray {
+                    id: schemeVariantArray
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    currentValue: Config.options?.appearance?.palette?.type ?? "auto"
+                    onSelected: newValue => {
+                        Config.setNestedValue("appearance.palette.type", newValue)
+                        if (!ThemeService.isAutoTheme) {
+                            // Manual preset: apply variant immediately via MaterialThemeLoader
+                            const hex = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
+                            const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                            MaterialThemeLoader.applySchemeVariant(hex, newValue, mode)
+                        }
+                        // Auto theme: ThemeService detects palette type change in
+                        // liveRegenSignature and regenerates automatically.
                     }
-                    // Auto theme: ThemeService detects palette type change in
-                    // liveRegenSignature and regenerates automatically.
+                    options: [
+                        { "value": "auto", "displayName": Translation.tr("Auto") },
+                        { "value": "scheme-content", "displayName": Translation.tr("Content") },
+                        { "value": "scheme-expressive", "displayName": Translation.tr("Expressive") },
+                        { "value": "scheme-fidelity", "displayName": Translation.tr("Fidelity") },
+                        { "value": "scheme-fruit-salad", "displayName": Translation.tr("Fruit Salad") },
+                        { "value": "scheme-monochrome", "displayName": Translation.tr("Monochrome") },
+                        { "value": "scheme-neutral", "displayName": Translation.tr("Neutral") },
+                        { "value": "scheme-rainbow", "displayName": Translation.tr("Rainbow") },
+                        { "value": "scheme-tonal-spot", "displayName": Translation.tr("Tonal Spot") }
+                    ]
                 }
-                options: [
-                    { "value": "auto", "displayName": Translation.tr("Auto") },
-                    { "value": "scheme-content", "displayName": Translation.tr("Content") },
-                    { "value": "scheme-expressive", "displayName": Translation.tr("Expressive") },
-                    { "value": "scheme-fidelity", "displayName": Translation.tr("Fidelity") },
-                    { "value": "scheme-fruit-salad", "displayName": Translation.tr("Fruit Salad") },
-                    { "value": "scheme-monochrome", "displayName": Translation.tr("Monochrome") },
-                    { "value": "scheme-neutral", "displayName": Translation.tr("Neutral") },
-                    { "value": "scheme-rainbow", "displayName": Translation.tr("Rainbow") },
-                    { "value": "scheme-tonal-spot", "displayName": Translation.tr("Tonal Spot") }
-                ]
+
+                StyledToolTip {
+                    text: Translation.tr("Apollo is hand-authored — variants don't apply.")
+                    visible: schemeVariantSection._apolloActive && schemeVariantHoverArea.containsMouse
+                }
+
+                MouseArea {
+                    // Hover-only sensor for tooltip when the array is disabled;
+                    // does not swallow clicks (pass-through when Apollo is not active).
+                    id: schemeVariantHoverArea
+                    anchors.fill: parent
+                    hoverEnabled: schemeVariantSection._apolloActive
+                    acceptedButtons: schemeVariantSection._apolloActive ? Qt.AllButtons : Qt.NoButton
+                    propagateComposedEvents: true
+                }
             }
         }
     }
@@ -1110,6 +1147,17 @@ ContentPage {
                 onTriggered: ThemeService.regenerateAutoTheme()
             }
 
+            // Apollo-active notice for the terminal-color-adjustment sliders
+            StyledText {
+                visible: (Config.options?.appearance?.theme ?? "auto") === "apollo"
+                text: Translation.tr("Apollo is hand-authored — terminal adjustments don't apply.")
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+                Layout.topMargin: 4
+            }
+
             // Saturation slider
             ConfigSpinBox {
                 id: saturationSpinBox
@@ -1119,12 +1167,18 @@ ContentPage {
                 from: 10
                 to: 80
                 stepSize: 5
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
                 property bool _ready: false
                 Component.onCompleted: _ready = true
                 onValueChanged: {
                     if (!_ready) return;
                     Config.setNestedValue("appearance.wallpaperTheming.terminalColorAdjustments.saturation", value / 100);
                     terminalColorDebounce.restart();
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Apollo is hand-authored — terminal adjustments don't apply.")
+                    visible: !saturationSpinBox.enabled
                 }
             }
 
@@ -1137,12 +1191,18 @@ ContentPage {
                 from: 35
                 to: 75
                 stepSize: 5
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
                 property bool _ready: false
                 Component.onCompleted: _ready = true
                 onValueChanged: {
                     if (!_ready) return;
                     Config.setNestedValue("appearance.wallpaperTheming.terminalColorAdjustments.brightness", value / 100);
                     terminalColorDebounce.restart();
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Apollo is hand-authored — terminal adjustments don't apply.")
+                    visible: !brightnessSpinBox.enabled
                 }
             }
 
@@ -1155,6 +1215,7 @@ ContentPage {
                 from: 0
                 to: 100
                 stepSize: 5
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
                 property bool _ready: false
                 Component.onCompleted: _ready = true
                 onValueChanged: {
@@ -1164,7 +1225,9 @@ ContentPage {
                 }
 
                 StyledToolTip {
-                    text: Translation.tr("Shifts terminal color hues towards the theme's primary color. 0% = original colors, 100% = fully harmonized.")
+                    text: harmonySpinBox.enabled
+                        ? Translation.tr("Shifts terminal color hues towards the theme's primary color. 0% = original colors, 100% = fully harmonized.")
+                        : Translation.tr("Apollo is hand-authored — terminal adjustments don't apply.")
                 }
             }
 
@@ -1177,6 +1240,7 @@ ContentPage {
                 from: 10
                 to: 90
                 stepSize: 5
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
                 property bool _ready: false
                 Component.onCompleted: _ready = true
                 onValueChanged: {
@@ -1186,7 +1250,9 @@ ContentPage {
                 }
 
                 StyledToolTip {
-                    text: Translation.tr("Controls terminal background darkness. Lower = darker, higher = lighter. Matches shell surfaces at 50%.")
+                    text: bgBrightnessSpinBox.enabled
+                        ? Translation.tr("Controls terminal background darkness. Lower = darker, higher = lighter. Matches shell surfaces at 50%.")
+                        : Translation.tr("Apollo is hand-authored — terminal adjustments don't apply.")
                 }
             }
 

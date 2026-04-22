@@ -13,7 +13,7 @@ Rectangle {
 
     property string headerText: ""
     property bool showHeader: headerText !== ""
-    property int headerFontSize: 10
+    property int headerFontSize: 11
     default property alias content: contentColumn.data
 
     // Content-driven sizing: the card is as tall as its content needs
@@ -21,10 +21,10 @@ Rectangle {
     implicitWidth: 200
 
     clip: true
-    color: Qt.rgba(1, 1, 1, 0.025)
+    color: Qt.rgba(1, 1, 1, 0.03)
     border.width: 1
     border.color: hoverHandler.hovered ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.06)
-    radius: 16
+    radius: 18
 
     Behavior on border.color {
         enabled: Appearance.animationsEnabled
@@ -38,7 +38,7 @@ Rectangle {
     ColumnLayout {
         id: cardLayout
         anchors.fill: parent
-        anchors.margins: 18
+        anchors.margins: 20
         spacing: 12
 
         // Section header (optional)

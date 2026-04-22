@@ -33,6 +33,24 @@ ensure_opencode_themegen() {
   [[ -x "$OPENCODE_THEMEGEN_BIN" ]]
 }
 
+sync_opencode_cockpit_theme() {
+  local inir_theme="$HOME/.config/opencode/themes/inir.json"
+  local cockpit_theme="$HOME/.config/opencode/themes/cockpit.json"
+
+  [[ -f "$inir_theme" ]] || return 0
+
+  mkdir -p "$(dirname "$cockpit_theme")"
+  cp -f "$inir_theme" "$cockpit_theme"
+}
+
+opencode_tui_uses_cockpit() {
+  local tui_config="$HOME/.config/opencode/tui.json"
+  [[ -f "$tui_config" ]] || return 1
+  local current_theme
+  current_theme=$(jq -r '.theme // empty' "$tui_config" 2>/dev/null || true)
+  [[ "$current_theme" == "cockpit" ]]
+}
+
 json_color() {
   local file_path="$1"
   local key="$2"
@@ -300,12 +318,13 @@ apply_code_editors() {
   if command -v opencode &>/dev/null; then
     local enable_opencode
     enable_opencode=$(config_bool '.appearance.wallpaperTheming.enableOpenCode' false)
-    if [[ "$enable_opencode" == 'true' ]]; then
+    if [[ "$enable_opencode" == 'true' ]] || opencode_tui_uses_cockpit; then
       if ensure_opencode_themegen; then
         "$OPENCODE_THEMEGEN_BIN" "$SCSS_FILE" "$colors_file" "$TERMINAL_FILE" >> "$STATE_DIR/user/generated/code_editor_themes.log" 2>&1 || true
       else
         "$python_cmd" "$SCRIPT_DIR/opencode/theme_generator.py" "$SCSS_FILE" "$colors_file" "$TERMINAL_FILE" >> "$STATE_DIR/user/generated/code_editor_themes.log" 2>&1 || true
       fi
+      sync_opencode_cockpit_theme
     fi
   fi
 }

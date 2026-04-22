@@ -532,9 +532,12 @@ WSettingsPage {
         icon: "weather-moon"
 
         WSettingsDropdown {
+            enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
             label: Translation.tr("Mode")
             icon: "weather-moon"
-            description: Translation.tr("Light or dark color scheme")
+            description: (Config.options?.appearance?.theme ?? "auto") === "apollo"
+                ? Translation.tr("Apollo is dark-only")
+                : Translation.tr("Light or dark color scheme")
             currentValue: Appearance.m3colors.darkmode ? "dark" : "light"
             options: [
                 { value: "light", displayName: Translation.tr("Light") },
@@ -546,9 +549,12 @@ WSettingsPage {
         }
 
         WSettingsDropdown {
+            enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
             label: Translation.tr("Palette type")
             icon: "dark-theme"
-            description: Translation.tr("How colors are generated from wallpaper")
+            description: (Config.options?.appearance?.theme ?? "auto") === "apollo"
+                ? Translation.tr("Apollo is hand-authored — variants don't apply")
+                : Translation.tr("How colors are generated from wallpaper")
             currentValue: Config.options?.appearance?.palette?.type ?? "auto"
             options: [
                 { value: "auto", displayName: Translation.tr("Auto") },
@@ -589,9 +595,12 @@ WSettingsPage {
         }
 
         WSettingsSlider {
+            enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
             label: Translation.tr("Color strength")
             icon: "eyedropper"
-            description: Translation.tr("Controls how vivid wallpaper-derived accent colors are")
+            description: (Config.options?.appearance?.theme ?? "auto") === "apollo"
+                ? Translation.tr("Apollo is hand-authored — wallpaper color strength doesn't apply")
+                : Translation.tr("Controls how vivid wallpaper-derived accent colors are")
             from: 60; to: 180; stepSize: 5
             suffix: "%"
             value: Math.round((Config.options?.appearance?.wallpaperTheming?.colorStrength ?? 1.0) * 100)
@@ -614,9 +623,12 @@ WSettingsPage {
         }
 
         WSettingsSwitch {
+            enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
             label: Translation.tr("Soften colors")
             icon: "paint-bucket"
-            description: Translation.tr("Subtly soften theme colors for a more natural look")
+            description: (Config.options?.appearance?.theme ?? "auto") === "apollo"
+                ? Translation.tr("Apollo is hand-authored — soften colors doesn't apply")
+                : Translation.tr("Subtly soften theme colors for a more natural look")
             checked: Config.options?.appearance?.softenColors ?? true
             onCheckedChanged: {
                 Config.setNestedValue("appearance.softenColors", checked)

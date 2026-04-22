@@ -1,0 +1,43 @@
+# Apollo preset — Ghostty theme
+# Hand-authored; deployed in place of ii-generator output when Apollo is active.
+
+background = #0E0B08
+foreground = #FFFBEE
+
+cursor-color = #FFFBEE
+cursor-text = #0E0B08
+
+selection-background = #FFFBEE
+selection-foreground = #0E0B08
+
+# Black
+palette = 0=#0E0B08
+palette = 8=#98876F
+
+# Red
+palette = 1=#FF5A4E
+palette = 9=#FF8274
+
+# Green
+palette = 2=#A8C97B
+palette = 10=#C9E89B
+
+# Yellow
+palette = 3=#FFB648
+palette = 11=#FFD080
+
+# Blue
+palette = 4=#6FC5C0
+palette = 12=#8FE2DD
+
+# Magenta
+palette = 5=#D28BD8
+palette = 13=#EBA9F0
+
+# Cyan
+palette = 6=#8FE2DD
+palette = 14=#A2F1E0
+
+# White
+palette = 7=#F2E3C6
+palette = 15=#FFFBEE

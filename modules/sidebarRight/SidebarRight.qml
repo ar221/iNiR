@@ -27,6 +27,15 @@ SidebarShell {
         }
     }
 
+    Component {
+        id: bridgeContentComponent
+        BridgeSidebarRightContent {
+            screenWidth: shell.screenWidth
+            screenHeight: shell.screenHeight
+            panelScreen: shell.panelScreen
+        }
+    }
+
     contentComponent: Component {
         Item {
             anchors.fill: parent
@@ -41,6 +50,12 @@ SidebarShell {
                 anchors.fill: parent
                 shown: (Config?.options?.sidebar?.layout ?? "default") === "compact"
                 sourceComponent: compactContentComponent
+            }
+
+            FadeLoader {
+                anchors.fill: parent
+                shown: (Config?.options?.sidebar?.layout ?? "default") === "bridge"
+                sourceComponent: bridgeContentComponent
             }
         }
     }

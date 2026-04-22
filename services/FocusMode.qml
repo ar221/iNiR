@@ -293,7 +293,7 @@ Singleton {
 
     readonly property bool _hasSchedules: {
         const schedules = Config.options?.focusMode?.schedules
-        return schedules && Object.keys(schedules).length > 0
+        return !!schedules && Object.keys(schedules).length > 0
     }
 
     function _checkSchedule() {

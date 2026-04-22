@@ -83,7 +83,8 @@ Item {
                 Image {
                     id: avatarImage
                     anchors.fill: parent
-                    source: root.avatarPath !== "" ? ("file://" + root.avatarPath) : "file:///home/" + root._userName + "/.face"
+                    // Only load explicit configured avatar path; otherwise show monogram fallback.
+                    source: root.avatarPath !== "" ? ("file://" + root.avatarPath) : ""
                     fillMode: Image.PreserveAspectCrop
                     visible: status === Image.Ready
                     layer.enabled: true

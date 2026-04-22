@@ -306,14 +306,23 @@ DockButton {
                     }
                     // Don't generate candidates if iconName is already an absolute path
                     property bool isAbsolutePath: iconName.startsWith("/") || iconName.startsWith("file://")
-                    property var candidates: isAbsolutePath ? [] : IconThemeService.dockIconCandidates(iconName)
+                    // Avoid noisy missing-file probes from dock theme candidate chains.
+                    // Let Quickshell.iconPath() resolve through themed lookup + fallback directly.
+                    property var candidates: []
                     // candidateIndex drives source — kept as a binding so delegate recreation
                     // always starts from 0 without breaking the source binding imperatively.
                     property int candidateIndex: 0
+                    // Absolute-path fallback: if direct file icon fails, resolve by basename via theme lookup.
+                    property string fallbackIconName: ""
                     // Reset candidate chain when iconName changes (dock theme change, app swap)
-                    onCandidatesChanged: candidateIndex = 0
+                    onCandidatesChanged: {
+                        candidateIndex = 0
+                        fallbackIconName = ""
+                    }
 
                     source: {
+                        if (fallbackIconName.length > 0)
+                            return Quickshell.iconPath(fallbackIconName, "image-missing")
                         if (isAbsolutePath) {
                             return iconName.startsWith("file://") ? iconName : `file://${iconName}`
                         }
@@ -333,9 +342,8 @@ DockButton {
                                 if (baseName.includes(".")) {
                                     baseName = baseName.split(".").slice(0, -1).join(".");
                                 }
-                                // Fall through to system icon via Quickshell.iconPath by forcing
-                                // an isAbsolutePath-false path. We do this by directly loading.
-                                source = Quickshell.iconPath(baseName, "image-missing");
+                                // Keep source as a pure binding by toggling fallback state, not assigning source.
+                                fallbackIconName = baseName
                                 return;
                             }
 

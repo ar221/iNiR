@@ -63,6 +63,19 @@ Singleton {
             }
         },
         {
+            id: "apollo",
+            name: "Apollo",
+            description: "Mission-clock discipline — amber, ember, sage, teal, violet",
+            icon: "flight_takeoff",
+            colors: apolloColors,
+            tags: ["dark", "retro"],
+            meta: {
+                roundingScale: 0.6,
+                fontStyle: "mono",
+                borderWidthScale: 1.1
+            }
+        },
+        {
             id: "catppuccin-mocha",
             name: "Catppuccin Mocha",
             description: "Pastel colors on dark backgrounds",
@@ -660,6 +673,66 @@ Singleton {
         m3onSuccess: "#ffffff",
         m3successContainer: "#c0e8b8",
         m3onSuccessContainer: "#1a3a18"
+    })
+
+    // Apollo — mission-clock semantic palette (amber / ember / sage / teal / violet on warm-black)
+    // Hand-authored, bypasses matugen chroma-harmonization. Dark-only by DNA.
+    // Mapping per Apollo Colorize 2026-04 Design Spec.
+    readonly property var apolloColors: ({
+        darkmode: true,
+        m3background: "#0E0B08",
+        m3onBackground: "#F2E3C6",
+        m3surface: "#0E0B08",
+        m3surfaceDim: "#050302",
+        m3surfaceBright: "#3A2710",
+        m3surfaceContainerLowest: "#050302",
+        m3surfaceContainerLow: "#1C150C",
+        m3surfaceContainer: "#1C150C",
+        m3surfaceContainerHigh: "#2B1F10",
+        m3surfaceContainerHighest: "#3A2710",
+        m3onSurface: "#F2E3C6",
+        m3surfaceVariant: "#2B1F10",
+        m3onSurfaceVariant: "#C9B28B",
+        m3inverseSurface: "#F2E3C6",
+        m3inverseOnSurface: "#0E0B08",
+        m3outline: "#5A4420",
+        m3outlineVariant: "#3A2710",
+        m3shadow: "#000000",
+        m3scrim: "#000000",
+        m3surfaceTint: "#FFB648",
+        m3primary: "#FFB648",
+        m3onPrimary: "#2B1F10",
+        m3primaryContainer: "#3A2710",
+        m3onPrimaryContainer: "#FFD080",
+        m3inversePrimary: "#C99545",
+        m3secondary: "#6FC5C0",
+        m3onSecondary: "#0E0B08",
+        m3secondaryContainer: "#1C150C",
+        m3onSecondaryContainer: "#8FE2DD",
+        m3tertiary: "#D28BD8",
+        m3onTertiary: "#0E0B08",
+        m3tertiaryContainer: "#1C150C",
+        m3onTertiaryContainer: "#EBA9F0",
+        m3error: "#FF5A4E",
+        m3onError: "#0E0B08",
+        m3errorContainer: "#1C150C",
+        m3onErrorContainer: "#FF8274",
+        m3primaryFixed: "#FFB648",
+        m3primaryFixedDim: "#C99545",
+        m3onPrimaryFixed: "#0E0B08",
+        m3onPrimaryFixedVariant: "#5A4420",
+        m3secondaryFixed: "#6FC5C0",
+        m3secondaryFixedDim: "#6FC5C0",
+        m3onSecondaryFixed: "#0E0B08",
+        m3onSecondaryFixedVariant: "#5A4420",
+        m3tertiaryFixed: "#D28BD8",
+        m3tertiaryFixedDim: "#D28BD8",
+        m3onTertiaryFixed: "#0E0B08",
+        m3onTertiaryFixedVariant: "#5A4420",
+        m3success: "#A8C97B",
+        m3onSuccess: "#0E0B08",
+        m3successContainer: "#1C150C",
+        m3onSuccessContainer: "#C9E89B"
     })
 
     readonly property var catppuccinMochaColors: ({
@@ -3173,7 +3246,9 @@ Singleton {
         var cSource = preset.colors === "custom" ? (Config.options?.appearance?.customTheme ?? {}) : preset.colors;
         
         // Soften colors for built-in presets (not custom) if enabled in config
-        var shouldSoften = (Config.options?.appearance?.softenColors ?? true) && (id !== "custom");
+        var shouldSoften = (Config.options?.appearance?.softenColors ?? true)
+            && (id !== "custom")
+            && (id !== "apollo");
         var c = shouldSoften ? softenColors(cSource) : cSource;
 
         const m3 = Appearance.m3colors;
@@ -3237,14 +3312,37 @@ Singleton {
         if (!skipColorsJson) {
             generateColorsJson(c);
         }
-        
+
         if (applyExternal) {
-            applyExternalThemes(c);
+            if (id === "apollo") {
+                // Apollo bypasses matugen + applycolor.sh — hand-authored assets are
+                // deployed by switchwall.sh --preset apollo. Phase 3 implements the
+                // actual --preset branch in switchwall.sh; until then this invocation
+                // is a no-op downstream but the shell still recolors via the m3
+                // slots written above.
+                _apolloDeployTimer.restart();
+            } else {
+                applyExternalThemes(c);
+            }
         }
-        
+
         return true;
     }
-    
+
+    Timer {
+        id: _apolloDeployTimer
+        interval: 120  // > FileView 50ms flush timer, with margin
+        repeat: false
+        running: false
+        onTriggered: {
+            Quickshell.execDetached([
+                Directories.wallpaperSwitchScriptPath,
+                "--preset", "apollo",
+                "--noswitch"
+            ]);
+        }
+    }
+
     function applyExternalThemes(c) {
         const enableAppsAndShell = Config.options?.appearance?.wallpaperTheming?.enableAppsAndShell ?? true;
         const enableTerminal = Config.options?.appearance?.wallpaperTheming?.enableTerminal ?? true;
@@ -3679,7 +3777,9 @@ Singleton {
         
         // Apply preview (no external apps)
         var cSource = preset.colors === "custom" ? Config.options?.appearance?.customTheme : preset.colors;
-        var shouldSoften = (Config.options?.appearance?.softenColors ?? true) && (id !== "custom");
+        var shouldSoften = (Config.options?.appearance?.softenColors ?? true)
+            && (id !== "custom")
+            && (id !== "apollo");
         var c = shouldSoften ? softenColors(cSource) : cSource;
         
         applyColorsToAppearance(c);

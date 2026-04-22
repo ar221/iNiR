@@ -1559,6 +1559,32 @@ ContentPage {
                 uniform: true
 
                 ContentSubsection {
+                    title: Translation.tr("Icon profile")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.iconProfile ?? "outlined").toLowerCase();
+                            return mode === "high-contrast" ? "high-contrast" : "outlined";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.iconProfile", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Outlined"), icon: "radio_button_unchecked", value: "outlined" },
+                            { displayName: Translation.tr("High contrast"), icon: "contrast", value: "high-contrast" }
+                        ]
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+
+                ContentSubsection {
                     title: Translation.tr("Lane separator")
                     ConfigSelectionArray {
                         currentValue: {

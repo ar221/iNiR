@@ -47,7 +47,23 @@ Singleton {
     }
 
     // Toggle dark/light mode by running switchwall.sh with --mode and scheduling a reload.
+    //
+    // Apollo guard: Apollo is dark-only by DNA. If the active theme is Apollo,
+    // setDarkMode(false) would fire matugen with --mode light and clobber the
+    // Apollo state dir. Short-circuit with a toast instead. Dark → dark is a
+    // no-op (already dark), so we skip the whole branch regardless of `dark`.
     function setDarkMode(dark: bool): void {
+        const isApollo = (Config.options?.appearance?.theme ?? "auto") === "apollo"
+        if (isApollo) {
+            Quickshell.execDetached([
+                "notify-send",
+                "-a", "iNiR",
+                "-i", "flight_takeoff",
+                "Apollo is dark-only",
+                "Switch to Auto in Themes to toggle dark/light modes."
+            ])
+            return
+        }
         darkModeProc.command = [
             "/usr/bin/bash",
             Directories.wallpaperSwitchScriptPath,

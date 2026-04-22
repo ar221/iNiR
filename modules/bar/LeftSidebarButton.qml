@@ -8,6 +8,11 @@ RippleButton {
     id: root
 
     property bool showPing: false
+    readonly property color iconColor: root.toggled
+        ? Appearance.colors.colPrimary
+        : root.containsMouse
+            ? Appearance.colors.colOnLayer1
+            : Appearance.colors.colOnLayer0
 
     property real buttonPadding: 5
     implicitWidth: distroIcon.width + buttonPadding * 2
@@ -78,7 +83,15 @@ RippleButton {
         height: 19.5
         source: (Config.options?.bar?.topLeftIcon ?? 'distro') == 'distro' ? SystemInfo.distroIcon : `${Config.options?.bar?.topLeftIcon ?? 'distro'}-symbolic`
         colorize: true
-        color: Appearance.colors.colOnLayer0
+        color: root.iconColor
+
+        Behavior on color {
+            animation: ColorAnimation {
+                duration: Appearance.animation.elementMoveFast.duration
+                easing.type: Appearance.animation.elementMoveFast.type
+                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+            }
+        }
 
         Rectangle {
             opacity: root.showPing ? 1 : 0

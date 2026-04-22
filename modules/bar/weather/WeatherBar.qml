@@ -11,39 +11,10 @@ import QtQuick.Layouts
 MouseArea {
     id: root
     property bool hovered: false
-    property bool _weatherLeased: false
     implicitWidth: rowLayout.implicitWidth + 10 * 2
     implicitHeight: Appearance.sizes.barHeight
 
     hoverEnabled: true
-
-    function _syncWeatherLease() {
-        const active = root.visible && Weather.enabled
-        if (active && !root._weatherLeased) {
-            Weather.acquire()
-            root._weatherLeased = true
-        } else if (!active && root._weatherLeased) {
-            Weather.release()
-            root._weatherLeased = false
-        }
-    }
-
-    Component.onCompleted: root._syncWeatherLease()
-    Component.onDestruction: {
-        if (root._weatherLeased) {
-            Weather.release()
-            root._weatherLeased = false
-        }
-    }
-
-    onVisibleChanged: root._syncWeatherLease()
-
-    Connections {
-        target: Weather
-        function onEnabledChanged() {
-            root._syncWeatherLease()
-        }
-    }
 
     /**
      * Maps a weather temperature to a heat-encoded color.
@@ -86,7 +57,7 @@ MouseArea {
     }
 
     onPressed: {
-        Weather.forceRefresh();
+        Weather.getData();
         Quickshell.execDetached(["/usr/bin/notify-send",
             Translation.tr("Weather"),
             Translation.tr("Refreshing (manually triggered)")
@@ -101,7 +72,7 @@ MouseArea {
         MaterialSymbol {
             fill: 0
             text: Icons.getWeatherIcon(Weather.data?.wCode, Weather.isNightNow()) ?? "cloud"
-            iconSize: Appearance.font.pixelSize.large
+            iconSize: Appearance.font.pixelSize.normal
             color: Appearance.angelEverywhere ? Appearance.angel.colText
                 : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
             Layout.alignment: Qt.AlignVCenter
@@ -110,6 +81,7 @@ MouseArea {
         StyledText {
             visible: true
             font.pixelSize: Appearance.font.pixelSize.small
+            font.weight: Font.Medium
             color: Appearance.angelEverywhere ? Appearance.angel.colText
                 : Appearance.inirEverywhere ? Appearance.inir.colText : root.weatherTempColor()
             text: Weather.data?.temp ?? "--°"

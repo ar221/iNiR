@@ -5,11 +5,10 @@ import qs.services
 
 RowLayout {
     id: root
-    spacing: 12
+    spacing: 10
 
     // Ensure resource polling is active while rings are visible
-    Component.onCompleted: ResourceUsage.acquire()
-    Component.onDestruction: ResourceUsage.release()
+    Component.onCompleted: ResourceUsage.ensureRunning()
 
     // CPU ring — primary family (compute = primary role)
     MiniRing {

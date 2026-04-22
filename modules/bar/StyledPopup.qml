@@ -18,11 +18,37 @@ LazyLoader {
 
     signal requestClose()
 
-    // Decouple hover from active to allow exit animations
-    property bool _shouldBeActive: root.hoverActivates && hoverTarget && (hoverTarget.containsMouse ?? hoverTarget.buttonHovered ?? false)
+    // Decouple hover from active to allow exit animations and pointer travel from anchor -> popup
+    property bool _targetHovered: root.hoverActivates && hoverTarget && (hoverTarget.containsMouse ?? hoverTarget.buttonHovered ?? false)
+    property bool _lingerActive: false
+    property bool _shouldBeActive: _targetHovered || root.popupHovered || _lingerActive
     property bool _animatingClose: false
 
     active: _shouldBeActive || _animatingClose
+
+    Timer {
+        id: lingerTimer
+        interval: 220
+        repeat: false
+        onTriggered: root._lingerActive = false
+    }
+
+    on_TargetHoveredChanged: {
+        if (_targetHovered) {
+            root._lingerActive = false;
+            lingerTimer.stop();
+        } else {
+            root._lingerActive = true;
+            lingerTimer.restart();
+        }
+    }
+
+    onPopupHoveredChanged: {
+        if (root.popupHovered) {
+            root._lingerActive = false;
+            lingerTimer.stop();
+        }
+    }
 
     on_ShouldBeActiveChanged: {
         if (_shouldBeActive) {
@@ -107,6 +133,7 @@ LazyLoader {
 
         StyledRectangularShadow {
             target: popupBackground
+            visible: popupBackground.opacity > 0.03
         }
 
         Rectangle {

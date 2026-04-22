@@ -167,6 +167,8 @@ Rectangle {
             active: root.showSchemeChips
             sourceComponent: ConfigSelectionArray {
                 Layout.fillWidth: true
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
+                opacity: enabled ? 1.0 : 0.45
                 currentValue: Config.options?.appearance?.palette?.type ?? "auto"
                 onSelected: newValue => {
                     Config.setNestedValue("appearance.palette.type", newValue)

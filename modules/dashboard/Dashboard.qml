@@ -109,8 +109,8 @@ Scope {
             // Offset slightly toward top (closer to bar)
             anchors.verticalCenterOffset: -(parent.height * 0.04)
 
-            width: Math.min(parent.width * 0.7, 1200)
-            height: Math.min(parent.height * 0.85, 940)
+            width: Math.min(parent.width * 0.9, 1640)
+            height: Math.min(parent.height * 0.94, 1100)
 
             clip: true
             color: Appearance.colors.colLayer0
@@ -168,7 +168,7 @@ Scope {
             // ── Content ──
             DashboardContent {
                 anchors.fill: parent
-                anchors.margins: 28
+                anchors.margins: 30
             }
 
             // ── Keyboard navigation ──
@@ -182,4 +182,18 @@ Scope {
         }
     }
 
+    // ── IPC handler ──
+    IpcHandler {
+        target: "dashboard"
+
+        function toggle(): void {
+            GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen
+        }
+        function open(): void {
+            GlobalStates.dashboardOpen = true
+        }
+        function close(): void {
+            GlobalStates.dashboardOpen = false
+        }
+    }
 }
