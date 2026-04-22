@@ -773,6 +773,10 @@ Singleton {
                 }
                 property bool verbose: true
                 property bool vertical: false
+                property JsonObject agentProfile: JsonObject {
+                    property bool enabled: false
+                    property string current: "balanced" // "local-only", "balanced", "quality-max", "budget"
+                }
                 property JsonObject vignette: JsonObject {
                     property bool enabled: false
                     property real intensity: 0.6
@@ -919,6 +923,11 @@ Singleton {
                     property bool calendar: true
                     property bool weather: true
                     property bool notifications: true
+                    property bool agentContext: false
+                    property bool agentLoop: false
+                    property bool sessionReview: false
+                    property bool agentTrust: false
+                    property bool agentCompanion: false
                 }
                 property JsonObject profile: JsonObject {
                     property string displayName: ""
@@ -927,11 +936,23 @@ Singleton {
                 }
                 property JsonObject quickToggles: JsonObject {
                     property int columns: 3
-                    property list<string> toggles: ["dnd", "darkMode", "wifi", "powerProfile", "bluetooth", "nightLight"]
+                    property list<string> toggles: ["dnd", "darkMode", "wifi", "powerProfile", "bluetooth", "nightLight", "claudeCodeProxy", "gptProxy"]
                 }
                 property JsonObject layout: JsonObject {
                     property int leftColumnWidth: 260
-                    property int rightColumnWidth: 240
+                    property int rightColumnWidth: 300
+                }
+                property JsonObject agentCockpit: JsonObject {
+                    property bool enable: true
+                    property bool mobileCompanion: false
+                    property bool mobilePayloadCompact: true
+                    property bool trustPanel: true
+                    property bool powerKeymap: true
+                }
+                property JsonObject agentTrust: JsonObject {
+                    property string mode: "balanced" // "strict" | "balanced" | "open"
+                    property bool allowSafeInBalanced: true
+                    property list<string> safeCommandPrefixes: ["pwd", "ls", "whoami", "uname", "date", "uptime", "git status", "git diff"]
                 }
             }
 

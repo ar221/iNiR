@@ -530,6 +530,10 @@
     },
     "verbose": true,
     "vertical": false,
+    "agentProfile": {
+      "enabled": false,
+      "current": "balanced"
+    },
     "weather": {
       "city": "",
       "enable": true,
@@ -588,7 +592,41 @@
   "dashboard": {
     "layout": {
       "leftColumnWidth": 260,
-      "rightColumnWidth": 240
+      "rightColumnWidth": 300
+    },
+    "agentCockpit": {
+      "enable": true,
+      "mobileCompanion": false,
+      "mobilePayloadCompact": true,
+      "trustPanel": true,
+      "powerKeymap": true
+    },
+    "agentTrust": {
+      "mode": "balanced",
+      "allowSafeInBalanced": true,
+      "safeCommandPrefixes": [
+        "pwd",
+        "ls",
+        "whoami",
+        "uname",
+        "date",
+        "uptime",
+        "git status",
+        "git diff"
+      ]
+    },
+    "quickToggles": {
+      "columns": 3,
+      "toggles": [
+        "dnd",
+        "darkMode",
+        "wifi",
+        "powerProfile",
+        "bluetooth",
+        "nightLight",
+        "claudeCodeProxy",
+        "gptProxy"
+      ]
     },
     "sections": {
       "profile": true,
@@ -598,7 +636,12 @@
       "performance": true,
       "calendar": true,
       "weather": true,
-      "notifications": true
+      "notifications": true,
+      "agentContext": false,
+      "agentLoop": false,
+      "sessionReview": false,
+      "agentTrust": false,
+      "agentCompanion": false
     },
     "activityConsole": {
       "enable": true,

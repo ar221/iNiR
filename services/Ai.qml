@@ -26,6 +26,7 @@ Singleton {
     property Component geminiApiStrategy: GeminiApiStrategy {}
     property Component openaiApiStrategy: OpenAiApiStrategy {}
     property Component mistralApiStrategy: MistralApiStrategy {}
+    property Component anthropicApiStrategy: AnthropicApiStrategy {}
     readonly property string interfaceRole: "interface"
     readonly property string apiKeyEnvVarName: "API_KEY"
 
@@ -358,6 +359,52 @@ Singleton {
             ],
             "search": [],
             "none": [],
+        },
+        "anthropic": {
+            "functions": [
+                {
+                    "name": "get_shell_config",
+                    "description": "Get the desktop shell config file contents",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {},
+                    }
+                },
+                {
+                    "name": "set_shell_config",
+                    "description": "Set a field in the desktop graphical shell config file. Must only be used after `get_shell_config`.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "description": "The key to set, e.g. `bar.borderless`. MUST NOT BE GUESSED, use `get_shell_config` to see what keys are available before setting.",
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "The value to set, e.g. `true`"
+                            }
+                        },
+                        "required": ["key", "value"]
+                    }
+                },
+                {
+                    "name": "run_shell_command",
+                    "description": "Run a shell command in bash and get its output. Use this only for quick commands that don't require user interaction. For commands that require interaction, ask the user to run manually instead.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "command": {
+                                "type": "string",
+                                "description": "The bash command to run",
+                            }
+                        },
+                        "required": ["command"]
+                    }
+                }
+            ],
+            "search": [],
+            "none": []
         }
     }
     property list<var> availableTools: {
@@ -431,11 +478,58 @@ Singleton {
         // Validate saved model still exists, fallback to first available
         return (saved && root.models[saved]) ? saved : modelList[0]
     }
+    readonly property var currentModel: models[currentModelId] ?? null
+    readonly property bool requestRunning: (requester?.running ?? false) || _pendingRequest
+    readonly property bool waitingForApproval: {
+        for (let i = 0; i < root.messageIDs.length; i++) {
+            const id = root.messageIDs[i]
+            const msg = root.messageByID[id]
+            if (msg?.functionPending === true)
+                return true
+        }
+        return false
+    }
+    readonly property string providerLabel: {
+        const model = root.currentModel
+        if (!model) return "none"
+
+        if ((model.endpoint ?? "").includes("localhost") || (model.endpoint ?? "").includes("127.0.0.1"))
+            return "local"
+
+        const keyId = String(model.key_id ?? "")
+        if (keyId === "openrouter") return "openrouter"
+        if (keyId === "gemini") return "google"
+        if (keyId === "mistral") return "mistral"
+        if (keyId === "claude-proxy") return "anthropic"
+
+        const fmt = String(model.api_format ?? "")
+        if (fmt === "anthropic") return "anthropic"
+        if (fmt.length > 0) return fmt
+        return "remote"
+    }
+    readonly property string trustMode: {
+        const mode = String(Config.options?.dashboard?.agentTrust?.mode ?? "balanced").toLowerCase()
+        return (mode === "strict" || mode === "open") ? mode : "balanced"
+    }
+    readonly property bool allowSafeInBalanced: Config.options?.dashboard?.agentTrust?.allowSafeInBalanced ?? true
+
+    function isSafeCommand(command: string): bool {
+        const cmd = String(command ?? "").trim().toLowerCase()
+        if (cmd.length === 0) return false
+        const prefixes = Config.options?.dashboard?.agentTrust?.safeCommandPrefixes ?? []
+        for (let i = 0; i < prefixes.length; i++) {
+            const prefix = String(prefixes[i] ?? "").trim().toLowerCase()
+            if (prefix.length > 0 && cmd.startsWith(prefix))
+                return true
+        }
+        return false
+    }
 
     property var apiStrategies: {
         "openai": openaiApiStrategy.createObject(this),
         "gemini": geminiApiStrategy.createObject(this),
         "mistral": mistralApiStrategy.createObject(this),
+        "anthropic": anthropicApiStrategy.createObject(this),
     }
     property ApiStrategy currentApiStrategy: apiStrategies[models[currentModelId]?.api_format || "openai"]
 
@@ -1022,6 +1116,19 @@ Singleton {
         }
     }
 
+    function cancelCurrentRequest() {
+        _pendingRequest = false
+        if (!requester.running)
+            return
+
+        requester.running = false
+        if (requester.message && !requester.message.done) {
+            requester.message.content += "\n\n[Interrupted by user]"
+            requester.message.rawContent += "\n\n[Interrupted by user]"
+            requester.markDone()
+        }
+    }
+
     function sendUserMessage(message) {
         if (message.length === 0) return;
         root.addMessage(message, "user");
@@ -1130,7 +1237,17 @@ Singleton {
             const contentToAppend = `\n\n**Command execution request**\n\n\`\`\`command\n${args.command}\n\`\`\``;
             message.rawContent += contentToAppend;
             message.content += contentToAppend;
-            message.functionPending = true; // Use thinking to indicate the command is waiting for approval
+
+            const cmd = String(args.command ?? "")
+            const autoApprove = (root.trustMode === "open")
+                || (root.trustMode === "balanced" && root.allowSafeInBalanced && root.isSafeCommand(cmd))
+
+            if (autoApprove) {
+                message.functionPending = true
+                root.approveCommand(message)
+            } else {
+                message.functionPending = true; // Wait for explicit approval in strict/unsafe cases
+            }
         }
         else root.addMessage(Translation.tr("Unknown function call: %1").arg(name), "assistant");
     }

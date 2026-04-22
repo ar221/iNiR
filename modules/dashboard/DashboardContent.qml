@@ -15,7 +15,7 @@ Item {
     property bool _weatherLeased: false
 
     readonly property int leftColumnWidth: Config.options?.dashboard?.layout?.leftColumnWidth ?? 260
-    readonly property int rightColumnWidth: Config.options?.dashboard?.layout?.rightColumnWidth ?? 240
+    readonly property int rightColumnWidth: Config.options?.dashboard?.layout?.rightColumnWidth ?? 300
     readonly property bool sectionProfile: Config.options?.dashboard?.sections?.profile ?? true
     readonly property bool sectionSystemInfo: Config.options?.dashboard?.sections?.systemInfo ?? true
     readonly property bool sectionQuickToggles: Config.options?.dashboard?.sections?.quickToggles ?? true
@@ -25,6 +25,13 @@ Item {
     readonly property bool sectionWeather: Config.options?.dashboard?.sections?.weather ?? true
     readonly property bool sectionNotifications: Config.options?.dashboard?.sections?.notifications ?? true
     readonly property bool sectionActivityConsole: Config.options?.dashboard?.activityConsole?.enable ?? true
+    readonly property bool sectionAgentContext: Config.options?.dashboard?.sections?.agentContext ?? false
+    readonly property bool sectionAgentLoop: Config.options?.dashboard?.sections?.agentLoop ?? false
+    readonly property bool sectionSessionReview: Config.options?.dashboard?.sections?.sessionReview ?? false
+    readonly property bool sectionAgentTrust: (Config.options?.dashboard?.sections?.agentTrust ?? false)
+        && (Config.options?.dashboard?.agentCockpit?.trustPanel ?? true)
+    readonly property bool sectionAgentCompanion: (Config.options?.dashboard?.sections?.agentCompanion ?? false)
+        && (Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false)
 
     RowLayout {
         anchors.fill: parent
@@ -69,53 +76,109 @@ Item {
         }
 
         // ════════════════════════════════════════════
-        // CENTER COLUMN — Performance, Network & Activity
+        // CENTER COLUMN — Performance, Network & Activity (scrollable)
         // ════════════════════════════════════════════
-        ColumnLayout {
+        Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 12
+            contentHeight: centerColumn.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            PerformanceBarsCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 270
-                visible: root.sectionPerformance
-            }
+            ColumnLayout {
+                id: centerColumn
+                width: parent.width
+                spacing: 12
 
-            NetworkSparklinesCard {
-                Layout.fillWidth: true
-                visible: root.sectionPerformance
-            }
+                PerformanceBarsCard {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 270
+                    visible: root.sectionPerformance
+                }
 
-            ActivityConsoleCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                visible: root.sectionActivityConsole
+                NetworkSparklinesCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionPerformance
+                }
+
+                ActivityConsoleCard {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
+                    visible: root.sectionActivityConsole
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentContext
+                    sourceComponent: AgentContextCard {
+                        Layout.fillWidth: true
+                    }
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentLoop
+                    sourceComponent: AgentLoopCard {
+                        Layout.fillWidth: true
+                    }
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentTrust
+                    sourceComponent: AgentTrustCard {
+                        Layout.fillWidth: true
+                    }
+                }
             }
         }
 
         // ════════════════════════════════════════════
-        // RIGHT COLUMN — Calendar, Weather, Notifications
+        // RIGHT COLUMN — Calendar, Weather, Notifications (scrollable)
         // ════════════════════════════════════════════
-        ColumnLayout {
+        Flickable {
             Layout.preferredWidth: root.rightColumnWidth
             Layout.fillHeight: true
-            spacing: 12
+            contentHeight: rightColumn.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            CalendarCard {
-                Layout.fillWidth: true
-                visible: root.sectionCalendar
-            }
+            ColumnLayout {
+                id: rightColumn
+                width: parent.width
+                spacing: 12
 
-            WeatherCard {
-                Layout.fillWidth: true
-                visible: root.sectionWeather
-            }
+                CalendarCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionCalendar
+                }
 
-            NotificationsCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                visible: root.sectionNotifications
+                WeatherCard {
+                    Layout.fillWidth: true
+                    visible: root.sectionWeather
+                }
+
+                NotificationsCard {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: (root.sectionSessionReview || root.sectionAgentCompanion) ? 260 : 340
+                    visible: root.sectionNotifications
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionSessionReview
+                    sourceComponent: SessionReviewCard {
+                        Layout.fillWidth: true
+                    }
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentCompanion
+                    sourceComponent: AgentCompanionCard {
+                        Layout.fillWidth: true
+                    }
+                }
             }
         }
     }

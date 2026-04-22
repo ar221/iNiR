@@ -14,3 +14,8 @@ PerformanceBarsCard 1.0 PerformanceBarsCard.qml
 Sparkline 1.0 Sparkline.qml
 NetworkSparklinesCard 1.0 NetworkSparklinesCard.qml
 ActivityConsoleCard 1.0 ActivityConsoleCard.qml
+AgentContextCard 1.0 AgentContextCard.qml
+AgentLoopCard 1.0 AgentLoopCard.qml
+SessionReviewCard 1.0 SessionReviewCard.qml
+AgentTrustCard 1.0 AgentTrustCard.qml
+AgentCompanionCard 1.0 AgentCompanionCard.qml

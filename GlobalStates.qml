@@ -16,6 +16,9 @@ Singleton {
     property bool crosshairOpen: false
     property bool sidebarLeftOpen: false
     property bool sidebarRightOpen: false
+    // Sidebar dialog open requests (consumed by SidebarRight/Compact/Bridge content)
+    property bool requestWifiDialog: false
+    property bool requestBluetoothDialog: false
     property bool mediaControlsOpen: false
     property bool osdBrightnessOpen: false
     property bool osdVolumeOpen: false

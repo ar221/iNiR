@@ -14,6 +14,25 @@ ContentPage {
 
     property bool isIiActive: Config.options?.panelFamily !== "waffle"
 
+    function normalizeSafePrefixes(rawText) {
+        const seen = {};
+        const out = [];
+        const parts = String(rawText ?? "").split(/[\n,]/);
+        for (let i = 0; i < parts.length; i++) {
+            const value = String(parts[i] ?? "").trim();
+            if (!value || seen[value])
+                continue;
+            seen[value] = true;
+            out.push(value);
+        }
+        return out;
+    }
+
+    function safePrefixesAsText() {
+        const items = Config.options?.dashboard?.agentTrust?.safeCommandPrefixes ?? [];
+        return items.join("\n");
+    }
+
     SettingsCardSection {
         expanded: false
         icon: "point_scan"
@@ -813,6 +832,154 @@ ContentPage {
                 onCheckedChanged: Config.setNestedValue("controlPanel.keepLoaded", checked)
                 StyledToolTip {
                     text: Translation.tr("Keep the quick settings panel in memory to reduce opening delay")
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "smart_toy"
+        title: Translation.tr("Agent cockpit")
+
+        SettingsGroup {
+            ContentSubsection {
+                title: Translation.tr("Dashboard sections")
+
+                SettingsSwitch {
+                    buttonIcon: "dataset"
+                    text: Translation.tr("Context staging")
+                    checked: Config.options?.dashboard?.sections?.agentContext ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.sections.agentContext", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "model_training"
+                    text: Translation.tr("Agent loop")
+                    checked: Config.options?.dashboard?.sections?.agentLoop ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.sections.agentLoop", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "history"
+                    text: Translation.tr("Session review")
+                    checked: Config.options?.dashboard?.sections?.sessionReview ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.sections.sessionReview", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "policy"
+                    text: Translation.tr("Trust policy card")
+                    checked: Config.options?.dashboard?.sections?.agentTrust ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.sections.agentTrust", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "phone_iphone"
+                    text: Translation.tr("Mobile companion card")
+                    checked: Config.options?.dashboard?.sections?.agentCompanion ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.sections.agentCompanion", checked)
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Command trust policy")
+
+                ConfigSelectionArray {
+                    currentValue: {
+                        const mode = String(Config.options?.dashboard?.agentTrust?.mode ?? "balanced").toLowerCase()
+                        return (mode === "strict" || mode === "open") ? mode : "balanced"
+                    }
+                    onSelected: newValue => {
+                        Config.setNestedValue("dashboard.agentTrust.mode", newValue)
+                    }
+                    options: [
+                        { displayName: Translation.tr("Strict (manual approval)"), icon: "gpp_bad", value: "strict" },
+                        { displayName: Translation.tr("Balanced"), icon: "gpp_maybe", value: "balanced" },
+                        { displayName: Translation.tr("Open (auto-approve)"), icon: "gpp_good", value: "open" }
+                    ]
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "dashboard_customize"
+                    text: Translation.tr("Show Trust Policy card on dashboard")
+                    checked: Config.options?.dashboard?.agentCockpit?.trustPanel ?? true
+                    onCheckedChanged: Config.setNestedValue("dashboard.agentCockpit.trustPanel", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "smartphone"
+                    text: Translation.tr("Enable mobile companion surface")
+                    checked: Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.agentCockpit.mobileCompanion", checked)
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "format_list_bulleted"
+                    text: Translation.tr("Compact Telegram payload mode")
+                    checked: Config.options?.dashboard?.agentCockpit?.mobilePayloadCompact ?? true
+                    enabled: Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false
+                    onCheckedChanged: Config.setNestedValue("dashboard.agentCockpit.mobilePayloadCompact", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Exports short summary + action hints for messenger consumption.")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "rule_settings"
+                    text: Translation.tr("Auto-approve safe commands in Balanced")
+                    checked: Config.options?.dashboard?.agentTrust?.allowSafeInBalanced ?? true
+                    enabled: (Config.options?.dashboard?.agentTrust?.mode ?? "balanced") === "balanced"
+                    onCheckedChanged: Config.setNestedValue("dashboard.agentTrust.allowSafeInBalanced", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Uses configured safe command prefixes (one per line below).")
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    StyledText {
+                        text: Translation.tr("Safe command prefixes (one per line)")
+                        color: Appearance.colors.colOnSurfaceVariant
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+
+                    MaterialTextArea {
+                        id: safePrefixesInput
+                        Layout.fillWidth: true
+                        implicitHeight: 110
+                        placeholderText: Translation.tr("pwd\nls\nwhoami\nuname\ndate\nuptime\ngit status\ngit diff")
+                        wrapMode: TextEdit.Wrap
+                        text: root.safePrefixesAsText()
+                        onTextEdited: {
+                            const parsed = root.normalizeSafePrefixes(text)
+                            Config.setNestedValue("dashboard.agentTrust.safeCommandPrefixes", parsed)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Translation.tr("Prefixes are matched with startsWith().")
+                            color: Appearance.colors.colSubtext
+                            font.pixelSize: Appearance.font.pixelSize.smallie
+                        }
+
+                        RippleButtonWithIcon {
+                            materialIcon: "refresh"
+                            mainText: Translation.tr("Reset defaults")
+                            onClicked: {
+                                Config.setNestedValue("dashboard.agentTrust.safeCommandPrefixes", [
+                                    "pwd", "ls", "whoami", "uname", "date", "uptime", "git status", "git diff"
+                                ])
+                            }
+                        }
+                    }
                 }
             }
         }

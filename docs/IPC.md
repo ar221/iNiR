@@ -216,7 +216,7 @@ Open the settings panel. GUI config so you don't have to edit JSON like it's 200
 Page names are case-insensitive and match the sidebar label (e.g. `Wallpaper`, `Keybinds`, `Compositor`, `Desktop Widgets`).
 
 ```kdl
-bind "Super+Comma" { spawn "qs" "msg" "-c" "inir" "settings" "open"; }
+bind "Super+Comma" { spawn "inir" "settings"; }
 ```
 
 Deep-link examples:

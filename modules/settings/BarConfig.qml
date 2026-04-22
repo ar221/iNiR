@@ -22,6 +22,49 @@ ContentPage {
     readonly property bool isAutoHide: Config.options?.bar?.autoHide?.enable ?? false
     readonly property bool isBorderless: Config.options?.bar?.borderless ?? false
     readonly property bool showBackground: Config.options?.bar?.showBackground ?? true
+    readonly property string stylePresetSummary: {
+        const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
+        if (preset === "clean")
+            return Translation.tr("Clean keeps high contrast with tighter borders and minimal translucency.")
+        if (preset === "glass")
+            return Translation.tr("Glass adds softer surfaces with stronger translucency and a lighter divider feel.")
+        return Translation.tr("Dusky prioritizes compact, command-strip clarity with a grounded, dense look.")
+    }
+
+    readonly property bool isRecommendedBarProfileActive: {
+        const style = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
+        const density = String(Config.options?.bar?.density ?? "compact").toLowerCase()
+        const lane = String(Config.options?.bar?.laneSeparator ?? "off").toLowerCase()
+        const ambient = String(Config.options?.bar?.ambientVisibility ?? "hidden").toLowerCase()
+        return (style === "dusky" && density === "compact" && lane === "off" && ambient === "hidden")
+    }
+
+    readonly property string styleDisplayName: {
+        const style = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
+        return style === "clean" ? Translation.tr("Clean") : style === "glass" ? Translation.tr("Glass") : Translation.tr("Dusky")
+    }
+
+    readonly property string densityDisplayName: {
+        const density = String(Config.options?.bar?.density ?? "compact").toLowerCase()
+        return density === "airy" ? Translation.tr("Airy") : density === "default" ? Translation.tr("Default") : Translation.tr("Compact")
+    }
+
+    readonly property string separatorDisplayName: {
+        const mode = String(Config.options?.bar?.laneSeparator ?? "off").toLowerCase()
+        return mode === "strong" ? Translation.tr("Strong") : mode === "subtle" ? Translation.tr("Subtle") : Translation.tr("Off")
+    }
+
+    readonly property string ambientDisplayName: {
+        const mode = String(Config.options?.bar?.ambientVisibility ?? "hidden").toLowerCase()
+        return mode === "always" ? Translation.tr("Always") : mode === "auto" ? Translation.tr("Auto") : Translation.tr("Hidden")
+    }
+
+    readonly property string iconProfileSummary: {
+        const profile = String(Config.options?.bar?.iconProfile ?? "outlined").toLowerCase()
+        return profile === "high-contrast"
+            ? Translation.tr("High-contrast uses filled icon outlines and thicker fills for stronger icon legibility.")
+            : Translation.tr("Outlined keeps a lighter profile and relies on stroke-based symbols for a cleaner look.")
+    }
 
     // Global style detection
     readonly property string currentGlobalStyle: Config.options?.appearance?.globalStyle ?? "material"
@@ -178,6 +221,24 @@ ContentPage {
                         ]
                     }
                 }
+
+                ContentSubsection {
+                    title: Translation.tr("Icon profile")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.iconProfile ?? "outlined").toLowerCase();
+                            return mode === "high-contrast" ? "high-contrast" : "outlined";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.iconProfile", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Outlined"), icon: "radio_button_unchecked", value: "outlined" },
+                            { displayName: Translation.tr("High contrast"), icon: "contrast", value: "high-contrast" }
+                        ]
+                    }
+                }
             }
 
             ConfigRow {
@@ -230,6 +291,46 @@ ContentPage {
             ConflictNote {
                 icon: "view_week"
                 text: Translation.tr("Ambient lane controls weather/resource tail behavior on narrow displays.")
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                MaterialSymbol {
+                    text: root.isRecommendedBarProfileActive ? "verified" : "info"
+                    iconSize: Appearance.font.pixelSize.normal
+                    color: root.isRecommendedBarProfileActive ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    color: root.isRecommendedBarProfileActive ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                    text: {
+                        if (root.isRecommendedBarProfileActive) {
+                            return Translation.tr("Recommended profile: ") + root.styleDisplayName + " / " + root.densityDisplayName + " / " + root.separatorDisplayName + " / " + root.ambientDisplayName
+                        }
+                        return Translation.tr("Current profile: ") + root.styleDisplayName + " / " + root.densityDisplayName + " / " + root.separatorDisplayName + " / " + root.ambientDisplayName
+                    }
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: root.stylePresetSummary
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                wrapMode: Text.WordWrap
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: root.iconProfileSummary
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                wrapMode: Text.WordWrap
             }
 
             // Corner style conflict notes
@@ -506,6 +607,37 @@ ContentPage {
             }
 
             SettingsDivider {}
+
+            ContentSubsection {
+                title: Translation.tr("Agent provider profile")
+
+                SettingsSwitch {
+                    buttonIcon: "auto_awesome"
+                    text: Translation.tr("Show provider profile chip")
+                    checked: Config.options?.bar?.agentProfile?.enabled ?? false
+                    onCheckedChanged: Config.setNestedValue("bar.agentProfile.enabled", checked)
+                    StyledToolTip {
+                        text: Translation.tr("Shows a compact profile chip in the bar for routing presets.")
+                    }
+                }
+
+                ConfigSelectionArray {
+                    currentValue: {
+                        const v = String(Config.options?.bar?.agentProfile?.current ?? "balanced").toLowerCase();
+                        return (v === "local-only" || v === "quality-max" || v === "budget") ? v : "balanced";
+                    }
+                    onSelected: newValue => {
+                        Config.setNestedValue("bar.agentProfile.current", newValue)
+                    }
+                    options: [
+                        { displayName: Translation.tr("Balanced"), icon: "tune", value: "balanced" },
+                        { displayName: Translation.tr("Local only"), icon: "dns", value: "local-only" },
+                        { displayName: Translation.tr("Quality max"), icon: "rocket_launch", value: "quality-max" },
+                        { displayName: Translation.tr("Budget"), icon: "savings", value: "budget" }
+                    ]
+                    enabled: Config.options?.bar?.agentProfile?.enabled ?? false
+                }
+            }
 
             StyledText {
                 Layout.fillWidth: true
