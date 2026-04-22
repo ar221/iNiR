@@ -309,8 +309,38 @@ Completed final readability polish for the right sidebar indicator chip.
 - More stable indicator readability under narrow-width stress.
 - Cleaner calendar chip behavior without overflow noise.
 
-## 14) Next Pass (Optional)
+## 14) Iteration G (Implemented): Hard Dusky Horizontal Lock
 
-- Add screenshot-based visual regression snapshots for style × density × lane-policy matrix.
-- Add a user-facing one-line preview description per visual preset in settings.
+Applied to align more directly with the Dusky horizontal reference posture (feature-light visual read, dense horizontal blocks first).
+
+### Defaults shifted
+- `bar.laneSeparator`: `off`
+- `bar.ambientVisibility`: `hidden`
+- Kept `bar.stylePreset: dusky` and `bar.density: compact`
+
+### Rhythm tightening
+- Compact token pass in `BarContent.qml`:
+  - `sideClusterGap: 5`
+  - `centerSegmentGap: 3`
+  - `missionClusterPadding: 3`
+  - `utilityClusterPadding: 2`
+  - `ambientClusterPadding: 2`
+- Right chip compacted for dusky profile:
+  - tighter chip interior padding
+  - reduced indicator spacing (`rightIndicatorSpacing` dusky branch tightened)
+- Calendar title truncation tightened in compact mode for cleaner right-edge scan.
+
+### Settings guidance shift
+- Lane separator now labels **Off** as recommended.
+- Ambient lane now labels **Hidden** as recommended.
+
+### Outcome
+- Cleaner, flatter horizontal read.
+- Lower right-tail noise and less visual float.
+- Closer aesthetic match to Dusky horizontal while keeping iNiR module architecture.
+
+## 15) Next Pass (Optional)
+
+- Add user-facing one-line preview description per visual preset in settings.
 - Add optional icon-weight profile (filled vs outlined emphasis) for accessibility variants.
+- Run targeted stress snapshots (shortened/hella-shortened + heavy indicator states) against the hard-lock default.
