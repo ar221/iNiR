@@ -1,0 +1,5 @@
+name,stylePreset,density,laneSeparator,ambientVisibility,path
+baseline-off-hidden,dusky,compact,off,hidden,/home/ayaz/Github/inir/docs/superpowers/assets/status-bar-matrix/2026-04-22/post-lock-stress/baseline-off-hidden.png
+stress-subtle-auto,dusky,compact,subtle,auto,/home/ayaz/Github/inir/docs/superpowers/assets/status-bar-matrix/2026-04-22/post-lock-stress/stress-subtle-auto.png
+stress-strong-always,dusky,compact,strong,always,/home/ayaz/Github/inir/docs/superpowers/assets/status-bar-matrix/2026-04-22/post-lock-stress/stress-strong-always.png
+stress-off-always,dusky,compact,off,always,/home/ayaz/Github/inir/docs/superpowers/assets/status-bar-matrix/2026-04-22/post-lock-stress/stress-off-always.png
