@@ -62,6 +62,28 @@ Item { // Bar content region
             },
         ]
     }
+
+    ContextMenu {
+        id: providerProfileContextMenu
+        anchorItem: providerProfileButton
+        popupAbove: Config.options?.bar?.bottom ?? false
+        closeOnFocusLost: true
+        closeOnHoverLost: true
+
+        model: (Ai.requestRunning || Ai.waitingForApproval)
+            ? [
+                {
+                    iconName: "cancel",
+                    monochromeIcon: true,
+                    text: Translation.tr("Interrupt Agent Request"),
+                    action: () => {
+                        Ai.cancelCurrentRequest();
+                    },
+                },
+            ]
+            : []
+    }
+
     property real useShortenedForm: (Appearance.sizes.barHellaShortenScreenWidthThreshold >= screen?.width) ? 2 : (Appearance.sizes.barShortenScreenWidthThreshold >= screen?.width) ? 1 : 0
     readonly property int baseCenterSideModuleWidth: (useShortenedForm == 2) ? Appearance.sizes.barCenterSideModuleWidthHellaShortened : (useShortenedForm == 1) ? Appearance.sizes.barCenterSideModuleWidthShortened : Appearance.sizes.barCenterSideModuleWidth
     // Both center groups share the same width so workspaces stay perfectly centered
@@ -93,7 +115,15 @@ Item { // Bar content region
     readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
         ? Appearance.font.pixelSize.smaller
         : Appearance.font.pixelSize.small
-    readonly property int calendarTitleMaxChars: root.useShortenedForm === 2 ? 9 : (root.useShortenedForm === 1 ? 12 : (barDensity === "compact" ? 13 : 18))
+    readonly property int calendarTitleMaxChars: {
+        if (root.useShortenedForm === 2)
+            return 7;
+        if (root.useShortenedForm === 1)
+            return 9;
+        return barDensity === "compact"
+            ? 11
+            : (barDensity === "airy" ? 16 : 14);
+    }
     readonly property string laneSeparatorMode: {
         const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
         return (mode === "off" || mode === "strong") ? mode : "subtle"
@@ -114,6 +144,79 @@ Item { // Bar content region
         && (showWeatherLaneItem || showRingsLaneItem)
     readonly property int ambientLaneSeparatorWidth: laneSeparatorMode === "strong" ? 2 : 1
     readonly property real ambientLaneSeparatorOpacity: laneSeparatorMode === "strong" ? 0.82 : 0.55
+    readonly property string barIconProfile: {
+        const profile = String(Config.options?.bar?.iconProfile ?? "outlined").toLowerCase()
+        return profile === "high-contrast" ? "high-contrast" : "outlined"
+    }
+    readonly property real barIconProfileFill: barIconProfile === "high-contrast" ? 1 : 0
+
+    readonly property var providerProfiles: ["local-only", "balanced", "quality-max", "budget"]
+    readonly property string providerProfileCurrent: {
+        const current = String(Config.options?.bar?.agentProfile?.current ?? "balanced").toLowerCase()
+        return providerProfiles.indexOf(current) >= 0 ? current : "balanced"
+    }
+    readonly property string providerProfileLabel: {
+        switch (providerProfileCurrent) {
+        case "local-only": return "LOCAL"
+        case "quality-max": return "QUALITY"
+        case "budget": return "BUDGET"
+        default: return "BALANCED"
+        }
+    }
+    readonly property string providerRouteLabel: {
+        return String(Ai.providerLabel ?? "unknown").toUpperCase()
+    }
+
+    function pickModelByHints(hints) {
+        const ids = Ai.modelList ?? []
+        const modelMap = Ai.models ?? ({})
+        for (const id of ids) {
+            const hay = `${id} ${(modelMap[id]?.name ?? "")} ${(modelMap[id]?.description ?? "")}`.toLowerCase()
+            if (hints.some(h => hay.indexOf(h) >= 0))
+                return id
+        }
+        return ids.length > 0 ? ids[0] : ""
+    }
+
+    function applyProviderProfile(profile) {
+        const p = String(profile ?? providerProfileCurrent)
+        let targetModelId = ""
+        if (p === "local-only") {
+            targetModelId = pickModelByHints(["ollama", "local", "qwen", "llama", "mistral"])
+            Ai.setTool("none")
+        } else if (p === "quality-max") {
+            targetModelId = pickModelByHints(["gpt-5", "sonnet", "opus", "gpt-4", "claude", "gemini"])
+            Ai.setTool("functions")
+        } else if (p === "budget") {
+            targetModelId = pickModelByHints(["mini", "haiku", "flash", "cheap", "free"])
+            Ai.setTool("none")
+        } else {
+            targetModelId = pickModelByHints(["gpt", "claude", "gemini", "qwen", "mistral"])
+            Ai.setTool("functions")
+        }
+
+        if (targetModelId && targetModelId !== Ai.currentModelId)
+            Ai.setModel(targetModelId, false, true)
+    }
+
+    function cycleProviderProfile(step) {
+        const current = providerProfileCurrent
+        const idx = providerProfiles.indexOf(current)
+        const nextIdx = (idx + step + providerProfiles.length) % providerProfiles.length
+        const nextProfile = providerProfiles[nextIdx]
+        Config.setNestedValue("bar.agentProfile.current", nextProfile)
+        applyProviderProfile(nextProfile)
+    }
+
+    Component.onCompleted: {
+        if (Config?.options?.bar?.agentProfile?.enabled ?? false)
+            applyProviderProfile(providerProfileCurrent)
+    }
+
+    onProviderProfileCurrentChanged: {
+        if (Config?.options?.bar?.agentProfile?.enabled ?? false)
+            applyProviderProfile(providerProfileCurrent)
+    }
 
     // Per-monitor wallpaper URL for Aurora blur — uses the actual wallpaper on this screen
     readonly property string wallpaperUrl: {
@@ -677,6 +780,7 @@ Item { // Bar content region
                         MaterialSymbol {
                             text: "volume_off"
                             iconSize: root.rightIndicatorIconSize
+                            fill: root.barIconProfileFill
                             color: rightSidebarButton.colText
                         }
                     }
@@ -690,6 +794,7 @@ Item { // Bar content region
                         MaterialSymbol {
                             text: "mic_off"
                             iconSize: root.rightIndicatorIconSize
+                            fill: root.barIconProfileFill
                             color: rightSidebarButton.colText
                         }
                     }
@@ -702,7 +807,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "mic"
-                            fill: 1
+                            fill: root.barIconProfileFill
                             iconSize: root.rightIndicatorIconSize
                             color: Appearance.colors.colError
                         }
@@ -717,6 +822,7 @@ Item { // Bar content region
                         MaterialSymbol {
                             text: "battery_alert"
                             iconSize: root.rightIndicatorIconSize
+                            fill: root.barIconProfileFill
                             color: Appearance.colors.colError
                         }
                     }
@@ -730,6 +836,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: FocusMode.icon
+                            fill: root.barIconProfileFill
                             iconSize: root.rightIndicatorIconSize
                             color: FocusMode.accentColor
                         }
@@ -763,7 +870,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "dns"
-                            fill: 1
+                            fill: root.barIconProfileFill
                             iconSize: root.rightIndicatorIconSize
                             color: Appearance.colors.colPersonalAccent
                             Behavior on color {
@@ -867,16 +974,58 @@ Item { // Bar content region
                     }
                     // Merged connectivity dot — network + bluetooth collapsed into one
                     // status symbol colored by the worst state across both.
-                    MaterialSymbol {
-                        id: connectivityDot
+                        MaterialSymbol {
+                            id: connectivityDot
                         // "disconnected" if either is off-but-enabled; "warn" if
                         // bluetooth unavailable but network OK is still normal.
                         readonly property bool networkBad: !Network.ethernet && (Network.wifiStatus !== "connected")
                         readonly property bool btBad: BluetoothStatus.available && BluetoothStatus.enabled && !BluetoothStatus.connected
                         readonly property bool anyBad: networkBad || btBad
-                        text: Network.materialSymbol
-                        iconSize: root.rightIndicatorIconSize
-                        color: anyBad ? Appearance.colors.colError : rightSidebarButton.colText
+                            text: Network.materialSymbol
+                            iconSize: root.rightIndicatorIconSize
+                            fill: root.barIconProfileFill
+                            color: anyBad ? Appearance.colors.colError : rightSidebarButton.colText
+                        }
+                }
+            }
+
+            // AI provider profile cycle chip (safe/off by default)
+            BarGroup {
+                visible: (Config.options?.bar?.agentProfile?.enabled ?? false)
+                padding: root.utilityClusterPadding
+
+                RippleButton {
+                    id: providerProfileButton
+                    implicitHeight: parent.implicitHeight
+                    implicitWidth: providerProfileRow.implicitWidth + 14
+
+                    onClicked: root.cycleProviderProfile(1)
+                    altAction: event => {
+                        if (Ai.requestRunning || Ai.waitingForApproval)
+                            providerProfileContextMenu.active = true;
+                        else
+                            root.cycleProviderProfile(-1);
+                        event.accepted = true;
+                    }
+
+                    contentItem: RowLayout {
+                        id: providerProfileRow
+                        spacing: 6
+
+                        MaterialSymbol {
+                            text: Ai._pendingRequest ? "sync" : "auto_awesome"
+                            iconSize: Appearance.font.pixelSize.normal
+                            fill: root.barIconProfileFill
+                            color: Ai._pendingRequest
+                                ? Appearance.colors.colPrimary
+                                : Appearance.m3colors.m3onSurfaceVariant
+                        }
+
+                        StyledText {
+                            text: `${root.providerProfileLabel} · ${root.providerRouteLabel}`
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.m3colors.m3onSurfaceVariant
+                        }
                     }
                 }
             }

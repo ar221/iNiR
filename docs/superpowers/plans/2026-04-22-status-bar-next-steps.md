@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-22
 **Owner:** Elsa + Hermes
-**Status:** Ready for next session
+**Status:** Ready to ship
 
 ## What was completed today
 
@@ -41,9 +41,10 @@ Test under:
 Goal: ensure right-lane never collapses into unreadable crowding.
 
 ### 3) Optional refinement pass (medium value)
-- Add user-facing one-line descriptions under visual preset selector.
-- Add an accessibility variant for icon weight/contrast.
-- Tune calendar title truncation thresholds after screenshot review.
+
+- [x] Add user-facing one-line descriptions under visual preset selector.
+- [x] Add an accessibility variant for icon weight/contrast (`outlined` / `high-contrast`).
+- [x] Tune calendar title truncation thresholds after runtime screenshot review.
 
 ## Suggested execution order
 
@@ -51,3 +52,17 @@ Goal: ensure right-lane never collapses into unreadable crowding.
 2. Runtime stress checks + quick fixes
 3. Optional refinement pass
 4. Merge/ship tag
+
+## Merge / ship tag
+
+- [x] Optional refinement pass complete.
+- [x] Runtime validation log updated for final calendar truncation thresholds.
+- [x] QML lint validated on updated bar runtime file.
+- [x] Commit and tag this refinement (`status-bar-calendar-truncation-2026-04-22`).
+
+## Runtime validation log
+
+- Calendar title truncation tuned to reduce long text in reduced widths after runtime review.
+  - `hella-short`: `8 -> 7`
+  - `shortened`: `10 -> 9`
+  - `compact + not-short`: `12 -> 11`
