@@ -15,7 +15,10 @@ Singleton {
 
     Connections {
         target: Config
-        function onConfigChanged(): void { root._configRevision++ }
+        function onConfigPathChanged(path): void {
+            if (path && path.startsWith("apps."))
+                root._configRevision++
+        }
     }
 
     readonly property var _slotDefinitions: [

@@ -29,6 +29,7 @@ Singleton {
     property bool blockWrites: false
 
     signal configChanged()
+    signal configPathChanged(string path)
 
     function flushWrites(): void {
         fileWriteTimer.stop();
@@ -84,6 +85,8 @@ Singleton {
             } catch (e) {}
         }
         obj[lastKey] = convertedValue;
+        const changedPath = keys.join(".")
+        root.configPathChanged(changedPath)
         root.configChanged()
     }
 
@@ -127,6 +130,7 @@ Singleton {
 
         JsonAdapter {
             id: configOptionsJsonAdapter
+            property int schemaVersion: 1
 
             // Panel system
             property list<string> enabledPanels: [

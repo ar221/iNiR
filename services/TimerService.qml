@@ -31,7 +31,10 @@ Singleton {
     // Sync pomodoro config on ANY config change (reliable - survives object recreation after file reload)
     Connections {
         target: Config
-        function onConfigChanged() { root._syncPomodoroConfig() }
+        function onConfigPathChanged(path) {
+            if (path && path.startsWith("time.pomodoro"))
+                root._syncPomodoroConfig()
+        }
         function onReadyChanged() {
             if (Config.ready) root._syncPomodoroConfig()
         }

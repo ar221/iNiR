@@ -343,6 +343,47 @@ Singleton {
         displayScales = scales
     }
 
+    function _workspaceEquivalent(a, b): bool {
+        if (!a || !b)
+            return false
+        const aKeys = Object.keys(a)
+        const bKeys = Object.keys(b)
+        if (aKeys.length !== bKeys.length)
+            return false
+        for (let i = 0; i < bKeys.length; i++) {
+            const key = bKeys[i]
+            if (a[key] !== b[key])
+                return false
+        }
+        return true
+    }
+
+    function _refreshWorkspaceDerivedStateFromMap(workspaceMap): void {
+        const sorted = Object.values(workspaceMap).sort((a, b) => a.idx - b.idx)
+        root.allWorkspaces = sorted
+
+        root.focusedWorkspaceIndex = sorted.findIndex(w => w.is_focused)
+        if (root.focusedWorkspaceIndex >= 0) {
+            const focusedWs = sorted[root.focusedWorkspaceIndex]
+            root.focusedWorkspaceId = focusedWs.id
+            root.currentOutput = focusedWs.output || ""
+        } else {
+            root.focusedWorkspaceIndex = 0
+            root.focusedWorkspaceId = ""
+        }
+
+        root.updateCurrentOutputWorkspaces()
+    }
+
+    function _setWorkspaceActiveWindowId(workspaceId, activeWindowId): void {
+        const ws = root.workspaces[workspaceId]
+        if (!ws || ws.active_window_id === activeWindowId)
+            return
+        const updatedWorkspaces = Object.assign({}, root.workspaces)
+        updatedWorkspaces[workspaceId] = Object.assign({}, ws, { active_window_id: activeWindowId })
+        root.workspaces = updatedWorkspaces
+    }
+
     function sortWindowsByLayout(windowList) {
         const enriched = windowList.map(w => {
             const ws = workspaces[w.workspace_id]
@@ -459,29 +500,27 @@ Singleton {
 
     function handleWorkspacesChanged(data) {
         const newWorkspaces = {}
+        let hasChanges = false
 
         for (const ws of data.workspaces) {
             const oldWs = root.workspaces[ws.id]
-            newWorkspaces[ws.id] = ws
-            if (oldWs && oldWs.active_window_id !== undefined) {
-                newWorkspaces[ws.id].active_window_id = oldWs.active_window_id
+            const candidate = Object.assign({}, ws)
+            if (oldWs && oldWs.active_window_id !== undefined && candidate.active_window_id === undefined)
+                candidate.active_window_id = oldWs.active_window_id
+
+            if (oldWs && root._workspaceEquivalent(oldWs, candidate))
+                newWorkspaces[ws.id] = oldWs
+            else {
+                newWorkspaces[ws.id] = candidate
+                hasChanges = true
             }
         }
 
+        if (!hasChanges && Object.keys(root.workspaces).length === data.workspaces.length)
+            return
+
         root.workspaces = newWorkspaces
-        allWorkspaces = Object.values(newWorkspaces).sort((a, b) => a.idx - b.idx)
-
-        focusedWorkspaceIndex = allWorkspaces.findIndex(w => w.is_focused)
-        if (focusedWorkspaceIndex >= 0) {
-            const focusedWs = allWorkspaces[focusedWorkspaceIndex]
-            focusedWorkspaceId = focusedWs.id
-            currentOutput = focusedWs.output || ""
-        } else {
-            focusedWorkspaceIndex = 0
-            focusedWorkspaceId = ""
-        }
-
-        updateCurrentOutputWorkspaces()
+        root._refreshWorkspaceDerivedStateFromMap(newWorkspaces)
     }
 
     function handleWorkspaceActivated(data) {
@@ -504,10 +543,7 @@ Singleton {
                 continue
             }
 
-            const updatedWs = {}
-            for (let prop in workspace) {
-                updatedWs[prop] = workspace[prop]
-            }
+            const updatedWs = Object.assign({}, workspace)
 
             if (workspace.output === output) {
                 updatedWs.is_active = got_activated
@@ -523,66 +559,52 @@ Singleton {
 
         if (!hasChanges) return
         root.workspaces = updatedWorkspaces
-
-        allWorkspaces = Object.values(updatedWorkspaces).sort((a, b) => a.idx - b.idx)
-
-        focusedWorkspaceIndex = allWorkspaces.findIndex(w => w.is_focused)
-        if (focusedWorkspaceIndex >= 0) {
-            const focusedWs = allWorkspaces[focusedWorkspaceIndex]
-            focusedWorkspaceId = focusedWs.id
-            currentOutput = focusedWs.output || ""
-        } else {
-            focusedWorkspaceIndex = 0
-            focusedWorkspaceId = ""
-        }
-
-        updateCurrentOutputWorkspaces()
+        root._refreshWorkspaceDerivedStateFromMap(updatedWorkspaces)
     }
 
     function handleWindowFocusChanged(data) {
         const focusedWindowId = data.id
 
         if (focusedWindowId !== null && focusedWindowId !== undefined) {
-            const newOrder = []
-            for (let i = 0; i < mruWindowIds.length; i++) {
-                const id = mruWindowIds[i]
-                if (id !== focusedWindowId) {
-                    newOrder.push(id)
+            if (mruWindowIds[0] !== focusedWindowId) {
+                const newOrder = []
+                for (let i = 0; i < mruWindowIds.length; i++) {
+                    const id = mruWindowIds[i]
+                    if (id !== focusedWindowId)
+                        newOrder.push(id)
                 }
+                newOrder.unshift(focusedWindowId)
+                mruWindowIds = newOrder
             }
-            newOrder.unshift(focusedWindowId)
-            mruWindowIds = newOrder
         }
 
-        let focusedWindow = null
-        const updatedWindows = []
-        let hasChanges = false
-
-        for (var i = 0; i < windows.length; i++) {
+        let previousFocusedIndex = -1
+        let nextFocusedIndex = -1
+        for (let i = 0; i < windows.length; i++) {
             const w = windows[i]
-            const shouldBeFocused = (w.id === focusedWindowId)
-            
-            if (w.is_focused === shouldBeFocused) {
-                updatedWindows.push(w)
-                if (shouldBeFocused) focusedWindow = w
-                continue
-            }
-
-            const updatedWindow = {}
-            for (let prop in w) {
-                updatedWindow[prop] = w[prop]
-            }
-
-            updatedWindow.is_focused = shouldBeFocused
-            if (shouldBeFocused) {
-                focusedWindow = updatedWindow
-            }
-
-            updatedWindows.push(updatedWindow)
-            hasChanges = true
+            if (w.is_focused)
+                previousFocusedIndex = i
+            if (w.id === focusedWindowId)
+                nextFocusedIndex = i
         }
 
-        if (hasChanges) windows = updatedWindows
+        let focusedWindow = nextFocusedIndex >= 0 ? windows[nextFocusedIndex] : null
+
+        if (previousFocusedIndex !== nextFocusedIndex) {
+            const updatedWindows = windows.slice()
+            if (previousFocusedIndex >= 0) {
+                const unfocused = Object.assign({}, updatedWindows[previousFocusedIndex])
+                unfocused.is_focused = false
+                updatedWindows[previousFocusedIndex] = unfocused
+            }
+            if (nextFocusedIndex >= 0) {
+                const focused = Object.assign({}, updatedWindows[nextFocusedIndex])
+                focused.is_focused = true
+                updatedWindows[nextFocusedIndex] = focused
+                focusedWindow = focused
+            }
+            windows = updatedWindows
+        }
 
         // Update activeWindow (signal is auto-emitted on property change)
         if (activeWindow !== focusedWindow) {
@@ -590,78 +612,74 @@ Singleton {
         }
 
         if (focusedWindow) {
-            const ws = root.workspaces[focusedWindow.workspace_id]
-            if (ws && ws.active_window_id !== focusedWindowId) {
-                const updatedWs = {}
-                for (let prop in ws) {
-                    updatedWs[prop] = ws[prop]
-                }
-                updatedWs.active_window_id = focusedWindowId
-
-                const updatedWorkspaces = {}
-                for (const id in root.workspaces) {
-                    updatedWorkspaces[id] = id === focusedWindow.workspace_id ? updatedWs : root.workspaces[id]
-                }
-                root.workspaces = updatedWorkspaces
-            }
+            root._setWorkspaceActiveWindowId(focusedWindow.workspace_id, focusedWindowId)
         }
     }
 
     function handleWorkspaceActiveWindowChanged(data) {
-        const ws = root.workspaces[data.workspace_id]
-        if (ws) {
-            const updatedWs = {}
-            for (let prop in ws) {
-                updatedWs[prop] = ws[prop]
-            }
-            updatedWs.active_window_id = data.active_window_id
+        root._setWorkspaceActiveWindowId(data.workspace_id, data.active_window_id)
 
-            const updatedWorkspaces = {}
-            for (const id in root.workspaces) {
-                updatedWorkspaces[id] = id === data.workspace_id ? updatedWs : root.workspaces[id]
+        const targetWindowId = data.active_window_id
+        if (targetWindowId !== null && targetWindowId !== undefined) {
+            let previousFocusedIndex = -1
+            let targetIndex = -1
+            for (let i = 0; i < windows.length; i++) {
+                const w = windows[i]
+                if (w.is_focused)
+                    previousFocusedIndex = i
+                if (w.id == targetWindowId)
+                    targetIndex = i
             }
-            root.workspaces = updatedWorkspaces
+
+            let newActiveWindow = targetIndex >= 0 ? windows[targetIndex] : null
+            if (previousFocusedIndex !== targetIndex) {
+                const updatedWindows = windows.slice()
+                if (previousFocusedIndex >= 0) {
+                    const unfocused = Object.assign({}, updatedWindows[previousFocusedIndex])
+                    unfocused.is_focused = false
+                    updatedWindows[previousFocusedIndex] = unfocused
+                }
+                if (targetIndex >= 0) {
+                    const focused = Object.assign({}, updatedWindows[targetIndex])
+                    focused.is_focused = true
+                    updatedWindows[targetIndex] = focused
+                    newActiveWindow = focused
+                }
+                windows = updatedWindows
+            }
+
+            if (activeWindow !== newActiveWindow)
+                activeWindow = newActiveWindow
+            return
         }
 
-        // Optimization: only recreate window objects that actually change
         const updatedWindows = []
         let hasChanges = false
         let newActiveWindow = null
 
-        for (var i = 0; i < windows.length; i++) {
+        for (let i = 0; i < windows.length; i++) {
             const w = windows[i]
-            let shouldBeFocused
-            
-            if (data.active_window_id !== null && data.active_window_id !== undefined) {
-                shouldBeFocused = (w.id == data.active_window_id)
-            } else {
-                shouldBeFocused = w.workspace_id == data.workspace_id ? false : w.is_focused
-            }
+            const shouldBeFocused = (w.workspace_id == data.workspace_id) ? false : w.is_focused
 
-            // Only create new object if focus state actually changed
             if (w.is_focused === shouldBeFocused) {
                 updatedWindows.push(w)
-                if (shouldBeFocused) newActiveWindow = w
-            } else {
-                const updatedWindow = {}
-                for (let prop in w) {
-                    updatedWindow[prop] = w[prop]
-                }
-                updatedWindow.is_focused = shouldBeFocused
-                updatedWindows.push(updatedWindow)
-                if (shouldBeFocused) newActiveWindow = updatedWindow
-                hasChanges = true
+                if (shouldBeFocused)
+                    newActiveWindow = w
+                continue
             }
+
+            const updatedWindow = Object.assign({}, w)
+            updatedWindow.is_focused = shouldBeFocused
+            updatedWindows.push(updatedWindow)
+            if (shouldBeFocused)
+                newActiveWindow = updatedWindow
+            hasChanges = true
         }
 
-        if (hasChanges) {
+        if (hasChanges)
             windows = updatedWindows
-        }
-        
-        // Update activeWindow (signal is auto-emitted on property change)
-        if (activeWindow !== newActiveWindow) {
+        if (activeWindow !== newActiveWindow)
             activeWindow = newActiveWindow
-        }
     }
 
     function handleWindowsChanged(data) {
@@ -738,10 +756,7 @@ Singleton {
             if (windowIndex < 0)
                 continue
 
-            const updatedWindow = {}
-            for (var prop in updatedWindows[windowIndex]) {
-                updatedWindow[prop] = updatedWindows[windowIndex][prop]
-            }
+            const updatedWindow = Object.assign({}, updatedWindows[windowIndex])
             updatedWindow.layout = layoutData
             updatedWindows[windowIndex] = updatedWindow
             hasChanges = true
@@ -806,20 +821,15 @@ Singleton {
         const ws = root.workspaces[data.id]
         if (!ws)
             return
+        if (ws.is_urgent === data.urgent)
+            return
 
-        const updatedWs = {}
-        for (let prop in ws) {
-            updatedWs[prop] = ws[prop]
-        }
-        updatedWs.is_urgent = data.urgent
-
-        const updatedWorkspaces = {}
-        for (const id in root.workspaces) {
-            updatedWorkspaces[id] = id === data.id ? updatedWs : root.workspaces[id]
-        }
+        const updatedWs = Object.assign({}, ws, { is_urgent: data.urgent })
+        const updatedWorkspaces = Object.assign({}, root.workspaces)
+        updatedWorkspaces[data.id] = updatedWs
         root.workspaces = updatedWorkspaces
 
-        allWorkspaces = Object.values(updatedWorkspaces).sort((a, b) => a.idx - b.idx)
+        root._refreshWorkspaceDerivedStateFromMap(updatedWorkspaces)
 
         windowUrgentChanged()
     }

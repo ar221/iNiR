@@ -15,6 +15,12 @@ Singleton {
     property bool ready: false
     readonly property string currentTheme: Config.options?.appearance?.theme ?? "auto"
     readonly property bool isAutoTheme: currentTheme === "auto"
+    readonly property bool isApolloTheme: currentTheme === "apollo"
+
+    // Session-scoped toast flag: fires "wallpaper locked to Apollo" notify-send at most once
+    // per Apollo-active stretch. Resets whenever the theme leaves Apollo.
+    property bool _apolloWallpaperToastShown: false
+
     readonly property bool isStandaloneSettingsWindow: (Quickshell.env("QS_NO_RELOAD_POPUP") ?? "") === "1"
     readonly property bool defaultApplyExternal: !isStandaloneSettingsWindow
     readonly property bool vesktopEnabled: (Config.options?.appearance?.wallpaperTheming?.enableVesktop ?? true) !== false
@@ -44,10 +50,40 @@ Singleton {
     readonly property int _regenCooldownMs: 700
 
     onCurrentThemeChanged: {
+        // Reset the Apollo wallpaper-lock toast flag whenever we leave Apollo,
+        // so the next Apollo-active stretch gets a fresh one-shot notification.
+        if (currentTheme !== "apollo")
+            root._apolloWallpaperToastShown = false
+
         if (Config.ready) {
             root._log("[ThemeService] currentTheme changed to:", currentTheme, "- applying");
             Qt.callLater(() => applyCurrentTheme(defaultApplyExternal));
         }
+    }
+
+    // Called by Wallpapers.apply() when a new wallpaper is picked while Apollo is active.
+    // Fires a toast explaining the lock. Rate-limited to at most once per 4 seconds
+    // to avoid spam when a rapid sequence of wallpaper changes fire (drag-select, etc).
+    property real _apolloLastToastMs: 0
+    function maybeNotifyApolloWallpaperLock(): void {
+        if (!isApolloTheme) {
+            root._log("[ThemeService] maybeNotifyApolloWallpaperLock: not Apollo, skipping")
+            return
+        }
+        const now = Date.now()
+        if (now - root._apolloLastToastMs < 4000) {
+            root._log("[ThemeService] maybeNotifyApolloWallpaperLock: rate-limited")
+            return
+        }
+        root._apolloLastToastMs = now
+        root._log("[ThemeService] maybeNotifyApolloWallpaperLock: firing toast")
+        Quickshell.execDetached([
+            "/usr/bin/notify-send",
+            "-a", "Themes",
+            "-i", "flight_takeoff",
+            "Wallpaper changed",
+            "Palette locked to Apollo — switch to Auto in Themes to colorize from wallpaper."
+        ])
     }
 
     function setTheme(themeId, applyExternal = true): void {
@@ -75,8 +111,9 @@ Singleton {
                 // Variant active: apply preset instantly, then regenerate variant colors
                 ThemePresets.applyPreset(themeId, false, true);
                 const seedColor = MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                root._log("[ThemeService] setTheme with variant", paletteType, "seed", seedColor);
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                root._log("[ThemeService] setTheme with variant", paletteType, "seed", seedColor, "mode", mode);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
             } else {
                 ThemePresets.applyPreset(themeId, applyExternal);
                 if (applyExternal && vesktopEnabled) {
@@ -127,8 +164,9 @@ Singleton {
                 const seedColor = configAccent.length > 0
                     ? configAccent
                     : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                root._log("[ThemeService] Re-applying variant", paletteType, "with seed", seedColor);
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                root._log("[ThemeService] Re-applying variant", paletteType, "with seed", seedColor, "mode", mode);
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
                 if (applyExternal && vesktopEnabled) {
                     root._triggerVesktopThemeGeneration()
                 }
@@ -177,7 +215,8 @@ Singleton {
                 const seedColor = configAccent.length > 0
                     ? configAccent
                     : MaterialThemeLoader.colorToHex(Appearance.m3colors.m3primary)
-                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType)
+                const mode = Appearance.m3colors.darkmode ? "dark" : "light"
+                MaterialThemeLoader.applySchemeVariant(seedColor, paletteType, mode)
             } else {
                 ThemePresets.applyPreset(currentTheme, true);
             }
@@ -199,8 +238,11 @@ Singleton {
 
     Connections {
         target: Config
-        function onConfigChanged() {
-            liveRegenerateDebounce.restart()
+        function onConfigPathChanged(path) {
+            if (!path)
+                return
+            if (path.startsWith("appearance.") || path.startsWith("background."))
+                liveRegenerateDebounce.restart()
         }
         function onReadyChanged() {
             if (Config.ready) {

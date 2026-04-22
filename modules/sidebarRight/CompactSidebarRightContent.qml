@@ -113,7 +113,16 @@ Item {
     property int configVersion: 0
     Connections {
         target: Config
-        function onConfigChanged() { root.configVersion++ }
+        function onConfigPathChanged(path) {
+            if (!path)
+                return
+            if (path.startsWith("sidebar.right.enabledWidgets")
+                    || path.startsWith("sidebar.right.controlsSectionOrder")
+                    || path.startsWith("sidebar.quickToggles.")
+                    || path.startsWith("sidebar.quickSliders.")) {
+                root.configVersion++
+            }
+        }
     }
 
     // ── Section definitions ───────────────────────────────────────

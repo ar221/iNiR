@@ -119,9 +119,13 @@ Singleton {
 	
 	Connections {
 		target: Config
-		function onConfigChanged() {
-			root._updateMpvCache();
-			root._rebuildPlayerList();
+		function onConfigPathChanged(path) {
+			if (!path)
+				return;
+			if (path.startsWith("media.") || path.startsWith("sidebar.ytmusic.")) {
+				root._updateMpvCache();
+				root._rebuildPlayerList();
+			}
 		}
 	}
 	

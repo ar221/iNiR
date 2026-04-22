@@ -193,19 +193,13 @@ Singleton {
         }
     }
 
-    // Safety net: Config.configChanged fires on every setNestedValue call.
-    // This guarantees we pick up wallpapersByMonitor changes even if the
-    // list<var> property assignment doesn't propagate through the binding chain.
-    // Debounced to avoid redundant refreshes when multiple values change at once.
-    Timer {
-        id: configChangeDebounce
-        interval: 80
-        onTriggered: root.refresh()
-    }
     Connections {
         target: Config
-        function onConfigChanged() {
-            configChangeDebounce.restart()
+        function onConfigPathChanged(path) {
+            if (!path)
+                return
+            if (path.startsWith("background."))
+                root.refresh()
         }
     }
 }

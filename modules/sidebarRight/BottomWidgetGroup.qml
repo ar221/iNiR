@@ -46,7 +46,10 @@ Rectangle {
     property int configVersion: 0
     Connections {
         target: Config
-        function onConfigChanged() { root.configVersion++ }
+        function onConfigPathChanged(path) {
+            if (path && path.startsWith("sidebar.right.enabledWidgets"))
+                root.configVersion++
+        }
     }
 
     readonly property var enabledWidgets: {
