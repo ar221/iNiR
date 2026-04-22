@@ -21,6 +21,7 @@ QtObject {
 
     property string failMessage: Translation.tr("That didn't work. Tips:\n- Check your query and NSFW settings\n- Make sure your Wallhaven API key is set if you want NSFW")
     property var responses: []
+    property int maxStoredResponses: Math.max(20, Config.options?.sidebar?.wallhaven?.maxStoredResponses ?? 80)
     property int runningRequests: 0
 
     property string _lastTagSuggestionQuery: ""
@@ -91,11 +92,13 @@ QtObject {
     property string tagSuggestionBase: "https://wallhaven.cc/tag/search"
     property int tagSuggestionCacheMs: 5 * 60 * 1000
     property var _tagSuggestionCache: ({})
+    property int maxTagSuggestionCacheEntries: Math.max(16, Config.options?.sidebar?.wallhaven?.maxTagSuggestionCacheEntries ?? 120)
     property var currentTagRequest: null
 
     // Cache + queue for counts (meta.total) per tag id
     property int tagCountCacheMs: 10 * 60 * 1000
     property var _tagCountCache: ({}) // id -> { ts, total }
+    property int maxTagCountCacheEntries: Math.max(32, Config.options?.sidebar?.wallhaven?.maxTagCountCacheEntries ?? 240)
     property var _tagCountRequests: ({}) // id -> bool
     property var _tagCountQueue: ([])
 
@@ -176,6 +179,32 @@ QtObject {
         root._tagCountQueue = [...root._tagCountQueue, id]
     }
 
+    function _enforceObjectEntryLimit(cacheObj, maxEntries): var {
+        const keys = Object.keys(cacheObj)
+        if (keys.length <= maxEntries)
+            return cacheObj
+        const trimmed = {}
+        const start = keys.length - maxEntries
+        for (let i = Math.max(0, start); i < keys.length; i++)
+            trimmed[keys[i]] = cacheObj[keys[i]]
+        return trimmed
+    }
+
+    function _appendResponse(response): void {
+        if (!response)
+            return
+        const next = [...responses, response]
+        const overflow = next.length - root.maxStoredResponses
+        if (overflow > 0) {
+            const dropped = next.splice(0, overflow)
+            for (let i = 0; i < dropped.length; i++) {
+                if (dropped[i])
+                    dropped[i].destroy()
+            }
+        }
+        responses = next
+    }
+
     function _fetchNextTagCount(): void {
         root.nowMs = Date.now()
         if (root.isRateLimited)
@@ -214,6 +243,7 @@ QtObject {
                     const meta = payload.meta || {}
                     const total = meta.total !== undefined ? parseInt(meta.total) : 0
                     root._tagCountCache[id] = { ts: root.nowMs, total: total }
+                    root._tagCountCache = root._enforceObjectEntryLimit(root._tagCountCache, root.maxTagCountCacheEntries)
 
                     // Re-emit last suggestions if they include this id
                     if (root._lastTagSuggestions && root._lastTagSuggestions.length > 0) {
@@ -325,6 +355,7 @@ QtObject {
                 })
 
                 root._tagSuggestionCache[q] = { ts: root.nowMs, items: enriched }
+                root._tagSuggestionCache = root._enforceObjectEntryLimit(root._tagSuggestionCache, root.maxTagSuggestionCacheEntries)
                 root._lastTagSuggestionQuery = q
                 root._lastTagSuggestions = enriched
                 root.tagSuggestion(q, enriched)
@@ -478,6 +509,11 @@ QtObject {
     property bool hideAiArt: false        // ai_art_filter=1 when true
 
     function clearResponses() {
+        const existing = responses.slice()
+        for (let i = 0; i < existing.length; i++) {
+            if (existing[i])
+                existing[i].destroy()
+        }
         responses = []
     }
 
@@ -489,7 +525,7 @@ QtObject {
             "images": [],
             "message": message
         })
-        responses = [...responses, resp]
+        root._appendResponse(resp)
         responseFinished()
     }
 
@@ -594,7 +630,7 @@ QtObject {
 
             function finish() {
                 runningRequests = Math.max(0, runningRequests - 1)
-                responses = [...responses, newResponse]
+                root._appendResponse(newResponse)
                 root.responseFinished()
 
                 if (root.pendingSearch && !root.isRateLimited) {
@@ -674,7 +710,7 @@ QtObject {
             console.log("[Wallhaven] Error sending request:", e)
             runningRequests = Math.max(0, runningRequests - 1)
             newResponse.message = failMessage
-            responses = [...responses, newResponse]
+            root._appendResponse(newResponse)
             root.responseFinished()
         }
     }

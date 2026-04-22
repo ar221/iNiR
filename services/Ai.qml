@@ -459,8 +459,11 @@ Singleton {
             if (!Config.ready) return;
             root.loadExtraModels();
         }
-        function onConfigChanged() {
-            root.loadExtraModels();
+        function onConfigPathChanged(path) {
+            if (!path)
+                return;
+            if (path.startsWith("ai.extraModels") || path.startsWith("policies.ai"))
+                root.loadExtraModels();
         }
     }
 
@@ -701,12 +704,22 @@ Singleton {
         root.messageByID[id] = aiMessage;
     }
 
+    function _destroyMessageObject(message): void {
+        if (!message)
+            return
+        if (requester.running && requester.message === message)
+            return
+        message.destroy()
+    }
+
     function removeMessage(index) {
         if (index < 0 || index >= messageIDs.length) return;
         const id = root.messageIDs[index];
+        const message = root.messageByID[id]
         root.messageIDs.splice(index, 1);
         root.messageIDs = [...root.messageIDs];
         delete root.messageByID[id];
+        root._destroyMessageObject(message)
     }
 
     function addApiKeyAdvice(model) {
@@ -838,6 +851,11 @@ Singleton {
     }
 
     function clearMessages() {
+        const ids = root.messageIDs.slice()
+        for (let i = 0; i < ids.length; i++) {
+            const message = root.messageByID[ids[i]]
+            root._destroyMessageObject(message)
+        }
         root.messageIDs = [];
         root.messageByID = ({});
         root.tokenCount.input = -1;

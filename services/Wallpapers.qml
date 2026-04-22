@@ -120,6 +120,7 @@ Singleton {
     }
 
     property var videoFirstFrames: ({})
+    property int maxVideoFirstFrameEntries: Math.max(64, Config.options?.background?.maxVideoFirstFrameEntries ?? 400)
 
     function isVideoFile(path: string): bool {
         if (!path) return false
@@ -133,6 +134,20 @@ Singleton {
     }
 
     property var _ffPending: ({})
+
+    function _trimVideoFirstFrameCache(): void {
+        const entries = Object.entries(root.videoFirstFrames)
+        const overflow = entries.length - root.maxVideoFirstFrameEntries
+        if (overflow <= 0)
+            return
+        const trimmedEntries = entries.slice(overflow)
+        const next = {}
+        for (let i = 0; i < trimmedEntries.length; i++) {
+            const pair = trimmedEntries[i]
+            next[pair[0]] = pair[1]
+        }
+        root.videoFirstFrames = next
+    }
 
     function ensureVideoFirstFrame(videoPath: string) {
         if (!videoPath || !isVideoFile(videoPath)) return
@@ -164,6 +179,11 @@ Singleton {
         const copy = Object.assign({}, root.videoFirstFrames)
         copy[videoPath] = imagePath
         root.videoFirstFrames = copy
+        root._trimVideoFirstFrameCache()
+
+        const pending = Object.assign({}, root._ffPending)
+        delete pending[videoPath]
+        root._ffPending = pending
 
         if (root._debugWallpaperUrls) {
             console.log("[Wallpapers] Cached first-frame:", videoPath, "->", imagePath)
@@ -208,6 +228,10 @@ Singleton {
         onExited: (exitCode) => {
             if (exitCode === 0) {
                 root._cacheFirstFrame(_ffGenProc._videoPath, _ffGenProc._outputPath)
+            } else {
+                const pending = Object.assign({}, root._ffPending)
+                delete pending[_ffGenProc._videoPath]
+                root._ffPending = pending
             }
             root._processNextFF()
         }
@@ -456,13 +480,34 @@ Singleton {
         }
     }
 
+    // Apollo palette lock: when a wallpaper changes while Apollo is the active
+    // theme, the normal apply() path still fires switchwall.sh which regenerates
+    // matugen colors from the new wallpaper — clobbering Apollo state. This
+    // chase-timer fires 4s after the wallpaper apply (giving matugen time to
+    // finish writing) and deploys Apollo via --preset, overwriting the
+    // wallpaper-derived state files. Rate-limited and reentrant-safe via restart().
+    Timer {
+        id: _apolloRedeployTimer
+        interval: 4000
+        repeat: false
+        onTriggered: {
+            Quickshell.execDetached([
+                "/usr/bin/bash",
+                Directories.wallpaperSwitchScriptPath,
+                "--preset", "apollo",
+                "--noswitch"
+            ])
+        }
+    }
+
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode) {
         applyProc.exec([Directories.wallpaperSwitchScriptPath, "--mode", (darkMode ? "dark" : "light")])
     }
 
     function applySelectionTarget(path, target = "main", darkMode = Appearance.m3colors.darkmode, monitorName = "") {
+        console.log("[Wallpapers.applySelectionTarget] CALLED path=" + path + " target=" + target + " monitorName=" + monitorName)
         const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
-        if (!normalizedPath || normalizedPath.length === 0) return
+        if (!normalizedPath || normalizedPath.length === 0) { console.log("[Wallpapers.applySelectionTarget] empty path, returning"); return }
 
         const normalizedTarget = target && target.length > 0 ? target : "main"
         const lowerPath = normalizedPath.toLowerCase()
@@ -514,14 +559,25 @@ Singleton {
             root.changed()
             return
         default:
-            root.select(normalizedPath, darkMode, monitorName)
+            root.apply(normalizedPath, darkMode, monitorName)
             return
         }
     }
 
     function apply(path, darkMode = Appearance.m3colors.darkmode, monitorName = "") {
+        console.log("[Wallpapers.apply] CALLED path=" + path + " monitorName=" + monitorName)
         const normalizedPath = FileUtils.trimFileProtocol(String(path ?? ""))
-        if (!normalizedPath || normalizedPath.length === 0) return
+        if (!normalizedPath || normalizedPath.length === 0) { console.log("[Wallpapers.apply] empty path, returning"); return }
+
+        // If Apollo is active, the palette is locked. Fire toast + schedule an
+        // Apollo redeploy to chase any matugen clobber that the wallpaper script
+        // is about to perform.
+        const apolloActive = (Config.options?.appearance?.theme ?? "auto") === "apollo"
+        console.log("[Wallpapers.apply] apolloActive=" + apolloActive)
+        if (apolloActive) {
+            ThemeService.maybeNotifyApolloWallpaperLock()
+            _apolloRedeployTimer.restart()
+        }
 
         root.requestWallpaperBlurTransition(monitorName)
 
@@ -635,7 +691,24 @@ Singleton {
             selectProc.darkMode = darkMode
             selectProc.monitorName = monitorName
             selectProc.target = target
-            selectProc.exec(["test", "-d", FileUtils.trimFileProtocol(filePath)])
+            const normalizedPath = FileUtils.trimFileProtocol(String(filePath ?? ""))
+            if (!normalizedPath || normalizedPath.length === 0) {
+                return
+            }
+
+            const lowerPath = normalizedPath.toLowerCase()
+            const isKnownMediaFile = root.extensions.some(ext => lowerPath.endsWith("." + ext))
+            if (isKnownMediaFile) {
+                const resolvedTarget = root.resolveSelectionTarget(target, monitorName)
+                if (resolvedTarget !== "main") {
+                    root.applySelectionTarget(normalizedPath, resolvedTarget, darkMode, monitorName)
+                } else {
+                    root.apply(normalizedPath, darkMode, monitorName)
+                }
+                return
+            }
+
+            selectProc.exec(["test", "-d", normalizedPath])
         }
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
@@ -676,6 +749,7 @@ Singleton {
     }
 
     function select(filePath, darkMode = Appearance.m3colors.darkmode, monitorName = "", target = "") {
+        console.log("[Wallpapers.select] CALLED filePath=" + filePath + " monitorName=" + monitorName + " target=" + target)
         selectProc.select(filePath, darkMode, monitorName, target)
     }
 

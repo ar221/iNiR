@@ -134,6 +134,7 @@ Singleton {
                                     : popupList.length
 
     property var filePath: Directories.notificationsPath
+    property int maxStoredNotifications: Math.max(50, Config.options?.notifications?.maxStored ?? 300)
     property list<Notif> list: []
     // Cached lists - updated via debounce timer
     property var popupList: []
@@ -172,6 +173,28 @@ Singleton {
 
     function stringifyList(list) {
         return JSON.stringify(list.map((notif) => notifToJSON(notif)), null, 2);
+    }
+
+    function _destroyNotifResources(notif): void {
+        if (!notif)
+            return
+        if (notif.timer) {
+            notif.timer.stop()
+            notif.timer.destroy()
+            notif.timer = null
+        }
+        notif.destroy()
+    }
+
+    function _trimStoredNotifications(): void {
+        const overflow = root.list.length - root.maxStoredNotifications
+        if (overflow <= 0)
+            return
+        const next = root.list.slice()
+        const dropped = next.splice(0, overflow)
+        for (let i = 0; i < dropped.length; i++)
+            root._destroyNotifResources(dropped[i])
+        root.list = next
     }
 
     onListChanged: {
@@ -395,6 +418,7 @@ Singleton {
             }
             const newNotifObject = notifComponent.createObject(root, createProps);
 			root.list = [...root.list, newNotifObject];
+            root._trimStoredNotifications()
 
             // Sonido de notificación opcional
             const ruleBlocksSound = rule.sound === false || rule.mode === "silent"
@@ -455,7 +479,9 @@ Singleton {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
         if (index !== -1) {
-            root.list.splice(index, 1);
+            const removed = root.list.splice(index, 1)
+            if (removed.length > 0)
+                root._destroyNotifResources(removed[0])
             notifFileView.setText(stringifyList(root.list));
             triggerListChange()
         }
@@ -466,7 +492,10 @@ Singleton {
     }
 
     function discardAllNotifications() {
+        const existing = root.list.slice()
         root.list = []
+        for (let i = 0; i < existing.length; i++)
+            root._destroyNotifResources(existing[i])
         triggerListChange()
         notifFileView.setText(stringifyList(root.list));
         notifServer.trackedNotifications.values.forEach((notif) => {
@@ -743,7 +772,11 @@ Singleton {
         path: Qt.resolvedUrl(filePath)
         onLoaded: {
             const fileContents = notifFileView.text()
-            root.list = JSON.parse(fileContents).map((notif) => {
+            const previous = root.list.slice()
+            for (let i = 0; i < previous.length; i++)
+                root._destroyNotifResources(previous[i])
+
+            let loaded = JSON.parse(fileContents).map((notif) => {
                 return notifComponent.createObject(root, {
                     "notificationId": notif.notificationId,
                     "actions": [], // Notification actions are meaningless if they're not tracked by the server or the sender is dead
@@ -756,6 +789,13 @@ Singleton {
                     "urgency": notif.urgency,
                 });
             });
+            const overflow = loaded.length - root.maxStoredNotifications
+            if (overflow > 0) {
+                const dropped = loaded.splice(0, overflow)
+                for (let i = 0; i < dropped.length; i++)
+                    root._destroyNotifResources(dropped[i])
+            }
+            root.list = loaded
             // Find largest notificationId
             let maxId = 0
             root.list.forEach((notif) => {

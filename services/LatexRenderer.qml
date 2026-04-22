@@ -17,15 +17,34 @@ Singleton {
     id: root
     
     readonly property var renderPadding: 4 // This is to prevent cutoff in the rendered images
+    property int maxCachedRenders: Math.max(32, Config.options?.ai?.maxLatexCacheEntries ?? 300)
 
     property list<string> processedHashes: []
     property var processedExpressions: ({})
     property var renderedImagePaths: ({})
+    property var _activeProcessByHash: ({})
     property string microtexBinaryDir: "/opt/MicroTeX"
     property string microtexBinaryName: "LaTeX"
     property string latexOutputPath: Directories.latexOutput
 
     signal renderFinished(string hash, string imagePath)
+
+    function _trimCacheIfNeeded(): void {
+        const overflow = processedHashes.length - maxCachedRenders
+        if (overflow <= 0)
+            return
+        const drop = processedHashes.slice(0, overflow)
+        processedHashes = processedHashes.slice(overflow)
+        const nextExpr = Object.assign({}, processedExpressions)
+        const nextPaths = Object.assign({}, renderedImagePaths)
+        for (let i = 0; i < drop.length; i++) {
+            const h = drop[i]
+            delete nextExpr[h]
+            delete nextPaths[h]
+        }
+        processedExpressions = nextExpr
+        renderedImagePaths = nextPaths
+    }
 
     /**
     * Requests rendering of a LaTeX expression.
@@ -42,10 +61,14 @@ Singleton {
             renderFinished(hash, imagePath)
             return [hash, false]
         } else {
-            root.processedHashes.push(hash)
+            root.processedHashes = [...root.processedHashes, hash]
+            root._trimCacheIfNeeded()
             root.processedExpressions[hash] = expression
             // console.log("Rendering expression: " + expression)
         }
+
+        if (root._activeProcessByHash[hash])
+            return [hash, false]
 
         // 3. If not, render it with MicroTeX and mark as processed
         // console.log(`[LatexRenderer] Rendering expression: ${expression} with hash: ${hash}`)
@@ -73,13 +96,17 @@ Singleton {
                 onExited: (exitCode, exitStatus) => {
                     // console.log("[LatexRenderer] MicroTeX process exited with code: " + exitCode + ", status: " + exitStatus)
                     renderedImagePaths["${hash}"] = "${imagePath}"
+                    const active = Object.assign({}, root._activeProcessByHash)
+                    delete active["${hash}"]
+                    root._activeProcessByHash = active
                     root.renderFinished("${hash}", "${imagePath}")
                     microtexProcess${hash}.destroy()
                 }
             }
         `
         // console.log("MicroTeX: " + processQml)
-        Qt.createQmlObject(processQml, root, `MicroTeXProcess_${hash}`)
+        const proc = Qt.createQmlObject(processQml, root, `MicroTeXProcess_${hash}`)
+        root._activeProcessByHash[hash] = proc
         return [hash, true]
     }
 }
