@@ -14,9 +14,12 @@ Singleton {
     property string firstRunNotifBody: "Hit Super+/ for a list of keybinds"
     property string defaultWallpaperPath: ""
     property string welcomeQmlPath: FileUtils.trimFileProtocol(Quickshell.shellPath("welcome.qml"))
+    property bool _firstRunPending: false
 
     function load() {
-        listWallpapersProc.running = true
+        if (checkFirstRunProc.running || listWallpapersProc.running)
+            return
+        checkFirstRunProc.running = true
     }
 
     function enableNextTime() {
@@ -27,7 +30,8 @@ Singleton {
     }
 
     function handleFirstRun(): void {
-        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, root.defaultWallpaperPath])
+        if (root.defaultWallpaperPath.length > 0)
+            Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, root.defaultWallpaperPath])
         Quickshell.execDetached(["/usr/bin/qs", "-p", root.welcomeQmlPath])
     }
 
@@ -48,7 +52,12 @@ Singleton {
                 const idx = Math.floor(Math.random() * _candidates.length)
                 root.defaultWallpaperPath = _candidates[idx]
             }
-            checkFirstRunProc.running = true
+            if (root._firstRunPending) {
+                root._firstRunPending = false
+                root.disableNextTime()
+                root.handleFirstRun()
+            }
+            listWallpapersProc._candidates = []
         }
     }
 
@@ -62,11 +71,9 @@ Singleton {
                 // first_run.txt is written by disableNextTime() or the welcome process itself.
                 const parentDir = root.firstRunFilePath.substring(0, root.firstRunFilePath.lastIndexOf('/'))
                 Quickshell.execDetached(["/bin/sh", "-c", `mkdir -p "${parentDir}"`])
-                root.disableNextTime()
-                root.handleFirstRun()
+                root._firstRunPending = true
+                listWallpapersProc.running = true
             }
         }
     }
-
-    Component.onCompleted: listWallpapersProc.running = true
 }

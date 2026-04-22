@@ -48,9 +48,66 @@ Singleton {
     // Internal: loaded manifest data + process state
     property var _plugins: ({})
     property bool _scanning: false
+    property bool _pluginPresenceKnown: false
+    property bool _hasPluginManifests: false
 
     // Reload counter for QML component cache-busting
     property int _reloadVersion: 0
+
+    function _buildBarPluginItem(id, p): var {
+        if (p.type === "poll") {
+            return {
+                id: id,
+                name: p.name,
+                type: "poll",
+                icon: p.icon,
+                text: p.text,
+                tooltip: p.tooltip,
+                status: p.status,
+                value: p.value,
+                position: p.position,
+                visible: p.text.length > 0
+            }
+        }
+        if (p.type === "qml") {
+            return {
+                id: id,
+                name: p.name,
+                type: "qml",
+                position: p.position,
+                visible: true,
+                sourceUrl: "file://" + root.pluginDir + "/" + id + "/" + p.entryPoint + "?v=" + root._reloadVersion,
+                pluginDirPath: root.pluginDir + "/" + id
+            }
+        }
+        return null
+    }
+
+    function _applyPluginToBarModel(pluginId): void {
+        const p = root._plugins[pluginId]
+        const current = root.barPlugins
+        const idx = current.findIndex(item => item.id === pluginId)
+
+        if (!p || !p.enabled || (p.type !== "poll" && p.type !== "qml")) {
+            if (idx >= 0) {
+                const next = current.slice()
+                next.splice(idx, 1)
+                root.barPlugins = next
+            }
+            return
+        }
+
+        const nextItem = root._buildBarPluginItem(pluginId, p)
+        if (!nextItem)
+            return
+
+        const next = current.slice()
+        if (idx >= 0)
+            next[idx] = nextItem
+        else
+            next.push(nextItem)
+        root.barPlugins = next
+    }
 
     function getPluginList(): string {
         const list = []
@@ -91,7 +148,34 @@ Singleton {
         scanProc.running = true
     }
 
+    function _checkPluginPresenceAndScan() {
+        if (!root.enabled || !Config.ready)
+            return
+        if (root._pluginPresenceKnown) {
+            if (root._hasPluginManifests)
+                root.scanPlugins()
+            return
+        }
+        if (!pluginPresenceProbe.running)
+            pluginPresenceProbe.running = true
+    }
+
     // Scan plugin directories for manifest.json files
+    Process {
+        id: pluginPresenceProbe
+        running: false
+        command: [
+            "/usr/bin/bash", "-c",
+            "shopt -s nullglob; manifests=(\"" + root.pluginDir + "\"/*/manifest.json); [ ${#manifests[@]} -gt 0 ]"
+        ]
+        onExited: (exitCode, exitStatus) => {
+            root._pluginPresenceKnown = true
+            root._hasPluginManifests = (exitCode === 0)
+            if (root._hasPluginManifests)
+                root.scanPlugins()
+        }
+    }
+
     Process {
         id: scanProc
         running: false
@@ -203,30 +287,9 @@ Singleton {
             const p = _plugins[id]
             if (!p.enabled) continue
 
-            if (p.type === "poll") {
-                model.push({
-                    id: id,
-                    name: p.name,
-                    type: "poll",
-                    icon: p.icon,
-                    text: p.text,
-                    tooltip: p.tooltip,
-                    status: p.status,
-                    value: p.value,
-                    position: p.position,
-                    visible: p.text.length > 0
-                })
-            } else if (p.type === "qml") {
-                model.push({
-                    id: id,
-                    name: p.name,
-                    type: "qml",
-                    position: p.position,
-                    visible: true,
-                    sourceUrl: "file://" + root.pluginDir + "/" + id + "/" + p.entryPoint + "?v=" + root._reloadVersion,
-                    pluginDirPath: root.pluginDir + "/" + id
-                })
-            }
+            const item = root._buildBarPluginItem(id, p)
+            if (item)
+                model.push(item)
         }
         root.barPlugins = model
     }
@@ -345,7 +408,7 @@ Singleton {
                         p.value = (data.value !== undefined && data.value !== null) ? Number(data.value) : -1
                         p.lastStatus = "ok"
                         p.lastError = ""
-                        root._rebuildBarModel()
+                        root._applyPluginToBarModel(pluginProc.pluginId)
                     } catch (e) {
                         const p = root._plugins[pluginProc.pluginId]
                         if (p) {
@@ -376,7 +439,7 @@ Singleton {
         interval: 2000
         repeat: false
         running: root.enabled && Config.ready
-        onTriggered: root.scanPlugins()
+        onTriggered: root._checkPluginPresenceAndScan()
     }
 
     Connections {
@@ -386,5 +449,10 @@ Singleton {
                 startupDelay.restart()
             }
         }
+    }
+
+    onEnabledChanged: {
+        if (root.enabled && Config.ready)
+            startupDelay.restart()
     }
 }

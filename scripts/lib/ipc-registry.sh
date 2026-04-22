@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: 253186516530cfb4
-# Targets: 48
+# IPC.md hash: ea2f556cc8ee78ae
+# Targets: 49
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -19,6 +19,7 @@ declare -gA IPC_TARGET_DESC=(
   [contracts]=""
   [controlPanel]="Quick settings panel. Toggles, sliders, and system controls without opening full settings."
   [coverflowSelector]="Wallpaper coverflow (3D card) picker."
+  [dashboard]=""
   [dictation]=""
   [focus]=""
   [gamemode]="Performance mode for gaming. Auto-detects fullscreen apps and disables animations/effects. Can also be toggled manually for those stubborn games that don't go fullscreen properly."
@@ -39,10 +40,7 @@ declare -gA IPC_TARGET_DESC=(
   [proxy]=""
   [region]="Region selection tools. Screenshots, OCR, recording. Draw a box, get stuff done."
   [search]="Waffle start menu / search."
-  [dashboard]="Command center dashboard overlay. System info, quick toggles, performance, calendar."
   [session]="Power menu. Logout, suspend, reboot, shutdown. The \"I'm done for today\" buttons."
-  [sidebarLeft]="Left sidebar (The Deck). Media player, wallpapers, system view."
-  [sidebarRight]="Right sidebar. Quick toggles, notifications, controls."
   [settings]="Open the settings panel. GUI config so you don't have to edit JSON like it's 2005."
   [shellUpdate]="Shell update checker. Monitors the git repo for new commits and shows an update overlay."
   [taskview]="Waffle task view (Win+Tab style)."
@@ -73,6 +71,7 @@ declare -gA IPC_TARGET_FAMILY=(
   [contracts]="shared"
   [controlPanel]="shared"
   [coverflowSelector]="shared"
+  [dashboard]="shared"
   [dictation]="shared"
   [focus]="shared"
   [gamemode]="shared"
@@ -93,11 +92,8 @@ declare -gA IPC_TARGET_FAMILY=(
   [proxy]="shared"
   [region]="shared"
   [search]="waffle"
-  [dashboard]="shared"
   [session]="shared"
   [settings]="shared"
-  [sidebarLeft]="shared"
-  [sidebarRight]="shared"
   [shellUpdate]="shared"
   [taskview]="waffle"
   [tiling]="shared"
@@ -127,6 +123,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [contracts]="list reset"
   [controlPanel]="toggle close open"
   [coverflowSelector]="toggle open close"
+  [dashboard]="toggle open close"
   [dictation]="toggle start stop status"
   [focus]="status set cycle off"
   [gamemode]="toggle activate deactivate status"
@@ -147,11 +144,8 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [proxy]="toggle start stop status"
   [region]="screenshot search googleLens ocr record recordWithSound"
   [search]="toggle close open"
-  [dashboard]="toggle open close"
   [session]="toggle close open"
   [settings]="open toggle close page"
-  [sidebarLeft]="toggle open close"
-  [sidebarRight]="toggle open close"
   [shellUpdate]="toggle open close check performUpdate dismiss undismiss diagnose"
   [taskview]="toggle close open"
   [tiling]="toggle open hide cycle showOsd promote"
@@ -208,6 +202,9 @@ declare -gA IPC_FUNCTION_DESC=(
   ["coverflowSelector:toggle"]="Open/close coverflow selector"
   ["coverflowSelector:open"]="Open coverflow selector"
   ["coverflowSelector:close"]="Close coverflow selector"
+  ["dashboard:toggle"]=""
+  ["dashboard:open"]=""
+  ["dashboard:close"]=""
   ["dictation:toggle"]=""
   ["dictation:start"]=""
   ["dictation:stop"]=""
@@ -274,16 +271,7 @@ declare -gA IPC_FUNCTION_DESC=(
   ["search:toggle"]="Open/close start menu"
   ["search:close"]="Close start menu"
   ["search:open"]="Open start menu"
-  ["dashboard:toggle"]="Open/close dashboard"
-  ["dashboard:open"]="Open dashboard"
-  ["dashboard:close"]="Close dashboard"
   ["session:toggle"]="Open/close session menu"
-  ["sidebarLeft:toggle"]="Open/close left sidebar"
-  ["sidebarLeft:open"]="Open left sidebar"
-  ["sidebarLeft:close"]="Close left sidebar"
-  ["sidebarRight:toggle"]="Open/close right sidebar"
-  ["sidebarRight:open"]="Open right sidebar"
-  ["sidebarRight:close"]="Close right sidebar"
   ["session:close"]="Hide session screen"
   ["session:open"]="Show session screen"
   ["settings:open"]="Open settings (overlay mode toggles, window mode opens)"
@@ -374,18 +362,15 @@ bind "Mod+Alt+P" { spawn "inir" "mpris" "previous"; }'
   [region]='bind "Super+Shift+S" { spawn "inir" "region" "screenshot"; }
 bind "Super+Shift+X" { spawn "inir" "region" "ocr"; }
 bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
-  [dashboard]='bind "Super+D" { spawn "inir" "dashboard" "toggle"; }'
   [session]='bind "Super+Shift+E" { spawn "inir" "session" "toggle"; }'
-  [sidebarLeft]='bind "Mod+Backspace" { spawn "inir" "sidebarLeft" "toggle"; }'
-  [sidebarRight]='bind "Mod+Shift+Backspace" { spawn "inir" "sidebarRight" "toggle"; }'
-  [settings]='bind "Super+Comma" { spawn "qs" "msg" "-c" "inir" "settings" "open"; }'
+  [settings]='bind "Super+Comma" { spawn "inir" "settings"; }'
   [voiceSearch]='bind "Super+Shift+V" { spawn "inir" "voiceSearch" "toggle"; }'
   [wallpaperSelector]='bind "Ctrl+Alt+T" { spawn "inir" "wallpaperSelector" "toggle"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel coverflowSelector dashboard dictation focus gamemode globalActions lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar widgets wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel coverflowSelector dashboard dictation focus gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily plugins proxy region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector widgets ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel coverflowSelector dashboard dictation focus gamemode globalActions lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar widgets wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel coverflowSelector dashboard dictation focus gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily plugins proxy region session settings shellUpdate tiling voiceSearch wallpaperSelector widgets ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(osd search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 

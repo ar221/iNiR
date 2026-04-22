@@ -23,6 +23,9 @@ import qs.services
 ShellRoot {
     id: root
 
+    readonly property bool _devHotReloadEnabled: (Quickshell.env("QS_DEBUG") === "1") || (Config.options?.devMode ?? false)
+    property bool _dashboardRequested: false
+
     function _log(msg: string): void {
         if (Quickshell.env("QS_DEBUG") === "1") console.log(msg);
     }
@@ -37,7 +40,7 @@ ShellRoot {
     property var _fontSyncService: FontSyncService
 
     Component.onCompleted: {
-        Quickshell.watchFiles = true;
+        Quickshell.watchFiles = root._devHotReloadEnabled;
         root._log("[Shell] Initializing singletons");
         Hyprsunset.load();
         FirstRunExperience.load();
@@ -60,6 +63,7 @@ ShellRoot {
         target: Config
         function onReadyChanged() {
             if (Config.ready) {
+                Quickshell.watchFiles = root._devHotReloadEnabled;
                 root._log("[Shell] Config ready, applying theme");
                 Qt.callLater(() => ThemeService.applyCurrentTheme());
                 Qt.callLater(() => IconThemeService.ensureInitialized());
@@ -75,6 +79,14 @@ ShellRoot {
                 // Migration: Ensure waffle family has wBackdrop instead of iiBackdrop
                 root.migrateEnabledPanels();
             }
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onDashboardOpenChanged() {
+            if (GlobalStates.dashboardOpen)
+                root._dashboardRequested = true
         }
     }
 
@@ -194,8 +206,27 @@ ShellRoot {
 
     // Command Center Dashboard (loaded regardless of panel family)
     LazyLoader {
-        active: Config.ready && (Config.options?.dashboard?.enable ?? true)
+        active: Config.ready
+            && (Config.options?.dashboard?.enable ?? true)
+            && (root._dashboardRequested || GlobalStates.dashboardOpen)
         component: Dashboard {}
+    }
+
+    IpcHandler {
+        target: "dashboard"
+
+        function toggle(): void {
+            if (!GlobalStates.dashboardOpen)
+                root._dashboardRequested = true
+            GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen
+        }
+        function open(): void {
+            root._dashboardRequested = true
+            GlobalStates.dashboardOpen = true
+        }
+        function close(): void {
+            GlobalStates.dashboardOpen = false
+        }
     }
 
     // Close confirmation dialog (always loaded, handles IPC)
