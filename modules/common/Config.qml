@@ -29,7 +29,6 @@ Singleton {
     property bool blockWrites: false
 
     signal configChanged()
-    signal configPathChanged(string path)
 
     function flushWrites(): void {
         fileWriteTimer.stop();
@@ -85,8 +84,6 @@ Singleton {
             } catch (e) {}
         }
         obj[lastKey] = convertedValue;
-        const changedPath = keys.join(".")
-        root.configPathChanged(changedPath)
         root.configChanged()
     }
 
@@ -757,6 +754,10 @@ Singleton {
                 }
                 property bool bottom: false // Instead of top
                 property int height: -1 // -1: use theme default | positive value: override bar height in px
+                property string density: "default" // "compact", "default", "airy" — controls spacing/padding rhythm
+                property string stylePreset: "dusky" // "dusky", "clean", "glass" — controls visual language of bar groups/widgets
+                property string laneSeparator: "subtle" // "off", "subtle", "strong" — separator between utility and ambient lanes
+                property string ambientVisibility: "auto" // "auto", "always", "hidden" — ambient lane overflow policy
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
                 property int customRounding: -1 // -1: use global theme rounding | 0+: override bar rounding (px)
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)

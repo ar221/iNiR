@@ -68,6 +68,52 @@ Item { // Bar content region
     readonly property int centerSideModuleWidth: Math.max(baseCenterSideModuleWidth, rightCenterGroupContent.implicitWidth)
     readonly property bool cardStyleEverywhere: (Config.options?.dock?.cardStyle ?? false) && (Config.options?.sidebar?.cardStyle ?? false) && (Config.options?.bar?.cornerStyle === 3)
     readonly property color separatorColor: Appearance.colors.colOutlineVariant
+    readonly property string barDensity: {
+        const preset = String(Config.options?.bar?.density ?? "default").toLowerCase()
+        return (preset === "compact" || preset === "airy") ? preset : "default"
+    }
+    readonly property string barStylePreset: {
+        const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
+        return (preset === "clean" || preset === "glass") ? preset : "dusky"
+    }
+    // Density tokens (compact/default/airy)
+    readonly property int sideClusterGap: barDensity === "compact" ? 6 : (barDensity === "airy" ? 10 : 8)
+    readonly property int centerSegmentGap: barDensity === "compact" ? 4 : (barDensity === "airy" ? 8 : 6)
+    readonly property int missionClusterPadding: barDensity === "compact" ? 4 : (barDensity === "airy" ? 6 : 5)
+    readonly property int utilityClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 5 : 4)
+    readonly property int ambientClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 5 : 4)
+    // Style tokens (dusky/clean/glass)
+    readonly property int rightChipHorizontalPadding: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 9)
+    readonly property int rightChipVerticalPadding: barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 4)
+    readonly property int rightIndicatorSpacing: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 12)
+    readonly property real rightChipBackgroundAlpha: barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92)
+    readonly property int rightIndicatorIconSize: barStylePreset === "clean"
+        ? Appearance.font.pixelSize.normal
+        : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger)
+    readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
+        ? Appearance.font.pixelSize.smaller
+        : Appearance.font.pixelSize.small
+    readonly property int calendarTitleMaxChars: root.useShortenedForm === 2 ? 10 : (root.useShortenedForm === 1 ? 13 : (barDensity === "compact" ? 15 : 18))
+    readonly property string laneSeparatorMode: {
+        const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
+        return (mode === "off" || mode === "strong") ? mode : "subtle"
+    }
+    readonly property string ambientVisibilityMode: {
+        const mode = String(Config.options?.bar?.ambientVisibility ?? "auto").toLowerCase()
+        return (mode === "always" || mode === "hidden") ? mode : "auto"
+    }
+    readonly property bool showAmbientLane: ambientVisibilityMode === "always"
+        ? true
+        : (ambientVisibilityMode === "hidden" ? false : (root.useShortenedForm === 0))
+    readonly property bool showWeatherLaneItem: showAmbientLane
+        && (Config.options?.bar?.modules?.weather ?? true)
+        && (Config.options?.bar?.weather?.enable ?? false)
+    readonly property bool showRingsLaneItem: showAmbientLane
+        && (Config.options?.bar?.modules?.resources ?? true)
+    readonly property bool showAmbientLaneSeparator: laneSeparatorMode !== "off"
+        && (showWeatherLaneItem || showRingsLaneItem)
+    readonly property int ambientLaneSeparatorWidth: laneSeparatorMode === "strong" ? 2 : 1
+    readonly property real ambientLaneSeparatorOpacity: laneSeparatorMode === "strong" ? 1.0 : 0.65
 
     // Per-monitor wallpaper URL for Aurora blur — uses the actual wallpaper on this screen
     readonly property string wallpaperUrl: {
@@ -106,6 +152,16 @@ Item { // Bar content region
         Layout.fillHeight: true
         implicitWidth: 1
         color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+    }
+
+    component AmbientLaneSeparator: Rectangle {
+        Layout.topMargin: Appearance.sizes.baseBarHeight / 3
+        Layout.bottomMargin: Appearance.sizes.baseBarHeight / 3
+        Layout.fillHeight: true
+        implicitWidth: root.ambientLaneSeparatorWidth
+        radius: implicitWidth
+        color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+        opacity: root.ambientLaneSeparatorOpacity
     }
 
     // Background shadow
@@ -309,7 +365,7 @@ Item { // Bar content region
             anchors.fill: parent
             anchors.leftMargin: Appearance.rounding.screenRounding
             anchors.rightMargin: Appearance.rounding.screenRounding
-            spacing: 10
+            spacing: root.sideClusterGap
 
             // Monogram Anchor (Move 2): replaces LeftSidebarButton when bar.identity.monogram.enabled
             Loader {
@@ -326,11 +382,7 @@ Item { // Bar content region
             }
             Component {
                 id: leftSidebarButtonComponent
-                LeftSidebarButton {
-                    colBackground: barLeftSideMouseArea.hovered
-                        ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
-                        : "transparent"
-                }
+                LeftSidebarButton {}
             }
 
             ActiveWindow {
@@ -349,7 +401,7 @@ Item { // Bar content region
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
         }
-        spacing: 4
+        spacing: root.centerSegmentGap
 
         BarGroup {
             id: leftCenterGroup
@@ -467,6 +519,7 @@ Item { // Bar content region
             BarGroup {
                 id: rightCenterGroupContent
                 anchors.fill: parent
+                padding: root.missionClusterPadding
 
                 ClockWidget {
                     visible: Config.options?.bar?.modules?.clock ?? true
@@ -562,7 +615,7 @@ Item { // Bar content region
             anchors.fill: parent
             anchors.leftMargin: Appearance.rounding.screenRounding
             anchors.rightMargin: Appearance.rounding.screenRounding
-            spacing: 5
+            spacing: root.sideClusterGap
             layoutDirection: Qt.RightToLeft
 
             RippleButton { // Right sidebar button
@@ -572,13 +625,16 @@ Item { // Bar content region
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 Layout.fillWidth: false
 
-                implicitWidth: indicatorsRowLayout.implicitWidth + 10 * 2
-                implicitHeight: indicatorsRowLayout.implicitHeight + 5 * 2
+                implicitWidth: indicatorsRowLayout.implicitWidth + root.rightChipHorizontalPadding * 2
+                implicitHeight: indicatorsRowLayout.implicitHeight + root.rightChipVerticalPadding * 2
 
                 buttonRadius: Appearance.rounding.full
 
-                colBackground: barRightSideMouseArea.hovered
-                    ? (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
+                colBackground: rightSidebarButton.containsMouse
+                    ? ColorUtils.applyAlpha(
+                        (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover),
+                        root.rightChipBackgroundAlpha
+                    )
                     : "transparent"
                 colBackgroundHover: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover
                 colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active
@@ -587,7 +643,11 @@ Item { // Bar content region
                 colRippleToggled: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive
 
                 toggled: GlobalStates.sidebarRightOpen
-                property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
+                property color colText: toggled
+                    ? Appearance.m3colors.m3onSecondaryContainer
+                    : rightSidebarButton.containsMouse
+                        ? Appearance.colors.colOnLayer1
+                        : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
                     animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -600,7 +660,11 @@ Item { // Bar content region
                 RowLayout {
                     id: indicatorsRowLayout
                     anchors.centerIn: parent
-                    property real realSpacing: 15
+                    property real realSpacing: root.rightIndicatorSpacing
+                    readonly property bool hasAlertGroup: ((Config.options?.bar?.modules?.micIndicator ?? true) && (Privacy.micActive || (Audio?.micBeingAccessed ?? false)) && !(Audio.source?.audio?.muted ?? false))
+                        || ((Config.options?.bar?.modules?.batteryAlert ?? true) && Battery.available && Battery.isLowAndNotCharging)
+                        || FocusMode.active
+                    readonly property bool hasStatusGroup: ClaudeCodeProxy.active || calEventRevealer.reveal || (Notifications.silent || Notifications.unread > 0)
                     spacing: 0
 
                     Revealer {
@@ -612,7 +676,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "volume_off"
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: rightSidebarButton.colText
                         }
                     }
@@ -625,7 +689,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "mic_off"
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: rightSidebarButton.colText
                         }
                     }
@@ -639,7 +703,7 @@ Item { // Bar content region
                         MaterialSymbol {
                             text: "mic"
                             fill: 1
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: Appearance.colors.colError
                         }
                     }
@@ -652,7 +716,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "battery_alert"
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: Appearance.colors.colError
                         }
                     }
@@ -666,10 +730,29 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: FocusMode.icon
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: FocusMode.accentColor
                         }
                     }
+
+                    // Divider: alert cluster -> status cluster
+                    Revealer {
+                        reveal: indicatorsRowLayout.hasAlertGroup && indicatorsRowLayout.hasStatusGroup
+                        Layout.fillHeight: true
+                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        Behavior on Layout.rightMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            implicitWidth: 1
+                            implicitHeight: Appearance.font.pixelSize.large
+                            radius: 1
+                            color: rightSidebarButton.colText
+                            opacity: root.barStylePreset === "glass" ? 0.45 : 0.65
+                        }
+                    }
+
                     // Claude proxy indicator — live when proxy service is active
                     Revealer {
                         reveal: ClaudeCodeProxy.active
@@ -681,7 +764,7 @@ Item { // Bar content region
                         MaterialSymbol {
                             text: "dns"
                             fill: 1
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: root.rightIndicatorIconSize
                             color: Appearance.colors.colPersonalAccent
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
@@ -742,9 +825,10 @@ Item { // Bar content region
                             Text {
                                 id: calEventTitle
                                 readonly property string _raw: calEventRevealer._nextEvent?.title ?? ""
-                                text: _raw.length > 18 ? _raw.substring(0, 17) + "…" : _raw
+                                readonly property int _maxChars: root.calendarTitleMaxChars
+                                text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
                                 font.family: Appearance.font.family.main
-                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.pixelSize: root.calendarTextPixelSize
                                 color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
@@ -754,7 +838,7 @@ Item { // Bar content region
                             Text {
                                 text: calEventRevealer._deltaText
                                 font.family: Appearance.font.family.main
-                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.pixelSize: root.calendarTextPixelSize
                                 color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
@@ -791,27 +875,39 @@ Item { // Bar content region
                         readonly property bool btBad: BluetoothStatus.available && BluetoothStatus.enabled && !BluetoothStatus.connected
                         readonly property bool anyBad: networkBad || btBad
                         text: Network.materialSymbol
-                        iconSize: Appearance.font.pixelSize.larger
+                        iconSize: root.rightIndicatorIconSize
                         color: anyBad ? Appearance.colors.colError : rightSidebarButton.colText
                     }
                 }
             }
 
-            SysTray {
+            // High-priority utility cluster: timer + shell updates + tray
+            BarGroup {
+                padding: root.utilityClusterPadding
+
+                TimerIndicator {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+            }
+
+            BarGroup {
+                padding: root.utilityClusterPadding
+
+                ShellUpdateIndicator {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+            }
+
+            BarGroup {
                 visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
-                Layout.fillWidth: false
-                Layout.fillHeight: true
-                invertSide: Config.options?.bar?.bottom ?? false
-            }
+                padding: root.utilityClusterPadding
 
-            // Timer indicator
-            TimerIndicator {
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            // iNiR shell update indicator
-            ShellUpdateIndicator {
-                Layout.alignment: Qt.AlignVCenter
+                SysTray {
+                    visible: parent.visible
+                    Layout.fillWidth: false
+                    Layout.fillHeight: true
+                    invertSide: Config.options?.bar?.bottom ?? false
+                }
             }
 
             Item {
@@ -819,27 +915,30 @@ Item { // Bar content region
                 Layout.fillHeight: true
             }
 
+            AmbientLaneSeparator {
+                visible: root.showAmbientLaneSeparator
+            }
+
             // Weather
             Loader {
-                Layout.leftMargin: 4
-                active: (Config.options?.bar?.modules?.weather ?? true) && (Config.options?.bar?.weather?.enable ?? false)
+                Layout.leftMargin: 2
+                active: root.showWeatherLaneItem
 
                 sourceComponent: BarGroup {
+                    padding: root.ambientClusterPadding
                     WeatherBar {}
                 }
             }
 
-            // MiniRings — gradient arc resource indicators
-            VerticalBarSeparator {
-                visible: (Config.options?.bar?.modules?.resources ?? true)
-                    && (Config.options?.bar?.borderless ?? true)
-            }
-
             Loader {
-                active: Config.options?.bar?.modules?.resources ?? true
+                active: root.showRingsLaneItem
                 visible: active
                 Layout.alignment: Qt.AlignVCenter
-                sourceComponent: MiniRings {}
+                Layout.leftMargin: 2
+                sourceComponent: BarGroup {
+                    padding: root.ambientClusterPadding
+                    MiniRings {}
+                }
             }
         }
     }

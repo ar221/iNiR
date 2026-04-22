@@ -425,6 +425,10 @@
     "bottom": false,
     "cornerStyle": 1,
     "height": 54,
+    "density": "compact",
+    "stylePreset": "dusky",
+    "laneSeparator": "subtle",
+    "ambientVisibility": "auto",
     "customRounding": -1,
     "edgeModulesLayout": {
       "leftOrder": [

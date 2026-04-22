@@ -233,6 +233,8 @@ ContentPage {
 
             // ── Color scheme variant chips ──
             ConfigSelectionArray {
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
+                opacity: enabled ? 1.0 : 0.45
                 currentValue: Config.options?.appearance?.palette?.type ?? "auto"
                 onSelected: newValue => {
                     Config.setNestedValue("appearance.palette.type", newValue)
@@ -286,6 +288,8 @@ ContentPage {
             }
 
             ConfigSpinBox {
+                enabled: (Config.options?.appearance?.theme ?? "auto") !== "apollo"
+                opacity: enabled ? 1.0 : 0.45
                 icon: "palette"
                 text: Translation.tr("Wallpaper color strength") + " (%)"
                 value: Math.round((Config.options?.appearance?.wallpaperTheming?.colorStrength ?? 1.0) * 100)
@@ -1506,6 +1510,86 @@ ContentPage {
                                 icon: "toolbar",
                                 value: 2
                             }
+                        ]
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+
+                ContentSubsection {
+                    title: Translation.tr("Bar density")
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const preset = String(Config.options?.bar?.density ?? "default").toLowerCase();
+                            return (preset === "compact" || preset === "airy") ? preset : "default";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.density", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Compact"), icon: "density_small", value: "compact" },
+                            { displayName: Translation.tr("Default"), icon: "density_medium", value: "default" },
+                            { displayName: Translation.tr("Airy"), icon: "density_large", value: "airy" }
+                        ]
+                    }
+                }
+
+                ContentSubsection {
+                    title: Translation.tr("Bar visual")
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase();
+                            return (preset === "clean" || preset === "glass") ? preset : "dusky";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.stylePreset", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Dusky"), icon: "dark_mode", value: "dusky" },
+                            { displayName: Translation.tr("Clean"), icon: "dehaze", value: "clean" },
+                            { displayName: Translation.tr("Glass"), icon: "blur_on", value: "glass" }
+                        ]
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+
+                ContentSubsection {
+                    title: Translation.tr("Lane separator")
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase();
+                            return (mode === "off" || mode === "strong") ? mode : "subtle";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.laneSeparator", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Off"), icon: "horizontal_rule", value: "off" },
+                            { displayName: Translation.tr("Subtle"), icon: "remove", value: "subtle" },
+                            { displayName: Translation.tr("Strong"), icon: "drag_handle", value: "strong" }
+                        ]
+                    }
+                }
+
+                ContentSubsection {
+                    title: Translation.tr("Ambient lane")
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.ambientVisibility ?? "auto").toLowerCase();
+                            return (mode === "always" || mode === "hidden") ? mode : "auto";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.ambientVisibility", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Auto"), icon: "width_normal", value: "auto" },
+                            { displayName: Translation.tr("Always"), icon: "visibility", value: "always" },
+                            { displayName: Translation.tr("Hidden"), icon: "visibility_off", value: "hidden" }
                         ]
                     }
                 }

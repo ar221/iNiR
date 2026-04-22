@@ -138,6 +138,100 @@ ContentPage {
                 }
             }
 
+            ConfigRow {
+                uniform: true
+
+                ContentSubsection {
+                    title: Translation.tr("Density")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const preset = String(Config.options?.bar?.density ?? "default").toLowerCase();
+                            return (preset === "compact" || preset === "airy") ? preset : "default";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.density", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Compact"), icon: "density_small", value: "compact" },
+                            { displayName: Translation.tr("Default"), icon: "density_medium", value: "default" },
+                            { displayName: Translation.tr("Airy"), icon: "density_large", value: "airy" }
+                        ]
+                    }
+                }
+
+                ContentSubsection {
+                    title: Translation.tr("Visual preset")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase();
+                            return (preset === "clean" || preset === "glass") ? preset : "dusky";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.stylePreset", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Dusky"), icon: "dark_mode", value: "dusky" },
+                            { displayName: Translation.tr("Clean"), icon: "dehaze", value: "clean" },
+                            { displayName: Translation.tr("Glass"), icon: "blur_on", value: "glass" }
+                        ]
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+
+                ContentSubsection {
+                    title: Translation.tr("Lane separator")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase();
+                            return (mode === "off" || mode === "strong") ? mode : "subtle";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.laneSeparator", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Off"), icon: "horizontal_rule", value: "off" },
+                            { displayName: Translation.tr("Subtle"), icon: "remove", value: "subtle" },
+                            { displayName: Translation.tr("Strong"), icon: "drag_handle", value: "strong" }
+                        ]
+                    }
+                }
+
+                ContentSubsection {
+                    title: Translation.tr("Ambient lane")
+
+                    ConfigSelectionArray {
+                        currentValue: {
+                            const mode = String(Config.options?.bar?.ambientVisibility ?? "auto").toLowerCase();
+                            return (mode === "always" || mode === "hidden") ? mode : "auto";
+                        }
+                        onSelected: newValue => {
+                            Config.setNestedValue("bar.ambientVisibility", newValue);
+                        }
+                        options: [
+                            { displayName: Translation.tr("Auto"), icon: "width_normal", value: "auto" },
+                            { displayName: Translation.tr("Always"), icon: "visibility", value: "always" },
+                            { displayName: Translation.tr("Hidden"), icon: "visibility_off", value: "hidden" }
+                        ]
+                    }
+                }
+            }
+
+            ConflictNote {
+                icon: "palette"
+                text: Translation.tr("Visual preset changes borders, translucency, and typography feel. Density controls spacing only.")
+            }
+
+            ConflictNote {
+                icon: "view_week"
+                text: Translation.tr("Ambient lane controls weather/resource tail behavior on narrow displays.")
+            }
+
             // Corner style conflict notes
             ConflictNote {
                 visible: root.hugNeedsBackground
