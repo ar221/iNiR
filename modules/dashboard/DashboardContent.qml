@@ -11,6 +11,9 @@ import qs.services
 Item {
     id: root
 
+    property bool _resourceLeased: false
+    property bool _weatherLeased: false
+
     readonly property int leftColumnWidth: Config.options?.dashboard?.layout?.leftColumnWidth ?? 260
     readonly property int rightColumnWidth: Config.options?.dashboard?.layout?.rightColumnWidth ?? 240
     readonly property bool sectionProfile: Config.options?.dashboard?.sections?.profile ?? true
@@ -117,7 +120,65 @@ Item {
         }
     }
 
+    function _syncResourceLease() {
+        const active = root.visible && GlobalStates.dashboardOpen
+        if (active && !root._resourceLeased) {
+            ResourceUsage.acquire()
+            root._resourceLeased = true
+        } else if (!active && root._resourceLeased) {
+            ResourceUsage.release()
+            root._resourceLeased = false
+        }
+    }
+
+    function _syncWeatherLease() {
+        const active = root.visible
+            && GlobalStates.dashboardOpen
+            && root.sectionWeather
+            && Weather.enabled
+        if (active && !root._weatherLeased) {
+            Weather.acquire()
+            root._weatherLeased = true
+        } else if (!active && root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
     Component.onCompleted: {
-        ResourceUsage.ensureRunning()
+        root._syncResourceLease()
+        root._syncWeatherLease()
+    }
+    Component.onDestruction: {
+        if (root._resourceLeased) {
+            ResourceUsage.release()
+            root._resourceLeased = false
+        }
+        if (root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    onVisibleChanged: {
+        root._syncResourceLease()
+        root._syncWeatherLease()
+    }
+
+    onSectionWeatherChanged: root._syncWeatherLease()
+
+    Connections {
+        target: GlobalStates
+        function onDashboardOpenChanged() {
+            root._syncResourceLease()
+            root._syncWeatherLease()
+        }
+    }
+
+    Connections {
+        target: Weather
+        function onEnabledChanged() {
+            root._syncWeatherLease()
+        }
     }
 }

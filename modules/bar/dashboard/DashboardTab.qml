@@ -10,6 +10,9 @@ import qs.services
 Item {
     id: root
 
+    property bool weatherLeaseActive: false
+    property bool _weatherLeased: false
+
     implicitWidth: mainGrid.implicitWidth + 20
     implicitHeight: mainGrid.implicitHeight + 20
 
@@ -33,7 +36,39 @@ Item {
         command: ["/usr/bin/bash", "-c", "echo $XDG_CURRENT_DESKTOP"]
         stdout: SplitParser { splitMarker: ""; onRead: data => { root.wmName = data.trim() || "niri" } }
     }
-    Component.onCompleted: { osProc.running = true; wmProc.running = true; ResourceUsage.ensureRunning() }
+    Component.onCompleted: {
+        osProc.running = true
+        wmProc.running = true
+        ResourceUsage.acquire()
+        root._syncWeatherLease()
+    }
+    Component.onDestruction: {
+        ResourceUsage.release()
+        if (root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    function _syncWeatherLease() {
+        const active = root.weatherLeaseActive && Weather.enabled
+        if (active && !root._weatherLeased) {
+            Weather.acquire()
+            root._weatherLeased = true
+        } else if (!active && root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    onWeatherLeaseActiveChanged: root._syncWeatherLease()
+
+    Connections {
+        target: Weather
+        function onEnabledChanged() {
+            root._syncWeatherLease()
+        }
+    }
 
     // ── Card background helper ──
     readonly property color cardBg: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.4)
@@ -56,7 +91,7 @@ Item {
             Layout.fillWidth: true; Layout.fillHeight: true
             radius: Appearance.rounding.small
             color: root.cardBg; border.width: 1; border.color: root.cardBorder
-            visible: Weather.enabled
+            visible: Weather.readyForDisplay
 
             ColumnLayout {
                 anchors.fill: parent
@@ -119,7 +154,7 @@ Item {
         Item {
             Layout.row: 0; Layout.column: 0; Layout.columnSpan: 2
             Layout.fillWidth: true; Layout.fillHeight: true
-            visible: !Weather.enabled
+            visible: !Weather.readyForDisplay
         }
 
         // ════════════════════════════════════════════

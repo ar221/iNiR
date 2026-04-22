@@ -23,6 +23,85 @@ Singleton {
     readonly property bool hasManualCoords: configLat !== 0 || configLon !== 0
     readonly property bool hasManualCity: configCity.length > 0
 
+    property int _requestCount: 0
+    property bool _forceMode: false
+    property bool _locationDirty: false
+    readonly property bool active: root.enabled && Config.ready && root._requestCount > 0
+    readonly property bool hasData: {
+        const temp = String(root.data?.temp ?? "")
+        return temp.length > 0 && !temp.startsWith("--")
+    }
+    readonly property bool readyForDisplay: root.hasData
+
+    function _canRun(force: bool = false): bool {
+        return root.enabled && Config.ready && (force || root.active || root._forceMode)
+    }
+
+    function ensureInitialized(): void {
+        if (root._initialized)
+            return
+        root._initialized = true
+        root._retryCount = 0
+        root._lastCity = root.configCity
+        root._lastLat = root.configLat
+        root._lastLon = root.configLon
+    }
+
+    function _clearForceModeIfIdle(): void {
+        if (root.active)
+            return
+        if (retryTimer.running || pendingForceRefreshTimer.running || locationDebounceTimer.running)
+            return
+        if (!root.hasRunningRequests())
+            root._forceMode = false
+    }
+
+    function acquire(): void {
+        root._requestCount = Math.max(0, root._requestCount + 1)
+    }
+
+    function release(): void {
+        if (root._requestCount > 0)
+            root._requestCount -= 1
+    }
+
+    function ensureRunning(): void {
+        if (root._requestCount <= 0)
+            root._requestCount = 1
+    }
+
+    function stop(force: bool = false): void {
+        if (!force && root._requestCount > 0)
+            return
+        root._requestCount = 0
+        retryTimer.stop()
+        pendingForceRefreshTimer.stop()
+        locationDebounceTimer.stop()
+        fetchTimer.stop()
+        if (force)
+            root._forceMode = false
+    }
+
+    function _activate(): void {
+        root.ensureInitialized()
+        if (root.hasRunningRequests())
+            return
+        if (root._locationDirty) {
+            root._locationDirty = false
+            root.location = { valid: false, lat: 0, lon: 0, name: "" }
+        }
+        root.getData(true)
+        root.fetchForecast(true)
+    }
+
+    function _deactivate(): void {
+        retryTimer.stop()
+        pendingForceRefreshTimer.stop()
+        locationDebounceTimer.stop()
+        fetchTimer.stop()
+        root._clearForceModeIfIdle()
+    }
+
     property var location: ({ valid: false, lat: 0, lon: 0, name: "" })
 
     property var data: ({
@@ -311,7 +390,9 @@ Singleton {
         console.info("[Weather] Forecast updated — hourly:", root.hourly.length, "h, daily:", root.daily.length, "days")
     }
 
-    function fetchForecast(): void {
+    function fetchForecast(force: bool = false): void {
+        if (!root._canRun(force))
+            return
         const lat = root.location.lat
         const lon = root.location.lon
         if (!root.location.valid || (lat === 0 && lon === 0) || forecastFetcher.running) return
@@ -359,11 +440,14 @@ Singleton {
         console.info("[Weather] Updated via Open-Meteo:", result.temp, root.redactedLogCity(result.city))
     }
 
-    function fetchWeatherFallback(): void {
+    function fetchWeatherFallback(force: bool = false): void {
+        if (!root._canRun(force))
+            return
         const lat = root.location.lat
         const lon = root.location.lon
         if ((lat === 0 && lon === 0) || openMeteoFetcher.running) {
-            retryTimer.start()
+            if (root._canRun(force))
+                retryTimer.start()
             return
         }
 
@@ -385,8 +469,15 @@ Singleton {
         openMeteoFetcher.running = true
     }
 
+    function _queueRetry(force: bool = false): void {
+        if (root._canRun(force))
+            retryTimer.start()
+    }
+
     // Resolve location: manual coords > manual city > GPS > IP auto-detect
-    function resolveLocation(): void {
+    function resolveLocation(force: bool = false): void {
+        if (!root._canRun(force))
+            return
         if (gpsLocator.running || ipLocator.running || fallbackLocator.running
                 || forwardGeocoder.running || reverseGeocoder.running || fetcher.running) {
             return;
@@ -429,23 +520,27 @@ Singleton {
         }
 
         // Auto-detect from IP
-        getLocation();
+        getLocation(force);
     }
 
     // Step 1: Get location from IP (primary method)
-    function getLocation(): void {
+    function getLocation(force: bool = false): void {
+        if (!root._canRun(force))
+            return
         if (ipLocator.running) return;
         console.info("[Weather] Getting location from IP...");
         ipLocator.running = true;
     }
 
     // Step 2: Fetch weather using coordinates (precise) or city name (fallback)
-    function fetchWeather(): void {
+    function fetchWeather(force: bool = false): void {
+        if (!root._canRun(force))
+            return
         if (!root.location.valid || fetcher.running) return;
 
         // Skip primary provider (wttr.in) if it has failed repeatedly — go straight to Open-Meteo
         if (root._primaryFailCount >= 3 && Date.now() < root._primaryFailUntil) {
-            root.fetchWeatherFallback();
+            root.fetchWeatherFallback(force);
             return;
         }
         
@@ -463,20 +558,28 @@ Singleton {
     function hasRunningRequests(): bool {
         return gpsLocator.running || ipLocator.running || fallbackLocator.running
             || forwardGeocoder.running || reverseGeocoder.running
-            || fetcher.running || openMeteoFetcher.running;
+            || fetcher.running || openMeteoFetcher.running || forecastFetcher.running;
     }
 
-    function getData(): void {
-        if (root.location.valid) {
-            fetchWeather();
+    function getData(force: bool = false): void {
+        if (!root._canRun(force))
+            return
+        root.ensureInitialized()
+        if (root.location.valid && !root._locationDirty) {
+            fetchWeather(force);
         } else {
-            resolveLocation();
+            resolveLocation(force);
         }
     }
 
     // Force refresh (useful for settings UI "refresh now" button)
     function forceRefresh(): void {
+        if (!root.enabled || !Config.ready)
+            return
+        root.ensureInitialized()
         console.info("[Weather] Force refresh requested");
+        root._forceMode = true;
+        root._locationDirty = false;
         root._forceRefreshPending = false;
         root.location = { valid: false, lat: 0, lon: 0, name: "" };
         root._retryCount = 0;
@@ -488,7 +591,7 @@ Singleton {
             pendingForceRefreshTimer.restart();
             return;
         }
-        resolveLocation();
+        resolveLocation(true);
     }
 
     // Retry timer for when network isn't ready at startup
@@ -504,6 +607,11 @@ Singleton {
         interval: Math.min(5000 * Math.pow(2, root._retryCount), 80000)
         repeat: false
         onTriggered: {
+            if (!root._canRun()) {
+                retryTimer.stop()
+                root._clearForceModeIfIdle()
+                return
+            }
             if (root._retryCount < 5) {
                 root._retryCount++;
                 console.info("[Weather] Retry attempt", root._retryCount);
@@ -524,13 +632,21 @@ Singleton {
         onTriggered: {
             if (!root._forceRefreshPending) {
                 pendingForceRefreshTimer.stop();
+                root._clearForceModeIfIdle()
+                return;
+            }
+            if (!root._canRun()) {
+                root._forceRefreshPending = false;
+                pendingForceRefreshTimer.stop();
+                root._clearForceModeIfIdle();
                 return;
             }
             if (root.hasRunningRequests())
                 return;
             root._forceRefreshPending = false;
             pendingForceRefreshTimer.stop();
-            root.resolveLocation();
+            root.resolveLocation(true);
+            root._clearForceModeIfIdle();
         }
     }
 
@@ -540,6 +656,11 @@ Singleton {
         interval: 1500  // 1.5s after last keystroke
         repeat: false
         onTriggered: {
+            if (!root._canRun()) {
+                root._locationDirty = true
+                locationDebounceTimer.stop()
+                return
+            }
             root._lastCity = root.configCity;
             root._lastLat = root.configLat;
             root._lastLon = root.configLon;
@@ -550,16 +671,22 @@ Singleton {
 
     property bool _initialized: false
 
-    onEnabledChanged: {
-        if (enabled && Config.ready && !root._initialized) {
-            root._initialized = true;
-            root._retryCount = 0;
-            root.location = { valid: false, lat: 0, lon: 0, name: "" };
-            resolveLocation();
-        }
+    onActiveChanged: {
+        if (root.active)
+            root._activate()
+        else
+            root._deactivate()
     }
+
+    onEnabledChanged: {
+        if (!enabled)
+            root.stop(true)
+        else if (root.active)
+            root._activate()
+    }
+
     onUseUSCSChanged: {
-        if (root.location.valid) {
+        if (root._canRun() && root.location.valid) {
             fetchWeather();
             fetchForecast();
         }
@@ -567,7 +694,7 @@ Singleton {
 
     // Fire forecast fetch whenever location becomes valid (covers all resolution paths)
     onLocationChanged: {
-        if (root.location.valid && root.enabled) {
+        if (root.location.valid && root._canRun()) {
             Qt.callLater(() => root.fetchForecast())
         }
     }
@@ -580,27 +707,42 @@ Singleton {
     onConfigCityChanged: {
         if (!Config.ready || !root.enabled || !root._initialized) return;
         if (root.configCity === root._lastCity) return;
+        if (!root._canRun()) {
+            root._locationDirty = true
+            root._lastCity = root.configCity
+            return
+        }
         locationDebounceTimer.restart();
     }
     onConfigLatChanged: {
         if (!Config.ready || !root.enabled || !root._initialized) return;
         if (root.configLat === root._lastLat) return;
+        if (!root._canRun()) {
+            root._locationDirty = true
+            root._lastLat = root.configLat
+            return
+        }
         if (root.hasManualCoords) locationDebounceTimer.restart();
     }
     onConfigLonChanged: {
         if (!Config.ready || !root.enabled || !root._initialized) return;
         if (root.configLon === root._lastLon) return;
+        if (!root._canRun()) {
+            root._locationDirty = true
+            root._lastLon = root.configLon
+            return
+        }
         if (root.hasManualCoords) locationDebounceTimer.restart();
     }
 
     Connections {
         target: Config
         function onReadyChanged() {
-            if (Config.ready && root.enabled && !root._initialized) {
-                root._initialized = true;
-                root._retryCount = 0;
-                root.resolveLocation();
-            }
+            if (!Config.ready)
+                return
+            root.ensureInitialized()
+            if (root.active)
+                root._activate()
         }
     }
 
@@ -610,6 +752,8 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "10", ""]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 if (text.length === 0) {
                     console.warn("[Weather] Forward geocode empty, falling back to city name");
                     root.location = { valid: true, lat: 0, lon: 0, name: root.configCity };
@@ -688,6 +832,8 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "10", ""]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 if (text.length === 0) {
                     root.fetchWeather();
                     return;
@@ -726,6 +872,8 @@ Singleton {
         onRunningChanged: if (running) _handledFallback = false
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 if (text.trim().length === 0) {
                     console.warn("[Weather] GPS failed, falling back to IP");
                     gpsLocator._handledFallback = true;
@@ -752,6 +900,8 @@ Singleton {
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             if (code !== 0 && !root.location.valid && !gpsLocator._handledFallback) {
                 console.warn("[Weather] GPS process failed (code " + code + "), falling back to IP");
                 gpsLocator._handledFallback = true;
@@ -766,6 +916,8 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "10", "http://ip-api.com/json/?fields=lat,lon,city,regionName"]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 if (text.length === 0) {
                     console.warn("[Weather] IP location empty, trying fallback");
                     fallbackLocator.running = true;
@@ -792,6 +944,8 @@ Singleton {
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             if (code !== 0) {
                 console.warn("[Weather] IP location failed, trying fallback");
                 fallbackLocator.running = true;
@@ -805,6 +959,8 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "10", "https://ipwho.is/"]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 if (text.length === 0) return;
                 try {
                     const data = JSON.parse(text);
@@ -819,18 +975,20 @@ Singleton {
                         root.fetchWeather();
                     } else {
                         // Both methods failed, schedule retry
-                        retryTimer.start();
+                        root._queueRetry();
                     }
                 } catch (e) {
                     console.error("[Weather] Fallback location error:", e.message);
-                    retryTimer.start();
+                    root._queueRetry();
                 }
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             // If fallback also fails, schedule retry
             if (code !== 0 && !root.location.valid) {
-                retryTimer.start();
+                root._queueRetry();
             }
         }
     }
@@ -844,6 +1002,8 @@ Singleton {
         onRunningChanged: if (running) _fallbackTriggered = false
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 const payload = text.trim();
                 if (payload.length === 0) {
                     root._emptyResponseCount++;
@@ -887,6 +1047,7 @@ Singleton {
                     root.refineData(normalized);
                     root._emptyResponseCount = 0;
                     root._primaryFailCount = 0; // Reset on success
+                    root._clearForceModeIfIdle();
                 } catch (e) {
                     root._emptyResponseCount++;
                     if (root._emptyResponseCount >= 3) {
@@ -904,6 +1065,8 @@ Singleton {
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             if (code !== 0 && !fetcher._fallbackTriggered) {
                 fetcher._fallbackTriggered = true;
                 root._primaryFailCount++;
@@ -911,6 +1074,7 @@ Singleton {
                 console.warn("[Weather] Primary provider failed, switching fallback. code:", code);
                 root.fetchWeatherFallback();
             }
+            root._clearForceModeIfIdle();
         }
     }
 
@@ -919,25 +1083,31 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "15", ""]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 const payload = text.trim()
                 if (payload.length === 0) {
-                    retryTimer.start()
+                    root._queueRetry()
                     return
                 }
                 try {
                     root.refineOpenMeteoData(JSON.parse(payload))
                     root._emptyResponseCount = 0
+                    root._clearForceModeIfIdle()
                 } catch (e) {
                     console.warn("[Weather] Open-Meteo parse error:", e.message)
-                    retryTimer.start()
+                    root._queueRetry()
                 }
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             if (code !== 0) {
                 console.warn("[Weather] Open-Meteo fetch failed, code:", code)
-                retryTimer.start()
+                root._queueRetry()
             }
+            root._clearForceModeIfIdle()
         }
     }
 
@@ -947,6 +1117,8 @@ Singleton {
         command: ["/usr/bin/curl", "-s", "--max-time", "15", ""]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!root._canRun())
+                    return
                 const payload = text.trim()
                 if (payload.length === 0) {
                     console.warn("[Weather] Forecast fetch returned empty response")
@@ -960,25 +1132,34 @@ Singleton {
             }
         }
         onExited: (code) => {
+            if (!root._canRun())
+                return
             if (code !== 0)
                 console.warn("[Weather] Forecast fetch failed, code:", code)
+            root._clearForceModeIfIdle()
         }
     }
 
     Timer {
         id: fetchTimer
-        running: root.enabled && Config.ready
+        running: root.active || root._forceMode
         repeat: true
         interval: root.fetchInterval > 0 ? root.fetchInterval : 600000
         onTriggered: {
+            if (!root._canRun())
+                return
             root.getData()
             root.fetchForecast()
         }
         onRunningChanged: {
             if (running) Qt.callLater(() => {
+                if (!root._canRun())
+                    return
                 root.getData()
                 root.fetchForecast()
             })
+            else
+                root._clearForceModeIfIdle()
         }
     }
 }

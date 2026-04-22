@@ -310,7 +310,7 @@ MouseArea {
         
         // Bottom left: Weather widget
         Loader {
-            active: Weather.data?.temp && Weather.data.temp.length > 0
+            active: Weather.readyForDisplay
             visible: active
             anchors {
                 left: parent.left

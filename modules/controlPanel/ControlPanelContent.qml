@@ -25,6 +25,7 @@ Item {
     readonly property bool showSystemSection: Config.options?.controlPanel?.showSystemSection ?? true
     readonly property bool showSlidersSection: Config.options?.controlPanel?.showSlidersSection ?? true
     readonly property bool showQuickActionsSection: Config.options?.controlPanel?.showQuickActionsSection ?? true
+    property bool _weatherLeased: false
     
     implicitHeight: background.implicitHeight
     
@@ -45,6 +46,45 @@ Item {
     readonly property color wallpaperDominantColor: (wallpaperColorQuantizer?.colors?.[0] ?? Appearance.colors.colPrimary)
     readonly property QtObject blendedColors: AdaptedMaterialScheme {
         color: ColorUtils.mix(root.wallpaperDominantColor, Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
+    }
+
+    function _syncWeatherLease() {
+        const active = root.visible
+            && GlobalStates.controlPanelOpen
+            && root.showWeatherSection
+            && Weather.enabled
+        if (active && !root._weatherLeased) {
+            Weather.acquire()
+            root._weatherLeased = true
+        } else if (!active && root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    Component.onCompleted: root._syncWeatherLease()
+    Component.onDestruction: {
+        if (root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    onVisibleChanged: root._syncWeatherLease()
+    onShowWeatherSectionChanged: root._syncWeatherLease()
+
+    Connections {
+        target: GlobalStates
+        function onControlPanelOpenChanged() {
+            root._syncWeatherLease()
+        }
+    }
+
+    Connections {
+        target: Weather
+        function onEnabledChanged() {
+            root._syncWeatherLease()
+        }
     }
 
     // Shadow

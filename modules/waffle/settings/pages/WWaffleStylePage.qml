@@ -469,7 +469,7 @@ WSettingsPage {
         
         // Current detected location
         WSettingsRow {
-            visible: Weather.location.valid
+            visible: Weather.location.valid || Weather.readyForDisplay
             label: Translation.tr("Detected location")
             icon: "globe-search"
             description: Weather.location.name || (Weather.location.lat + ", " + Weather.location.lon)

@@ -10,7 +10,7 @@ DashboardCard {
     id: root
     headerText: ""
 
-    visible: Weather.enabled
+    visible: Weather.readyForDisplay
 
     // Heat-gradient: cool → warm → hot across palette.
     // Maps parsed integer temp (°C/°F) from 0°C (colSubtext) to 40°C+ (colError).

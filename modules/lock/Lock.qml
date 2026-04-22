@@ -15,6 +15,19 @@ import Quickshell.Hyprland
 Scope {
     id: root
 
+    property bool _weatherLeased: false
+
+    function _syncWeatherLease() {
+        const active = GlobalStates.screenLocked && Weather.enabled
+        if (active && !root._weatherLeased) {
+            Weather.acquire()
+            root._weatherLeased = true
+        } else if (!active && root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
     readonly property bool _lockActivating: lockActivateDelay.running
 
     Timer {
@@ -146,6 +159,28 @@ Scope {
         // Initialize cache
         if (Config.ready) {
             root._cachedUseWaffleLock = Config.options?.panelFamily === "waffle"
+        }
+        root._syncWeatherLease()
+    }
+
+    Component.onDestruction: {
+        if (root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onScreenLockedChanged() {
+            root._syncWeatherLease()
+        }
+    }
+
+    Connections {
+        target: Weather
+        function onEnabledChanged() {
+            root._syncWeatherLease()
         }
     }
     

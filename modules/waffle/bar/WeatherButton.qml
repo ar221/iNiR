@@ -9,14 +9,44 @@ import qs.modules.waffle.looks
 BarButton {
     id: root
 
+    property bool _weatherLeased: false
+
     leftInset: 8
     rightInset: 8
     implicitWidth: contentRow.implicitWidth + leftInset + rightInset + 8
     readonly property string locationText: Weather.visibleCity
     readonly property string secondaryText: locationText || root.weatherDescription
 
+    function _syncWeatherLease() {
+        const active = root.visible && Weather.enabled
+        if (active && !root._weatherLeased) {
+            Weather.acquire()
+            root._weatherLeased = true
+        } else if (!active && root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    Component.onCompleted: root._syncWeatherLease()
+    Component.onDestruction: {
+        if (root._weatherLeased) {
+            Weather.release()
+            root._weatherLeased = false
+        }
+    }
+
+    onVisibleChanged: root._syncWeatherLease()
+
+    Connections {
+        target: Weather
+        function onEnabledChanged() {
+            root._syncWeatherLease()
+        }
+    }
+
     onClicked: {
-        Weather.getData()
+        Weather.forceRefresh()
         GlobalStates.waffleWidgetsOpen = !GlobalStates.waffleWidgetsOpen
     }
 

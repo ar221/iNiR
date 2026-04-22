@@ -10,7 +10,7 @@ Rectangle {
     id: root
     Layout.fillWidth: true
     implicitHeight: visible ? contentLayout.implicitHeight + 16 : 0
-    visible: Weather.enabled && Weather.data.temp && !Weather.data.temp.startsWith("--")
+    visible: Weather.readyForDisplay
     readonly property bool compactMode: Config.options?.controlPanel?.compactMode ?? true
     
     readonly property bool inirEverywhere: Appearance.inirEverywhere

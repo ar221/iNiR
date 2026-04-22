@@ -13,6 +13,7 @@ Singleton {
     id: root
 
     property bool _runningRequested: false
+    property int _requestCount: 0
     property bool _initRequested: false
 
     // Auto-stop polling when nothing requested it recently.
@@ -161,7 +162,23 @@ Singleton {
 		pollTimer.restart()
 	}
 
-	function stop(): void {
+	function acquire(): void {
+		root._requestCount = Math.max(0, root._requestCount + 1)
+		root.ensureRunning()
+	}
+
+	function release(): void {
+		if (root._requestCount > 0)
+			root._requestCount -= 1
+		if (root._requestCount <= 0) {
+			root._requestCount = 0
+			root.stop()
+		}
+	}
+
+	function stop(force: bool = false): void {
+		if (!force && root._requestCount > 0)
+			return
 		root._runningRequested = false
 		pollTimer.stop()
 		autoStopTimer.stop()
@@ -179,7 +196,7 @@ Singleton {
 	Timer {
 		id: pollTimer
 		interval: Config.options?.resources?.updateInterval ?? 3000
-	    running: root._runningRequested
+	    running: root._runningRequested || root._requestCount > 0
 	    repeat: true
 		onTriggered: {
 	        autoStopTimer.restart()

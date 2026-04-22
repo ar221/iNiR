@@ -16,6 +16,7 @@ StyledOverlayWidget {
     minimumHeight: 200
 
     Component.onCompleted: ResourceUsage.ensureRunning()
+    Component.onDestruction: ResourceUsage.stop()
     property list<var> resources: [
         {
             "icon": "planner_review",

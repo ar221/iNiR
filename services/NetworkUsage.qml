@@ -14,6 +14,9 @@ import qs.modules.common
 Singleton {
     id: root
 
+    property bool _runningRequested: false
+    property int _requestCount: 0
+
     property real downloadSpeed: 0       // bytes per second
     property real uploadSpeed: 0         // bytes per second
     property string downloadSpeedStr: "" // human readable
@@ -30,6 +33,38 @@ Singleton {
     property real _lastTx: 0
     property bool _firstPoll: true
 
+    function _pollNow() {
+        netDevView.reload()
+        root._parseNetDev(netDevView.text())
+    }
+
+    function ensureRunning(): void {
+        root._runningRequested = true
+        pollTimer.restart()
+        root._pollNow()
+    }
+
+    function acquire(): void {
+        root._requestCount = Math.max(0, root._requestCount + 1)
+        root.ensureRunning()
+    }
+
+    function release(): void {
+        if (root._requestCount > 0)
+            root._requestCount -= 1
+        if (root._requestCount <= 0) {
+            root._requestCount = 0
+            root.stop()
+        }
+    }
+
+    function stop(force = false): void {
+        if (!force && root._requestCount > 0)
+            return
+        root._runningRequested = false
+        pollTimer.stop()
+    }
+
     FileView {
         id: netDevView
         path: "/proc/net/dev"
@@ -38,12 +73,9 @@ Singleton {
     Timer {
         id: pollTimer
         interval: 2000
-        running: true
+        running: root._runningRequested || root._requestCount > 0
         repeat: true
-        onTriggered: {
-            netDevView.reload();
-            root._parseNetDev(netDevView.text());
-        }
+        onTriggered: root._pollNow()
     }
 
     function _parseNetDev(output) {
@@ -145,7 +177,6 @@ Singleton {
     }
 
     Component.onCompleted: {
-        netDevView.reload();
-        root._parseNetDev(netDevView.text());
+        // Lazy: polling starts only when a visible consumer requests it.
     }
 }

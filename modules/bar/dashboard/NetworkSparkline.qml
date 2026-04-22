@@ -9,6 +9,9 @@ ColumnLayout {
     id: root
     spacing: 6
 
+    Component.onCompleted: NetworkUsage.acquire()
+    Component.onDestruction: NetworkUsage.release()
+
     // Sparkline canvas
     Canvas {
         id: sparkCanvas

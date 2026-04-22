@@ -952,7 +952,7 @@ ContentPage {
             // Current detected location display
             StyledText {
                 Layout.fillWidth: true
-                visible: (Config.options?.bar?.weather?.enable ?? false) && Weather.location.valid
+                visible: (Config.options?.bar?.weather?.enable ?? false) && (Weather.location.valid || Weather.readyForDisplay)
                 text: Translation.tr("Current location:") + " " + (Weather.location.name || (Weather.location.lat + ", " + Weather.location.lon))
                 color: Appearance.colors.colOnSurfaceVariant
                 font.pixelSize: Appearance.font.pixelSize.small

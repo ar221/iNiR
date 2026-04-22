@@ -11,9 +11,49 @@ import "root:"
 Item {
     id: root
     property int margin: 10
+    property bool _resourceLeased: false
+    property bool _networkLeased: false
 
-    Component.onCompleted: ResourceUsage.ensureRunning()
-    Component.onDestruction: ResourceUsage.stop()
+    function _syncServiceLeases() {
+        const active = root.visible && GlobalStates.sidebarRightOpen
+
+        if (active && !root._resourceLeased) {
+            ResourceUsage.acquire()
+            root._resourceLeased = true
+        } else if (!active && root._resourceLeased) {
+            ResourceUsage.release()
+            root._resourceLeased = false
+        }
+
+        if (active && !root._networkLeased) {
+            NetworkUsage.acquire()
+            root._networkLeased = true
+        } else if (!active && root._networkLeased) {
+            NetworkUsage.release()
+            root._networkLeased = false
+        }
+    }
+
+    Component.onCompleted: root._syncServiceLeases()
+    Component.onDestruction: {
+        if (root._resourceLeased) {
+            ResourceUsage.release()
+            root._resourceLeased = false
+        }
+        if (root._networkLeased) {
+            NetworkUsage.release()
+            root._networkLeased = false
+        }
+    }
+
+    onVisibleChanged: root._syncServiceLeases()
+
+    Connections {
+        target: GlobalStates
+        function onSidebarRightOpenChanged() {
+            root._syncServiceLeases()
+        }
+    }
 
     // Style tokens
     readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText

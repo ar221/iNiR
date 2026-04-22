@@ -308,7 +308,9 @@ LazyLoader {
                     currentIndex: 0
 
                     // Overview tab
-                    DashboardTab {}
+                    DashboardTab {
+                        weatherLeaseActive: root.active && tabStack.currentIndex === 0
+                    }
 
                     // Media tab
                     MediaTab {}

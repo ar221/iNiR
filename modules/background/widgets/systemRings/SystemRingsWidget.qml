@@ -26,8 +26,8 @@ AbstractBackgroundWidget {
     implicitWidth: ringCount * 80 + (ringCount - 1) * 16 + 40
     implicitHeight: cardContent.implicitHeight + cardContent.anchors.margins * 2
 
-    Component.onCompleted: ResourceUsage.ensureRunning()
-    Component.onDestruction: ResourceUsage.stop()
+    Component.onCompleted: ResourceUsage.acquire()
+    Component.onDestruction: ResourceUsage.release()
 
     Timer {
         running: root.visible

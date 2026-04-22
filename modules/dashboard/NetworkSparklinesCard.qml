@@ -11,6 +11,9 @@ DashboardCard {
     id: root
     headerText: "Network"
 
+    Component.onCompleted: NetworkUsage.acquire()
+    Component.onDestruction: NetworkUsage.release()
+
     Sparkline {
         Layout.fillWidth: true
         dataPoints: NetworkUsage.downloadHistory

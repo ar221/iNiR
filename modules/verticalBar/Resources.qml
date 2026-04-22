@@ -12,6 +12,7 @@ MouseArea {
     hoverEnabled: true
 
     Component.onCompleted: ResourceUsage.ensureRunning()
+    Component.onDestruction: ResourceUsage.stop()
 
     ColumnLayout {
         id: columnLayout

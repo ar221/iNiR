@@ -9,7 +9,7 @@ ColumnLayout {
     id: root
 
     property var configEntry: ({})
-    readonly property bool hasWeather: Weather.enabled && Weather.data?.temp && !Weather.data.temp.startsWith("--")
+    readonly property bool hasWeather: Weather.readyForDisplay
 
     visible: hasWeather
     spacing: 4

@@ -181,7 +181,7 @@ MouseArea {
             spacing: 24
 
             Loader {
-                active: (Weather.data?.temp?.length ?? 0) > 0
+                active: Weather.readyForDisplay
                 visible: active
 
                 sourceComponent: Row {

@@ -198,13 +198,13 @@ WBarAttachedPanelContent {
                 }
             }
 
-            WPanelSeparator { visible: (Config.options?.waffles?.widgetsPanel?.showWeather ?? true) && Weather.data.temp !== undefined && Weather.data.temp !== "" }
+            WPanelSeparator { visible: (Config.options?.waffles?.widgetsPanel?.showWeather ?? true) && Weather.readyForDisplay }
 
             // Weather widget
             BodyRectangle {
                 Layout.fillWidth: true
                 implicitHeight: weatherContent.implicitHeight + Looks.dp(32)
-                visible: (Config.options?.waffles?.widgetsPanel?.showWeather ?? true) && Weather.data.temp !== undefined && Weather.data.temp !== ""
+                visible: (Config.options?.waffles?.widgetsPanel?.showWeather ?? true) && Weather.readyForDisplay
 
                 ColumnLayout {
                     id: weatherContent

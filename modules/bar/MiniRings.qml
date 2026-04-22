@@ -8,7 +8,8 @@ RowLayout {
     spacing: 12
 
     // Ensure resource polling is active while rings are visible
-    Component.onCompleted: ResourceUsage.ensureRunning()
+    Component.onCompleted: ResourceUsage.acquire()
+    Component.onDestruction: ResourceUsage.release()
 
     // CPU ring — primary family (compute = primary role)
     MiniRing {
