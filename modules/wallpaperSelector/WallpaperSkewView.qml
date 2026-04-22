@@ -301,6 +301,7 @@ Item {
     readonly property int sliceSpacing: Math.round(baseSliceSpacing * skewScale)
     readonly property int deckWidth: Math.round(expandedCardWidth + (visibleSliceCount - 1) * (sliceWidth + sliceSpacing))
     readonly property int skewFrameWidth: expandedCardWidth + skewExtent
+    readonly property int effectDistanceThreshold: 3
 
     readonly property string _thumbSizeName: {
         const w = Math.round(root.skewFrameWidth * root.thumbnailDecodeScale * root._dpr)
@@ -831,7 +832,7 @@ Item {
         orientation: ListView.Horizontal
         spacing: root.sliceSpacing
         clip: false
-        cacheBuffer: root.expandedCardWidth * 4
+        cacheBuffer: root.expandedCardWidth * 2
         focus: false
 
         highlightRangeMode: ListView.StrictlyEnforceRange
@@ -888,6 +889,9 @@ Item {
             readonly property string mediaKind: root._mediaKind(fileName)
             readonly property bool isCurrent: ListView.isCurrentItem
             readonly property bool isHovered: itemMouseArea.containsMouse
+            readonly property int distanceFromCurrent: Math.abs(index - skewView.currentIndex)
+            readonly property bool highQualityTier: delegateItem.isCurrent || delegateItem.distanceFromCurrent <= 1
+            readonly property bool effectsTier: delegateItem.isCurrent || delegateItem.distanceFromCurrent <= root.effectDistanceThreshold
             readonly property bool isActive: filePath.length > 0
                 && root._normalizedFilePath(filePath) === root._normalizedFilePath(root.currentWallpaperPath)
 
@@ -1035,7 +1039,7 @@ Item {
                     asynchronous: true
                     retainWhileLoading: true
                     smooth: true
-                    mipmap: delegateItem.isCurrent
+                    mipmap: delegateItem.highQualityTier
                     sourceSize.width: delegateItem._sourceW
                     sourceSize.height: delegateItem._sourceH
                 }
@@ -1060,7 +1064,7 @@ Item {
                     asynchronous: true
                     cache: true
                     smooth: true
-                    mipmap: delegateItem.isCurrent
+                    mipmap: delegateItem.highQualityTier
                     sourceSize.width: delegateItem._sourceW
                     sourceSize.height: delegateItem._sourceH
                     source: {
@@ -1113,9 +1117,9 @@ Item {
                 }
 
                 // Parallelogram mask — CurveRenderer provides AA, no MSAA layers needed
-                layer.enabled: true
-                layer.smooth: delegateItem.isCurrent
-                layer.samples: delegateItem.isCurrent ? 4 : 0
+                layer.enabled: delegateItem.effectsTier
+                layer.smooth: delegateItem.highQualityTier
+                layer.samples: delegateItem.highQualityTier ? 4 : 0
                 layer.effect: MultiEffect {
                     maskEnabled: true
                     maskSource: ShaderEffectSource {

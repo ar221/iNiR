@@ -71,6 +71,16 @@ Variants {
         readonly property var workSafetyTriggerOptions: workSafetyOptions.triggerCondition ?? {}
         readonly property var lockBlurOptions: Config.options?.lock?.blur ?? {}
         readonly property var backgroundWidgetsOptions: backgroundOptions.widgets ?? {}
+        readonly property int blurSampleCap: 41
+        readonly property real _animatedBlurStrength: Math.max(0, Math.min(1, Number(bgRoot.effectsOptions.thumbnailBlurStrength ?? 50) / 100))
+        readonly property int animatedWallpaperBlurRadius: Math.round(Math.min(Number(bgRoot.effectsOptions.blurRadius ?? 32), 18) * bgRoot._animatedBlurStrength)
+        readonly property int animatedWallpaperBlurSamples: Math.min(bgRoot.blurSampleCap, (bgRoot.animatedWallpaperBlurRadius * 2) + 1)
+        readonly property int staticWallpaperBlurRadius: Math.round(Math.min(Number(bgRoot.effectsOptions.blurRadius ?? 32), 28))
+        readonly property int staticWallpaperBlurSamples: Math.min(bgRoot.blurSampleCap, (bgRoot.staticWallpaperBlurRadius * 2) + 1)
+        readonly property int lockBlurSamples: {
+            const lockRadius = GlobalStates.screenLocked ? Number(bgRoot.lockBlurOptions.radius ?? 0) : 0
+            return Math.min(bgRoot.blurSampleCap, (Math.max(0, Math.round(lockRadius)) * 2) + 1)
+        }
 
         // Multi-monitor wallpaper support
         // IMPORTANT: Only use WallpaperListener when multi-monitor is enabled.
@@ -807,8 +817,8 @@ Variants {
 
                     layer.enabled: Appearance.effectsEnabled && (bgRoot.effectsOptions.enableAnimatedBlur ?? false) && (bgRoot.effectsOptions.blurRadius ?? 0) > 0
                     layer.effect: GaussianBlur {
-                        radius: Math.round((bgRoot.effectsOptions.blurRadius ?? 32) * Math.max(0, Math.min(1, (bgRoot.effectsOptions.thumbnailBlurStrength ?? 50) / 100)))
-                        samples: radius * 2 + 1
+                        radius: bgRoot.animatedWallpaperBlurRadius
+                        samples: bgRoot.animatedWallpaperBlurSamples
                     }
                 }
 
@@ -890,8 +900,8 @@ Variants {
 
                     layer.enabled: Appearance.effectsEnabled && (bgRoot.effectsOptions.enableAnimatedBlur ?? false) && (bgRoot.effectsOptions.blurRadius ?? 0) > 0
                     layer.effect: GaussianBlur {
-                        radius: Math.round((bgRoot.effectsOptions.blurRadius ?? 32) * Math.max(0, Math.min(1, (bgRoot.effectsOptions.thumbnailBlurStrength ?? 50) / 100)))
-                        samples: radius * 2 + 1
+                        radius: bgRoot.animatedWallpaperBlurRadius
+                        samples: bgRoot.animatedWallpaperBlurSamples
                     }
                 }
             }
@@ -910,6 +920,7 @@ Variants {
                         && !bgRoot.wallpaperIsGif
                         && !bgRoot.wallpaperIsVideo
                 anchors.fill: wallpaperContainer
+                asynchronous: true
                 sourceComponent: Item {
                     anchors.fill: parent
                     opacity: bgRoot.blurProgress
@@ -917,8 +928,9 @@ Variants {
                     GaussianBlur {
                         anchors.fill: parent
                         source: wallpaper
-                        radius: bgRoot.effectsOptions.blurRadius ?? 32
-                        samples: radius * 2 + 1
+                        radius: bgRoot.staticWallpaperBlurRadius
+                        samples: bgRoot.staticWallpaperBlurSamples
+                        cached: true
                     }
                 }
             }
@@ -928,6 +940,7 @@ Variants {
                 z: 2
                 active: (bgRoot.lockBlurOptions.enable ?? false) && (GlobalStates.screenLocked || scaleAnim.running)
                 anchors.fill: wallpaperContainer
+                asynchronous: true
                 scale: GlobalStates.screenLocked ? (bgRoot.lockBlurOptions.extraZoom ?? 1) : 1
                 Behavior on scale {
                     enabled: Appearance.animationsEnabled
@@ -941,7 +954,7 @@ Variants {
                 sourceComponent: GaussianBlur {
                     source: wallpaperContainer
                     radius: GlobalStates.screenLocked ? (bgRoot.lockBlurOptions.radius ?? 0) : 0
-                    samples: radius * 2 + 1
+                    samples: bgRoot.lockBlurSamples
                     Rectangle {
                         opacity: GlobalStates.screenLocked ? 1 : 0
                         anchors.fill: parent
