@@ -113,7 +113,7 @@ Item { // Bar content region
     readonly property bool showAmbientLaneSeparator: laneSeparatorMode !== "off"
         && (showWeatherLaneItem || showRingsLaneItem)
     readonly property int ambientLaneSeparatorWidth: laneSeparatorMode === "strong" ? 2 : 1
-    readonly property real ambientLaneSeparatorOpacity: laneSeparatorMode === "strong" ? 1.0 : 0.65
+    readonly property real ambientLaneSeparatorOpacity: laneSeparatorMode === "strong" ? 0.82 : 0.55
 
     // Per-monitor wallpaper URL for Aurora blur — uses the actual wallpaper on this screen
     readonly property string wallpaperUrl: {

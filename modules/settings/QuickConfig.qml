@@ -1529,7 +1529,7 @@ ContentPage {
                             Config.setNestedValue("bar.density", newValue);
                         }
                         options: [
-                            { displayName: Translation.tr("Compact"), icon: "density_small", value: "compact" },
+                            { displayName: Translation.tr("Compact (recommended)"), icon: "density_small", value: "compact" },
                             { displayName: Translation.tr("Default"), icon: "density_medium", value: "default" },
                             { displayName: Translation.tr("Airy"), icon: "density_large", value: "airy" }
                         ]
@@ -1547,7 +1547,7 @@ ContentPage {
                             Config.setNestedValue("bar.stylePreset", newValue);
                         }
                         options: [
-                            { displayName: Translation.tr("Dusky"), icon: "dark_mode", value: "dusky" },
+                            { displayName: Translation.tr("Dusky (recommended)"), icon: "dark_mode", value: "dusky" },
                             { displayName: Translation.tr("Clean"), icon: "dehaze", value: "clean" },
                             { displayName: Translation.tr("Glass"), icon: "blur_on", value: "glass" }
                         ]
@@ -1570,7 +1570,7 @@ ContentPage {
                         }
                         options: [
                             { displayName: Translation.tr("Off"), icon: "horizontal_rule", value: "off" },
-                            { displayName: Translation.tr("Subtle"), icon: "remove", value: "subtle" },
+                            { displayName: Translation.tr("Subtle (recommended)"), icon: "remove", value: "subtle" },
                             { displayName: Translation.tr("Strong"), icon: "drag_handle", value: "strong" }
                         ]
                     }
@@ -1587,7 +1587,7 @@ ContentPage {
                             Config.setNestedValue("bar.ambientVisibility", newValue);
                         }
                         options: [
-                            { displayName: Translation.tr("Auto"), icon: "width_normal", value: "auto" },
+                            { displayName: Translation.tr("Auto (recommended)"), icon: "width_normal", value: "auto" },
                             { displayName: Translation.tr("Always"), icon: "visibility", value: "always" },
                             { displayName: Translation.tr("Hidden"), icon: "visibility_off", value: "hidden" }
                         ]
