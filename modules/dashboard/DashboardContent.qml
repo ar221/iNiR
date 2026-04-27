@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -32,6 +33,9 @@ Item {
         && (Config.options?.dashboard?.agentCockpit?.trustPanel ?? true)
     readonly property bool sectionAgentCompanion: (Config.options?.dashboard?.sections?.agentCompanion ?? false)
         && (Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false)
+    readonly property bool commandPreset: Appearance.mission.commandPreset
+    readonly property bool sectionHeroZone: commandPreset
+        && (Config.options?.dashboard?.sections?.heroZone ?? true)
 
     RowLayout {
         anchors.fill: parent
@@ -90,45 +94,61 @@ Item {
                 width: parent.width
                 spacing: 12
 
-                PerformanceBarsCard {
+                Loader {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 270
-                    visible: root.sectionPerformance
+                    active: root.sectionPerformance && !root.commandPreset
+                    visible: active
+                    sourceComponent: PerformanceBarsCard {}
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionPerformance && root.commandPreset
+                    visible: active
+                    sourceComponent: PerformanceBarcodeCard {}
                 }
 
                 NetworkSparklinesCard {
                     Layout.fillWidth: true
-                    visible: root.sectionPerformance
+                    visible: root.sectionPerformance && !root.commandPreset
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionHeroZone
+                    visible: active
+                    sourceComponent: HeroZone {}
                 }
 
                 ActivityConsoleCard {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
+                    Layout.preferredHeight: root.commandPreset ? -1 : (
+                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
+                    )
+                    Layout.fillHeight: root.commandPreset
                     visible: root.sectionActivityConsole
                 }
 
                 Loader {
                     Layout.fillWidth: true
-                    active: root.sectionAgentContext
-                    sourceComponent: AgentContextCard {
-                        Layout.fillWidth: true
-                    }
+                    active: root.sectionAgentContext && !root.commandPreset
+                    visible: active
+                    sourceComponent: AgentContextCard {}
                 }
 
                 Loader {
                     Layout.fillWidth: true
-                    active: root.sectionAgentLoop
-                    sourceComponent: AgentLoopCard {
-                        Layout.fillWidth: true
-                    }
+                    active: root.sectionAgentLoop && !root.commandPreset
+                    visible: active
+                    sourceComponent: AgentLoopCard {}
                 }
 
                 Loader {
                     Layout.fillWidth: true
-                    active: root.sectionAgentTrust
-                    sourceComponent: AgentTrustCard {
-                        Layout.fillWidth: true
-                    }
+                    active: root.sectionAgentTrust && !root.commandPreset
+                    visible: active
+                    sourceComponent: AgentTrustCard {}
                 }
             }
         }
