@@ -79,6 +79,7 @@ Revealer 1.0 Revealer.qml
 RippleButton 1.0 RippleButton.qml
 RippleButtonWithIcon 1.0 RippleButtonWithIcon.qml
 RoundCorner 1.0 RoundCorner.qml
+RoutineTile 1.0 RoutineTile.qml
 ScrollEdgeFade 1.0 ScrollEdgeFade.qml
 SecondaryTabBar 1.0 SecondaryTabBar.qml
 SecondaryTabButton 1.0 SecondaryTabButton.qml
