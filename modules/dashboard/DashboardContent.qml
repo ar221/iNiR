@@ -36,6 +36,20 @@ Item {
     readonly property bool commandPreset: Appearance.mission.commandPreset
     readonly property bool sectionHeroZone: commandPreset
         && (Config.options?.dashboard?.sections?.heroZone ?? true)
+    readonly property bool sectionAgentStatus: commandPreset
+        && (Config.options?.dashboard?.sections?.agentStatus ?? false)
+    readonly property bool sectionServiceGrid: commandPreset
+        && (Config.options?.dashboard?.sections?.serviceGrid ?? false)
+    readonly property bool sectionDiskGauges: commandPreset
+        && (Config.options?.dashboard?.sections?.diskGauges ?? false)
+    readonly property bool sectionVaultPulse: commandPreset
+        && (Config.options?.dashboard?.sections?.vaultPulse ?? false)
+    readonly property bool sectionRecentRuns: commandPreset
+        && (Config.options?.dashboard?.sections?.recentRuns ?? false)
+    readonly property bool sectionIntegrationStatus: commandPreset
+        && (Config.options?.dashboard?.sections?.integrationStatus ?? false)
+    readonly property bool _anyWidgetStackVisible: sectionServiceGrid
+        || sectionDiskGauges || sectionVaultPulse || sectionRecentRuns
 
     RowLayout {
         anchors.fill: parent
@@ -69,6 +83,13 @@ Item {
                 QuickTogglesCard {
                     Layout.fillWidth: true
                     visible: root.sectionQuickToggles
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentStatus
+                    visible: active
+                    sourceComponent: AgentStatusCard {}
                 }
 
                 MediaCard {
@@ -121,13 +142,70 @@ Item {
                     sourceComponent: HeroZone {}
                 }
 
-                ActivityConsoleCard {
+                RowLayout {
                     Layout.fillWidth: true
+                    Layout.fillHeight: root.commandPreset
                     Layout.preferredHeight: root.commandPreset ? -1 : (
                         (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
                     )
-                    Layout.fillHeight: root.commandPreset
-                    visible: root.sectionActivityConsole
+                    spacing: 12
+                    visible: root.sectionActivityConsole || root._anyWidgetStackVisible
+
+                    ActivityConsoleCard {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.sectionActivityConsole
+                    }
+
+                    Flickable {
+                        Layout.preferredWidth: 280
+                        Layout.fillHeight: true
+                        contentHeight: widgetStack.implicitHeight
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        visible: root._anyWidgetStackVisible
+
+                        ColumnLayout {
+                            id: widgetStack
+                            width: parent.width
+                            spacing: 12
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionServiceGrid
+                                visible: active
+                                sourceComponent: ServiceGridCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionDiskGauges
+                                visible: active
+                                sourceComponent: DiskGaugesCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionVaultPulse
+                                visible: active
+                                sourceComponent: VaultPulseCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionRecentRuns
+                                visible: active
+                                sourceComponent: RecentRunsCard {}
+                            }
+                        }
+                    }
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionIntegrationStatus
+                    visible: active
+                    sourceComponent: IntegrationStatusBar {}
                 }
 
                 Loader {
