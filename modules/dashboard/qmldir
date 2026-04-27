@@ -24,3 +24,4 @@ HeroZone 1.0 HeroZone.qml
 AgentStatusCard 1.0 AgentStatusCard.qml
 ServiceGridCard 1.0 ServiceGridCard.qml
 DiskGaugesCard 1.0 DiskGaugesCard.qml
+VaultPulseCard 1.0 VaultPulseCard.qml
