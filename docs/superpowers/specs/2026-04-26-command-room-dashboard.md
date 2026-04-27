@@ -81,6 +81,8 @@ Dashboard-scoped. The bar and sidebar keep their current font stack.
 
 All levels use `appearance.typography.monospaceFont` (JetBrainsMono Nerd Font) when the Command preset is active. The font family is read from config, not hardcoded.
 
+**Selectivity note:** Monospace is strongest on instrumentation surfaces — headers, timestamps, readouts, labels, status pills. Body-length prose (activity console messages, notification bodies, calendar event descriptions) should use the system proportional font (`appearance.typography.fontFamily`) even in Command preset. Wall-to-wall monospace flattens hierarchy and reads as "dark SaaS dashboard" rather than mission control.
+
 ---
 
 ## 3. Component Primitives
@@ -159,7 +161,7 @@ StatusPill {
 
 Agent status row for the cockpit panel.
 
-- Avatar: 28px square, 4px radius, gradient background (`primary` → `primaryContainer`), centered initial letter
+- Avatar: 28px square, 4px radius, `rgba(onBg, 0.06)` fill, stamped initial letter in `rgba(onBg, 0.5)` — monochrome, not gradient. Gradient agent avatars read as generic AI-dashboard; the monochrome badge keeps the Command Room's utilitarian identity.
 - Name: 12px DemiBold, `m3onBackground`
 - Route: 10px, `rgba(onBg, 0.25)` — shows domain + last activity time
 - Status: StatusPill, right-aligned
@@ -171,8 +173,6 @@ Agent status row for the cockpit panel.
 AgentTile {
     name: "ALFRED"
     initial: "A"
-    gradientStart: colPrimary
-    gradientEnd: colPrimaryContainer
     route: "system ops"
     lastActive: "2m ago"
     status: "active"
@@ -276,7 +276,8 @@ Replaces MiniRing when `bar.rings.variant === "barcode"`.
 - Same warning thresholds from config
 - Layout: `label (8px) + meter (48px × 10px) + value (9px)` per metric
 - Arranged in a row matching current ring layout position
-- Total width: ~4 × 80px = 320px (vs current ~4 × 28px = 112px for rings) — this takes more horizontal space. If bar width is constrained, label can be hidden and meter width reduced to 32px.
+- Total width: ~4 × 80px = 320px (vs current ~4 × 28px = 112px for rings) — nearly 3× the footprint.
+- **Adaptive sizing (required from day one):** The component must measure available width and degrade gracefully: full labels + 48px meters → hidden labels + 32px meters → 2-column stack. This is not a polish follow-up — shipping at 320px fixed would break narrow bars immediately.
 
 **Implementation:** New `BarcodeMiniMeters.qml` component (parallel to `MiniRings.qml`). `BarContent.qml` loads one or the other based on `bar.rings.variant`. Both components expose the same data interface.
 
@@ -306,7 +307,7 @@ Monogram, workspace pills, clock, active window title, notification bell — all
 | **DiskGauges** | `statvfs` / QML `Qt.resolvedUrl` + C++ helper | Configurable mount paths in `dashboard.diskGauges.mounts` (array: `["/", "/home", "/mnt/hdd"]`). Polled every 60s. |
 | **VaultPulse** | Shell commands via `Process` | `find ~/Documents/Ayaz\ OS/ -name '*.md' \| wc -l` for total notes. `find ... -mtime 0` for edited today. Inbox = count of files in `00 Inbox/`. Orphans = count of files with no backlinks (expensive — cache result, refresh on dashboard open). Polled on dashboard open, not continuously. |
 | **RecentRuns** | `~/.local/state/inir/recent-runs.jsonl` (new) | New state file. Each line: `{"timestamp":"ISO","label":"VAULT CLEANUP","source":"hermes\|claude\|cron","status":"done\|running\|failed"}`. Writers: Hermes gateway (via inbox file pickup), Claude Code hooks (post-session), cron routines. Initially populated by Claude Code session hooks only — Hermes integration is a follow-up. |
-| **IntegrationStatus** | Configurable static entries + optional live ping | `dashboard.integrations` array: `[{"name":"GITHUB","check":"none"},{"name":"GMAIL","check":"none"}]`. `check: "none"` = always green (user-managed). Future: `check: "mcp"` pings MCP server health. Initially static — live status is a follow-up. |
+| **IntegrationStatus** | Configurable static entries + optional live ping | `dashboard.integrations` array: `[{"name":"GITHUB","check":"none"},{"name":"GMAIL","check":"none"}]`. `check: "none"` = neutral "CONFIGURED" label (muted dot, not green). Static entries must never imply live health — green dot is reserved for `check: "mcp"` with a real health ping. Future: `check: "mcp"` pings MCP server health. Initially static — live status is a follow-up. |
 | **AgentStatus** | `~/.local/state/inir/agent-status.jsonl` (new) | New state file. Each line: `{"agent":"alfred","status":"active\|idle\|scheduled","lastActive":"ISO","domain":"system ops"}`. Writers: Claude Code session hooks (on session start/end), Hermes gateway (on routine dispatch). Initially populated by Claude Code hooks only. |
 | **HeroZone active state** | `~/.local/state/inir/active-session.json` (new) | Single JSON file, overwritten per session: `{"active":true,"agent":"alfred","domain":"system ops","startedAt":"ISO"}`. Cleared on session end. Writer: Claude Code hook. |
 
@@ -456,7 +457,35 @@ NetworkSparklinesCard.qml — hidden in command preset, not deleted.
 
 ---
 
-## 10. Out of Scope
+## 10. Implementation Phasing Guidance
+
+The spec describes the full Command Room. Implementation should prove the visual language before piling on every subsystem:
+
+**Phase 1 — Visual grammar (ship first):**
+- Warm Apollo palette shift in ThemePresets.qml
+- `dashboard.stylePreset` toggle in DashboardCard (opaque fills, tight radius)
+- BarcodeMeter.qml (block + inline variants) — the signature primitive
+- PerformanceBarcodeCard (replaces gradient bars)
+- HeroZone (idle + active states)
+- Core layout restructure (activity + widget stack side-by-side)
+- Bar BarcodeMiniMeters with adaptive sizing
+
+**Phase 2 — Operational widgets (after Phase 1 lands):**
+- AgentStatusCard + AgentTile
+- RecentRunsCard + RoutineTile
+- ServiceGridCard
+- DiskGaugesCard
+- VaultPulseCard
+- IntegrationStatusBar
+
+**Phase 3 — Data plumbing (after Phase 2 shells exist):**
+- State file writers (Claude Code hooks, cron routines)
+- Hermes gateway integration
+- MCP live health pings for IntegrationStatus
+
+---
+
+## 11. Out of Scope
 
 - Hermes gateway integration (writing to recent-runs.jsonl from Hermes). Follow-up.
 - MCP live health checks for IntegrationStatus. Follow-up — static entries first.
