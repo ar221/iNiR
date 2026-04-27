@@ -11,6 +11,7 @@ WeatherCard 1.0 WeatherCard.qml
 NotificationsCard 1.0 NotificationsCard.qml
 PerformanceBar 1.0 PerformanceBar.qml
 PerformanceBarsCard 1.0 PerformanceBarsCard.qml
+PerformanceBarcodeCard 1.0 PerformanceBarcodeCard.qml
 Sparkline 1.0 Sparkline.qml
 NetworkSparklinesCard 1.0 NetworkSparklinesCard.qml
 ActivityConsoleCard 1.0 ActivityConsoleCard.qml
@@ -19,3 +20,4 @@ AgentLoopCard 1.0 AgentLoopCard.qml
 SessionReviewCard 1.0 SessionReviewCard.qml
 AgentTrustCard 1.0 AgentTrustCard.qml
 AgentCompanionCard 1.0 AgentCompanionCard.qml
+HeroZone 1.0 HeroZone.qml

@@ -497,6 +497,7 @@
       "swapWarningThreshold": 85
     },
     "rings": {
+      "variant": "arc",
       "cpu": true,
       "gpu": true,
       "ram": true,
@@ -590,6 +591,7 @@
     "code": "0;P;d;1;0l;10;0o;2;1b;0"
   },
   "dashboard": {
+    "stylePreset": "default",
     "layout": {
       "leftColumnWidth": 260,
       "rightColumnWidth": 300
@@ -641,7 +643,8 @@
       "agentLoop": false,
       "sessionReview": false,
       "agentTrust": false,
-      "agentCompanion": false
+      "agentCompanion": false,
+      "heroZone": false
     },
     "activityConsole": {
       "enable": true,
