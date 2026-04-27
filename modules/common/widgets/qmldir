@@ -89,11 +89,11 @@ SettingsGroup 1.0 SettingsGroup.qml
 singleton SettingsMaterialPreset 1.0 SettingsMaterialPreset.qml
 singleton SettingsSearchRegistry 1.0 SettingsSearchRegistry.qml
 SettingsSwitch 1.0 SettingsSwitch.qml
-StatusPill 1.0 StatusPill.qml
 SidebarBackground 1.0 SidebarBackground.qml
 SidebarShell 1.0 SidebarShell.qml
 SineCookie 1.0 SineCookie.qml
 StaggeredReveal 1.0 StaggeredReveal.qml
+StatusPill 1.0 StatusPill.qml
 StyledBlurEffect 1.0 StyledBlurEffect.qml
 StyledComboBox 1.0 StyledComboBox.qml
 StyledDropShadow 1.0 StyledDropShadow.qml
