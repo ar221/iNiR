@@ -26,3 +26,4 @@ ServiceGridCard 1.0 ServiceGridCard.qml
 DiskGaugesCard 1.0 DiskGaugesCard.qml
 VaultPulseCard 1.0 VaultPulseCard.qml
 RecentRunsCard 1.0 RecentRunsCard.qml
+IntegrationStatusBar 1.0 IntegrationStatusBar.qml
