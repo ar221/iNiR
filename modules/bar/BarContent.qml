@@ -140,6 +140,10 @@ Item { // Bar content region
         && (Config.options?.bar?.weather?.enable ?? false)
     readonly property bool showRingsLaneItem: showAmbientLane
         && (Config.options?.bar?.modules?.resources ?? true)
+    readonly property string ringsVariant: {
+        const v = String(Config.options?.bar?.rings?.variant ?? "arc").toLowerCase()
+        return v === "barcode" ? "barcode" : "arc"
+    }
     readonly property bool showAmbientLaneSeparator: laneSeparatorMode !== "off"
         && (showWeatherLaneItem || showRingsLaneItem)
     readonly property int ambientLaneSeparatorWidth: laneSeparatorMode === "strong" ? 2 : 1
@@ -1080,13 +1084,24 @@ Item { // Bar content region
             }
 
             Loader {
-                active: root.showRingsLaneItem
+                active: root.showRingsLaneItem && root.ringsVariant === "arc"
                 visible: active
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: 2
                 sourceComponent: BarGroup {
                     padding: root.ambientClusterPadding
                     MiniRings {}
+                }
+            }
+
+            Loader {
+                active: root.showRingsLaneItem && root.ringsVariant === "barcode"
+                visible: active
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: 2
+                sourceComponent: BarGroup {
+                    padding: root.ambientClusterPadding
+                    BarcodeMiniMeters {}
                 }
             }
         }
