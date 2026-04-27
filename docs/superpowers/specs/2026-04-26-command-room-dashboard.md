@@ -14,7 +14,7 @@ Add a "Command Room" style preset to the dashboard and bar, inspired by the Agen
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Scope | Full — dashboard reskin + palette layer + new primitives + bar barcode meters | Maximum expressiveness without breaking existing look |
-| Typography | Full JetBrainsMono in dashboard; current fonts (Roboto Flex, Gabarito) elsewhere | Terminal/mission-control feel scoped to the command surface |
+| Typography | Monospace for instrumentation (headers, readouts, labels, timestamps); proportional for prose (activity messages, notification bodies, event descriptions) | Terminal feel without flattening hierarchy — selective monospace reads as mission control, wall-to-wall reads as SaaS |
 | Performance viz | Barcode meters everywhere (dashboard + bar) | Cohesive visual language; bar mini-rings replaced |
 | Palette | Warm blacks + bright amber; add opaque card surface tokens | Apollo keeps its identity; cards get real hierarchy |
 | Card shape | 6-8px radius, opaque fills, 1px hairline borders | Technical/angular, not brutalist |
@@ -46,7 +46,9 @@ These are currently cool-neutral. The Command Room shifts them warm:
 | m3surfaceContainerHigh | `#272B31` | `#2A2420` | Card border / highest surface |
 | m3surfaceContainerHighest | `#333841` | `#3A3430` | Card border hover |
 
-**Implementation:** These values replace the current cool values in the `apolloColors` object. This is not a conditional switch — Apollo itself shifts warm. The `"default"` dashboard preset uses the same palette but renders cards with transparent overlays, so the background warmth is barely visible there. The `"command"` preset makes the surfaces opaque, which is where the warmth shows.
+**Implementation — intentional global change:** These values replace the current cool values in the `apolloColors` object unconditionally. This is NOT scoped to the command preset — Apollo itself shifts warm everywhere (bar, sidebar, dashboard, all surfaces).
+
+**Why global, not preset-scoped:** Maintaining two parallel Apollo color sets (cool for default, warm for command) doubles the palette surface and creates a jarring temperature jump when toggling presets. The warm shift is subtle on transparent surfaces — the `"default"` dashboard preset renders cards with `rgba(1,1,1,0.03)` overlays, so the underlying warmth is barely perceptible there. The `"command"` preset makes surfaces opaque, which is where the warmth visually registers. Net effect: warm palette everywhere, only opaque command cards reveal it.
 
 ### New semantic aliases (Command preset only)
 
@@ -79,9 +81,14 @@ Dashboard-scoped. The bar and sidebar keep their current font stack.
 | Label | 10px | DemiBold (600) | 1.0px | `rgba(onBg, 0.3)` | Sub-labels, metadata, uppercase |
 | Timestamp | 10px | Regular (400) | 0 | `rgba(onBg, 0.2)` | Times, tertiary info |
 
-All levels use `appearance.typography.monospaceFont` (JetBrainsMono Nerd Font) when the Command preset is active. The font family is read from config, not hardcoded.
+**Font assignment by level:**
 
-**Selectivity note:** Monospace is strongest on instrumentation surfaces — headers, timestamps, readouts, labels, status pills. Body-length prose (activity console messages, notification bodies, calendar event descriptions) should use the system proportional font (`appearance.typography.fontFamily`) even in Command preset. Wall-to-wall monospace flattens hierarchy and reads as "dark SaaS dashboard" rather than mission control.
+| Levels | Font | Rationale |
+|--------|------|-----------|
+| Hero, Metric, Card header, Label, Timestamp | `appearance.typography.monospaceFont` (JetBrainsMono NF) | Instrumentation surfaces — readouts, headers, status text |
+| Body | `appearance.typography.fontFamily` (Roboto Flex / system proportional) | Prose surfaces — activity messages, notification bodies, event descriptions |
+
+Monospace on instrumentation reads as mission control. Wall-to-wall monospace flattens hierarchy into dark SaaS dashboard. The split is the brand.
 
 ---
 
@@ -95,18 +102,18 @@ Horizontal striped progress bar. Two variants:
 
 **Block variant (dashboard cards):**
 - Height: 16-18px
-- Track: `meterTrack` fill, 2px radius
-- Fill: `repeating-linear-gradient` pattern — 2px bar, 2px gap, accent color
-- Fill width: proportional to value (0.0–1.0)
+- Track: Rectangle, `meterTrack` fill, 2px radius, `clip: true`
+- Fill: Row of thin Rectangles inside a clipped Item, width proportional to value (0.0–1.0). Each stripe is 2px wide with 2px spacing (4px pitch). Stripe color = accent. Generated via a `Repeater { model: Math.ceil(trackWidth / 4) }` producing 2px-wide Rectangles at `x: index * 4`.
 - Label left, value right
 - Optional header row above (title + metadata)
 
 **Inline variant (status bar):**
 - Height: 10px
-- Track: `rgba(onBg, 0.04)`, 2px radius
-- Fill: same pattern, 1.5px bar, 1.5px gap
+- Track: Rectangle, `rgba(onBg, 0.04)`, 2px radius, `clip: true`
+- Fill: Same Repeater-stripe approach, 1.5px bar width, 1.5px spacing (3px pitch)
 - Compact: label (8px) + meter (48px width) + value (9px)
-- Uses Rectangle with a repeating fill, not Canvas
+
+**Why Repeater, not Canvas or ShaderEffect:** Repeater + Rectangles is pure Scene Graph — no texture uploads, no JS paint callbacks, minimal overhead for a simple stripe pattern. Canvas would work but costs a texture and repaints on resize. ShaderEffect is overkill for axis-aligned stripes.
 
 **Color assignment (same as current ring mapping):**
 - CPU: `m3primary` (amber)
@@ -140,8 +147,8 @@ Compact status indicator chip.
 - Radius: 4px
 - Padding: 4px 10px
 
-**States:**
-| State | Color | Label |
+**Statuses** (property name is `status`, not `state` — avoids collision with QML's built-in `Item.state`):
+| Status | Color | Label |
 |-------|-------|-------|
 | active | `m3primary` | ACTIVE |
 | idle | `rgba(onBg, 0.3)` | IDLE |
@@ -153,7 +160,7 @@ Compact status indicator chip.
 **QML interface:**
 ```
 StatusPill {
-    state: "active"   // active | idle | running | error | waiting | scheduled
+    status: "active"   // active | idle | running | error | waiting | scheduled
 }
 ```
 
@@ -277,7 +284,15 @@ Replaces MiniRing when `bar.rings.variant === "barcode"`.
 - Layout: `label (8px) + meter (48px × 10px) + value (9px)` per metric
 - Arranged in a row matching current ring layout position
 - Total width: ~4 × 80px = 320px (vs current ~4 × 28px = 112px for rings) — nearly 3× the footprint.
-- **Adaptive sizing (required from day one):** The component must measure available width and degrade gracefully: full labels + 48px meters → hidden labels + 32px meters → 2-column stack. This is not a polish follow-up — shipping at 320px fixed would break narrow bars immediately.
+- **Adaptive sizing (required from day one):** The component must bind to parent width and degrade:
+
+  | Available width | Behavior |
+  |-----------------|----------|
+  | ≥ 320px | Full: `label (8px) + meter (48px) + value (9px)` × 4 in a row |
+  | 200–319px | Compact: labels hidden, meter shrinks to 32px, values stay |
+  | < 200px | Stacked: 2×2 grid, each cell = `meter (32px) + value (9px)` |
+
+  Implementation: BarcodeMiniMeters reads `width` and picks a layout state. Not a polish follow-up — shipping at 320px fixed would break narrow bars immediately.
 
 **Implementation:** New `BarcodeMiniMeters.qml` component (parallel to `MiniRings.qml`). `BarContent.qml` loads one or the other based on `bar.rings.variant`. Both components expose the same data interface.
 
@@ -309,7 +324,7 @@ Monogram, workspace pills, clock, active window title, notification bell — all
 | **RecentRuns** | `~/.local/state/inir/recent-runs.jsonl` (new) | New state file. Each line: `{"timestamp":"ISO","label":"VAULT CLEANUP","source":"hermes\|claude\|cron","status":"done\|running\|failed"}`. Writers: Hermes gateway (via inbox file pickup), Claude Code hooks (post-session), cron routines. Initially populated by Claude Code session hooks only — Hermes integration is a follow-up. |
 | **IntegrationStatus** | Configurable static entries + optional live ping | `dashboard.integrations` array: `[{"name":"GITHUB","check":"none"},{"name":"GMAIL","check":"none"}]`. `check: "none"` = neutral "CONFIGURED" label (muted dot, not green). Static entries must never imply live health — green dot is reserved for `check: "mcp"` with a real health ping. Future: `check: "mcp"` pings MCP server health. Initially static — live status is a follow-up. |
 | **AgentStatus** | `~/.local/state/inir/agent-status.jsonl` (new) | New state file. Each line: `{"agent":"alfred","status":"active\|idle\|scheduled","lastActive":"ISO","domain":"system ops"}`. Writers: Claude Code session hooks (on session start/end), Hermes gateway (on routine dispatch). Initially populated by Claude Code hooks only. |
-| **HeroZone active state** | `~/.local/state/inir/active-session.json` (new) | Single JSON file, overwritten per session: `{"active":true,"agent":"alfred","domain":"system ops","startedAt":"ISO"}`. Cleared on session end. Writer: Claude Code hook. |
+| **HeroZone active state** | `~/.local/state/inir/active-session.json` (new) | Single JSON file, overwritten per session: `{"active":true,"agent":"alfred","domain":"system ops","startedAt":"ISO","updatedAt":"ISO"}`. `updatedAt` refreshed every 60s by the session hook (heartbeat). Cleared on session end. **Stale protection:** HeroZone reads `updatedAt` on each poll — if older than 5 minutes, treats session as stale and falls back to idle state. This handles crash/disconnect where the hook never clears the file. Writer: Claude Code hook. |
 
 ### State file location
 
@@ -317,7 +332,19 @@ All new state files live under `~/.local/state/inir/` (XDG state directory), con
 
 ### Stub behavior
 
-Widgets with no data source configured or no state file present show a "NO DATA" placeholder in muted text, not an error. This prevents first-run breakage.
+Widgets with no data source configured or no state file present show a contextual dormant message in muted text (`rgba(onBg, 0.15)`), not a generic "NO DATA" or an error. Each widget owns its copy:
+
+| Widget | Dormant message |
+|--------|-----------------|
+| ServiceGrid | "CONFIGURE SERVICES IN CONFIG" |
+| DiskGauges | "CONFIGURE MOUNTS IN CONFIG" |
+| VaultPulse | "VAULT PATH NOT SET" |
+| RecentRuns | "NO RUNS RECORDED" |
+| IntegrationStatus | "NO INTEGRATIONS CONFIGURED" |
+| AgentStatus | "AWAITING AGENT ACTIVITY" |
+| HeroZone (stale session) | Falls back to idle state (not a separate message) |
+
+This prevents first-run breakage while telling the user what to do about it.
 
 ---
 
@@ -465,9 +492,10 @@ The spec describes the full Command Room. Implementation should prove the visual
 - Warm Apollo palette shift in ThemePresets.qml
 - `dashboard.stylePreset` toggle in DashboardCard (opaque fills, tight radius)
 - BarcodeMeter.qml (block + inline variants) — the signature primitive
+- StatusPill.qml — needed by HeroZone active state
 - PerformanceBarcodeCard (replaces gradient bars)
 - HeroZone (idle + active states)
-- Core layout restructure (activity + widget stack side-by-side)
+- Core layout restructure (activity + widget stack column). In Phase 1 the widget stack column exists structurally but is empty — it shows a single muted "SUBSYSTEMS OFFLINE" placeholder until Phase 2 widgets populate it. Activity console stretches to fill if no widgets are enabled.
 - Bar BarcodeMiniMeters with adaptive sizing
 
 **Phase 2 — Operational widgets (after Phase 1 lands):**
