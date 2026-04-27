@@ -19,7 +19,7 @@
 | `modules/common/widgets/BarcodeMeter.qml` | Reusable barcode progress bar (block + inline variants) |
 | `modules/common/widgets/StatusPill.qml` | Compact status indicator chip |
 | `modules/dashboard/PerformanceBarcodeCard.qml` | Horizontal barcode meters replacing vertical gradient bars |
-| `modules/dashboard/HeroZone.qml` | Idle-state hero card ("COMMAND ROOM STANDING BY") — active state deferred to Phase 2 |
+| `modules/dashboard/HeroZone.qml` | Idle-state hero card ("COMMAND ROOM READY") — active state deferred to Phase 2 |
 | `modules/bar/BarcodeMiniMeters.qml` | Inline barcode meters for bar (parallel to MiniRings) |
 
 ### Modified files
@@ -50,6 +50,8 @@
 **Files:**
 - Modify: `modules/common/ThemePresets.qml:681-736`
 
+**Design note:** This warm-shift is intentionally global to Apollo. It affects all Apollo surfaces (bar, dashboard, sidebar) regardless of `stylePreset`. The rationale: Apollo is a hand-authored theme, not matugen-generated, and the warm undertone is a net improvement to the palette — it moves from clinical cool-neutral to a richer dark base. The `"default"` dashboard preset inherits the warmer surfaces; this is accepted, not a bug. If warm-only-on-command is desired later, it would require a parallel `apolloCommandColors` object — not worth the complexity for Phase 1.
+
 - [ ] **Step 1: Read current apolloColors and confirm line numbers**
 
 Run: `grep -n "m3background\|m3surface\b\|m3surfaceDim\|m3surfaceBright\|m3surfaceContainerLowest\|m3surfaceContainerLow\|m3surfaceContainer\b\|m3surfaceContainerHigh\b\|m3surfaceContainerHighest" modules/common/ThemePresets.qml | head -20`
@@ -78,13 +80,13 @@ All other apolloColors tokens (primary, secondary, tertiary, error, success, on*
 
 Save and open the dashboard to trigger hot-reload. Quickshell logs to its own stdout (not journalctl) — check for QML errors in the terminal where qs was started, or visually confirm no crash.
 
-Expected: No QML errors. Visual: bar and dashboard surfaces shift slightly warmer. The change is subtle on transparent surfaces, noticeable on opaque cards.
+Expected: No QML errors. Visual: all Apollo surfaces shift slightly warmer (bar, dashboard, sidebar). The change is subtle on transparent surfaces, noticeable on opaque cards.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add modules/common/ThemePresets.qml
-git commit -m "palette: warm-shift Apollo background tokens for Command Room"
+git commit -m "palette: warm-shift Apollo background tokens globally"
 ```
 
 ---
@@ -221,11 +223,13 @@ Item {
     property bool showValue: true
     property int inlineTrackWidth: 48
 
+    readonly property real _val: Math.min(1, Math.max(0, value))
+
     property real cautionThreshold: 0
     property real warningThreshold: 100
     readonly property bool _caution: cautionThreshold > 0
-        && (value * 100) >= cautionThreshold && !_warning
-    readonly property bool _warning: (value * 100) >= warningThreshold
+        && (_val * 100) >= cautionThreshold && !_warning
+    readonly property bool _warning: (_val * 100) >= warningThreshold
     readonly property color _fillColor: _warning ? Appearance.mission.colCritical
         : _caution ? Appearance.colors.colError : root.color
 
@@ -265,7 +269,7 @@ Item {
 
             StyledText {
                 visible: root.showValue
-                text: Math.round(root.value * 100) + "%"
+                text: Math.round(root._val * 100) + "%"
                 font.pixelSize: 10
                 font.weight: Font.Bold
                 font.family: Appearance.font.family.numbers
@@ -286,7 +290,7 @@ Item {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: root.value * parent.width
+                width: root._val * parent.width
 
                 Behavior on width {
                     enabled: Appearance.animationsEnabled
@@ -346,7 +350,7 @@ Item {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: root.value * parent.width
+                width: root._val * parent.width
 
                 Behavior on width {
                     enabled: Appearance.animationsEnabled
@@ -370,7 +374,7 @@ Item {
 
         StyledText {
             visible: root.showValue
-            text: Math.round(root.value * 100)
+            text: Math.round(root._val * 100)
             font.pixelSize: 9
             font.weight: Font.Bold
             font.family: Appearance.font.family.numbers
@@ -650,7 +654,7 @@ git commit -m "dashboard: add PerformanceBarcodeCard with barcode meters"
 - Create: `modules/dashboard/HeroZone.qml`
 - Modify: `modules/dashboard/qmldir`
 
-Idle-only in Phase 1: full-width card with "COMMAND ROOM STANDING BY" hero text. Active state (compact status strip driven by `active-session.json`) is deferred to Phase 2/3 where the state file writers will be implemented.
+Idle-only in Phase 1: full-width card with "COMMAND ROOM READY" hero text, proportional subtitle. Active state (compact status strip driven by `active-session.json`), session file reading, stale-session TTL handling, and the `updatedAt` heartbeat mechanism are all deferred to Phase 2/3 where the state file writers will be implemented. This component has no runtime dependencies — it's pure static QML.
 
 - [ ] **Step 1: Create HeroZone.qml**
 
@@ -694,7 +698,7 @@ DashboardCard {
             }
 
             StyledText {
-                text: "STANDING BY"
+                text: "READY"
                 font.pixelSize: 28
                 font.weight: Font.Bold
                 font.family: Appearance.font.family.monospace
@@ -703,11 +707,9 @@ DashboardCard {
         }
 
         StyledText {
-            text: "ALL SYSTEMS NOMINAL · AWAITING OPERATOR INPUT"
-            font.pixelSize: 10
-            font.weight: Font.DemiBold
-            font.letterSpacing: 1.0
-            font.family: Appearance.font.family.monospace
+            text: "Awaiting operator input"
+            font.pixelSize: 11
+            font.family: Appearance.font.family.main
             color: Appearance.mission.colTextFaint
         }
     }
@@ -742,7 +744,7 @@ git commit -m "dashboard: add HeroZone idle-state card (active state deferred to
 **Files:**
 - Modify: `modules/dashboard/DashboardContent.qml:80-135`
 
-The center column currently stacks: PerformanceBarsCard → NetworkSparklinesCard → ActivityConsoleCard → agent cards. In the command preset, it becomes: PerformanceBarcodeCard → HeroZone → (Activity side-by-side with Widget Stack) → IntegrationStatus placeholder. The widget stack is empty in Phase 1 with a "SUBSYSTEMS OFFLINE" placeholder. Activity stretches to fill if the widget stack is empty.
+The center column currently stacks: PerformanceBarsCard → NetworkSparklinesCard → ActivityConsoleCard → agent cards. In the command preset, it becomes: PerformanceBarcodeCard → HeroZone → ActivityConsoleCard (full-width). The widget stack column (subsystem sockets) is Phase 2 work — in Phase 1, Activity fills the entire width. No dormant placeholder card.
 
 - [ ] **Step 1: Add preset and section properties**
 
@@ -791,48 +793,13 @@ Replace the center column ColumnLayout content (lines 89-134) with:
                     sourceComponent: HeroZone {}
                 }
 
-                RowLayout {
+                ActivityConsoleCard {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: root.commandPreset ? -1 : (
+                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
+                    )
                     Layout.fillHeight: root.commandPreset
-                    spacing: 12
-                    visible: root.sectionActivityConsole || root.commandPreset
-
-                    ActivityConsoleCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.commandPreset ? -1 : (
-                            (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
-                        )
-                        Layout.fillHeight: root.commandPreset
-                        visible: root.sectionActivityConsole
-                    }
-
-                    ColumnLayout {
-                        Layout.preferredWidth: 280
-                        Layout.fillHeight: true
-                        visible: root.commandPreset
-                        spacing: 8
-
-                        DashboardCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            headerText: "Subsystems"
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignCenter
-                                text: "SUBSYSTEMS OFFLINE"
-                                font.pixelSize: 10
-                                font.weight: Font.DemiBold
-                                font.letterSpacing: 1.5
-                                font.family: Appearance.font.family.monospace
-                                color: Qt.rgba(Appearance.mission.colText.r,
-                                               Appearance.mission.colText.g,
-                                               Appearance.mission.colText.b, 0.15)
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-                    }
+                    visible: root.sectionActivityConsole
                 }
 
                 Loader {
@@ -870,15 +837,15 @@ Expected: No QML errors. Dashboard opens and looks identical to before.
 
 - [ ] **Step 4: Test command preset**
 
-Temporarily edit `defaults/config.json` to set `"stylePreset": "command"`. Open the dashboard. Expected:
+Edit the live config at `~/.config/illogical-impulse/config.json` to set `"stylePreset": "command"` under the `"dashboard"` key. Open the dashboard. Expected:
 - PerformanceBarcodeCard visible (horizontal barcode meters)
 - PerformanceBarsCard hidden
-- HeroZone visible with "COMMAND ROOM STANDING BY"
-- Activity + widget stack side-by-side (widget stack showing "SUBSYSTEMS OFFLINE")
+- HeroZone visible with "COMMAND ROOM READY"
+- ActivityConsoleCard full-width (no side-by-side widget stack yet — Phase 2)
 - NetworkSparklinesCard hidden
 - Card radius visibly tighter (6px vs 18px)
 
-Then revert `stylePreset` back to `"default"`.
+Then revert `stylePreset` back to `"default"` in the live config.
 
 - [ ] **Step 5: Commit**
 
@@ -894,7 +861,7 @@ git commit -m "dashboard: restructure center column with preset-aware layout"
 **Files:**
 - Create: `modules/bar/BarcodeMiniMeters.qml`
 
-Inline barcode meters for the bar, parallel to MiniRings. Uses BarcodeMeter with `variant: "inline"`. Same data sources and warning thresholds as MiniRings. Must degrade gracefully at narrow widths.
+Inline barcode meters for the bar, parallel to MiniRings. Uses BarcodeMeter with `variant: "inline"`. Same data sources and warning thresholds as MiniRings. Progressive degradation at narrow widths: full (labels + wide tracks) → compact (no labels, narrow tracks) → minimal (drop temp metric, narrow tracks, values only). Always single-row — never stacks to two rows (bar height is ~40px, stacking won't fit).
 
 - [ ] **Step 1: Create BarcodeMiniMeters.qml**
 
@@ -913,126 +880,62 @@ Item {
     readonly property real _availWidth: width
     readonly property string _layout: _availWidth >= 320 ? "full"
         : _availWidth >= 200 ? "compact"
-        : "stacked"
+        : "minimal"
 
-    implicitWidth: _layout === "stacked" ? 160 : (_layout === "compact" ? 240 : 340)
-    implicitHeight: _layout === "stacked" ? 48 : 24
+    implicitWidth: _layout === "minimal" ? 160 : (_layout === "compact" ? 240 : 340)
+    implicitHeight: 24
 
-    Loader {
+    RowLayout {
         anchors.fill: parent
-        active: root._layout === "full" || root._layout === "compact"
-        visible: active
+        spacing: root._layout === "full" ? 10 : 6
 
-        sourceComponent: RowLayout {
-            spacing: root._layout === "full" ? 10 : 6
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.cpu ?? true
-                value: ResourceUsage.cpuUsage
-                label: "CPU"
-                color: Appearance.colors.colPrimary
-                variant: "inline"
-                showLabel: root._layout === "full"
-                inlineTrackWidth: root._layout === "full" ? 48 : 32
-                cautionThreshold: Config.options?.bar?.resources?.cpuCautionThreshold ?? 70
-                warningThreshold: Config.options?.bar?.resources?.cpuWarningThreshold ?? 90
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.gpu ?? true
-                value: ResourceUsage.gpuUsage
-                label: "GPU"
-                color: Appearance.colors.colSecondary
-                variant: "inline"
-                showLabel: root._layout === "full"
-                inlineTrackWidth: root._layout === "full" ? 48 : 32
-                cautionThreshold: Config.options?.bar?.resources?.gpuCautionThreshold ?? 70
-                warningThreshold: Config.options?.bar?.resources?.gpuWarningThreshold ?? 90
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.temp ?? true
-                value: Math.min(ResourceUsage.cpuTemp / 100, 1.0)
-                label: "TMP"
-                color: Appearance.colors.colError
-                variant: "inline"
-                showLabel: root._layout === "full"
-                inlineTrackWidth: root._layout === "full" ? 48 : 32
-                cautionThreshold: Config.options?.bar?.resources?.tempCautionThreshold ?? 65
-                warningThreshold: Config.options?.bar?.resources?.tempWarningThreshold ?? 80
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.ram ?? true
-                value: ResourceUsage.memoryUsedPercentage
-                label: "RAM"
-                color: Appearance.colors.colTertiary
-                variant: "inline"
-                showLabel: root._layout === "full"
-                inlineTrackWidth: root._layout === "full" ? 48 : 32
-                cautionThreshold: Config.options?.bar?.resources?.memoryCautionThreshold ?? 80
-                warningThreshold: Config.options?.bar?.resources?.memoryWarningThreshold ?? 95
-            }
+        BarcodeMeter {
+            visible: Config.options?.bar?.rings?.cpu ?? true
+            value: Math.min(1, Math.max(0, ResourceUsage.cpuUsage))
+            label: "CPU"
+            color: Appearance.colors.colPrimary
+            variant: "inline"
+            showLabel: root._layout === "full"
+            showValue: root._layout !== "minimal" || true
+            inlineTrackWidth: root._layout === "full" ? 48 : 32
+            cautionThreshold: Config.options?.bar?.resources?.cpuCautionThreshold ?? 70
+            warningThreshold: Config.options?.bar?.resources?.cpuWarningThreshold ?? 90
         }
-    }
 
-    Loader {
-        anchors.fill: parent
-        active: root._layout === "stacked"
-        visible: active
+        BarcodeMeter {
+            visible: Config.options?.bar?.rings?.gpu ?? true
+            value: Math.min(1, Math.max(0, ResourceUsage.gpuUsage))
+            label: "GPU"
+            color: Appearance.colors.colSecondary
+            variant: "inline"
+            showLabel: root._layout === "full"
+            inlineTrackWidth: root._layout === "full" ? 48 : 32
+            cautionThreshold: Config.options?.bar?.resources?.gpuCautionThreshold ?? 70
+            warningThreshold: Config.options?.bar?.resources?.gpuWarningThreshold ?? 90
+        }
 
-        sourceComponent: GridLayout {
-            columns: 2
-            rowSpacing: 4
-            columnSpacing: 8
+        BarcodeMeter {
+            visible: (Config.options?.bar?.rings?.temp ?? true) && root._layout !== "minimal"
+            value: Math.min(1, Math.max(0, ResourceUsage.cpuTemp / 100))
+            label: "TMP"
+            color: Appearance.colors.colError
+            variant: "inline"
+            showLabel: root._layout === "full"
+            inlineTrackWidth: root._layout === "full" ? 48 : 32
+            cautionThreshold: Config.options?.bar?.resources?.tempCautionThreshold ?? 65
+            warningThreshold: Config.options?.bar?.resources?.tempWarningThreshold ?? 80
+        }
 
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.cpu ?? true
-                value: ResourceUsage.cpuUsage
-                label: "CPU"
-                color: Appearance.colors.colPrimary
-                variant: "inline"
-                showLabel: false
-                inlineTrackWidth: 32
-                cautionThreshold: Config.options?.bar?.resources?.cpuCautionThreshold ?? 70
-                warningThreshold: Config.options?.bar?.resources?.cpuWarningThreshold ?? 90
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.gpu ?? true
-                value: ResourceUsage.gpuUsage
-                label: "GPU"
-                color: Appearance.colors.colSecondary
-                variant: "inline"
-                showLabel: false
-                inlineTrackWidth: 32
-                cautionThreshold: Config.options?.bar?.resources?.gpuCautionThreshold ?? 70
-                warningThreshold: Config.options?.bar?.resources?.gpuWarningThreshold ?? 90
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.temp ?? true
-                value: Math.min(ResourceUsage.cpuTemp / 100, 1.0)
-                label: "TMP"
-                color: Appearance.colors.colError
-                variant: "inline"
-                showLabel: false
-                inlineTrackWidth: 32
-                cautionThreshold: Config.options?.bar?.resources?.tempCautionThreshold ?? 65
-                warningThreshold: Config.options?.bar?.resources?.tempWarningThreshold ?? 80
-            }
-
-            BarcodeMeter {
-                visible: Config.options?.bar?.rings?.ram ?? true
-                value: ResourceUsage.memoryUsedPercentage
-                label: "RAM"
-                color: Appearance.colors.colTertiary
-                variant: "inline"
-                showLabel: false
-                inlineTrackWidth: 32
-                cautionThreshold: Config.options?.bar?.resources?.memoryCautionThreshold ?? 80
-                warningThreshold: Config.options?.bar?.resources?.memoryWarningThreshold ?? 95
-            }
+        BarcodeMeter {
+            visible: Config.options?.bar?.rings?.ram ?? true
+            value: Math.min(1, Math.max(0, ResourceUsage.memoryUsedPercentage))
+            label: "RAM"
+            color: Appearance.colors.colTertiary
+            variant: "inline"
+            showLabel: root._layout === "full"
+            inlineTrackWidth: root._layout === "full" ? 48 : 32
+            cautionThreshold: Config.options?.bar?.resources?.memoryCautionThreshold ?? 80
+            warningThreshold: Config.options?.bar?.resources?.memoryWarningThreshold ?? 95
         }
     }
 }
@@ -1135,7 +1038,7 @@ Save and open the dashboard to trigger hot-reload. Quickshell logs to its own st
 
 - [ ] **Step 5: Test with `variant: "barcode"`**
 
-Temporarily edit `defaults/config.json` to set `"variant": "barcode"` under `bar.rings`. Expected: bar shows inline barcode meters instead of arc rings. Then revert.
+Edit the live config at `~/.config/illogical-impulse/config.json` to set `"variant": "barcode"` under `bar.rings`. Expected: bar shows inline barcode meters instead of arc rings. Then revert in the live config.
 
 - [ ] **Step 6: Commit**
 
@@ -1150,12 +1053,12 @@ git commit -m "bar: wire BarcodeMiniMeters loader conditional on rings.variant"
 
 **Files:** None (verification only)
 
-- [ ] **Step 1: Set command preset in config**
+- [ ] **Step 1: Set command preset in live config**
 
-Edit `defaults/config.json`:
-- `"stylePreset": "command"`
-- `"heroZone": true` in sections
-- `"variant": "barcode"` in bar.rings
+Edit both `defaults/config.json` (repo defaults) and `~/.config/illogical-impulse/config.json` (live runtime):
+- `"stylePreset": "command"` under `dashboard`
+- `"heroZone": true` under `dashboard.sections`
+- `"variant": "barcode"` under `bar.rings`
 
 - [ ] **Step 2: Open dashboard and verify all Phase 1 components**
 
@@ -1164,18 +1067,18 @@ Checklist:
 2. Card radius is tight (6px, visibly angular vs the old 18px rounded)
 3. Card padding is slightly tighter (16px vs 18px)
 4. PerformanceBarcodeCard shows 4 horizontal barcode meter rows (CPU, GPU, RAM, VRAM) with temperature row below
-5. HeroZone shows "COMMAND ROOM STANDING BY" (idle-only in Phase 1)
-6. Activity console and widget stack are side-by-side. Widget stack shows "SUBSYSTEMS OFFLINE"
+5. HeroZone shows "COMMAND ROOM READY" with subtitle (idle-only in Phase 1)
+6. ActivityConsoleCard fills full center-column width (widget stack deferred to Phase 2)
 7. Left and right columns are unchanged (profile, system info, toggles, calendar, weather, notifications)
 8. Bar shows inline barcode meters instead of arc rings
 
 - [ ] **Step 3: Revert to default preset and verify no regression**
 
-Set `"stylePreset": "default"`, `"variant": "arc"`, `"heroZone": false`. Dashboard should look identical to before the entire Phase 1 implementation. No visible changes.
+In the live config (`~/.config/illogical-impulse/config.json`), set `"stylePreset": "default"`, `"variant": "arc"`, `"heroZone": false`. Dashboard should look identical to before the entire Phase 1 implementation. No visible changes.
 
-- [ ] **Step 4: Revert config.json to ship state**
+- [ ] **Step 4: Revert defaults/config.json to ship state**
 
-Set `"stylePreset": "default"` (ship default — user opts into command), `"heroZone": false`, `"variant": "arc"`. These are the safe defaults.
+In `defaults/config.json` (repo), set `"stylePreset": "default"` (ship default — user opts into command), `"heroZone": false`, `"variant": "arc"`. These are the safe defaults. Revert the live config to match.
 
 - [ ] **Step 5: Final commit with config**
 
