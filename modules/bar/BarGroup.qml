@@ -15,6 +15,7 @@ Item {
         return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky"
     }
     property real padding: densityPreset === "compact" ? 4 : (densityPreset === "airy" ? 6 : 5)
+    property bool showBackground: true
     readonly property int blockMargin: densityPreset === "compact" ? 3 : (densityPreset === "airy" ? 5 : 4)
     readonly property bool cardStyleEverywhere: (Config.options?.dock?.cardStyle ?? false) && (Config.options?.sidebar?.cardStyle ?? false) && (Config.options?.bar?.cornerStyle === 3)
     readonly property bool courierPreset: stylePreset === "courier"
@@ -58,9 +59,9 @@ Item {
             leftMargin: root.vertical ? root.blockMargin : 0
             rightMargin: root.vertical ? root.blockMargin : 0
         }
-        color: (Config.options?.bar?.borderless ?? false) ? "transparent"
+        color: (!root.showBackground || (Config.options?.bar?.borderless ?? false)) ? "transparent"
             : ColorUtils.applyAlpha(root.baseLayerColor, root.backgroundOpacity)
-        border.width: (Config.options?.bar?.borderless ?? false) ? 0 : root.styleBorderWidth
+        border.width: (!root.showBackground || (Config.options?.bar?.borderless ?? false)) ? 0 : root.styleBorderWidth
         border.color: root.styleBorderColor
         radius: root.styleRadius
     }

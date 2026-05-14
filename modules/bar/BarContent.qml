@@ -543,6 +543,9 @@ Item { // Bar content region
             id: leftCenterGroup
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
+            readonly property bool hasPlugins: PluginRegistry.barPlugins.some(p => p.position === "leftCenter" && p.visible)
+            readonly property bool hasContent: mediaRevealer.reveal || hasPlugins
+            showBackground: hasContent
 
             Loader {
                 active: false  // Replaced by MiniRings in right section
@@ -1069,27 +1072,19 @@ Item { // Bar content region
 
             // High-priority utility cluster: timer + shell updates + tray
             BarGroup {
+                visible: ShellUpdates.hasUpdate || ((Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0)
                 padding: root.utilityClusterPadding
 
                 TimerIndicator {
                     Layout.alignment: Qt.AlignVCenter
                 }
-            }
-
-            BarGroup {
-                padding: root.utilityClusterPadding
 
                 ShellUpdateIndicator {
                     Layout.alignment: Qt.AlignVCenter
                 }
-            }
-
-            BarGroup {
-                visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
-                padding: root.utilityClusterPadding
 
                 SysTray {
-                    visible: parent.visible
+                    visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
                     Layout.fillWidth: false
                     Layout.fillHeight: true
                     invertSide: Config.options?.bar?.bottom ?? false
