@@ -1071,13 +1071,26 @@ Item { // Bar content region
                 Component.onCompleted: ResourceUsage.acquire()
                 Component.onDestruction: ResourceUsage.release()
 
-                function percent(value) {
-                    return Math.round(Math.max(0, Math.min(1, value)) * 100).toString()
+                function kbToGiB(kb) {
+                    const gb = Math.max(0, kb) / (1024 * 1024)
+                    return (gb >= 10 ? gb.toFixed(0) : gb.toFixed(1)) + "G"
                 }
 
-                readonly property color cpuColor: ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuWarningThreshold ?? 90)
+                function bytesToGiB(bytes) {
+                    const gb = Math.max(0, bytes) / (1024 * 1024 * 1024)
+                    return (gb >= 10 ? gb.toFixed(0) : gb.toFixed(1)) + "G"
+                }
+
+                readonly property bool hasVramMetric: ResourceUsage.vramTotal > 1
+                readonly property string cpuMetric: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp.toString() + "°" : "--"
+                readonly property string ramMetric: kbToGiB(ResourceUsage.memoryUsed)
+                readonly property string gpuMetric: hasVramMetric
+                    ? bytesToGiB(ResourceUsage.vramUsed)
+                    : (ResourceUsage.gpuTemp > 0 ? ResourceUsage.gpuTemp.toString() + "°" : "--")
+
+                readonly property color cpuColor: ResourceUsage.cpuTemp >= (Config.options?.bar?.resources?.tempWarningThreshold ?? 80)
                     ? Appearance.colors.colError
-                    : (ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuCautionThreshold ?? 70)
+                    : (ResourceUsage.cpuTemp >= (Config.options?.bar?.resources?.tempCautionThreshold ?? 70)
                         ? Appearance.m3colors.m3tertiary
                         : root.courierChipText)
                 readonly property color ramColor: ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryWarningThreshold ?? 95)
@@ -1085,11 +1098,17 @@ Item { // Bar content region
                     : (ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryCautionThreshold ?? 80)
                         ? Appearance.m3colors.m3tertiary
                         : root.courierChipText)
-                readonly property color gpuColor: ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
-                    ? Appearance.colors.colError
-                    : (ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
-                        ? Appearance.m3colors.m3tertiary
-                        : root.courierChipText)
+                readonly property color gpuColor: hasVramMetric
+                    ? (ResourceUsage.vramUsedPercentage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.vramUsedPercentage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText))
+                    : (ResourceUsage.gpuTemp >= (Config.options?.bar?.resources?.tempWarningThreshold ?? 80)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.gpuTemp >= (Config.options?.bar?.resources?.tempCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText))
 
                 RowLayout {
                     spacing: 2
@@ -1103,7 +1122,7 @@ Item { // Bar content region
                         Layout.alignment: Qt.AlignVCenter
                     }
                     Text {
-                        text: rightSystemMonitorGroup.percent(ResourceUsage.cpuUsage)
+                        text: rightSystemMonitorGroup.cpuMetric
                         font.family: Appearance.font.family.main
                         font.pixelSize: root.resourceTextPixelSize
                         color: rightSystemMonitorGroup.cpuColor
@@ -1123,7 +1142,7 @@ Item { // Bar content region
                         Layout.alignment: Qt.AlignVCenter
                     }
                     Text {
-                        text: rightSystemMonitorGroup.percent(ResourceUsage.memoryUsedPercentage)
+                        text: rightSystemMonitorGroup.ramMetric
                         font.family: Appearance.font.family.main
                         font.pixelSize: root.resourceTextPixelSize
                         color: rightSystemMonitorGroup.ramColor
@@ -1143,7 +1162,7 @@ Item { // Bar content region
                         Layout.alignment: Qt.AlignVCenter
                     }
                     Text {
-                        text: rightSystemMonitorGroup.percent(ResourceUsage.gpuUsage)
+                        text: rightSystemMonitorGroup.gpuMetric
                         font.family: Appearance.font.family.main
                         font.pixelSize: root.resourceTextPixelSize
                         color: rightSystemMonitorGroup.gpuColor
