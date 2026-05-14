@@ -19,9 +19,12 @@ Item {
     property color barColor: Appearance.colors.colPrimary
     // Fixed bar count — decouples layout from the live stream's band count,
     // so a cava config regen can't tear down + rebuild the Repeater mid-stream.
-    property int barCount: 20
-    // Cava raw output is ~0-255 per band (matches CavaProcess + SpectrumVisualizer).
-    readonly property real maxValue: 255
+    // 50 mirrors `bars = 50` in scripts/cava/generate_config.sh (the shared
+    // CavaProcess config); keep in sync if that script's bar count changes.
+    property int barCount: 50
+    // Cava raw output runs ~0-1000 per band on the shared CavaProcess config
+    // (no ascii_max_range set) — matches AudioVisualizer.qml / WaveformFossilWidget.qml.
+    readonly property real maxValue: 1000
     property real barSpacing: 2
     property real minBarHeight: 2
 
