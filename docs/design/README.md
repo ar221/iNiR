@@ -12,7 +12,7 @@ Canonical specs:
 - Cross-stack source spec: `~/Documents/Ayaz OS/03 Projects/System/01 Specs/™ Courier Console Design Language.md`
 - Agentic OS reference intake: `~/Documents/Ayaz OS/03 Projects/iNiR/00 Inspiration & Research/™ Agentic OS Dashboard Reference 2026-04-26.md`
 
-Rollout rule: wedge, verify, then expand. Bar first; cockpit/dashboard next; sidebars only where the command grammar helps.
+Rollout rule: wedge, verify, then expand. Bar first; cockpit/dashboard next; sidebars only where the command grammar helps. Narrow/mobile surfaces follow the Courier translation rule: **desktop = command board; mobile = dispatch packet**. Rails collapse into strips/drawers, ledgers summarize before expanding, touch targets stay real, and a narrow-width check is part of done.
 
 ## Core Workflow
 
