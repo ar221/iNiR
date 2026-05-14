@@ -1648,6 +1648,103 @@ ContentPage {
         }
     }
 
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "music_note"
+        title: Translation.tr("Widget: Now Playing")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.nowPlaying.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Tall poster card — album art, track, progress, transport, Cava mini-spectrum")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.nowPlaying.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.nowPlaying.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.nowPlaying.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.nowPlaying.cardWidth ?? 320
+                    from: 240
+                    to: 480
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.cardWidth", value);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Visualizer")
+
+                SettingsSwitch {
+                    buttonIcon: "graphic_eq"
+                    text: Translation.tr("Show visualizer")
+                    checked: Config.options.background.widgets.nowPlaying.showVisualizer ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.showVisualizer", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Cava mini-spectrum — runs only while music plays")
+                    }
+                }
+            }
+        }
+    }
+
     // ── Signature Widgets ─────────────────────────────────────────────
 
     SettingsCardSection {
