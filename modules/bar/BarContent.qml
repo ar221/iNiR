@@ -96,22 +96,34 @@ Item { // Bar content region
     }
     readonly property string barStylePreset: {
         const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
-        return (preset === "clean" || preset === "glass") ? preset : "dusky"
+        return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky"
     }
+    // Courier Console preset — warm-terminal palette, square hard edges
+    readonly property bool courierPreset: barStylePreset === "courier"
+    readonly property color courierBarBg: "#0e0b06"
+    readonly property color courierBorder: "#c98a2e"
+    readonly property color courierBorderDim: "#5e7a48"
+    readonly property color courierDivider: "#74a39a"
     // Density tokens (compact/default/airy)
     readonly property int sideClusterGap: barDensity === "compact" ? 5 : (barDensity === "airy" ? 10 : 8)
     readonly property int centerSegmentGap: barDensity === "compact" ? 3 : (barDensity === "airy" ? 8 : 6)
     readonly property int missionClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 6 : 5)
     readonly property int utilityClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
     readonly property int ambientClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
-    // Style tokens (dusky/clean/glass)
-    readonly property int rightChipHorizontalPadding: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 8)
-    readonly property int rightChipVerticalPadding: barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 3)
-    readonly property int rightIndicatorSpacing: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 8)
-    readonly property real rightChipBackgroundAlpha: barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92)
-    readonly property int rightIndicatorIconSize: barStylePreset === "clean"
+    // Style tokens (dusky/clean/glass/courier)
+    readonly property int rightChipHorizontalPadding: courierPreset ? 9 : (barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 8))
+    readonly property int rightChipVerticalPadding: courierPreset ? 4 : (barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 3))
+    readonly property int rightIndicatorSpacing: courierPreset ? 9 : (barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 8))
+    readonly property real rightChipBackgroundAlpha: courierPreset ? 0.98 : (barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92))
+    readonly property int rightIndicatorIconSize: courierPreset
         ? Appearance.font.pixelSize.normal
-        : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger)
+        : (barStylePreset === "clean"
+            ? Appearance.font.pixelSize.normal
+            : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger))
+    readonly property color courierChipBg: "#171005"
+    readonly property color courierChipHover: "#21170a"
+    readonly property color courierChipActive: "#2a1c08"
+    readonly property color courierChipText: "#d7b56d"
     readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
         ? Appearance.font.pixelSize.smaller
         : Appearance.font.pixelSize.small
@@ -258,7 +270,8 @@ Item { // Bar content region
         Layout.bottomMargin: Appearance.sizes.baseBarHeight / 3
         Layout.fillHeight: true
         implicitWidth: 1
-        color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+        color: root.courierPreset ? root.courierBorderDim
+            : root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
     }
 
     component AmbientLaneSeparator: Rectangle {
@@ -267,7 +280,8 @@ Item { // Bar content region
         Layout.fillHeight: true
         implicitWidth: root.ambientLaneSeparatorWidth
         radius: implicitWidth
-        color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+        color: root.courierPreset ? root.courierBorderDim
+            : root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
         opacity: root.ambientLaneSeparatorOpacity
     }
 
@@ -307,6 +321,9 @@ Item { // Bar content region
 
         // Color logic per global style and corner style
         color: {
+            if (root.courierPreset) {
+                return ColorUtils.applyAlpha(root.courierBarBg, 0.97)
+            }
             if (root.angelEverywhere) {
                 return ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
             }
@@ -331,6 +348,9 @@ Item { // Bar content region
             if (customRounding >= 0) {
                 return customRounding
             }
+            if (root.courierPreset) {
+                return 0
+            }
             if (root.angelEverywhere) {
                 return (cornerStyle === 1 || cornerStyle === 3) ? Appearance.angel.roundingNormal : 0
             }
@@ -350,6 +370,7 @@ Item { // Bar content region
 
         // Border logic per global style
         border.width: {
+            if (root.courierPreset) return 1
             if (root.angelEverywhere) return Appearance.angel.panelBorderWidth
             if (root.inirEverywhere) {
                 return (cornerStyle === 1 || cornerStyle === 3) ? 1 : 0
@@ -360,6 +381,7 @@ Item { // Bar content region
             return floatingStyle ? 1 : 0
         }
         border.color: {
+            if (root.courierPreset) return root.courierBorder
             if (root.angelEverywhere) return Appearance.angel.colPanelBorder
             if (root.inirEverywhere) {
                 return Appearance.inir.colBorder
@@ -735,22 +757,26 @@ Item { // Bar content region
                 implicitWidth: indicatorsRowLayout.implicitWidth + root.rightChipHorizontalPadding * 2
                 implicitHeight: indicatorsRowLayout.implicitHeight + root.rightChipVerticalPadding * 2
 
-                buttonRadius: Appearance.rounding.full
+                buttonRadius: root.courierPreset ? 0 : Appearance.rounding.full
 
                 colBackground: rightSidebarButton.containsMouse
                     ? ColorUtils.applyAlpha(
-                        (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover),
+                        root.courierPreset
+                            ? root.courierChipHover
+                            : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover),
                         root.rightChipBackgroundAlpha
                     )
                     : "transparent"
-                colBackgroundHover: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover
-                colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active
-                colBackgroundToggled: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer
-                colBackgroundToggledHover: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover
-                colRippleToggled: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive
+                colBackgroundHover: root.courierPreset ? root.courierChipHover : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
+                colRipple: root.courierPreset ? root.courierChipActive : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active)
+                colBackgroundToggled: root.courierPreset ? root.courierChipBg : (Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer)
+                colBackgroundToggledHover: root.courierPreset ? root.courierChipHover : (Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover)
+                colRippleToggled: root.courierPreset ? root.courierChipActive : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive)
 
                 toggled: GlobalStates.sidebarRightOpen
-                property color colText: toggled
+                property color colText: root.courierPreset
+                    ? (toggled ? root.courierBorder : root.courierChipText)
+                    : toggled
                     ? Appearance.m3colors.m3onSecondaryContainer
                     : rightSidebarButton.containsMouse
                         ? Appearance.colors.colOnLayer1

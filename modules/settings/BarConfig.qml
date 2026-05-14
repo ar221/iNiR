@@ -28,6 +28,8 @@ ContentPage {
             return Translation.tr("Clean keeps high contrast with tighter borders and minimal translucency.")
         if (preset === "glass")
             return Translation.tr("Glass adds softer surfaces with stronger translucency and a lighter divider feel.")
+        if (preset === "courier")
+            return Translation.tr("Courier uses warm terminal blocks, square edges, and command-console contrast.")
         return Translation.tr("Dusky prioritizes compact, command-strip clarity with a grounded, dense look.")
     }
 
@@ -36,12 +38,12 @@ ContentPage {
         const density = String(Config.options?.bar?.density ?? "compact").toLowerCase()
         const lane = String(Config.options?.bar?.laneSeparator ?? "off").toLowerCase()
         const ambient = String(Config.options?.bar?.ambientVisibility ?? "hidden").toLowerCase()
-        return (style === "dusky" && density === "compact" && lane === "off" && ambient === "hidden")
+        return ((style === "dusky" || style === "courier") && density === "compact" && lane === "off" && ambient === "hidden")
     }
 
     readonly property string styleDisplayName: {
         const style = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
-        return style === "clean" ? Translation.tr("Clean") : style === "glass" ? Translation.tr("Glass") : Translation.tr("Dusky")
+        return style === "clean" ? Translation.tr("Clean") : style === "glass" ? Translation.tr("Glass") : style === "courier" ? Translation.tr("Courier") : Translation.tr("Dusky")
     }
 
     readonly property string densityDisplayName: {
@@ -209,7 +211,7 @@ ContentPage {
                     ConfigSelectionArray {
                         currentValue: {
                             const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase();
-                            return (preset === "clean" || preset === "glass") ? preset : "dusky";
+                            return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky";
                         }
                         onSelected: newValue => {
                             Config.setNestedValue("bar.stylePreset", newValue);
@@ -217,7 +219,8 @@ ContentPage {
                         options: [
                             { displayName: Translation.tr("Dusky (recommended)"), icon: "dark_mode", value: "dusky" },
                             { displayName: Translation.tr("Clean"), icon: "dehaze", value: "clean" },
-                            { displayName: Translation.tr("Glass"), icon: "blur_on", value: "glass" }
+                            { displayName: Translation.tr("Glass"), icon: "blur_on", value: "glass" },
+                            { displayName: Translation.tr("Courier"), icon: "terminal", value: "courier" }
                         ]
                     }
                 }
