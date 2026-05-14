@@ -38,10 +38,33 @@ AbstractBackgroundWidget {
     // Divider suppression for the last visible cell is derived positionally
     // inside StripCell (StripCell._isLastVisible) — reorder-safe, no index map.
 
-    // ── gcalcli "next event" state ──
-    property bool gcalAvailable: false
-    property var nextEvent: null // { time, title } or null
+    // ── "next event" state — sourced from CalendarSync (caldav-events.json) ──
+    // gcalcli is not installed on this system; the calendar-sync pipeline
+    // populates caldav-events.json, which the CalendarSync singleton already
+    // watches + parses. We consume that service rather than re-reading the file.
     property int _countdownTick: 0
+
+    // First timed event today whose start is still in the future. Re-evaluates
+    // when CalendarSync reloads the file AND every minute via _countdownTick, so
+    // a just-passed event drops off and the next one surfaces without a resync.
+    // All-day events are skipped (matches the old gcalcli "All day" hard-skip).
+    readonly property var nextEvent: {
+        void root._countdownTick // re-eval every minute
+        const list = CalendarSync.list // re-eval on file reload
+        if (!list || list.length === 0)
+            return null
+        const now = new Date()
+        const todays = CalendarSync.getEventsForDate(now)
+        const future = todays.filter(e =>
+            !e.allDay && !isNaN(new Date(e.dateTime).getTime())
+            && new Date(e.dateTime).getTime() > now.getTime()
+        )
+        if (future.length === 0)
+            return null
+        future.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+        const ev = future[0]
+        return { time: ev.time, title: ev.title }
+    }
 
     // ── oc-vault glance state ──
     property string glanceTask: ""
@@ -171,7 +194,9 @@ AbstractBackgroundWidget {
                 anchors.right: parent.right
                 spacing: 1
 
-                // Muted em-dash when gcalcli unavailable or no upcoming event
+                // Muted em-dash when there's no upcoming event today
+                // (also covers a missing / empty / unparseable events file —
+                // CalendarSync degrades to an empty list, nextEvent → null).
                 StyledText {
                     Layout.fillWidth: true
                     visible: !root.nextEvent
@@ -355,59 +380,6 @@ AbstractBackgroundWidget {
         return "in " + timeStr
     }
 
-    // ── gcalcli availability check ──
-    Process {
-        id: gcalCheck
-        command: ["/usr/bin/which", "gcalcli"]
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => {
-                root.gcalAvailable = data.trim().length > 0
-                if (root.gcalAvailable) root.fetchNextEvent()
-            }
-        }
-    }
-
-    // ── Next-event fetcher — first event today whose start is in the future ──
-    Process {
-        id: gcalFetch
-        command: ["/usr/bin/bash", "-lc",
-            "gcalcli agenda --nocolor --tsv $(date +%Y-%m-%dT00:00) $(date +%Y-%m-%dT23:59) 2>/dev/null"
-        ]
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => {
-                const lines = data.trim().split("\n")
-                const now = new Date()
-                let chosen = null
-                for (const line of lines) {
-                    if (line.trim() === "") continue
-                    const parts = line.split("\t")
-                    if (parts.length < 4) continue
-                    const title = parts.slice(4).join(" ").trim()
-                    if (!title) continue
-                    const time = parts[1] || "All day"
-                    if (time === "All day") continue
-                    const timeParts = time.split(":")
-                    if (timeParts.length < 2) continue
-                    const todayStr = now.getFullYear() + "-"
-                        + String(now.getMonth() + 1).padStart(2, "0") + "-"
-                        + String(now.getDate()).padStart(2, "0")
-                    const eventDate = new Date(todayStr + "T" + time.padStart(5, "0") + ":00")
-                    if (isNaN(eventDate.getTime())) continue
-                    if (eventDate.getTime() - now.getTime() <= 0) continue
-                    chosen = { time: time, title: title }
-                    break // events are time-ordered; first future one wins
-                }
-                root.nextEvent = chosen
-            }
-        }
-    }
-
-    function fetchNextEvent() {
-        gcalFetch.running = true
-    }
-
     // ── oc-vault glance fetcher — emits one TSV line: task<TAB>reminder ──
     Process {
         id: glanceFetch
@@ -430,24 +402,13 @@ AbstractBackgroundWidget {
     }
 
     Component.onCompleted: {
-        gcalCheck.running = true
         Weather.ensureRunning()
         fetchGlance()
     }
 
     onVisibleChanged: {
-        if (visible) {
-            if (root.gcalAvailable) root.fetchNextEvent()
+        if (visible)
             root.fetchGlance()
-        }
-    }
-
-    // Refresh gcalcli next event every 5 minutes
-    Timer {
-        running: root.visible && root.gcalAvailable
-        interval: 300000
-        repeat: true
-        onTriggered: root.fetchNextEvent()
     }
 
     // Refresh the vault glance every 5 minutes
@@ -458,9 +419,11 @@ AbstractBackgroundWidget {
         onTriggered: root.fetchGlance()
     }
 
-    // Re-evaluate the countdown every minute
+    // Re-evaluate the countdown every minute. Gated only on visibility (not on
+    // nextEvent) so when an event's start time passes, the tick keeps firing,
+    // nextEvent recomputes, and the next upcoming event surfaces on its own.
     Timer {
-        running: root.visible && !!root.nextEvent
+        running: root.visible
         interval: 60000
         repeat: true
         onTriggered: root._countdownTick++
