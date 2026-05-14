@@ -75,9 +75,7 @@ Item {
         defaultComponent: VerticalBar {}
     }
     ContractPanelLoader { identifier: "iiBackground"; slotName: "background"; defaultComponent: Background {} }
-    // Dock is core shell UI. Load it directly so a contract-loader edge case cannot leave
-    // the launcher rail silently absent while the slot reports enabled.
-    PanelLoader { identifier: "iiDock"; extraCondition: Config.options?.dock?.enable ?? true; component: Dock {} }
+    ContractPanelLoader { identifier: "iiDock"; slotName: "dock"; extraCondition: Config.options?.dock?.enable ?? true; defaultComponent: Dock {} }
     ContractPanelLoader { identifier: "iiLock"; slotName: "lock"; defaultComponent: Lock {} }
     ContractPanelLoader { identifier: "iiMediaControls"; slotName: "mediaControls"; defaultComponent: MediaControls {} }
     ContractPanelLoader { identifier: "iiSidebarLeft"; slotName: "sidebarLeft"; defaultComponent: SidebarLeft {} }

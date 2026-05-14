@@ -84,10 +84,10 @@ Scope {
                 }
                 readonly property bool hasFocusedWindow: !!focusedWindow || !!ToplevelManager.activeToplevel?.activated
                 readonly property bool focusedWindowIsFullSize: focusedWindow ? (GameMode.isWindowFullscreen(focusedWindow) || focusedWindowFillsOutput(focusedWindow)) : false
-                // Courier Rail is normally visible when pinned. Yielding is only for hover/auto-hide
-                // behavior; otherwise screenshots and normal split-tile work lose the rail entirely.
-                readonly property bool railShouldYieldToFocusedWindow: root.isRailVertical && !root.pinned && hasFocusedWindow && !focusedWindowIsFullSize
-                readonly property bool pinnedRevealAllowed: root.pinned
+                // Courier Rail is normally visible. It only peeks away for normal/floating/split
+                // windows that do not fill the output, so the rail does not cover usable view.
+                readonly property bool railShouldYieldToFocusedWindow: root.isRailVertical && hasFocusedWindow && !focusedWindowIsFullSize
+                readonly property bool pinnedRevealAllowed: root.pinned && !railShouldYieldToFocusedWindow
 
                 function focusedWindowFillsOutput(window) {
                     if (!window || !CompositorService.isNiri || window.is_floating)
@@ -141,18 +141,14 @@ Scope {
                     ? (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
                     : dockBackground.implicitWidth
                 implicitHeight: root.isVertical
-                    ? (root.isRailVertical && root.pinned ? (dockRoot.screen?.height ?? 1440) : dockBackground.implicitHeight)
+                    ? dockBackground.implicitHeight
                     : (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
-                width: implicitWidth
-                height: root.isVertical ? (dockRoot.screen?.height ?? 1440) : implicitHeight
 
                 WlrLayershell.namespace: "quickshell:dock"
-                WlrLayershell.layer: WlrLayer.Top
                 color: "transparent"
 
                 Item { id: emptyMask; width: 0; height: 0 }
-                Item { id: fullMask; anchors.fill: parent }
-                mask: Region { item: GameMode.shouldHidePanels ? emptyMask : (root.isRailVertical && root.pinned ? fullMask : dockMouseArea) }
+                mask: Region { item: GameMode.shouldHidePanels ? emptyMask : dockMouseArea }
 
                 MouseArea {
                     id: dockMouseArea
@@ -160,7 +156,7 @@ Scope {
                     acceptedButtons: Qt.NoButton
 
                     width: root.isVertical ? parent.width : undefined
-                    height: root.isVertical ? (root.isRailVertical && root.pinned ? parent.height : implicitHeight) : parent.height
+                    height: root.isVertical ? undefined : parent.height
                     implicitWidth: root.isVertical ? parent.width : (dockBackground.implicitWidth + Appearance.sizes.elevationMargin * 2)
                     implicitHeight: root.isVertical ? (dockBackground.implicitHeight + Appearance.sizes.elevationMargin * 2) : parent.height
 
@@ -184,7 +180,7 @@ Scope {
                     anchors.topMargin: root.position === "bottom" ? hideOffset : 0
                     anchors.bottomMargin: root.isTop ? hideOffset : 0
                     anchors.leftMargin: root.position === "right" ? hideOffsetV : 0
-                    anchors.rightMargin: root.isLeft ? (root.isRailVertical && root.pinned ? 0 : hideOffsetV) : 0
+                    anchors.rightMargin: root.isLeft ? hideOffsetV : 0
 
                     Behavior on anchors.topMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
                     Behavior on anchors.bottomMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve } }
