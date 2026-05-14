@@ -12,8 +12,20 @@ Item {
 
     // Monospace header text, rendered uppercase
     property string label: ""
-    // Draw the trailing-edge divider — false for the last visible cell
-    property bool showDivider: true
+    // Whether this is the last visible cell among its siblings — derived
+    // positionally from the actual layout children, so a cell reorder can't
+    // silently break divider suppression. Forward-walk + accumulate so QML
+    // registers a dependency on every sibling's `visible`, not just the last.
+    readonly property bool _isLastVisible: {
+        if (!parent) return false
+        let last = null
+        for (let i = 0; i < parent.children.length; i++) {
+            if (parent.children[i].visible) last = parent.children[i]
+        }
+        return last === root
+    }
+    // Draw the trailing-edge divider — false for the last visible cell.
+    property bool showDivider: !_isLastVisible
 
     // Content slot — children land in the content container below the header
     default property alias content: contentContainer.data

@@ -35,14 +35,8 @@ AbstractBackgroundWidget {
         + (showTask ? 1 : 0)
         + (showReminder ? 1 : 0)
     readonly property real cellWidth: Math.floor(cardWidth / Math.max(1, visibleCellCount))
-    // Index of the last visible cell — that cell drops its divider.
-    readonly property int lastVisibleIndex: {
-        let idx = 1 // NEXT is index 1, always visible
-        if (showWeather) idx = 2
-        if (showTask) idx = 3
-        if (showReminder) idx = 4
-        return idx
-    }
+    // Divider suppression for the last visible cell is derived positionally
+    // inside StripCell (StripCell._isLastVisible) — reorder-safe, no index map.
 
     // ── gcalcli "next event" state ──
     property bool gcalAvailable: false
@@ -125,8 +119,11 @@ AbstractBackgroundWidget {
         StripCell {
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
+            // Pin the layout's height floor to this cell's content-driven
+            // implicitHeight, making the content→layout sizing direction
+            // explicit so a future refactor can't introduce a cycle.
+            Layout.minimumHeight: implicitHeight
             label: "TIME"
-            showDivider: root.lastVisibleIndex !== 0
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -166,8 +163,8 @@ AbstractBackgroundWidget {
         StripCell {
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
+            Layout.minimumHeight: implicitHeight
             label: "NEXT"
-            showDivider: root.lastVisibleIndex !== 1
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -216,9 +213,9 @@ AbstractBackgroundWidget {
         StripCell {
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
+            Layout.minimumHeight: implicitHeight
             visible: root.showWeather
             label: "WEATHER"
-            showDivider: root.lastVisibleIndex !== 2
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -267,9 +264,9 @@ AbstractBackgroundWidget {
         StripCell {
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
+            Layout.minimumHeight: implicitHeight
             visible: root.showTask
             label: "TASK"
-            showDivider: root.lastVisibleIndex !== 3
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -303,9 +300,9 @@ AbstractBackgroundWidget {
         StripCell {
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
+            Layout.minimumHeight: implicitHeight
             visible: root.showReminder
             label: "REMINDER"
-            showDivider: root.lastVisibleIndex !== 4
 
             ColumnLayout {
                 anchors.left: parent.left
