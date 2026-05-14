@@ -83,11 +83,34 @@ Scope {
                     return NiriService.activeWindow
                 }
                 readonly property bool hasFocusedWindow: !!focusedWindow || !!ToplevelManager.activeToplevel?.activated
-                readonly property bool focusedWindowIsFullSize: focusedWindow ? GameMode.isWindowFullscreen(focusedWindow) : false
-                // Courier Rail should yield to normal/floating windows. Keep the rail present on
-                // desktop and when the focused window is explicitly full-sized/fullscreened.
+                readonly property bool focusedWindowIsFullSize: focusedWindow ? (GameMode.isWindowFullscreen(focusedWindow) || focusedWindowFillsOutput(focusedWindow)) : false
+                // Courier Rail is normally visible. It only peeks away for normal/floating/split
+                // windows that do not fill the output, so the rail does not cover usable view.
                 readonly property bool railShouldYieldToFocusedWindow: root.isRailVertical && hasFocusedWindow && !focusedWindowIsFullSize
                 readonly property bool pinnedRevealAllowed: root.pinned && !railShouldYieldToFocusedWindow
+
+                function focusedWindowFillsOutput(window) {
+                    if (!window || !CompositorService.isNiri || window.is_floating)
+                        return false
+
+                    const layout = window.layout
+                    const tileSize = layout?.tile_size || layout?.window_size
+                    if (!tileSize || tileSize.length < 2)
+                        return false
+
+                    const workspace = NiriService.workspaces[window.workspace_id]
+                    const output = workspace ? NiriService.outputs[workspace.output] : null
+                    if (!output?.logical)
+                        return false
+
+                    // Niri reports the usable tile a little smaller than the raw output because
+                    // of gaps, borders, and shell reservations. Treat near-output tiles as the
+                    // user's explicit full-size state, but still yield for split/floating windows.
+                    const widthTolerance = Math.max(80, output.logical.width * 0.04)
+                    const heightTolerance = Math.max(140, output.logical.height * 0.10)
+                    return tileSize[0] >= output.logical.width - widthTolerance
+                        && tileSize[1] >= output.logical.height - heightTolerance
+                }
 
                 property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (pinnedRevealAllowed || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
