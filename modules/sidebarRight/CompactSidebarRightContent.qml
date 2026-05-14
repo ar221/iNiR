@@ -996,7 +996,7 @@ Item {
                                             id: ccSurface
                                             anchors.fill: parent
                                             implicitHeight: ccCard.implicitHeight + 10
-                                            radius: bg.angelEverywhere ? Appearance.angel.roundingNormal : bg.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
+                                            radius: Appearance.rounding.unsharpen
                                             color: bg.angelEverywhere ? Appearance.angel.colGlassCard
                                                 : bg.inirEverywhere ? Appearance.inir.colLayer1
                                                 : "transparent"
@@ -1335,8 +1335,7 @@ Item {
             RippleButton {
                 visible: sectionHeader.showSecondaryAction
                 implicitWidth: 28; implicitHeight: 28
-                buttonRadius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                    : bg.inirEverywhere ? Appearance.inir.roundingSmall : 14
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: bg.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colLayer1, 0.35)
                     : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colGlassCard, 0.72)
                     : bg.auroraEverywhere ? bg.colDarkSurface
@@ -1361,8 +1360,7 @@ Item {
             RippleButton {
                 visible: sectionHeader.showAction
                 implicitWidth: 28; implicitHeight: 28
-                buttonRadius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                    : bg.inirEverywhere ? Appearance.inir.roundingSmall : 14
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: sectionHeader.actionToggled
                     ? (bg.inirEverywhere ? Appearance.inir.colSecondaryContainer
                      : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
@@ -1419,7 +1417,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 implicitHeight: 32
                 implicitWidth: dndChipContent.implicitWidth + 20
-                buttonRadius: Appearance.rounding.full
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: Notifications.silent
                     ? (bg.inirEverywhere ? Appearance.inir.colSecondaryContainer
                         : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
@@ -1587,7 +1585,7 @@ Item {
                 color: bg.angelEverywhere ? Appearance.angel.colPrimary
                     : bg.inirEverywhere ? Appearance.inir.colPrimary
                     : Appearance.colors.colPrimary
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.unsharpen
                 implicitWidth: bubbleLabel.implicitWidth + 24
                 implicitHeight: bubbleLabel.implicitHeight + 10
 
@@ -1635,9 +1633,7 @@ Item {
         Rectangle {
             id: qaBtnBg
             anchors.fill: parent
-            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                : Appearance.rounding.small
+            radius: Appearance.rounding.unsharpen
             color: {
                 if (qaBtnMA.containsPress)
                     return bg.inirEverywhere ? Appearance.inir.colLayer2Active
@@ -1672,7 +1668,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
-                    radius: 14
+                    radius: Appearance.rounding.unsharpen
                     color: qaBtn.toggled
                         ? ColorUtils.transparentize(qaBtn._colOnToggle, 0.82)
                         : ColorUtils.transparentize(qaBtn._colPrimary, 0.86)

@@ -13,7 +13,7 @@ Rectangle {
     color: Appearance.colors.colLayer0
     border.width: 1
     border.color: Appearance.colors.colLayer1
-    radius: 2
+    radius: Appearance.rounding.unsharpen
 
     ColumnLayout {
         anchors.centerIn: parent
