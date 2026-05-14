@@ -241,9 +241,7 @@ Item {
         Rectangle {
             id: chipBg
             anchors.fill: parent
-            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                : Appearance.rounding.small
+            radius: Appearance.rounding.unsharpen
             color: {
                 if (chipMA.containsPress)
                     return bg.inirEverywhere ? Appearance.inir.colLayer2Active
@@ -272,7 +270,7 @@ Item {
                 Rectangle {
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
-                    radius: 16
+                    radius: Appearance.rounding.unsharpen
                     color: ColorUtils.transparentize(chip._colPrimary, 0.84)
 
                     MaterialSymbol {
@@ -470,9 +468,7 @@ Item {
                     y: colTop + clampedIdx * (navItemH + navSpacing) + (navItemH - navBgH) / 2
                     width: leftRail.width - colLeft - colRight - navBgLeft
                     height: navBgH
-                    radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                          : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                          : Appearance.rounding.small
+                    radius: Appearance.rounding.unsharpen
                     color: bg.inirEverywhere  ? Appearance.inir.colSecondaryContainer
                          : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
                          : bg.auroraEverywhere ? bg.colDarkSurfaceHover
@@ -560,9 +556,7 @@ Item {
                                     leftMargin: 7
                                 }
                                 height: 38
-                                radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                      : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                      : Appearance.rounding.small
+                                radius: Appearance.rounding.unsharpen
 
                                 color: {
                                     if (navMA.containsPress)
@@ -696,9 +690,7 @@ Item {
                                     leftMargin: 7
                                 }
                                 height: 34
-                                radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                      : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                      : Appearance.rounding.small
+                                radius: Appearance.rounding.unsharpen
                                 color: {
                                     if (sysMA.containsPress)
                                         return bg.inirEverywhere  ? Appearance.inir.colLayer2Active
@@ -752,9 +744,7 @@ Item {
                                 leftMargin: 7
                             }
                             height: 34
-                            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                  : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                  : Appearance.rounding.small
+                            radius: Appearance.rounding.unsharpen
                             color: {
                                 if (layoutMA.containsPress)
                                     return bg.inirEverywhere  ? Appearance.inir.colLayer2Active
