@@ -8,7 +8,8 @@ import qs.modules.common.functions
 // No sidebar coupling; the parent decides when to run by setting `active`.
 // CavaProcess spawns the native `cava` process only while `active` is true
 // (with an internal 800ms stop debounce) and exposes `points` (~0-255 per
-// band, [] when not running).
+// band, [] when not running). Follows the CavaVisualizer.qml pattern: a
+// fixed barCount drives the Repeater model, delegates index into `points`.
 Item {
     id: root
 
@@ -16,6 +17,9 @@ Item {
     property bool active: false
     // Album-art dominant tint for the bars.
     property color barColor: Appearance.colors.colPrimary
+    // Fixed bar count — decouples layout from the live stream's band count,
+    // so a cava config regen can't tear down + rebuild the Repeater mid-stream.
+    property int barCount: 20
     // Cava raw output is ~0-255 per band (matches CavaProcess + SpectrumVisualizer).
     readonly property real maxValue: 255
     property real barSpacing: 2
@@ -34,19 +38,18 @@ Item {
         spacing: root.barSpacing
 
         Repeater {
-            model: cavaProc.points.length
+            model: root.barCount
 
             Rectangle {
                 required property int index
-                readonly property int barCount: cavaProc.points.length
                 width: Math.max(1,
-                    (barRow.width - (barCount - 1) * root.barSpacing) / Math.max(1, barCount))
+                    (barRow.width - (root.barCount - 1) * root.barSpacing) / Math.max(1, root.barCount))
                 height: Math.max(root.minBarHeight,
                     (Math.min(root.maxValue, cavaProc.points[index] ?? 0) / root.maxValue) * barRow.height)
                 anchors.bottom: parent.bottom
                 radius: Appearance.rounding.unsharpen
                 color: root.barColor
-                opacity: 0.55 + 0.45 * (index / Math.max(1, barCount))
+                opacity: 0.55 + 0.45 * (index / Math.max(1, root.barCount))
 
                 Behavior on height {
                     enabled: Appearance.animationsEnabled
