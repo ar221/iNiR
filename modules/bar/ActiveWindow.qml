@@ -61,21 +61,21 @@ Item {
         if (CompositorService.isNiri) {
             const w = niriFocusedWindow
             if (w && w.title) {
-                return shortenText(w.title, 80)
+                return shortenText(w.title, 160)
             }
             const wsNum = NiriService.getCurrentWorkspaceNumber()
-            return shortenText(`${Translation.tr("Workspace")} ${wsNum}`, 80)
+            return shortenText(`${Translation.tr("Workspace")} ${wsNum}`, 160)
         }
 
         if (root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow) {
-            return shortenText(root.activeWindow?.title || "", 80)
+            return shortenText(root.activeWindow?.title || "", 160)
         }
 
         const fbTitle = (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${monitor?.activeWorkspace?.id ?? 1}`
-        return shortenText(fbTitle, 80)
+        return shortenText(fbTitle, 160)
     }
 
-    property real maxTextWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 280
+    property real maxTextWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 520
     property bool fadeOverflow: Config.options?.bar?.activeWindow?.fadeOverflow ?? true
 
     implicitWidth: colLayout.implicitWidth

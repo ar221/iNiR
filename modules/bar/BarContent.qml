@@ -131,12 +131,12 @@ Item { // Bar content region
         : Appearance.font.pixelSize.small
     readonly property int calendarTitleMaxChars: {
         if (root.useShortenedForm === 2)
-            return 7;
+            return 12;
         if (root.useShortenedForm === 1)
-            return 9;
+            return 18;
         return barDensity === "compact"
-            ? 11
-            : (barDensity === "airy" ? 16 : 14);
+            ? 24
+            : (barDensity === "airy" ? 34 : 28);
     }
     readonly property string laneSeparatorMode: {
         const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
@@ -525,7 +525,7 @@ Item { // Bar content region
                 visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 280
+                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 520
             }
         }
     }
@@ -544,7 +544,7 @@ Item { // Bar content region
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
             readonly property bool hasPlugins: PluginRegistry.barPlugins.some(p => p.position === "leftCenter" && p.visible)
-            readonly property bool hasContent: mediaRevealer.reveal || hasPlugins
+            readonly property bool hasContent: leftCalEventRevealer.reveal || mediaRevealer.reveal || hasPlugins
             showBackground: hasContent
 
             Loader {
@@ -553,6 +553,72 @@ Item { // Bar content region
                 Layout.fillWidth: root.useShortenedForm === 2
                 sourceComponent: Resources {
                     alwaysShowAllResources: root.useShortenedForm === 2
+                }
+            }
+
+            // Next calendar event — lives in the left-center empty lane, not the right quick controls
+            Revealer {
+                id: leftCalEventRevealer
+                property var _now: new Date()
+                readonly property var _nextEvent: {
+                    var upcoming = CalendarSync.list.filter(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > leftCalEventRevealer._now && (dt - leftCalEventRevealer._now) <= 7200000
+                    }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
+                    return upcoming.length > 0 ? upcoming[0] : null
+                }
+                readonly property int _msUntil: _nextEvent ? (new Date(_nextEvent.dateTime) - _now) : -1
+                readonly property bool imminent: _msUntil >= 0 && _msUntil < 300000
+                readonly property string _deltaText: {
+                    if (_msUntil < 0) return ""
+                    var mins = Math.floor(_msUntil / 60000)
+                    if (mins < 60) return "· " + mins + "m"
+                    var h = Math.floor(mins / 60)
+                    var m = mins % 60
+                    return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
+                }
+
+                reveal: _nextEvent !== null
+                Layout.fillHeight: true
+                Layout.fillWidth: reveal
+
+                Timer {
+                    readonly property bool _hasSoon: CalendarSync.list.some(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > leftCalEventRevealer._now && (dt - leftCalEventRevealer._now) <= 10800000
+                    })
+                    interval: leftCalEventRevealer.imminent ? 10000 : 30000
+                    running: _hasSoon
+                    repeat: true
+                    onTriggered: leftCalEventRevealer._now = new Date()
+                }
+
+                Row {
+                    spacing: 4
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    MaterialSymbol {
+                        text: "event"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    }
+
+                    Text {
+                        readonly property string _raw: leftCalEventRevealer._nextEvent?.title ?? ""
+                        readonly property int _maxChars: root.calendarTitleMaxChars
+                        text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.calendarTextPixelSize
+                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    }
+
+                    Text {
+                        text: leftCalEventRevealer._deltaText
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.calendarTextPixelSize
+                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    }
                 }
             }
 
@@ -807,7 +873,7 @@ Item { // Bar content region
                     readonly property bool hasAlertGroup: ((Config.options?.bar?.modules?.micIndicator ?? true) && (Privacy.micActive || (Audio?.micBeingAccessed ?? false)) && !(Audio.source?.audio?.muted ?? false))
                         || ((Config.options?.bar?.modules?.batteryAlert ?? true) && Battery.available && Battery.isLowAndNotCharging)
                         || FocusMode.active
-                    readonly property bool hasStatusGroup: ClaudeCodeProxy.active || calEventRevealer.reveal || (Notifications.silent || Notifications.unread > 0)
+                    readonly property bool hasStatusGroup: ClaudeCodeProxy.active || (Notifications.silent || Notifications.unread > 0)
                     spacing: 0
 
                     Revealer {
@@ -923,77 +989,7 @@ Item { // Bar content region
                             onClicked: ClaudeCodeProxy.toggle()
                         }
                     }
-                    // Next calendar event indicator — visible when event within 2 hours
-                    Revealer {
-                        id: calEventRevealer
-                        property var _now: new Date()
-                        readonly property var _nextEvent: {
-                            var upcoming = CalendarSync.list.filter(function(e) {
-                                var dt = new Date(e.dateTime)
-                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 7200000
-                            }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
-                            return upcoming.length > 0 ? upcoming[0] : null
-                        }
-                        readonly property int _msUntil: _nextEvent ? (new Date(_nextEvent.dateTime) - _now) : -1
-                        readonly property bool imminent: _msUntil >= 0 && _msUntil < 300000
-                        readonly property string _deltaText: {
-                            if (_msUntil < 0) return ""
-                            var mins = Math.floor(_msUntil / 60000)
-                            if (mins < 60) return "· " + mins + "m"
-                            var h = Math.floor(mins / 60)
-                            var m = mins % 60
-                            return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
-                        }
 
-                        reveal: _nextEvent !== null
-                        Layout.fillHeight: true
-                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
-                        Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
-
-                        // Refresh _now only while an event is within the 3h horizon; idle otherwise.
-                        // Interval narrows as imminence grows so the countdown stays accurate near T-0.
-                        Timer {
-                            readonly property bool _hasSoon: CalendarSync.list.some(function(e) {
-                                var dt = new Date(e.dateTime)
-                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 10800000
-                            })
-                            interval: calEventRevealer.imminent ? 10000 : 30000
-                            running: _hasSoon
-                            repeat: true
-                            onTriggered: calEventRevealer._now = new Date()
-                        }
-
-                        Row {
-                            spacing: 3
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Text {
-                                id: calEventTitle
-                                readonly property string _raw: calEventRevealer._nextEvent?.title ?? ""
-                                readonly property int _maxChars: root.calendarTitleMaxChars
-                                text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
-                                font.family: Appearance.font.family.main
-                                font.pixelSize: root.calendarTextPixelSize
-                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
-                                Behavior on color {
-                                    enabled: Appearance.animationsEnabled
-                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-                                }
-                            }
-                            Text {
-                                text: calEventRevealer._deltaText
-                                font.family: Appearance.font.family.main
-                                font.pixelSize: root.calendarTextPixelSize
-                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
-                                Behavior on color {
-                                    enabled: Appearance.animationsEnabled
-                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-                                }
-                            }
-                        }
-                    }
                     HyprlandXkbIndicator {
                         Layout.alignment: Qt.AlignVCenter
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
