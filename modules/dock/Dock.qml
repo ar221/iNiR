@@ -73,10 +73,10 @@ Scope {
 
                 property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
-                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 8) : (Config.options?.dock?.height ?? 80)
-                // Rail should reserve only the physical spine plus a tiny breathing gap.
+                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 4) : (Config.options?.dock?.height ?? 80)
+                // Rail should reserve only the physical spine plus a hairline breathing gap.
                 // The normal dock keeps its larger buffer for magnification / float-dock feel.
-                readonly property real dockReservePadding: root.isRailVertical ? (Appearance.sizes.hyprlandGapsOut + 2) : (Appearance.sizes.elevationMargin + 20)
+                readonly property real dockReservePadding: root.isRailVertical ? 1 : (Appearance.sizes.elevationMargin + 20)
                 readonly property real magnificationOverflow: {
                     if (root.isRailVertical) return 0
                     const enabled = Config.options?.dock?.magnification?.enabled ?? true
@@ -386,8 +386,8 @@ Scope {
                                   id: dockColumn
                                   visible: root.isVertical
                                   anchors.centerIn: root.isMacosStyle ? macBackground : dockVisualBackground
-                                spacing: root.isRailVertical ? 4 : 2
-                                property real padding: root.isRailVertical ? 3 : 5
+                                spacing: root.isRailVertical ? 3 : 2
+                                property real padding: root.isRailVertical ? 1 : 5
 
                                 DockApps {
                                     id: dockAppsVertical

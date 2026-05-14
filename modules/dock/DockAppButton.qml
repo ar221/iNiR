@@ -14,7 +14,7 @@ DockButton {
     property int lastFocused: -1
     readonly property bool isRailVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
     property real iconSize: root.isRailVertical ? (Config.options?.dock?.railIconSize ?? 32) : (Config.options?.dock?.iconSize ?? 56)
-    readonly property real baseButtonSize: iconSize + (root.isRailVertical ? 4 : 8)
+    readonly property real baseButtonSize: iconSize + (root.isRailVertical ? 2 : 8)
     property real countDotWidth: 10
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined

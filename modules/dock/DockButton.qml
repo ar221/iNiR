@@ -11,7 +11,7 @@ RippleButton {
     readonly property bool railVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
 
     readonly property real baseIconSize: root.railVertical ? (Config.options?.dock?.railIconSize ?? 32) : (Config.options?.dock?.iconSize ?? 56)
-    readonly property real baseButtonSize: baseIconSize + (root.railVertical ? 4 : 8)
+    readonly property real baseButtonSize: baseIconSize + (root.railVertical ? 2 : 8)
 
     Layout.fillHeight: !vertical
     Layout.fillWidth: vertical
@@ -43,8 +43,4 @@ RippleButton {
 
     background.implicitHeight: baseButtonSize
     background.implicitWidth: baseButtonSize
-    background.border.width: root.railVertical ? 1 : (Appearance.angelEverywhere ? 1 : 0)
-    background.border.color: root.railVertical
-        ? (root.buttonHovered || root.toggled ? "#2a333b" : "#151a1f")
-        : (Appearance.angelEverywhere ? (root.buttonHovered ? Appearance.angel.colBorderHover : "transparent") : "transparent")
 }
