@@ -396,7 +396,7 @@ ContentPage {
 
             ContentSubsection {
                 title: Translation.tr("Dock style")
-                tooltip: Translation.tr("Panel: classic unified background. Pill: each icon floats in its own capsule. macOS: frosted glass shelf with magnify effect.")
+                tooltip: Translation.tr("Panel: classic unified background. Pill: each icon floats in its own capsule. macOS: frosted glass shelf with magnify effect. Rail: compact vertical command rail for left/right docks.")
 
                 ConfigSelectionArray {
                     currentValue: Config.options?.dock?.style ?? "panel"
@@ -406,7 +406,8 @@ ContentPage {
                     options: [
                         { displayName: Translation.tr("Panel"), icon: "dock_to_bottom", value: "panel" },
                         { displayName: Translation.tr("Pill"),  icon: "interests",       value: "pill"  },
-                        { displayName: Translation.tr("macOS"), icon: "desktop_mac",     value: "macos" }
+                        { displayName: Translation.tr("macOS"), icon: "desktop_mac",     value: "macos" },
+                        { displayName: Translation.tr("Rail"),  icon: "dock_to_right",   value: "rail"  }
                     ]
                 }
             }

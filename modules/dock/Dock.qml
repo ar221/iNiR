@@ -25,6 +25,8 @@ Scope {
     readonly property bool isLeft: root.position === "left"
     readonly property bool isPillStyle:   Config.options?.dock?.style === "pill"
     readonly property bool isMacosStyle:  Config.options?.dock?.style === "macos"
+    readonly property bool isRailStyle:   Config.options?.dock?.style === "rail"
+    readonly property bool isRailVertical: root.isRailStyle && root.isVertical
 
     // Track bar position to force dock recreation when bar changes
     readonly property bool barIsVertical: Config.options?.bar?.bottom !== undefined
@@ -71,8 +73,9 @@ Scope {
 
                 property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
-                readonly property real dockHeight: Config.options?.dock?.height ?? 80
+                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 14) : (Config.options?.dock?.height ?? 80)
                 readonly property real magnificationOverflow: {
+                    if (root.isRailVertical) return 0
                     const enabled = Config.options?.dock?.magnification?.enabled ?? true
                     if (!enabled) return 0
                     const iconSize = Config.options?.dock?.iconSize ?? 56
@@ -161,7 +164,7 @@ Scope {
 
                             // Use dockRoot dimensions to avoid binding loop
                             implicitWidth: root.isVertical ? (dockRoot.width - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut) : (dockRow.implicitWidth + 10)
-                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + 10) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
+                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + (root.isRailVertical ? 28 : 10)) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
                             width: implicitWidth
                             height: implicitHeight
 
@@ -211,7 +214,8 @@ Scope {
                                 border.color: Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
                                     : inirEverywhere ? Appearance.inir.colBorder
                                     : Appearance.colors.colLayer0Border
-                                radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                                radius: root.isRailVertical ? 6
+                                    : Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
                                     : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
 
@@ -273,7 +277,7 @@ Scope {
                                 Rectangle {
                                     id: dockAccentLine
                                     visible: !Appearance.gameModeMinimal
-                                    opacity: 0.5
+                                    opacity: root.isRailVertical ? 0.78 : 0.5
 
                                     // Position along inner edge based on dock position
                                     anchors {
@@ -310,7 +314,7 @@ Scope {
                                     ]
 
                                     // Dimensions: thin line
-                                    width: root.isVertical ? 2 : undefined
+                                    width: root.isVertical ? (root.isRailVertical ? 3 : 2) : undefined
                                     height: root.isVertical ? undefined : 2
 
                                     // Inset from edges for the gradient fade
@@ -322,8 +326,8 @@ Scope {
                                     gradient: Gradient {
                                         orientation: root.isVertical ? Gradient.Vertical : Gradient.Horizontal
                                         GradientStop { position: 0.0; color: "transparent" }
-                                        GradientStop { position: 0.3; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
-                                        GradientStop { position: 0.7; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
+                                        GradientStop { position: 0.3; color: root.isRailVertical ? Appearance.colors.colSecondary : (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary) }
+                                        GradientStop { position: 0.7; color: root.isRailVertical ? Appearance.colors.colPrimary : (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary) }
                                         GradientStop { position: 1.0; color: "transparent" }
                                     }
                                 }

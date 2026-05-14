@@ -721,6 +721,7 @@
     "pinnedOnStartup": true,
     "showBackground": true,
     "iconSize": 56,
+    "railIconSize": 32,
     "separatePinnedFromRunning": true,
     "enableDragReorder": true,
     "style": "panel",

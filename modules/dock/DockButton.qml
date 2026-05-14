@@ -8,16 +8,18 @@ RippleButton {
     id: root
     property bool vertical: false
     property string dockPosition: "bottom"
+    readonly property bool railVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
 
-    readonly property real baseIconSize: Config.options?.dock?.iconSize ?? 56
-    readonly property real baseButtonSize: baseIconSize + 8
+    readonly property real baseIconSize: root.railVertical ? (Config.options?.dock?.railIconSize ?? 32) : (Config.options?.dock?.iconSize ?? 56)
+    readonly property real baseButtonSize: baseIconSize + (root.railVertical ? 6 : 8)
 
     Layout.fillHeight: !vertical
     Layout.fillWidth: vertical
 
     implicitWidth: baseButtonSize
     implicitHeight: baseButtonSize
-    buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+    buttonRadius: root.railVertical ? 6
+        : Appearance.angelEverywhere ? Appearance.angel.roundingSmall
         : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.normal
 
     // Background: fully transparent for angel (no boxes visible), only glass on hover

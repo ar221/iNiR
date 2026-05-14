@@ -988,13 +988,14 @@ Singleton {
             }
 
             property JsonObject dock: JsonObject {
-                property string style: "panel" // "panel" | "pill"
+                property string style: "panel" // "panel" | "pill" | "macos" | "rail"
                 property bool cardStyle: false
                 property bool enable: false
                 property bool monochromeIcons: true
                 property string position: "bottom" // "top", "bottom", "left", "right"
                 property real height: 60
                 property real iconSize: 35
+                property real railIconSize: 32
                 property real hoverRegionHeight: 2
                 property bool pinnedOnStartup: false
                 property bool hoverToReveal: true // When false, only reveals on empty workspace

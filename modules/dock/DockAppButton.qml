@@ -12,8 +12,9 @@ DockButton {
     property var appToplevel
     property var appListRoot
     property int lastFocused: -1
-    property real iconSize: Config.options?.dock?.iconSize ?? 56
-    readonly property real baseButtonSize: iconSize + 8
+    readonly property bool isRailVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
+    property real iconSize: root.isRailVertical ? (Config.options?.dock?.railIconSize ?? 32) : (Config.options?.dock?.iconSize ?? 56)
+    readonly property real baseButtonSize: iconSize + (root.isRailVertical ? 6 : 8)
     property real countDotWidth: 10
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
@@ -366,9 +367,32 @@ DockButton {
                 tintOpacity: 0.1
             }
 
-            // Smart indicator: shows window count and which is focused
+            // Rail indicator: subtle inner-edge tick for vertical command rail.
             Loader {
-                active: root.hasWindows && !root.isSeparator
+                active: root.hasWindows && !root.isSeparator && root.isRailVertical
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: root.dockPosition === "right" ? parent.left : undefined
+                anchors.right: root.dockPosition === "left" ? parent.right : undefined
+
+                sourceComponent: Rectangle {
+                    width: root.appIsActive ? 3 : 2
+                    height: root.appIsActive ? 18 : 8
+                    radius: 1
+                    color: root.appIsActive
+                        ? Appearance.colors.colPrimary
+                        : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.6)
+                    opacity: root.appIsActive ? 0.95 : 0.55
+
+                    Behavior on height {
+                        NumberAnimation { duration: Appearance.animation.elementMoveEnter.duration; easing.type: Appearance.animation.elementMoveEnter.type; easing.bezierCurve: Appearance.animation.elementMoveEnter.bezierCurve }
+                    }
+                }
+            }
+
+            // Smart indicator: shows window count and which is focused.
+            Loader {
+                id: windowIndicatorLoader
+                active: root.hasWindows && !root.isSeparator && !root.isRailVertical
                 anchors {
                     top: iconImageLoader.bottom
                     topMargin: 2
