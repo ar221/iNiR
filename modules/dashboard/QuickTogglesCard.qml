@@ -13,6 +13,7 @@ import qs.services
 DashboardCard {
     id: root
     headerText: "Quick Toggles"
+    accentHeader: true
 
     readonly property int columns: Config.options?.dashboard?.quickToggles?.columns ?? 3
 
@@ -120,12 +121,12 @@ DashboardCard {
                 Layout.preferredHeight: 72
                 radius: 12
                 color: toggleBtn.modelData.toggled
-                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
-                    : Qt.rgba(1, 1, 1, 0.03)
+                    ? Appearance.mission.colAccentSurface
+                    : Appearance.mission.colSurfaceRaised
                 border.width: 1
                 border.color: toggleBtn.modelData.toggled
-                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
-                    : Qt.rgba(1, 1, 1, 0.04)
+                    ? Appearance.mission.colBorderHot
+                    : Appearance.mission.colBorderSubtle
 
                 Behavior on color {
                     enabled: Appearance.animationsEnabled
@@ -145,8 +146,8 @@ DashboardCard {
                         text: toggleBtn.modelData.icon
                         iconSize: 20
                         color: toggleBtn.modelData.toggled
-                            ? Qt.rgba(1, 1, 1, 0.9)
-                            : Qt.rgba(1, 1, 1, 0.45)
+                            ? Appearance.mission.colAccent
+                            : Appearance.mission.colTextMuted
                     }
 
                     StyledText {
@@ -154,9 +155,11 @@ DashboardCard {
                         text: toggleBtn.modelData.label
                         font.pixelSize: 10
                         font.weight: Font.DemiBold
+                        font.family: Appearance.font.family.monospace
+                        font.letterSpacing: 0.4
                         color: toggleBtn.modelData.toggled
-                            ? Qt.rgba(1, 1, 1, 0.7)
-                            : Qt.rgba(1, 1, 1, 0.35)
+                            ? Appearance.mission.colText
+                            : Appearance.mission.colTextFaint
                     }
                 }
 

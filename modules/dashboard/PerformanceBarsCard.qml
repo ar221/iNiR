@@ -11,12 +11,13 @@ import qs.services
 DashboardCard {
     id: root
     headerText: "Performance"
+    accentHeader: true
     headerFontSize: 11
 
     function tempColor(temp) {
-        // Blend from colSubtext (40°C) to colError (95°C)
+        // Blend from muted text (40°C) to critical (95°C)
         const t = Math.min(1, Math.max(0, (temp - 40) / 55))
-        return ColorUtils.mix(Appearance.colors.colError, Appearance.colors.colSubtext, t)
+        return ColorUtils.mix(Appearance.mission.colCritical, Appearance.mission.colTextMuted, t)
     }
 
     RowLayout {
@@ -29,8 +30,8 @@ DashboardCard {
         PerformanceBar {
             value: ResourceUsage.cpuUsage
             label: "CPU"
-            lowColor: Appearance.colors.colPrimary
-            highColor: Appearance.colors.colError
+            lowColor: Appearance.mission.colActive
+            highColor: Appearance.mission.colCritical
         }
 
         Item { Layout.fillWidth: true }
@@ -39,7 +40,7 @@ DashboardCard {
             value: ResourceUsage.gpuUsage
             label: "GPU"
             lowColor: Appearance.colors.colSecondary
-            highColor: Appearance.colors.colError
+            highColor: Appearance.mission.colCritical
         }
 
         Item { Layout.fillWidth: true }
@@ -48,7 +49,7 @@ DashboardCard {
             value: ResourceUsage.memoryUsedPercentage
             label: "RAM"
             lowColor: Appearance.colors.colTertiary
-            highColor: Appearance.colors.colError
+            highColor: Appearance.mission.colCritical
         }
 
         Item { Layout.fillWidth: true }
@@ -56,8 +57,8 @@ DashboardCard {
         PerformanceBar {
             value: ResourceUsage.vramUsedPercentage
             label: "VRAM"
-            lowColor: Appearance.colors.colPrimary
-            highColor: Appearance.colors.colError
+            lowColor: Appearance.mission.colAccentMuted
+            highColor: Appearance.mission.colCritical
         }
 
         Item { Layout.fillWidth: true }
@@ -67,7 +68,7 @@ DashboardCard {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 1
-        color: Qt.rgba(1, 1, 1, 0.06)
+        color: Appearance.mission.colGrid
     }
 
     // ── Temperature row ──
@@ -78,7 +79,7 @@ DashboardCard {
         StyledText {
             text: "CPU " + ResourceUsage.cpuTemp + "°"
             font.pixelSize: 12
-            font.family: Appearance.font.family.numbers
+            font.family: Appearance.font.family.monospace
             color: root.tempColor(ResourceUsage.cpuTemp)
         }
 
@@ -97,7 +98,7 @@ DashboardCard {
         StyledText {
             text: "GPU " + ResourceUsage.gpuTemp + "°"
             font.pixelSize: 12
-            font.family: Appearance.font.family.numbers
+            font.family: Appearance.font.family.monospace
             color: root.tempColor(ResourceUsage.gpuTemp)
         }
     }

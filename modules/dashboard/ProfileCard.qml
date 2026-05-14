@@ -7,14 +7,26 @@ import qs.modules.common.functions
 import qs.modules.dashboard
 import qs.services
 
-// Identity strip — lean horizontal badge at the top of the left column.
-// No DashboardCard chrome; reads as the column's header, not a card-in-list.
-Item {
+// Identity strip — lean operator badge at the top of the left column.
+Rectangle {
     id: root
 
     // Layout contract: fixed height so the strip is always a stable anchor
     Layout.fillWidth: true
     implicitHeight: 72
+    radius: Appearance.mission.radiusLarge
+    color: Appearance.mission.colPanel
+    border.width: Appearance.mission.borderWidth
+    border.color: Appearance.mission.colBorderSubtle
+    clip: true
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 1
+        color: Appearance.mission.colBorderHot
+    }
 
     // Config-driven profile data
     readonly property string displayName: {
@@ -67,6 +79,7 @@ Item {
 
     RowLayout {
         anchors.fill: parent
+        anchors.margins: 14
         spacing: 12
 
         // ── Avatar 40×40 ──
@@ -78,7 +91,9 @@ Item {
                 id: avatarBg
                 anchors.fill: parent
                 radius: width / 2
-                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
+                color: Appearance.mission.colAccentSurface
+                border.width: 1
+                border.color: Appearance.mission.colBorderHot
 
                 Image {
                     id: avatarImage
@@ -104,7 +119,8 @@ Item {
                     }
                     font.pixelSize: 16
                     font.weight: Font.Bold
-                    color: Appearance.colors.colPrimary
+                    font.family: Appearance.font.family.monospace
+                    color: Appearance.mission.colAccent
                 }
             }
         }
@@ -119,7 +135,7 @@ Item {
                 text: root.displayName
                 font.pixelSize: 18
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
                 elide: Text.ElideRight
             }
 
@@ -127,8 +143,29 @@ Item {
                 Layout.fillWidth: true
                 text: root.subtitle
                 font.pixelSize: 11
-                color: Qt.rgba(1, 1, 1, 0.35)
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colTextMuted
                 elide: Text.ElideRight
+            }
+        }
+
+        Rectangle {
+            Layout.preferredWidth: 46
+            Layout.preferredHeight: 22
+            Layout.alignment: Qt.AlignVCenter
+            radius: Appearance.mission.radiusSmall
+            color: Appearance.mission.colSurfaceRaised
+            border.width: 1
+            border.color: Appearance.mission.colBorderSubtle
+
+            StyledText {
+                anchors.centerIn: parent
+                text: "OPS"
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                font.family: Appearance.font.family.monospace
+                font.letterSpacing: 1.1
+                color: Appearance.mission.colAccentMuted
             }
         }
     }

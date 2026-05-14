@@ -9,7 +9,7 @@ Item {
     id: root
 
     property list<real> dataPoints: []
-    property color lineColor: Appearance.colors.colPrimary
+    property color lineColor: Appearance.mission.colAccent
     property real currentSpeed: 0     // bytes/sec
     property real maxSpeed: 1         // for fill intensity
     property string speedStr: ""      // formatted speed string
@@ -43,6 +43,16 @@ Item {
                 const fillOpacity = Math.min(0.05 + 0.25 * Math.pow(norm, 0.5), 0.30)
 
                 const lc = root.lineColor
+
+                ctx.strokeStyle = Qt.rgba(Appearance.mission.colGrid.r, Appearance.mission.colGrid.g, Appearance.mission.colGrid.b, 0.55)
+                ctx.lineWidth = 1
+                for (let i = 1; i < 4; i++) {
+                    const y = (i / 4) * height
+                    ctx.beginPath()
+                    ctx.moveTo(0, y)
+                    ctx.lineTo(width, y)
+                    ctx.stroke()
+                }
 
                 // Build path across full width
                 ctx.beginPath()
@@ -84,17 +94,17 @@ Item {
             StyledText {
                 text: root.speedStr || "0 B/s"
                 font.pixelSize: 12
-                font.family: Appearance.font.family.numbers
-                color: Appearance.colors.colOnLayer0
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colText
                 horizontalAlignment: Text.AlignRight
             }
 
             StyledText {
                 text: root.label
                 font.pixelSize: 9
-                font.family: Appearance.font.family.numbers
+                font.family: Appearance.font.family.monospace
                 font.letterSpacing: 0.5
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextMuted
                 horizontalAlignment: Text.AlignRight
             }
         }

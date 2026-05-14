@@ -22,9 +22,10 @@ DashboardCard {
     id: root
     // Header is custom (needs liveness dot) — suppress base class header
     headerText: ""
+    accentHeader: true
 
     // Slightly denser surface for clearer separation from neighboring cards
-    color: Qt.rgba(1, 1, 1, 0.02)
+    color: Appearance.mission.colPanel
 
     // Config toggles — default true so the card works before config keys exist
     readonly property bool consoleEnabled: Config.options?.dashboard?.activityConsole?.enable       ?? true
@@ -70,7 +71,7 @@ DashboardCard {
             case "git": return Appearance.colors.colSecondary
             case "pacman": return Appearance.colors.colTertiary
             case "system": return Appearance.colors.colError
-            default: return Qt.rgba(1, 1, 1, 0.5)
+            default: return Appearance.mission.colTextMuted
         }
     }
 
@@ -356,7 +357,7 @@ DashboardCard {
             implicitWidth: 8
             implicitHeight: 8
             radius: 4
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colActive
             Layout.alignment: Qt.AlignVCenter
 
             SequentialAnimation on opacity {
@@ -372,14 +373,16 @@ DashboardCard {
             font.pixelSize: 13
             font.weight: Font.ExtraBold
             font.letterSpacing: 1.4
-            color: Qt.rgba(1, 1, 1, 0.76)
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colText
         }
 
         StyledText {
             text: visibleEntryCount + " items"
             font.pixelSize: 10
             font.weight: Font.Medium
-            color: Qt.rgba(1, 1, 1, 0.56)
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colTextMuted
             Layout.fillWidth: true
         }
 
@@ -387,7 +390,8 @@ DashboardCard {
             text: "LIVE"
             font.pixelSize: 10
             font.weight: Font.Bold
-            color: Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.95)
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colAccent
             font.letterSpacing: 1.2
         }
     }
@@ -401,19 +405,20 @@ DashboardCard {
             Layout.preferredWidth: 48
             radius: 7
             color: root.allFiltersActive && !root.criticalOnly
-                ? Qt.rgba(1, 1, 1, 0.14)
-                : Qt.rgba(1, 1, 1, 0.08)
+                ? Appearance.mission.colAccentSurface
+                : Appearance.mission.colSurfaceRaised
             border.width: 1
             border.color: root.allFiltersActive && !root.criticalOnly
-                ? Qt.rgba(1, 1, 1, 0.26)
-                : Qt.rgba(1, 1, 1, 0.14)
+                ? Appearance.mission.colBorderHot
+                : Appearance.mission.colBorderSubtle
 
             StyledText {
                 anchors.centerIn: parent
                 text: "ALL"
                 font.pixelSize: 10
                 font.weight: Font.Bold
-                color: Qt.rgba(1, 1, 1, 0.88)
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colText
             }
 
             MouseArea {
@@ -453,19 +458,20 @@ DashboardCard {
                 Layout.preferredWidth: 68
                 radius: 7
                 color: active
-                    ? Qt.rgba(root.sourceColor(modelData.key).r, root.sourceColor(modelData.key).g, root.sourceColor(modelData.key).b, 0.22)
-                    : Qt.rgba(1, 1, 1, 0.05)
+                    ? Qt.rgba(root.sourceColor(modelData.key).r, root.sourceColor(modelData.key).g, root.sourceColor(modelData.key).b, 0.18)
+                    : Appearance.mission.colSurfaceRaised
                 border.width: 1
                 border.color: active
-                    ? Qt.rgba(root.sourceColor(modelData.key).r, root.sourceColor(modelData.key).g, root.sourceColor(modelData.key).b, 0.52)
-                    : Qt.rgba(1, 1, 1, 0.12)
+                    ? Qt.rgba(root.sourceColor(modelData.key).r, root.sourceColor(modelData.key).g, root.sourceColor(modelData.key).b, 0.48)
+                    : Appearance.mission.colBorderSubtle
 
                 StyledText {
                     anchors.centerIn: parent
                     text: modelData.label
                     font.pixelSize: 10
                     font.weight: Font.DemiBold
-                    color: active ? Qt.rgba(1, 1, 1, 0.94) : Qt.rgba(1, 1, 1, 0.56)
+                    font.family: Appearance.font.family.monospace
+                    color: active ? Appearance.mission.colText : Appearance.mission.colTextMuted
                 }
 
                 MouseArea {
@@ -492,18 +498,19 @@ DashboardCard {
             radius: 7
             color: root.criticalOnly
                 ? Qt.rgba(Appearance.colors.colError.r, Appearance.colors.colError.g, Appearance.colors.colError.b, 0.20)
-                : Qt.rgba(1, 1, 1, 0.04)
+                : Appearance.mission.colSurfaceRaised
             border.width: 1
             border.color: root.criticalOnly
                 ? Qt.rgba(Appearance.colors.colError.r, Appearance.colors.colError.g, Appearance.colors.colError.b, 0.52)
-                : Qt.rgba(1, 1, 1, 0.10)
+                : Appearance.mission.colBorderSubtle
 
             StyledText {
                 anchors.centerIn: parent
                 text: "CRITICAL"
                 font.pixelSize: 10
                 font.weight: Font.Bold
-                color: root.criticalOnly ? Qt.rgba(1, 1, 1, 0.95) : Qt.rgba(1, 1, 1, 0.56)
+                font.family: Appearance.font.family.monospace
+                color: root.criticalOnly ? Appearance.mission.colText : Appearance.mission.colTextMuted
             }
 
             MouseArea {
@@ -523,7 +530,8 @@ DashboardCard {
             text: "GROUPS"
             font.pixelSize: 9
             font.weight: Font.Bold
-            color: Qt.rgba(1, 1, 1, 0.50)
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colTextMuted
             font.letterSpacing: 1.1
         }
 
@@ -541,9 +549,9 @@ DashboardCard {
                 Layout.preferredHeight: 24
                 Layout.preferredWidth: 78
                 radius: 7
-                color: expanded ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.04)
+                color: expanded ? Appearance.mission.colSurfaceActive : Appearance.mission.colSurfaceRaised
                 border.width: 1
-                border.color: expanded ? Qt.rgba(1, 1, 1, 0.20) : Qt.rgba(1, 1, 1, 0.10)
+                border.color: expanded ? Appearance.mission.colBorderHover : Appearance.mission.colBorderSubtle
 
                 Row {
                     anchors.centerIn: parent
@@ -552,14 +560,15 @@ DashboardCard {
                     MaterialSymbol {
                         text: expanded ? "expand_more" : "chevron_right"
                         iconSize: 12
-                        color: Qt.rgba(1, 1, 1, 0.68)
+                        color: expanded ? Appearance.mission.colAccentMuted : Appearance.mission.colTextMuted
                     }
 
                     StyledText {
                         text: modelData.label
                         font.pixelSize: 9
                         font.weight: Font.DemiBold
-                        color: Qt.rgba(1, 1, 1, expanded ? 0.84 : 0.48)
+                        font.family: Appearance.font.family.monospace
+                        color: expanded ? Appearance.mission.colText : Appearance.mission.colTextMuted
                     }
                 }
 
@@ -698,9 +707,9 @@ DashboardCard {
                         Layout.preferredHeight: 24
                         visible: showBucketHeader
                         radius: 7
-                        color: Qt.rgba(1, 1, 1, 0.08)
+                        color: Appearance.mission.colSurfaceRaised
                         border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.14)
+                        border.color: Appearance.mission.colBorderSubtle
 
                         Row {
                             anchors.left: parent.left
@@ -711,14 +720,15 @@ DashboardCard {
                             MaterialSymbol {
                                 text: expanded ? "expand_more" : "chevron_right"
                                 iconSize: 12
-                                color: Qt.rgba(1, 1, 1, 0.62)
+                                color: Appearance.mission.colTextMuted
                             }
 
                             StyledText {
                                 text: root.bucketLabel(bucket)
                                 font.pixelSize: 10
                                 font.weight: Font.Bold
-                                color: Qt.rgba(1, 1, 1, 0.70)
+                                font.family: Appearance.font.family.monospace
+                                color: Appearance.mission.colTextMuted
                                 font.letterSpacing: 1.0
                             }
                         }
@@ -737,12 +747,12 @@ DashboardCard {
                         visible: expanded
                         implicitHeight: rowContent.implicitHeight + 20
                         radius: 11
-                        color: Qt.rgba(1, 1, 1, entryDelegate.hovered ? 0.09 : 0.05)
+                        color: entryDelegate.hovered ? Appearance.mission.colSurfaceHover : Appearance.mission.colSurfaceRaised
                         border.width: 1
                         border.color: Qt.rgba(root.sourceColor(entryDelegate.source).r,
                                               root.sourceColor(entryDelegate.source).g,
                                               root.sourceColor(entryDelegate.source).b,
-                                              entryDelegate.hovered ? 0.50 : 0.30)
+                                              entryDelegate.hovered ? 0.48 : 0.24)
                         Behavior on color { ColorAnimation { duration: 110 } }
                         Behavior on border.color { ColorAnimation { duration: 110 } }
 
@@ -760,14 +770,17 @@ DashboardCard {
                                     Layout.preferredHeight: 20
                                     Layout.preferredWidth: 46
                                     radius: 5
-                                    color: Qt.rgba(1, 1, 1, 0.08)
+                                    color: Appearance.mission.colPanel
+                                    border.width: 1
+                                    border.color: Appearance.mission.colBorderSubtle
 
                                     StyledText {
                                         anchors.centerIn: parent
                                         text: root.formatTime(entryDelegate.ts)
                                         font.pixelSize: 10
                                         font.weight: Font.Bold
-                                        color: Qt.rgba(1, 1, 1, 0.84)
+                                        font.family: Appearance.font.family.monospace
+                                        color: Appearance.mission.colText
                                     }
                                 }
 
@@ -790,7 +803,8 @@ DashboardCard {
                                         text: root.sourceLabel(entryDelegate.source)
                                         font.pixelSize: 9
                                         font.weight: Font.Bold
-                                        color: Qt.rgba(1, 1, 1, 0.92)
+                                        font.family: Appearance.font.family.monospace
+                                        color: Appearance.mission.colText
                                         font.letterSpacing: 0.8
                                     }
                                 }
@@ -803,14 +817,21 @@ DashboardCard {
                                         ? Qt.rgba(Appearance.colors.colError.r, Appearance.colors.colError.g, Appearance.colors.colError.b, 0.24)
                                         : entryDelegate.priority === "MED"
                                             ? Qt.rgba(Appearance.colors.colTertiary.r, Appearance.colors.colTertiary.g, Appearance.colors.colTertiary.b, 0.24)
-                                            : Qt.rgba(1, 1, 1, 0.08)
+                                            : Appearance.mission.colPanel
+                                    border.width: 1
+                                    border.color: entryDelegate.priority === "HIGH"
+                                        ? Qt.rgba(Appearance.colors.colError.r, Appearance.colors.colError.g, Appearance.colors.colError.b, 0.42)
+                                        : entryDelegate.priority === "MED"
+                                            ? Qt.rgba(Appearance.colors.colTertiary.r, Appearance.colors.colTertiary.g, Appearance.colors.colTertiary.b, 0.42)
+                                            : Appearance.mission.colBorderSubtle
 
                                     StyledText {
                                         anchors.centerIn: parent
                                         text: entryDelegate.priority
                                         font.pixelSize: 9
                                         font.weight: Font.Bold
-                                        color: Qt.rgba(1, 1, 1, 0.86)
+                                        font.family: Appearance.font.family.monospace
+                                        color: Appearance.mission.colText
                                     }
                                 }
 
@@ -819,7 +840,8 @@ DashboardCard {
                                     visible: entryDelegate.context !== ""
                                     text: entryDelegate.context
                                     font.pixelSize: 10
-                                    color: Qt.rgba(1, 1, 1, 0.50)
+                                    font.family: Appearance.font.family.monospace
+                                    color: Appearance.mission.colTextMuted
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideLeft
                                 }
@@ -830,7 +852,7 @@ DashboardCard {
                                 text: entryDelegate.summary
                                 font.pixelSize: 13
                                 font.weight: Font.DemiBold
-                                color: Qt.rgba(1, 1, 1, 0.92)
+                                color: Appearance.mission.colText
                                 wrapMode: Text.WordWrap
                                 maximumLineCount: 2
                                 elide: Text.ElideRight
@@ -853,7 +875,7 @@ DashboardCard {
                     Layout.alignment: Qt.AlignHCenter
                     text: "travel_explore"
                     iconSize: 24
-                    color: Qt.rgba(1, 1, 1, 0.30)
+                    color: Appearance.mission.colTextFaint
                 }
 
                 StyledText {
@@ -861,14 +883,15 @@ DashboardCard {
                     text: "No events in current filters"
                     font.pixelSize: 12
                     font.weight: Font.DemiBold
-                    color: Qt.rgba(1, 1, 1, 0.52)
+                    color: Appearance.mission.colTextMuted
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Press ALL to restore feed"
                     font.pixelSize: 10
-                    color: Qt.rgba(1, 1, 1, 0.36)
+                    font.family: Appearance.font.family.monospace
+                    color: Appearance.mission.colTextFaint
                 }
             }
         }
@@ -883,7 +906,7 @@ DashboardCard {
             height: 24
             z: 1
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.6) }
+                GradientStop { position: 0.0; color: ColorUtils.applyAlpha(Appearance.mission.colPanel, 0.78) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -897,7 +920,7 @@ DashboardCard {
             z: 1
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.6) }
+                GradientStop { position: 1.0; color: ColorUtils.applyAlpha(Appearance.mission.colPanel, 0.78) }
             }
         }
     }
