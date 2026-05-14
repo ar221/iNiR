@@ -525,7 +525,7 @@ Item { // Bar content region
                 visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 520
+                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 760
             }
         }
     }
@@ -544,7 +544,7 @@ Item { // Bar content region
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
             readonly property bool hasPlugins: PluginRegistry.barPlugins.some(p => p.position === "leftCenter" && p.visible)
-            readonly property bool hasContent: leftCalEventRevealer.reveal || mediaRevealer.reveal || hasPlugins
+            readonly property bool hasContent: mediaRevealer.reveal || hasPlugins
             showBackground: hasContent
 
             Loader {
@@ -553,72 +553,6 @@ Item { // Bar content region
                 Layout.fillWidth: root.useShortenedForm === 2
                 sourceComponent: Resources {
                     alwaysShowAllResources: root.useShortenedForm === 2
-                }
-            }
-
-            // Next calendar event — lives in the left-center empty lane, not the right quick controls
-            Revealer {
-                id: leftCalEventRevealer
-                property var _now: new Date()
-                readonly property var _nextEvent: {
-                    var upcoming = CalendarSync.list.filter(function(e) {
-                        var dt = new Date(e.dateTime)
-                        return dt > leftCalEventRevealer._now && (dt - leftCalEventRevealer._now) <= 7200000
-                    }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
-                    return upcoming.length > 0 ? upcoming[0] : null
-                }
-                readonly property int _msUntil: _nextEvent ? (new Date(_nextEvent.dateTime) - _now) : -1
-                readonly property bool imminent: _msUntil >= 0 && _msUntil < 300000
-                readonly property string _deltaText: {
-                    if (_msUntil < 0) return ""
-                    var mins = Math.floor(_msUntil / 60000)
-                    if (mins < 60) return "· " + mins + "m"
-                    var h = Math.floor(mins / 60)
-                    var m = mins % 60
-                    return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
-                }
-
-                reveal: _nextEvent !== null
-                Layout.fillHeight: true
-                Layout.fillWidth: reveal
-
-                Timer {
-                    readonly property bool _hasSoon: CalendarSync.list.some(function(e) {
-                        var dt = new Date(e.dateTime)
-                        return dt > leftCalEventRevealer._now && (dt - leftCalEventRevealer._now) <= 10800000
-                    })
-                    interval: leftCalEventRevealer.imminent ? 10000 : 30000
-                    running: _hasSoon
-                    repeat: true
-                    onTriggered: leftCalEventRevealer._now = new Date()
-                }
-
-                Row {
-                    spacing: 4
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    MaterialSymbol {
-                        text: "event"
-                        iconSize: root.rightIndicatorIconSize
-                        fill: root.barIconProfileFill
-                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
-                    }
-
-                    Text {
-                        readonly property string _raw: leftCalEventRevealer._nextEvent?.title ?? ""
-                        readonly property int _maxChars: root.calendarTitleMaxChars
-                        text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
-                        font.family: Appearance.font.family.main
-                        font.pixelSize: root.calendarTextPixelSize
-                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
-                    }
-
-                    Text {
-                        text: leftCalEventRevealer._deltaText
-                        font.family: Appearance.font.family.main
-                        font.pixelSize: root.calendarTextPixelSize
-                        color: leftCalEventRevealer.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
-                    }
                 }
             }
 
@@ -1066,8 +1000,46 @@ Item { // Bar content region
                 }
             }
 
+            Item {
+                id: rightCalendarEventState
+                visible: false
+                Layout.preferredWidth: 0
+                Layout.preferredHeight: 0
+
+                property var now: new Date()
+                readonly property var nextEvent: {
+                    var upcoming = CalendarSync.list.filter(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > rightCalendarEventState.now && (dt - rightCalendarEventState.now) <= 7200000
+                    }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
+                    return upcoming.length > 0 ? upcoming[0] : null
+                }
+                readonly property int msUntil: nextEvent ? (new Date(nextEvent.dateTime) - now) : -1
+                readonly property bool imminent: msUntil >= 0 && msUntil < 300000
+                readonly property string deltaText: {
+                    if (msUntil < 0) return ""
+                    var mins = Math.floor(msUntil / 60000)
+                    if (mins < 60) return "· " + mins + "m"
+                    var h = Math.floor(mins / 60)
+                    var m = mins % 60
+                    return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
+                }
+
+                Timer {
+                    readonly property bool hasSoon: CalendarSync.list.some(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > rightCalendarEventState.now && (dt - rightCalendarEventState.now) <= 10800000
+                    })
+                    interval: rightCalendarEventState.imminent ? 10000 : 30000
+                    running: hasSoon
+                    repeat: true
+                    onTriggered: rightCalendarEventState.now = new Date()
+                }
+            }
+
             // High-priority utility cluster: timer + shell updates + tray
             BarGroup {
+                id: utilityTrayGroup
                 visible: ShellUpdates.hasUpdate || ((Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0)
                 padding: root.utilityClusterPadding
 
@@ -1084,6 +1056,39 @@ Item { // Bar content region
                     Layout.fillWidth: false
                     Layout.fillHeight: true
                     invertSide: Config.options?.bar?.bottom ?? false
+                }
+            }
+
+            // Calendar/event chip: own readable slot immediately left of the system tray cluster.
+            BarGroup {
+                id: rightCalendarEventGroup
+                visible: rightCalendarEventState.nextEvent !== null
+                padding: root.utilityClusterPadding + 1
+
+                MaterialSymbol {
+                    text: "event"
+                    iconSize: root.rightIndicatorIconSize
+                    fill: root.barIconProfileFill
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    readonly property string _raw: rightCalendarEventState.nextEvent?.title ?? ""
+                    readonly property int _maxChars: root.calendarTitleMaxChars
+                    text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.calendarTextPixelSize
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    text: rightCalendarEventState.deltaText
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.calendarTextPixelSize
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
                 }
             }
 

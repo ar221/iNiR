@@ -419,7 +419,7 @@
     },
     "activeWindow": {
       "fadeOverflow": true,
-      "maxWidth": 280
+      "maxWidth": 760
     },
     "borderless": true,
     "bottom": false,

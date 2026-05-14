@@ -75,7 +75,7 @@ Item {
         return shortenText(fbTitle, 160)
     }
 
-    property real maxTextWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 520
+    property real maxTextWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 760
     property bool fadeOverflow: Config.options?.bar?.activeWindow?.fadeOverflow ?? true
 
     implicitWidth: colLayout.implicitWidth
