@@ -138,6 +138,9 @@ Item { // Bar content region
             ? 24
             : (barDensity === "airy" ? 34 : 28);
     }
+    readonly property int resourceTextPixelSize: barDensity === "compact"
+        ? Appearance.font.pixelSize.smaller
+        : Appearance.font.pixelSize.small
     readonly property string laneSeparatorMode: {
         const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
         return (mode === "off" || mode === "strong") ? mode : "subtle"
@@ -1056,6 +1059,64 @@ Item { // Bar content region
                     Layout.fillWidth: false
                     Layout.fillHeight: true
                     invertSide: Config.options?.bar?.bottom ?? false
+                }
+            }
+
+            // Compact system monitor: quick vitals glance before the calendar/event chip.
+            BarGroup {
+                id: rightSystemMonitorGroup
+                visible: (Config.options?.bar?.modules?.resources ?? true) && root.useShortenedForm === 0
+                padding: root.utilityClusterPadding + 1
+
+                Component.onCompleted: ResourceUsage.acquire()
+                Component.onDestruction: ResourceUsage.release()
+
+                function percent(value) {
+                    return Math.round(Math.max(0, Math.min(1, value)) * 100).toString()
+                }
+
+                MaterialSymbol {
+                    text: "monitor_heart"
+                    iconSize: root.rightIndicatorIconSize
+                    fill: root.barIconProfileFill
+                    color: root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    text: "C" + rightSystemMonitorGroup.percent(ResourceUsage.cpuUsage)
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.resourceTextPixelSize
+                    color: ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuWarningThreshold ?? 90)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText)
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    text: "R" + rightSystemMonitorGroup.percent(ResourceUsage.memoryUsedPercentage)
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.resourceTextPixelSize
+                    color: ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryWarningThreshold ?? 95)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryCautionThreshold ?? 80)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText)
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    text: "G" + rightSystemMonitorGroup.percent(ResourceUsage.gpuUsage)
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.resourceTextPixelSize
+                    color: ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText)
+                    Layout.alignment: Qt.AlignVCenter
                 }
             }
 
