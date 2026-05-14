@@ -571,6 +571,8 @@ Item {
         }
         implicitWidth: contentWidth
         implicitHeight: contentHeight
+        height: root.vertical ? implicitHeight : parent.height
+        width: root.vertical ? parent.width : implicitWidth
         interactive: false // Dock should never flick/scroll — all items visible
 
         Behavior on implicitWidth {
