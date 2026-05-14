@@ -621,6 +621,15 @@ Singleton {
                         property bool showTask: true
                         property bool showReminder: true
                     }
+                    property JsonObject nowPlaying: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 100
+                        property real y: 100
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 320
+                        property bool showVisualizer: true
+                    }
                     property JsonObject lissajous: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
