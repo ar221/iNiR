@@ -1075,48 +1075,80 @@ Item { // Bar content region
                     return Math.round(Math.max(0, Math.min(1, value)) * 100).toString()
                 }
 
-                MaterialSymbol {
-                    text: "monitor_heart"
-                    iconSize: root.rightIndicatorIconSize
-                    fill: root.barIconProfileFill
-                    color: root.courierChipText
+                readonly property color cpuColor: ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuWarningThreshold ?? 90)
+                    ? Appearance.colors.colError
+                    : (ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuCautionThreshold ?? 70)
+                        ? Appearance.m3colors.m3tertiary
+                        : root.courierChipText)
+                readonly property color ramColor: ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryWarningThreshold ?? 95)
+                    ? Appearance.colors.colError
+                    : (ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryCautionThreshold ?? 80)
+                        ? Appearance.m3colors.m3tertiary
+                        : root.courierChipText)
+                readonly property color gpuColor: ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
+                    ? Appearance.colors.colError
+                    : (ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
+                        ? Appearance.m3colors.m3tertiary
+                        : root.courierChipText)
+
+                RowLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        text: "developer_board"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.cpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.percent(ResourceUsage.cpuUsage)
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.cpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
                 }
 
-                Text {
-                    text: "C" + rightSystemMonitorGroup.percent(ResourceUsage.cpuUsage)
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: root.resourceTextPixelSize
-                    color: ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuWarningThreshold ?? 90)
-                        ? Appearance.colors.colError
-                        : (ResourceUsage.cpuUsage * 100 >= (Config.options?.bar?.resources?.cpuCautionThreshold ?? 70)
-                            ? Appearance.m3colors.m3tertiary
-                            : root.courierChipText)
+                RowLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        text: "memory"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.ramColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.percent(ResourceUsage.memoryUsedPercentage)
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.ramColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
                 }
 
-                Text {
-                    text: "R" + rightSystemMonitorGroup.percent(ResourceUsage.memoryUsedPercentage)
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: root.resourceTextPixelSize
-                    color: ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryWarningThreshold ?? 95)
-                        ? Appearance.colors.colError
-                        : (ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryCautionThreshold ?? 80)
-                            ? Appearance.m3colors.m3tertiary
-                            : root.courierChipText)
+                RowLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignVCenter
-                }
 
-                Text {
-                    text: "G" + rightSystemMonitorGroup.percent(ResourceUsage.gpuUsage)
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: root.resourceTextPixelSize
-                    color: ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
-                        ? Appearance.colors.colError
-                        : (ResourceUsage.gpuUsage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
-                            ? Appearance.m3colors.m3tertiary
-                            : root.courierChipText)
-                    Layout.alignment: Qt.AlignVCenter
+                    MaterialSymbol {
+                        text: "memory_alt"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.gpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.percent(ResourceUsage.gpuUsage)
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.gpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
                 }
             }
 
