@@ -33,6 +33,9 @@ QtObject {
     readonly property string effectiveArtist: isYtMusicPlayer 
         ? YtMusic.currentArtist 
         : (player?.trackArtist ?? "")
+    readonly property string effectiveAlbum: isYtMusicPlayer 
+        ? ""
+        : (player?.trackAlbum ?? "")
     readonly property string effectiveArtUrl: isYtMusicPlayer 
         ? YtMusic.currentThumbnail 
         : (player?.trackArtUrl ?? "")
