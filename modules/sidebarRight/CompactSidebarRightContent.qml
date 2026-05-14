@@ -1265,6 +1265,9 @@ Item {
     // ── Section Header ───────────────────────────────────────────
     component SectionHeader: Item {
         id: sectionHeader
+        readonly property string monoFamily: (Appearance.font && Appearance.font.family && Appearance.font.family.mono)
+            ? Appearance.font.family.mono
+            : "monospace"
         required property string headerText
         property string headerIcon: ""
         property string badgeText: ""
@@ -1288,6 +1291,15 @@ Item {
             anchors.right: parent.right
             spacing: 8
 
+            // Courier signature tick — 2px primary stripe
+            Rectangle {
+                width: 2
+                height: 12
+                color: bg.inirEverywhere  ? Appearance.inir.colPrimary
+                     : bg.angelEverywhere ? Appearance.angel.colPrimary
+                     : Appearance.colors.colPrimary
+            }
+
             MaterialSymbol {
                 visible: sectionHeader.headerIcon !== ""
                 text: sectionHeader.headerIcon
@@ -1302,10 +1314,13 @@ Item {
                 Layout.fillWidth: true
                 text: sectionHeader.headerText
                 font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: bg.inirEverywhere  ? Appearance.inir.colText
-                     : bg.angelEverywhere ? Appearance.angel.colText
-                     : Appearance.colors.colOnLayer0
+                font.weight: Font.DemiBold
+                font.family: sectionHeader.monoFamily
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1.25
+                color: bg.inirEverywhere  ? Appearance.inir.colTextSecondary
+                     : bg.angelEverywhere ? Appearance.angel.colTextSecondary
+                     : Appearance.colors.colSubtext
             }
 
             // Badge (notification count)
