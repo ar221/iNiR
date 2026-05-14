@@ -2,6 +2,10 @@
 
 Compact operator surfaces for AI workflows in iNiR.
 
+Design language: **Courier Console**. Agent Cockpit surfaces should look and behave like receipt-backed dispatch hardware: square/micro-radius cards, warm near-black surfaces, semantic status dots, route/owner/source fields, and no dashboard state that is not backed by a real file/service/feed or explicitly labeled mock.
+
+Source spec: `~/Documents/Ayaz OS/03 Projects/System/01 Specs/™ Courier Console Design Language.md`
+
 ## Surfaces
 
 - **Provider Profile chip (bar)**
