@@ -71,7 +71,25 @@ Scope {
                 screen: panelLoader.modelData
                 visible: !GlobalStates.screenLocked && !GameMode.shouldHidePanels
 
-                property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
+                readonly property var focusedWindow: {
+                    if (!CompositorService.isNiri)
+                        return null
+                    const windows = NiriService.windows
+                    if (Array.isArray(windows)) {
+                        const focused = windows.find(w => w?.is_focused)
+                        if (focused)
+                            return focused
+                    }
+                    return NiriService.activeWindow
+                }
+                readonly property bool hasFocusedWindow: !!focusedWindow || !!ToplevelManager.activeToplevel?.activated
+                readonly property bool focusedWindowIsFullSize: focusedWindow ? GameMode.isWindowFullscreen(focusedWindow) : false
+                // Courier Rail should yield to normal/floating windows. Keep the rail present on
+                // desktop and when the focused window is explicitly full-sized/fullscreened.
+                readonly property bool railShouldYieldToFocusedWindow: root.isRailVertical && hasFocusedWindow && !focusedWindowIsFullSize
+                readonly property bool pinnedRevealAllowed: root.pinned && !railShouldYieldToFocusedWindow
+
+                property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (pinnedRevealAllowed || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
                 readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 4) : (Config.options?.dock?.height ?? 80)
                 // Rail should reserve only the physical spine plus a hairline breathing gap.
@@ -94,7 +112,7 @@ Scope {
                     right: !root.isLeft || !root.isVertical
                 }
 
-                exclusiveZone: GameMode.shouldHidePanels ? 0 : root.pinned ? (dockHeight + dockReservePadding) : 0
+                exclusiveZone: GameMode.shouldHidePanels ? 0 : pinnedRevealAllowed ? (dockHeight + dockReservePadding) : 0
 
                 implicitWidth: root.isVertical
                     ? (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)

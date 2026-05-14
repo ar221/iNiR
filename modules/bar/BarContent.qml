@@ -1102,7 +1102,7 @@ Item { // Bar content region
             }
 
             AmbientLaneSeparator {
-                visible: root.showAmbientLaneSeparator
+                visible: false
             }
 
             // Weather

@@ -40,6 +40,8 @@ PopupWindow {
     }
 
     function show(appEntry: var, button: Item): void {
+        if (!appEntry || ((appEntry.toplevels?.length ?? 0) === 0))
+            return
         root.appEntry = appEntry
         root.anchorItem = button
         root.anchor.updateAnchor()
@@ -49,7 +51,7 @@ PopupWindow {
 
     ///////////////////// Model ////////////////////
 
-    readonly property var liveToplevels: root.anchorItem?.toplevels ?? root.appEntry?.toplevels ?? []
+    readonly property var liveToplevels: root.appEntry?.toplevels ?? []
 
     // Wrap toplevels with a stable key so ScriptModel preserves delegates
     // across model rebuilds (prevents delegate recreation → icon flash).
