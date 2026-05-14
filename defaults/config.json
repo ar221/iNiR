@@ -399,6 +399,17 @@
             "icon": "code"
           }
         ]
+      },
+      "todayStrip": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 100,
+        "y": 100,
+        "cardOpacity": 0.85,
+        "cardWidth": 720,
+        "showWeather": true,
+        "showTask": true,
+        "showReminder": true
       }
     },
     "multiMonitor": {

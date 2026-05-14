@@ -610,6 +610,17 @@ Singleton {
                         property bool showPackageUpdates: true
                         property bool showServiceHealth: true
                     }
+                    property JsonObject todayStrip: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 100
+                        property real y: 100
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 720
+                        property bool showWeather: true
+                        property bool showTask: true
+                        property bool showReminder: true
+                    }
                     property JsonObject lissajous: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
