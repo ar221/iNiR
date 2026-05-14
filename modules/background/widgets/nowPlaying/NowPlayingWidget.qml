@@ -85,6 +85,7 @@ AbstractBackgroundWidget {
             cache: true
             smooth: true
             mipmap: true
+            sourceSize.width: root.cardWidth
             opacity: root.idle ? 0.0 : 0.18
             visible: playerBase.displayedArtFilePath !== ""
 
