@@ -100,6 +100,8 @@ Item { // Bar content region
     }
     // Courier Console preset — warm-terminal palette, square hard edges
     readonly property bool courierPreset: barStylePreset === "courier"
+    readonly property bool railTopStripQuiet: (Config.options?.dock?.style === "rail")
+        && ((Config.options?.dock?.position ?? "bottom") === "left" || (Config.options?.dock?.position ?? "bottom") === "right")
     readonly property color courierBarBg: "#0e0b06"
     readonly property color courierBorder: "#c98a2e"
     readonly property color courierBorderDim: "#5e7a48"
@@ -321,6 +323,9 @@ Item { // Bar content region
 
         // Color logic per global style and corner style
         color: {
+            if (root.railTopStripQuiet) {
+                return ColorUtils.applyAlpha("#07090b", 0.88)
+            }
             if (root.courierPreset) {
                 return ColorUtils.applyAlpha(root.courierBarBg, 0.97)
             }
@@ -370,6 +375,7 @@ Item { // Bar content region
 
         // Border logic per global style
         border.width: {
+            if (root.railTopStripQuiet) return 1
             if (root.courierPreset) return 1
             if (root.angelEverywhere) return Appearance.angel.panelBorderWidth
             if (root.inirEverywhere) {
@@ -381,6 +387,7 @@ Item { // Bar content region
             return floatingStyle ? 1 : 0
         }
         border.color: {
+            if (root.railTopStripQuiet) return "#151b20"
             if (root.courierPreset) return root.courierBorder
             if (root.angelEverywhere) return Appearance.angel.colPanelBorder
             if (root.inirEverywhere) {

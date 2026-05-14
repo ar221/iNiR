@@ -561,7 +561,7 @@ Item {
 
     StyledListView {
         id: listView
-        spacing: 2
+        spacing: root.railVertical ? 5 : 2
         orientation: root.vertical ? ListView.Vertical : ListView.Horizontal
         anchors {
             top: root.vertical ? undefined : parent.top

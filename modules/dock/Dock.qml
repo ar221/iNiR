@@ -73,7 +73,7 @@ Scope {
 
                 property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
 
-                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 14) : (Config.options?.dock?.height ?? 80)
+                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 8) : (Config.options?.dock?.height ?? 80)
                 readonly property real magnificationOverflow: {
                     if (root.isRailVertical) return 0
                     const enabled = Config.options?.dock?.magnification?.enabled ?? true
@@ -164,7 +164,7 @@ Scope {
 
                             // Use dockRoot dimensions to avoid binding loop
                             implicitWidth: root.isVertical ? (dockRoot.width - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut) : (dockRow.implicitWidth + 10)
-                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + (root.isRailVertical ? 28 : 10)) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
+                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + (root.isRailVertical ? 18 : 10)) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
                             width: implicitWidth
                             height: implicitHeight
 
@@ -207,14 +207,16 @@ Scope {
                                 // Hide shared background in pill mode — each pill is its own background
                                 // Hide in macOS mode — DockMacBackground is the unified shelf
                                 visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
-                                color: auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
+                                color: root.isRailVertical ? "#080a0c"
+                                    : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
                                     : inirEverywhere ? Appearance.inir.colLayer1
                                     : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
-                                border.width: Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1
-                                border.color: Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
+                                border.width: root.isRailVertical ? 1 : (Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
+                                border.color: root.isRailVertical ? "#1a2025"
+                                    : Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
                                     : inirEverywhere ? Appearance.inir.colBorder
                                     : Appearance.colors.colLayer0Border
-                                radius: root.isRailVertical ? 6
+                                radius: root.isRailVertical ? 2
                                     : Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
                                     : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
@@ -276,7 +278,7 @@ Scope {
                                 // Theme accent line — inner edge of dock
                                 Rectangle {
                                     id: dockAccentLine
-                                    visible: !Appearance.gameModeMinimal
+                                    visible: !Appearance.gameModeMinimal && !root.isRailVertical
                                     opacity: root.isRailVertical ? 0.78 : 0.5
 
                                     // Position along inner edge based on dock position
@@ -381,8 +383,8 @@ Scope {
                                   id: dockColumn
                                   visible: root.isVertical
                                   anchors.centerIn: root.isMacosStyle ? macBackground : dockVisualBackground
-                                spacing: 2
-                                property real padding: 5
+                                spacing: root.isRailVertical ? 4 : 2
+                                property real padding: root.isRailVertical ? 3 : 5
 
                                 DockApps {
                                     id: dockAppsVertical
