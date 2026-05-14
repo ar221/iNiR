@@ -12,6 +12,10 @@ DashboardCard {
 
     visible: Weather.enabled
 
+    // Progressive disclosure — hourly strip + 7-day forecast stay folded by
+    // default so the context rail leads with the current read, not a data wall.
+    property bool expanded: false
+
     // Heat-gradient: cool → warm → hot across palette.
     // Maps parsed integer temp (°C/°F) from 0°C (colSubtext) to 40°C+ (colError).
     // Shared by current hero, hourly strip, and 7-day high/low.
@@ -112,12 +116,55 @@ DashboardCard {
         }
     }
 
+    // ── Forecast disclosure toggle ──
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 26
+        visible: Weather.hourly.length > 0 || Weather.daily.length > 0
+        radius: Appearance.mission.radiusSmall
+        color: root.expanded ? Appearance.mission.colSurfaceActive : Appearance.mission.colSurfaceRaised
+        border.width: 1
+        border.color: root.expanded ? Appearance.mission.colBorderHover : Appearance.mission.colBorderSubtle
+
+        Behavior on color {
+            enabled: Appearance.animationsEnabled
+            ColorAnimation { duration: 140 }
+        }
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 5
+
+            MaterialSymbol {
+                text: root.expanded ? "expand_less" : "expand_more"
+                iconSize: 14
+                color: root.expanded ? Appearance.mission.colAccentMuted : Appearance.mission.colTextMuted
+            }
+
+            StyledText {
+                text: root.expanded ? "HIDE FORECAST" : "HOURLY + 7-DAY FORECAST"
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                font.letterSpacing: 1.0
+                font.family: Appearance.font.family.monospace
+                color: root.expanded ? Appearance.mission.colText : Appearance.mission.colTextMuted
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.expanded = !root.expanded
+        }
+    }
+
     // ── Hourly strip — next 12 hours ──
     // Hidden until data arrives; no flash on cold start.
     ColumnLayout {
         Layout.fillWidth: true
         spacing: 6
-        visible: Weather.hourly.length > 0
+        visible: root.expanded && Weather.hourly.length > 0
 
         // Divider
         Rectangle {
@@ -181,7 +228,7 @@ DashboardCard {
     ColumnLayout {
         Layout.fillWidth: true
         spacing: 6
-        visible: Weather.daily.length > 0
+        visible: root.expanded && Weather.daily.length > 0
 
         // Divider
         Rectangle {

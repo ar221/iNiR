@@ -34,8 +34,10 @@ Item {
     readonly property bool sectionAgentCompanion: (Config.options?.dashboard?.sections?.agentCompanion ?? false)
         && (Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false)
     readonly property bool commandPreset: Appearance.mission.commandPreset
-    readonly property bool sectionHeroZone: commandPreset
-        && (Config.options?.dashboard?.sections?.heroZone ?? true)
+    // Hero band is preset-agnostic — it is the focal landing zone for every layout.
+    readonly property bool sectionHeroZone: Config.options?.dashboard?.sections?.heroZone ?? true
+    // Network sparklines are opt-in detail — kept off the default render to reduce mass.
+    readonly property bool sectionNetwork: Config.options?.dashboard?.sections?.network ?? false
     readonly property bool sectionAgentStatus: commandPreset
         && (Config.options?.dashboard?.sections?.agentStatus ?? false)
     readonly property bool sectionServiceGrid: commandPreset
@@ -51,9 +53,24 @@ Item {
     readonly property bool _anyWidgetStackVisible: sectionServiceGrid
         || sectionDiskGauges || sectionVaultPulse || sectionRecentRuns
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
-        spacing: 20
+        spacing: 18
+
+        // ════════════════════════════════════════════
+        // HERO BAND — full-width focal landing zone
+        // ════════════════════════════════════════════
+        Loader {
+            Layout.fillWidth: true
+            active: root.sectionHeroZone
+            visible: active
+            sourceComponent: HeroZone {}
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 20
 
         // ════════════════════════════════════════════
         // LEFT COLUMN — Identity & Controls (scrollable)
@@ -132,21 +149,16 @@ Item {
 
                 NetworkSparklinesCard {
                     Layout.fillWidth: true
-                    visible: root.sectionPerformance && !root.commandPreset
-                }
-
-                Loader {
-                    Layout.fillWidth: true
-                    active: root.sectionHeroZone
-                    visible: active
-                    sourceComponent: HeroZone {}
+                    visible: root.sectionNetwork && !root.commandPreset
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: root.commandPreset
+                    // Default preset: the feed is the column's primary focus, so it
+                    // claims the dominant height block below the summarized cards.
                     Layout.preferredHeight: root.commandPreset ? -1 : (
-                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
+                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 320 : 440
                     )
                     spacing: 12
                     visible: root.sectionActivityConsole || root._anyWidgetStackVisible
@@ -278,6 +290,7 @@ Item {
                     }
                 }
             }
+        }
         }
     }
 

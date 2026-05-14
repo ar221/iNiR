@@ -43,10 +43,11 @@ DashboardCard {
     property bool filterSystem: srcSystem
     property bool criticalOnly: false
 
-    // Collapsible time buckets
+    // Collapsible time buckets — "Earlier" folds by default so the feed opens
+    // on what's live, not a backlog wall (progressive disclosure).
     property bool expandNow: true
     property bool expandRecent: true
-    property bool expandEarlier: true
+    property bool expandEarlier: false
 
     readonly property bool allFiltersActive: filterClaude && filterGit && filterPacman && filterSystem
 
