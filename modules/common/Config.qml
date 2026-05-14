@@ -627,7 +627,7 @@ Singleton {
                         property real x: 100
                         property real y: 100
                         property real cardOpacity: 0.85
-                        property real cardWidth: 320
+                        property real cardWidth: 400
                         property bool showVisualizer: true
                     }
                     property JsonObject lissajous: JsonObject {
