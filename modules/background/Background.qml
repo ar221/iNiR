@@ -21,6 +21,7 @@ import qs.modules.background.widgets.mediaControls
 import qs.modules.background.widgets.weather
 import qs.modules.background.widgets.systemMonitor
 import qs.modules.background.widgets.timeCalendar
+import qs.modules.background.widgets.todayStrip
 import qs.modules.background.widgets.systemRings
 import qs.modules.background.widgets.contextCard
 import qs.modules.background.widgets.network
@@ -1109,6 +1110,17 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.timeCalendar?.enable ?? false
                     sourceComponent: TimeCalendarWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.todayStrip?.enable ?? false
+                    sourceComponent: TodayStripWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width
