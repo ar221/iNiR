@@ -201,7 +201,7 @@ AbstractBackgroundWidget {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 1
-            visible: !!root.nextAction && (root.showApplied || root.showPackageReady || root.showShortlist)
+            visible: !!root.nextAction && (root.showApplied || (root.showPackageReady && root.packageReady.length > 0) || root.showShortlist)
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
