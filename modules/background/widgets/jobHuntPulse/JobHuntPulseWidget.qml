@@ -81,6 +81,10 @@ AbstractBackgroundWidget {
         return String(d.getHours()).padStart(2, "0") + ":"
             + String(d.getMinutes()).padStart(2, "0")
     }
+    readonly property string todayDateStr: {
+        void root._freshnessTick   // refresh at minute boundaries; survives midnight rollover
+        return Qt.formatDate(new Date(), "yyyy-MM-dd")
+    }
 
     // — Obsidian paths (static for v1; v1.5 will read from `job-pulse --paths`) —
     readonly property string pathTasks:
@@ -168,6 +172,16 @@ AbstractBackgroundWidget {
             }
 
             Item { Layout.fillWidth: true }
+
+            // Today's date
+            StyledText {
+                text: root.todayDateStr
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.letterSpacing: 1.5
+                font.weight: Font.DemiBold
+                color: Appearance.colors.colOnLayer0
+            }
 
             // Freshness dot
             Rectangle {

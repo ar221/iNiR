@@ -223,11 +223,14 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: Appearance.rounding.verysmall
-                color: Appearance.inirEverywhere
-                    ? Appearance.inir.colLayer2
-                    : Appearance.auroraEverywhere
-                        ? Appearance.aurora.colTooltipSurface
-                        : Appearance.colors.colLayer3
+                color: {
+                    const c = Appearance.inirEverywhere
+                        ? Appearance.inir.colLayer2
+                        : Appearance.auroraEverywhere
+                            ? Appearance.aurora.colTooltipSurface
+                            : Appearance.colors.colLayer3
+                    return Qt.rgba(c.r, c.g, c.b, 1.0)
+                }
                 border.width: 1
                 border.color: Appearance.inirEverywhere
                     ? Appearance.inir.colBorder
