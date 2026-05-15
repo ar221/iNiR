@@ -126,35 +126,223 @@ AbstractBackgroundWidget {
         }
     }
 
-    // — Content (layout lands in Task 5; this is a placeholder) —
+    // — Content —
     ColumnLayout {
         id: cardContent
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: 18
+        spacing: 14
 
-        StyledText {
+        // — Header —
+        RowLayout {
             Layout.fillWidth: true
-            text: "JOB HUNT · PULSE"
-            font.family: Appearance.font.family.monospace
-            font.pixelSize: Appearance.font.pixelSize.smaller
-            font.weight: Font.Bold
-            font.letterSpacing: 2
-            color: Appearance.colors.colPrimary
+            spacing: 6
+
+            StyledText {
+                text: "JOB HUNT · PULSE"
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.weight: Font.Bold
+                font.letterSpacing: 2
+                color: Appearance.colors.colPrimary
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // Freshness dot
+            Rectangle {
+                width: 6
+                height: 6
+                radius: 3
+                color: {
+                    if (root.freshnessColor === "green") return Appearance.m3colors.m3primary
+                    if (root.freshnessColor === "amber") return Appearance.colors.colTertiary
+                    return Appearance.colors.colError
+                }
+            }
+
+            StyledText {
+                text: root.lastFetchTimeStr
+                    + (root.lastError.length > 0 ? "  · stale ·" : "")
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.letterSpacing: 1.5
+                color: Appearance.colors.colSubtext
+            }
         }
 
-        StyledText {
+        // — Header underline —
+        Rectangle {
             Layout.fillWidth: true
-            text: root.lastError.length > 0
-                ? ("error: " + root.lastError)
-                : root.lastSuccessAt === 0
-                    ? "loading…"
-                    : ("loaded · " + root.applied.length + " applied · "
-                       + root.shortlist.length + " shortlist · " + root.lastFetchTimeStr)
-            font.family: Appearance.font.family.monospace
-            font.pixelSize: Appearance.font.pixelSize.smallie
-            color: Appearance.colors.colSubtext
-            wrapMode: Text.Wrap
+            implicitHeight: 1
+            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
+        }
+
+        // — NEXT —
+        PulseSection {
+            Layout.fillWidth: true
+            visible: !!root.nextAction
+            label: "NEXT"
+            meta: "task"
+            accent: Appearance.colors.colPrimary
+            showCount: false
+
+            PulseRow {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                variant: "next"
+                company: root.nextAction ? (root.nextAction.task ?? "") : ""
+                role: root.nextAction ? (root.nextAction.why ?? "") : ""
+                obsidianPath: root.pathTasks
+                vaultName: root.vaultName
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            visible: !!root.nextAction && (root.showApplied || root.showPackageReady || root.showShortlist)
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        // — APPLIED —
+        PulseSection {
+            Layout.fillWidth: true
+            visible: root.showApplied
+            label: "APPLIED"
+            count: root.applied.length
+            meta: root.waitingFollowup + " waiting · " + root.staleCount + " stale"
+            accent: Appearance.colors.colSecondary
+
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 0
+
+                // Empty state
+                PulseRow {
+                    Layout.fillWidth: true
+                    visible: root.applied.length === 0
+                    variant: "applied"
+                    company: "—"
+                    role: "no submissions yet"
+                    passive: true
+                }
+
+                Repeater {
+                    model: root.applied
+                    delegate: PulseRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        variant: "applied"
+                        company: modelData.company ?? ""
+                        role: modelData.role ?? ""
+                        status: modelData.status ?? ""
+                        notes: modelData.notes ?? ""
+                        dateStr: modelData.date ?? ""
+                        passive: modelData.is_passive === true
+                        obsidianPath: root.pathSprint
+                        vaultName: root.vaultName
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            visible: root.showApplied && (root.showPackageReady && root.packageReady.length > 0 || root.showShortlist)
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        // — PACKAGE READY —
+        PulseSection {
+            Layout.fillWidth: true
+            visible: root.showPackageReady && root.packageReady.length > 0
+            label: "PACKAGE READY"
+            count: root.packageReady.length
+            meta: "not submitted"
+            accent: Appearance.colors.colTertiary
+
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 0
+
+                Repeater {
+                    model: root.packageReady
+                    delegate: PulseRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        variant: "ready"
+                        company: modelData.company ?? ""
+                        role: modelData.role ?? ""
+                        notes: modelData.notes ?? ""
+                        marker: "SHIP"
+                        obsidianPath: root.pathSprint
+                        vaultName: root.vaultName
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            visible: root.showPackageReady && root.packageReady.length > 0 && root.showShortlist
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        // — SHORTLIST —
+        PulseSection {
+            Layout.fillWidth: true
+            visible: root.showShortlist
+            label: "SHORTLIST"
+            count: root.shortlist.length
+            meta: "to apply"
+            accent: Appearance.colors.colSubtext
+
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 0
+
+                PulseRow {
+                    Layout.fillWidth: true
+                    visible: root.shortlist.length === 0
+                    variant: "shortlist"
+                    company: "—"
+                    role: "shortlist empty"
+                    passive: true
+                }
+
+                Repeater {
+                    model: root.shortlist
+                    delegate: PulseRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        variant: "shortlist"
+                        company: modelData.company ?? ""
+                        role: modelData.role ?? ""
+                        notes: modelData.notes ?? ""
+                        priorityTag: modelData.priority ?? ""
+                        obsidianPath: root.pathShortlist
+                        vaultName: root.vaultName
+                    }
+                }
+            }
         }
     }
 
