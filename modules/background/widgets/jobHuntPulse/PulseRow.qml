@@ -86,6 +86,7 @@ Item {
                 if (root.variant === "next")      return "→"
                 return "·"
             }
+            visible: !(root.variant === "shortlist" && root.priorityTag.length > 0)
             font.family: Appearance.font.family.monospace
             font.pixelSize: root.variant === "shortlist"
                 ? Appearance.font.pixelSize.smallie
@@ -106,8 +107,8 @@ Item {
             color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.96)
             radius: 2
             implicitWidth: prioLabel.implicitWidth + 10
-            implicitHeight: prioLabel.implicitHeight + 2
-            Layout.alignment: Qt.AlignBaseline
+            implicitHeight: prioLabel.implicitHeight + 4
+            Layout.alignment: Qt.AlignVCenter
 
             StyledText {
                 id: prioLabel
