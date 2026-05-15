@@ -855,7 +855,8 @@ deploy_preset() {
             enableChrome:       (.appearance.wallpaperTheming.enableChrome       // true),
             enableAdwSteam:     (.appearance.wallpaperTheming.enableAdwSteam     // false),
             enableZed:          (.appearance.wallpaperTheming.enableZed          // true),
-            enableVSCode:       (.appearance.wallpaperTheming.enableVSCode       // true)
+            enableVSCode:       (.appearance.wallpaperTheming.enableVSCode       // true),
+            enableVesktop:      (.appearance.wallpaperTheming.enableVesktop      // true)
         }' "$SHELL_CONFIG_FILE" 2>/dev/null) || _cfg="{}"
     fi
     _preset_cfg() { jq -r ".$1" <<< "$_cfg" 2>/dev/null; }
@@ -924,6 +925,30 @@ deploy_preset() {
     # All read from state/palette/terminal.json → Apollo state yields Apollo output.
     "$SCRIPT_DIR/applycolor.sh" || echo "[switchwall.sh] preset: applycolor.sh reported non-zero exit" >&2
 
+    # --- Courier-additive deploys ---
+    # Wedge A authored three paths that have no existing fan-out coverage:
+    #   - templates/vesktop/vesktop.css
+    #   - tools/newsboat/colors
+    #   - templates/firefox/shy-material-colors.css (belt-and-suspenders copy)
+    if [[ "$enable_apps_shell" == "true" ]]; then
+        local enable_vesktop
+        enable_vesktop=$(_preset_cfg enableVesktop)
+        if [[ "$enable_vesktop" != "false" ]]; then
+            _copy_if_exists "$templates_src/vesktop/vesktop.css" \
+                "$HOME/.config/vesktop/themes/Matugen.css"
+        fi
+    fi
+
+    if [[ "$enable_terminal" == "true" ]]; then
+        _copy_if_exists "$preset_dir/tools/newsboat/colors" \
+            "$HOME/.config/newsboat/colors"
+    fi
+
+    if [[ "$enable_chrome" == "true" ]]; then
+        _copy_if_exists "$templates_src/firefox/shy-material-colors.css" \
+            "$STATE_DIR/user/generated/firefox-shy-material-colors.css"
+    fi
+
     echo "[switchwall.sh] preset '$preset' deployed"
     return 0
 }
@@ -979,6 +1004,23 @@ main() {
         fi
 
         printf '%s\n' "auto"
+        return 1
+    }
+
+    read_appearance_global_style() {
+        local retries=12
+        local delay_s="0.03"
+        local i
+        local parsed=""
+        for ((i=0; i<retries; i++)); do
+            parsed=$(jq -er '.appearance.globalStyle // ""' "$SHELL_CONFIG_FILE" 2>/dev/null || true)
+            if [[ -n "$parsed" ]]; then
+                printf '%s\n' "$parsed"
+                return 0
+            fi
+            sleep "$delay_s"
+        done
+        printf '\n'
         return 1
     }
 
@@ -1082,8 +1124,15 @@ main() {
     # For presets that DON'T have a file-palette tree (the 30+ M3-slot presets
     # in ThemePresets.qml), this check is a no-op and matugen runs as before.
     if [[ -z "$preset_flag" ]]; then
+        global_style=$(read_appearance_global_style)
+        if [[ "$global_style" == "courier" && -d "$PALETTES_DIR/courier" ]]; then
+            echo "[switchwall.sh] courier auto-guard: appearance.globalStyle='courier'; redirecting to deploy_preset courier (image: ${imgpath:-<none>})" >&2
+            deploy_preset "courier" "$imgpath"
+            exit $?
+        fi
+
         auto_theme=$(read_theme_for_preset_guard)
-        if [[ "$auto_theme" != "auto" && -d "$PALETTES_DIR/$auto_theme" ]]; then
+        if [[ "$auto_theme" != "auto" && "$auto_theme" != "courier" && -d "$PALETTES_DIR/$auto_theme" ]]; then
             echo "[switchwall.sh] apollo auto-guard: config theme='$auto_theme' has a file-palette; redirecting to deploy_preset (image: ${imgpath:-<none>})" >&2
             deploy_preset "$auto_theme" "$imgpath"
             exit $?
