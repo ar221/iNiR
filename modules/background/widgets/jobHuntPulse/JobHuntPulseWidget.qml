@@ -141,7 +141,7 @@ AbstractBackgroundWidget {
             StyledText {
                 text: "JOB HUNT · PULSE"
                 font.family: Appearance.font.family.monospace
-                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Bold
                 font.letterSpacing: 2
                 color: Appearance.colors.colPrimary
@@ -362,7 +362,7 @@ AbstractBackgroundWidget {
                     const data = JSON.parse(raw)
                     const apps = (data.applications && data.applications.apps) || []
                     root.applied = apps.filter(a => a.is_submitted === true)
-                    root.packageReady = apps.filter(a => a.is_placeholder === true)
+                    root.packageReady = (data.applications && data.applications.package_ready) || []
                     root.shortlist = (data.shortlist && data.shortlist.targets) || []
                     const nba = data.next_best_action
                     if (nba && typeof nba === "string") {

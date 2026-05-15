@@ -130,7 +130,11 @@ Item {
                 ? Appearance.colors.colSubtext
                 : Appearance.colors.colOnLayer0
             Layout.alignment: Qt.AlignBaseline
+            Layout.fillWidth: root.variant === "next"
             opacity: root.passive ? 0.55 : 1.0
+            wrapMode: root.variant === "next" ? Text.WordWrap : Text.NoWrap
+            maximumLineCount: root.variant === "next" ? 3 : 1
+            elide: root.variant === "next" ? Text.ElideRight : Text.ElideNone
         }
 
         // — Role (elides) —
@@ -191,6 +195,7 @@ Item {
 
     // — Hover popup: full detail —
     PopupToolTip {
+        id: _popup
         text: {
             const parts = []
             if (root.role.length > 0)   parts.push(root.role)
@@ -203,5 +208,52 @@ Item {
         extraVisibleCondition: false
         alternativeVisibleCondition: _hover.containsMouse
             && (root.status.length > 0 || root.notes.length > 0 || root.role.length > 0)
+        horizontalPadding: 14
+        verticalPadding: 10
+
+        contentItem: Item {
+            id: _popupBody
+            property bool shown: false
+            readonly property real maxTextWidth: 360
+            readonly property real textWidth: Math.min(_popupText.contentWidth, maxTextWidth)
+            implicitWidth: textWidth + _popup.horizontalPadding * 2
+            implicitHeight: _popupText.implicitHeight + _popup.verticalPadding * 2
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Appearance.rounding.verysmall
+                color: Appearance.inirEverywhere
+                    ? Appearance.inir.colLayer2
+                    : Appearance.auroraEverywhere
+                        ? Appearance.aurora.colTooltipSurface
+                        : Appearance.colors.colLayer3
+                border.width: 1
+                border.color: Appearance.inirEverywhere
+                    ? Appearance.inir.colBorder
+                    : Appearance.auroraEverywhere
+                        ? Appearance.aurora.colTooltipBorder
+                        : Appearance.colors.colLayer3Hover
+                opacity: _popupBody.shown ? 1 : 0
+                Behavior on opacity {
+                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                }
+            }
+
+            StyledText {
+                id: _popupText
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.leftMargin: _popup.horizontalPadding
+                anchors.topMargin: _popup.verticalPadding
+                width: _popupBody.maxTextWidth
+                text: _popup.text
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.inirEverywhere
+                    ? Appearance.inir.colText
+                    : Appearance.colors.colOnLayer3
+                wrapMode: Text.WordWrap
+            }
+        }
     }
 }
