@@ -168,7 +168,7 @@ Singleton {
 
             property JsonObject appearance: JsonObject {
                 property string theme: "auto" // Theme preset ID: "auto" for wallpaper-based, or preset name like "gruvbox-dark", "catppuccin-mocha", "custom", etc.
-                property string globalStyle: "material" // "material" | "cards" | "aurora" | "inir" | "angel"
+                property string globalStyle: "material" // "material" | "cards" | "aurora" | "inir" | "angel" | "courier"
                 property string angelSubStyle: "frost" // "frost" | "neon" | "void"
                 property JsonObject angel: JsonObject {
                     property JsonObject blur: JsonObject {

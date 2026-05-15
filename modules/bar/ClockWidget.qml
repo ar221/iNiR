@@ -23,7 +23,7 @@ Item {
     readonly property bool courierPreset: stylePreset === "courier"
     readonly property color courierText: "#e8b54a"
     readonly property color courierTextDim: "#8a9a72"
-    readonly property color courierDivider: "#74a39a"
+    readonly property color courierDivider: Appearance.courier.colDivider
     implicitWidth: rowLayout.implicitWidth
     implicitHeight: Appearance.sizes.barHeight
 

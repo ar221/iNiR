@@ -18,9 +18,9 @@ Item {
     property bool showBackground: true
     readonly property int blockMargin: densityPreset === "compact" ? 3 : (densityPreset === "airy" ? 5 : 4)
     readonly property bool cardStyleEverywhere: (Config.options?.dock?.cardStyle ?? false) && (Config.options?.sidebar?.cardStyle ?? false) && (Config.options?.bar?.cornerStyle === 3)
-    readonly property bool courierPreset: stylePreset === "courier"
-    readonly property color courierGroupBg: "#171005"
-    readonly property color courierGroupBorder: "#5e7a48"
+    readonly property bool courierPreset: stylePreset === "courier" || Appearance.courierEverywhere
+    readonly property color courierGroupBg: Appearance.courier.colSurface
+    readonly property color courierGroupBorder: Appearance.courier.colBorderDim
     readonly property color baseLayerColor: courierPreset ? courierGroupBg
         : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer1

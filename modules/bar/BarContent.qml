@@ -99,13 +99,13 @@ Item { // Bar content region
         return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky"
     }
     // Courier Console preset — warm-terminal palette, square hard edges
-    readonly property bool courierPreset: barStylePreset === "courier"
+    readonly property bool courierPreset: barStylePreset === "courier" || Appearance.courierEverywhere
     readonly property bool railTopStripQuiet: (Config.options?.dock?.style === "rail")
         && ((Config.options?.dock?.position ?? "bottom") === "left" || (Config.options?.dock?.position ?? "bottom") === "right")
-    readonly property color courierBarBg: "#0e0b06"
-    readonly property color courierBorder: "#c98a2e"
-    readonly property color courierBorderDim: "#5e7a48"
-    readonly property color courierDivider: "#74a39a"
+    readonly property color courierBarBg: Appearance.courier.colCanvas
+    readonly property color courierBorder: Appearance.courier.colBorder
+    readonly property color courierBorderDim: Appearance.courier.colBorderDim
+    readonly property color courierDivider: Appearance.courier.colDivider
     // Density tokens (compact/default/airy)
     readonly property int sideClusterGap: barDensity === "compact" ? 5 : (barDensity === "airy" ? 10 : 8)
     readonly property int centerSegmentGap: barDensity === "compact" ? 3 : (barDensity === "airy" ? 8 : 6)
@@ -122,10 +122,10 @@ Item { // Bar content region
         : (barStylePreset === "clean"
             ? Appearance.font.pixelSize.normal
             : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger))
-    readonly property color courierChipBg: "#171005"
-    readonly property color courierChipHover: "#21170a"
-    readonly property color courierChipActive: "#2a1c08"
-    readonly property color courierChipText: "#d7b56d"
+    readonly property color courierChipBg: Appearance.courier.colSurface
+    readonly property color courierChipHover: Appearance.courier.colSurfaceHover
+    readonly property color courierChipActive: Appearance.courier.colSurfaceActive
+    readonly property color courierChipText: Appearance.courier.colText
     readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
         ? Appearance.font.pixelSize.smaller
         : Appearance.font.pixelSize.small

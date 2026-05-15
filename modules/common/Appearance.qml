@@ -14,6 +14,7 @@ Singleton {
     property QtObject animation
     property QtObject animationCurves
     property QtObject aurora
+    property QtObject courier
     property QtObject mission
     property QtObject inir
     property QtObject angel
@@ -73,6 +74,7 @@ Singleton {
     readonly property bool inirEverywhere: globalStyle === "inir"
     // angelEverywhere - flagship neo-brutalism glass style (superset of aurora)
     readonly property bool angelEverywhere: globalStyle === "angel"
+    readonly property bool courierEverywhere: globalStyle === "courier"
     // auroraEverywhere controls blur/glass backgrounds — angel inherits aurora blur
     readonly property bool auroraEverywhere: globalStyle === "aurora" || globalStyle === "angel"
     
@@ -709,6 +711,23 @@ Singleton {
         readonly property int roundingSmall: 6
         readonly property int roundingNormal: 8
         readonly property int roundingLarge: 12
+    }
+
+    courier: QtObject {
+        readonly property color colCanvas: "#0e0b06"
+        readonly property color colSurface: "#171005"
+        readonly property color colSurfaceHover: "#21170a"
+        readonly property color colSurfaceActive: "#2a1c08"
+        readonly property color colBorder: "#c98a2e"
+        readonly property color colBorderDim: "#5e7a48"
+        readonly property color colDivider: "#74a39a"
+        readonly property color colText: "#d7b56d"
+        readonly property color colTextMuted: ColorUtils.transparentize(colText, 0.40)
+
+        readonly property int radiusStructural: 0
+        readonly property int radiusMicro: 2
+        readonly property int radiusMax: 4
+        readonly property real borderWidth: 1
     }
 
     // ═══════════════════════════════════════════════════════════════════
