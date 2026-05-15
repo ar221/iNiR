@@ -84,6 +84,12 @@ Item {
             WPopupToolTip {
                 extraVisibleCondition: compactMouse.containsMouse && !root.selected
                 text: root.item?.appName ?? root.item?.title ?? ""
+                realContentComponent: Component {
+                    WText {
+                        text: root.item?.appName ?? root.item?.title ?? ""
+                        anchors.centerIn: parent
+                    }
+                }
             }
         }
     }

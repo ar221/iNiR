@@ -2324,7 +2324,8 @@ ApplicationWindow {
                         delay: 0
                         extraVisibleCondition: !navRail.expanded
                         anchorEdges: Edges.Right
-                        contentItem: Item {
+                        contentComponent: Component {
+                            Item {
                             id: overlayBubbleContent
                             property bool shown: false
                             implicitWidth: overlayBubbleBackground.implicitWidth
@@ -2367,6 +2368,7 @@ ApplicationWindow {
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
+                            }
                             }
                         }
                     }

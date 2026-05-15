@@ -5,7 +5,7 @@ import qs.modules.waffle.looks
 Item {
     id: root
     anchors.centerIn: parent
-    required property Item realContentItem
+    required property Component realContentComponent
     property alias radius: realContent.radius
     property real verticalPadding: 8
     property real horizontalPadding: 10
@@ -20,13 +20,17 @@ Item {
         id: realContent
         z: 1
         anchors.centerIn: parent
-        implicitWidth: root.realContentItem.implicitWidth + root.horizontalPadding * 2
-        implicitHeight: root.realContentItem.implicitHeight + root.verticalPadding * 2
+        implicitWidth: (realContentLoader.item?.implicitWidth ?? 0) + root.horizontalPadding * 2
+        implicitHeight: (realContentLoader.item?.implicitHeight ?? 0) + root.verticalPadding * 2
         color: Looks.colors.tooltipSurface
         radius: Looks.radius.medium
         border.width: Looks.glassActive ? 1 : 0
         border.color: Looks.colors.tooltipBorder
 
-        children: [root.realContentItem]
+        Loader {
+            id: realContentLoader
+            anchors.centerIn: parent
+            sourceComponent: root.realContentComponent
+        }
     }
 }

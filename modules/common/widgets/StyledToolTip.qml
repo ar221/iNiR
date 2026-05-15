@@ -17,12 +17,13 @@ PopupToolTip {
         : Edges.Bottom
     anchorGravity: anchorEdges
 
-    contentItem: StyledToolTipContent {
-        id: contentItem
-        font: root.font
-        text: root.text
-        shown: false
-        horizontalPadding: root.horizontalPadding
-        verticalPadding: root.verticalPadding
+    contentComponent: Component {
+        StyledToolTipContent {
+            font: root.font
+            text: root.text
+            shown: false
+            horizontalPadding: root.horizontalPadding
+            verticalPadding: root.verticalPadding
+        }
     }
 }

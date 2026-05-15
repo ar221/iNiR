@@ -280,87 +280,89 @@ WPanelPageColumn {
             x: -51
             y: -userMenu.implicitHeight + userButton.implicitHeight / 2 - 10
             background: null
-            
+
             WToolTipContent {
                 id: popupContent
                 horizontalPadding: 10
                 verticalPadding: 7
                 radius: Looks.radius.large
-                realContentItem: Item {
-                    implicitWidth: userMenuContentLayout.implicitWidth
-                    implicitHeight: userMenuContentLayout.implicitHeight
-                    
-                    ColumnLayout {
-                        id: userMenuContentLayout
-                        anchors {
-                            fill: parent
-                            leftMargin: popupContent.horizontalPadding
-                            rightMargin: popupContent.horizontalPadding
-                            topMargin: popupContent.verticalPadding
-                            bottomMargin: popupContent.verticalPadding
-                        }
-                        spacing: 5
+                realContentComponent: Component {
+                    Item {
+                        implicitWidth: userMenuContentLayout.implicitWidth
+                        implicitHeight: userMenuContentLayout.implicitHeight
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.leftMargin: 6
-                            FluentIcon {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitSize: 22
-                                icon: "corporation"
-                                monochrome: false
+                        ColumnLayout {
+                            id: userMenuContentLayout
+                            anchors {
+                                fill: parent
+                                leftMargin: popupContent.horizontalPadding
+                                rightMargin: popupContent.horizontalPadding
+                                topMargin: popupContent.verticalPadding
+                                bottomMargin: popupContent.verticalPadding
                             }
-                            WText {
-                                Layout.alignment: Qt.AlignVCenter
-                                text: SystemInfo.hostname ?? "Computer"
-                                font.pixelSize: Looks.font.pixelSize.large
-                                font.weight: Looks.font.weight.strong
-                            }
-                            Item { Layout.fillWidth: true }
-                            WBorderlessButton {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitHeight: 36
-                                implicitWidth: signOutText.implicitWidth + 20
-                                contentItem: WText {
-                                    id: signOutText
-                                    text: Translation.tr("Sign out")
-                                    font.pixelSize: Looks.font.pixelSize.large
-                                }
-                                onClicked: Session.logout()
-                            }
-                        }
-                        
-                        Item { implicitWidth: 334 }
-                        
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.bottomMargin: 7
-                            Layout.leftMargin: 6
-                            spacing: 12
-                            WUserAvatar { sourceSize: Qt.size(58, 58) }
-                            ColumnLayout {
+                            spacing: 5
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignVCenter
-                                spacing: 2
+                                Layout.leftMargin: 6
+                                FluentIcon {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    implicitSize: 22
+                                    icon: "corporation"
+                                    monochrome: false
+                                }
                                 WText {
-                                    text: SystemInfo.displayName || SystemInfo.username
-                                    font.pixelSize: Looks.font.pixelSize.larger
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: SystemInfo.hostname ?? "Computer"
+                                    font.pixelSize: Looks.font.pixelSize.large
                                     font.weight: Looks.font.weight.strong
                                 }
-                                WText {
-                                    color: Looks.colors.fg1
-                                    text: Translation.tr("Local account")
+                                Item { Layout.fillWidth: true }
+                                WBorderlessButton {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    implicitHeight: 36
+                                    implicitWidth: signOutText.implicitWidth + 20
+                                    contentItem: WText {
+                                        id: signOutText
+                                        text: Translation.tr("Sign out")
+                                        font.pixelSize: Looks.font.pixelSize.large
+                                    }
+                                    onClicked: Session.logout()
                                 }
-                                WText {
-                                    color: Looks.colors.accent
-                                    text: Translation.tr("Manage my account")
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            AppLauncher.launch("manageUser")
-                                            GlobalStates.searchOpen = false
-                                            userMenu.close()
+                            }
+
+                            Item { implicitWidth: 334 }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.bottomMargin: 7
+                                Layout.leftMargin: 6
+                                spacing: 12
+                                WUserAvatar { sourceSize: Qt.size(58, 58) }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 2
+                                    WText {
+                                        text: SystemInfo.displayName || SystemInfo.username
+                                        font.pixelSize: Looks.font.pixelSize.larger
+                                        font.weight: Looks.font.weight.strong
+                                    }
+                                    WText {
+                                        color: Looks.colors.fg1
+                                        text: Translation.tr("Local account")
+                                    }
+                                    WText {
+                                        color: Looks.colors.accent
+                                        text: Translation.tr("Manage my account")
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                AppLauncher.launch("manageUser")
+                                                GlobalStates.searchOpen = false
+                                                userMenu.close()
+                                            }
                                         }
                                     }
                                 }

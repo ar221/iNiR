@@ -38,7 +38,8 @@ TabButton {
         delay: 0
         extraVisibleCondition: !root.expanded
         anchorEdges: Edges.Right
-        contentItem: Item {
+        contentComponent: Component {
+            Item {
             id: bubbleContent
             property bool shown: false
             implicitWidth: bubbleBackground.implicitWidth
@@ -82,6 +83,7 @@ TabButton {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
+        }
         }
     }
 

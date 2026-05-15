@@ -125,10 +125,12 @@ RowLayout {
                 extraVisibleCondition: trayButton.Drag.active && pinDropArea.containsDrag && pinDropArea.willPin
                 horizontalPadding: 6
                 verticalPadding: 6
-                realContentItem: FluentIcon {
-                    anchors.centerIn: parent
-                    icon: "pin-off"
-                    implicitSize: 18
+                realContentComponent: Component {
+                    FluentIcon {
+                        anchors.centerIn: parent
+                        icon: "pin-off"
+                        implicitSize: 18
+                    }
                 }
             }
         }

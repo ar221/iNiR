@@ -1576,7 +1576,8 @@ Item {
             : position === "right" ? Edges.Right
             : Edges.Top
         anchorGravity: anchorEdges
-        contentItem: Item {
+        contentComponent: Component {
+            Item {
             id: bubbleContent
             property bool shown: false
             implicitWidth: bubbleBackground.implicitWidth
@@ -1617,6 +1618,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
+        }
         }
     }
 

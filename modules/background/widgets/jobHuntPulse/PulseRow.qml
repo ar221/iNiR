@@ -212,7 +212,8 @@ Item {
         horizontalPadding: 14
         verticalPadding: 10
 
-        contentItem: Item {
+        contentComponent: Component {
+            Item {
             id: _popupBody
             property bool shown: false
             readonly property real maxTextWidth: 360
@@ -258,6 +259,7 @@ Item {
                     : Appearance.colors.colOnLayer3
                 wrapMode: Text.WordWrap
             }
+        }
         }
     }
 }

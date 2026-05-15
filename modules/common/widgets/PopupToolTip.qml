@@ -19,8 +19,9 @@ Item {
     property real verticalMargin: verticalPadding
 
     function setContentShown(shown: bool): void {
-        if (root.contentItem && root.contentItem.shown !== undefined)
-            root.contentItem.shown = shown
+        const content = tooltipLoader.item?.contentItem ?? fallbackLoader.item?.contentItem
+        if (content && content.shown !== undefined)
+            content.shown = shown
     }
     
     function updateAnchor() {
@@ -40,13 +41,14 @@ Item {
     property var anchorEdges: Edges.Top
     property var anchorGravity: anchorEdges
 
-    property Item contentItem: StyledToolTipContent {
-        id: contentItem
-        anchors.centerIn: parent
-        text: root.text
-        shown: false
-        horizontalPadding: root.horizontalPadding
-        verticalPadding: root.verticalPadding
+    property Component contentComponent: Component {
+        StyledToolTipContent {
+            anchors.centerIn: parent
+            text: root.text
+            shown: false
+            horizontalPadding: root.horizontalPadding
+            verticalPadding: root.verticalPadding
+        }
     }
 
     // Whether we can use PopupWindow (requires QsWindow, i.e. PanelWindow context)
@@ -73,6 +75,7 @@ Item {
             }
         }
         sourceComponent: PopupWindow {
+            property Item contentItem: tooltipContentLoader.item
             visible: true
             anchor {
                 window: root.QsWindow.window
@@ -85,10 +88,15 @@ Item {
             }
 
             color: "transparent"
-            implicitWidth: root.contentItem.implicitWidth + root.horizontalMargin * 2
-            implicitHeight: root.contentItem.implicitHeight + root.verticalMargin * 2
+            implicitWidth: (contentItem?.implicitWidth ?? 0) + root.horizontalMargin * 2
+            implicitHeight: (contentItem?.implicitHeight ?? 0) + root.verticalMargin * 2
 
-            data: [root.contentItem]
+            Loader {
+                id: tooltipContentLoader
+                sourceComponent: root.contentComponent
+            }
+
+            data: [tooltipContentLoader]
         }
     }
 
@@ -109,12 +117,18 @@ Item {
         }
         sourceComponent: Item {
             id: fallbackItem
+            property Item contentItem: tooltipContentLoader.item
             // Reparent to Window.contentItem to escape clipped containers
             parent: root.Window.window?.contentItem ?? root.parent ?? root
             z: 1000
 
-            readonly property real tooltipW: root.contentItem.implicitWidth + root.horizontalMargin * 2
-            readonly property real tooltipH: root.contentItem.implicitHeight + root.verticalMargin * 2
+            readonly property real tooltipW: (contentItem?.implicitWidth ?? 0) + root.horizontalMargin * 2
+            readonly property real tooltipH: (contentItem?.implicitHeight ?? 0) + root.verticalMargin * 2
+
+            Loader {
+                id: tooltipContentLoader
+                sourceComponent: root.contentComponent
+            }
 
             width: tooltipW
             height: tooltipH
@@ -147,7 +161,7 @@ Item {
                 return anchorPos.y + ((anchorItem?.height ?? 0) - tooltipH) / 2
             }
 
-            data: [root.contentItem]
+            data: [tooltipContentLoader]
         }
     }
 }
