@@ -94,12 +94,14 @@ AbstractBackgroundWidget {
         }
     }
 
-    // Click to launch btop (disabled in edit mode to allow dragging)
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: GlobalStates.widgetEditMode ? Qt.ArrowCursor : Qt.PointingHandCursor
-        enabled: !GlobalStates.widgetEditMode
-        onClicked: btopLauncher.running = true
+    // Tap to launch btop. TapHandler (not MouseArea) coexists with the parent
+    // MouseArea's drag — tap fires only on a real tap, drag still pans the widget.
+    TapHandler {
+        gesturePolicy: TapHandler.ReleaseWithinBounds
+        onTapped: btopLauncher.running = true
+    }
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
     }
 
     Process {

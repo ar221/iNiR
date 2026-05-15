@@ -70,7 +70,7 @@ AbstractWidget {
         animation: NumberAnimation { duration: Appearance.animation.elementResize.duration; easing.type: Appearance.animation.elementResize.type; easing.bezierCurve: Appearance.animation.elementResize.bezierCurve }
     }
 
-    draggable: placementStrategy === "free" && !GlobalStates.screenLocked && GlobalStates.widgetEditMode
+    draggable: placementStrategy === "free" && !GlobalStates.screenLocked
     function syncFreePositionFromConfig(): void {
         if (!Config.ready) return;
         if (root.placementStrategy !== "free") return;
@@ -104,41 +104,6 @@ AbstractWidget {
         root.y = newY
         configEntry.x = newX
         configEntry.y = newY
-    }
-
-    // Edit mode border overlay
-    Rectangle {
-        anchors.fill: parent
-        visible: GlobalStates.widgetEditMode
-        color: "transparent"
-        border.width: 2
-        border.color: Appearance.m3colors.m3primary
-        radius: Appearance.rounding.normal
-        opacity: GlobalStates.widgetEditMode ? 0.5 : 0
-        z: 999
-
-        Behavior on opacity {
-            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-        }
-
-        // Widget name label
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.margins: -1
-            width: nameLabel.implicitWidth + 8
-            height: nameLabel.implicitHeight + 4
-            radius: 4
-            color: Appearance.m3colors.m3primary
-
-            StyledText {
-                id: nameLabel
-                anchors.centerIn: parent
-                text: root.configEntryName
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                color: Appearance.m3colors.m3onPrimary
-            }
-        }
     }
 
     property bool needsColText: false

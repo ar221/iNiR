@@ -59,9 +59,6 @@ Singleton {
             }
         }
     }
-    // Desktop widget edit mode — enables drag, shows grid overlay, widget borders
-    property bool widgetEditMode: false
-
     property bool cheatsheetOpen: false
     property bool controlPanelOpen: false
     property bool workspaceShowNumbers: false
@@ -193,17 +190,4 @@ Singleton {
         }
 	}
 
-    IpcHandler {
-        target: "widgets"
-
-        function editMode(): void {
-            root.widgetEditMode = !root.widgetEditMode
-        }
-        function lock(): void {
-            root.widgetEditMode = false
-        }
-        function unlock(): void {
-            root.widgetEditMode = true
-        }
-    }
 }
