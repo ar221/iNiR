@@ -42,11 +42,13 @@ AbstractBackgroundWidget {
     property string lastError: ""
     property int    _freshnessTick: 0
 
-    readonly property int ageMin: lastSuccessAt > 0
-        ? Math.floor((Date.now() - lastSuccessAt) / 60000)
-        : 9999
-    readonly property string freshnessColor: {
+    readonly property int ageMin: {
         void root._freshnessTick   // re-eval every minute
+        return lastSuccessAt > 0
+            ? Math.floor((Date.now() - lastSuccessAt) / 60000)
+            : 9999
+    }
+    readonly property string freshnessColor: {
         if (lastError.length > 0)         return "red"
         if (lastSuccessAt === 0)          return "amber"   // never fetched
         if (ageMin < 10)                  return "green"
