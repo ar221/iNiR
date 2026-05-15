@@ -419,6 +419,19 @@
         "cardOpacity": 0.95,
         "cardWidth": 560,
         "showVisualizer": true
+      },
+      "jobHuntPulse": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 100,
+        "y": 100,
+        "cardOpacity": 0.95,
+        "cardWidth": 440,
+        "showApplied": true,
+        "showPackageReady": true,
+        "showShortlist": true,
+        "refreshIntervalMs": 300000,
+        "vaultName": "Ayaz OS"
       }
     },
     "multiMonitor": {

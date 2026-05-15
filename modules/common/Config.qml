@@ -630,6 +630,19 @@ Singleton {
                         property real cardWidth: 560
                         property bool showVisualizer: true
                     }
+                    property JsonObject jobHuntPulse: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 100
+                        property real y: 100
+                        property real cardOpacity: 0.95
+                        property real cardWidth: 440
+                        property bool showApplied: true
+                        property bool showPackageReady: true
+                        property bool showShortlist: true
+                        property int refreshIntervalMs: 300000
+                        property string vaultName: "Ayaz OS"
+                    }
                     property JsonObject lissajous: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
