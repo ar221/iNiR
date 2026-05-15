@@ -10,6 +10,19 @@ import qs.modules.common.functions
 Item {
     id: root
 
+    // Hover state exposed so cells with truncatable content (TASK, REMINDER)
+    // can wire a popup tooltip showing the full text. MouseArea (not
+    // HoverHandler) — HoverHandler's exit event was unreliable under the
+    // AbstractWidget root MouseArea, leaving tooltips stuck.
+    MouseArea {
+        id: _hover
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: true
+        propagateComposedEvents: true
+    }
+    readonly property alias hovered: _hover.containsMouse
+
     // Monospace header text, rendered uppercase
     property string label: ""
     // Whether this is the last visible cell among its siblings — derived

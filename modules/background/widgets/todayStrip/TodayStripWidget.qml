@@ -287,6 +287,7 @@ AbstractBackgroundWidget {
 
         // ── Cell 4 — TASK ──
         StripCell {
+            id: taskCell
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
             Layout.minimumHeight: implicitHeight
@@ -311,18 +312,26 @@ AbstractBackgroundWidget {
                     Layout.fillWidth: true
                     visible: root.glanceTask.length > 0
                     text: root.glanceTask
-                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.pixelSize: Appearance.font.pixelSize.smallie
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnLayer0
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
-                    maximumLineCount: 2
+                    maximumLineCount: 3
                 }
+            }
+
+            PopupToolTip {
+                text: root.glanceTask
+                anchorEdges: Edges.Bottom
+                extraVisibleCondition: false
+                alternativeVisibleCondition: taskCell.hovered && root.glanceTask.length > 0
             }
         }
 
         // ── Cell 5 — REMINDER ──
         StripCell {
+            id: reminderCell
             Layout.preferredWidth: root.cellWidth
             Layout.fillHeight: true
             Layout.minimumHeight: implicitHeight
@@ -347,13 +356,20 @@ AbstractBackgroundWidget {
                     Layout.fillWidth: true
                     visible: root.glanceReminder.length > 0
                     text: root.glanceReminder
-                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.pixelSize: Appearance.font.pixelSize.smallie
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnLayer0
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
-                    maximumLineCount: 2
+                    maximumLineCount: 3
                 }
+            }
+
+            PopupToolTip {
+                text: root.glanceReminder
+                anchorEdges: Edges.Bottom
+                extraVisibleCondition: false
+                alternativeVisibleCondition: reminderCell.hovered && root.glanceReminder.length > 0
             }
         }
     }
