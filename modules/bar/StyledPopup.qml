@@ -26,8 +26,11 @@ LazyLoader {
 
     active: _shouldBeActive || _animatingClose
 
-    Timer {
-        id: lingerTimer
+    // Hoisted to an explicit named property so references resolve via Qt's
+    // meta-object system (rebuilt per instance) rather than the QML context
+    // table (mmap'd bytecode, stale on Singleton-cascaded hot-reloads).
+    // See memory: quickshell_singleton_hot_reload.md.
+    property Timer lingerTimer: Timer {
         interval: 220
         repeat: false
         onTriggered: root._lingerActive = false
@@ -36,17 +39,17 @@ LazyLoader {
     on_TargetHoveredChanged: {
         if (_targetHovered) {
             root._lingerActive = false;
-            lingerTimer.stop();
+            root.lingerTimer.stop();
         } else {
             root._lingerActive = true;
-            lingerTimer.restart();
+            root.lingerTimer.restart();
         }
     }
 
     onPopupHoveredChanged: {
         if (root.popupHovered) {
             root._lingerActive = false;
-            lingerTimer.stop();
+            root.lingerTimer.stop();
         }
     }
 
