@@ -416,8 +416,8 @@
         "placementStrategy": "free",
         "x": 100,
         "y": 100,
-        "cardOpacity": 0.85,
-        "cardWidth": 400,
+        "cardOpacity": 0.95,
+        "cardWidth": 560,
         "showVisualizer": true
       }
     },

@@ -21,8 +21,8 @@ AbstractBackgroundWidget {
     configEntryName: "nowPlaying"
 
     readonly property var npConfig: configEntry
-    readonly property real cardWidth: npConfig?.cardWidth ?? 320
-    readonly property real cardOpacity: npConfig?.cardOpacity ?? 0.85
+    readonly property real cardWidth: npConfig?.cardWidth ?? 560
+    readonly property real cardOpacity: npConfig?.cardOpacity ?? 0.95
     readonly property bool showVisualizer: npConfig?.showVisualizer ?? true
     readonly property point screenPos: root.mapToItem(null, 0, 0)
 

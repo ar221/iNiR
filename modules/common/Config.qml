@@ -626,8 +626,8 @@ Singleton {
                         property string placementStrategy: "free"
                         property real x: 100
                         property real y: 100
-                        property real cardOpacity: 0.85
-                        property real cardWidth: 400
+                        property real cardOpacity: 0.95
+                        property real cardWidth: 560
                         property bool showVisualizer: true
                     }
                     property JsonObject lissajous: JsonObject {

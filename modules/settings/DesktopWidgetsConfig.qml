@@ -1717,9 +1717,9 @@ ContentPage {
                 ConfigSpinBox {
                     icon: "width"
                     text: Translation.tr("Card width (px)")
-                    value: Config.options.background.widgets.nowPlaying.cardWidth ?? 320
+                    value: Config.options.background.widgets.nowPlaying.cardWidth ?? 560
                     from: 240
-                    to: 480
+                    to: 720
                     stepSize: 10
                     onValueChanged: {
                         Config.setNestedValue("background.widgets.nowPlaying.cardWidth", value);
