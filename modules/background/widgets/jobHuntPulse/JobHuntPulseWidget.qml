@@ -31,6 +31,26 @@ AbstractBackgroundWidget {
     // — Parsed JSON state —
     property var nextAction: null    // { task, why, date }
     property var applied: []         // [{ company, role, status, notes, date, is_passive }]
+    // Derived from `applied`: array of { date, items[] } groups, newest first.
+    readonly property var appliedByDate: {
+        const groups = {}
+        const order = []
+        for (let i = 0; i < applied.length; i++) {
+            const app = applied[i]
+            const key = (app && app.date && app.date.length > 0) ? app.date : "no date"
+            if (groups[key] === undefined) {
+                groups[key] = []
+                order.push(key)
+            }
+            groups[key].push(app)
+        }
+        order.sort((a, b) => {
+            if (a === "no date") return 1
+            if (b === "no date") return -1
+            return b.localeCompare(a)   // newest first
+        })
+        return order.map(k => ({ date: k, items: groups[k] }))
+    }
     property var packageReady: []    // [{ company, role, notes }]
     property var shortlist: []       // [{ priority, company, role, notes }]
     property int directSubmittedTotal: 0
@@ -234,19 +254,45 @@ AbstractBackgroundWidget {
                 }
 
                 Repeater {
-                    model: root.applied
-                    delegate: PulseRow {
+                    model: root.appliedByDate
+                    delegate: ColumnLayout {
+                        id: _appliedGroup
                         required property var modelData
+                        required property int index
                         Layout.fillWidth: true
-                        variant: "applied"
-                        company: modelData.company ?? ""
-                        role: modelData.role ?? ""
-                        status: modelData.status ?? ""
-                        notes: modelData.notes ?? ""
-                        dateStr: modelData.date ?? ""
-                        passive: modelData.is_passive === true
-                        obsidianPath: root.pathSprint
-                        vaultName: root.vaultName
+                        Layout.topMargin: index === 0 ? 0 : 6
+                        spacing: 0
+
+                        // Date header
+                        StyledText {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 10
+                            Layout.bottomMargin: 2
+                            text: _appliedGroup.modelData.date
+                            font.family: Appearance.font.family.monospace
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            font.letterSpacing: 1.2
+                            font.weight: Font.DemiBold
+                            color: Appearance.colors.colSubtext
+                            opacity: 0.85
+                        }
+
+                        Repeater {
+                            model: _appliedGroup.modelData.items
+                            delegate: PulseRow {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                variant: "applied"
+                                company: modelData.company ?? ""
+                                role: modelData.role ?? ""
+                                status: modelData.status ?? ""
+                                notes: modelData.notes ?? ""
+                                dateStr: modelData.date ?? ""
+                                passive: modelData.is_passive === true
+                                obsidianPath: root.pathSprint
+                                vaultName: root.vaultName
+                            }
+                        }
                     }
                 }
             }

@@ -157,8 +157,8 @@ Item {
             color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.96)
             radius: 2
             implicitWidth: passLabel.implicitWidth + 10
-            implicitHeight: passLabel.implicitHeight + 2
-            Layout.alignment: Qt.AlignBaseline
+            implicitHeight: passLabel.implicitHeight + 4
+            Layout.alignment: Qt.AlignVCenter
 
             StyledText {
                 id: passLabel
@@ -178,8 +178,8 @@ Item {
             color: Appearance.colors.colTertiary
             radius: 2
             implicitWidth: shipLabel.implicitWidth + 10
-            implicitHeight: shipLabel.implicitHeight + 2
-            Layout.alignment: Qt.AlignBaseline
+            implicitHeight: shipLabel.implicitHeight + 4
+            Layout.alignment: Qt.AlignVCenter
 
             StyledText {
                 id: shipLabel
