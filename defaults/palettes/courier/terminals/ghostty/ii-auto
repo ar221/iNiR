@@ -1,0 +1,43 @@
+# Courier preset — Ghostty theme
+# Hand-authored; deployed in place of ii-generator output when Courier is active.
+
+background = #0E0B06
+foreground = #F0D29E
+
+cursor-color = #F0D29E
+cursor-text = #0E0B06
+
+selection-background = #F0D29E
+selection-foreground = #0E0B06
+
+# Black
+palette = 0=#0E0B06
+palette = 8=#8A9A72
+
+# Red
+palette = 1=#C85A38
+palette = 9=#E89A6E
+
+# Green
+palette = 2=#6E8E50
+palette = 10=#7A9A60
+
+# Yellow
+palette = 3=#C98A2E
+palette = 11=#E8B54A
+
+# Blue
+palette = 4=#74A39A
+palette = 12=#92BEB4
+
+# Magenta
+palette = 5=#9E7AA6
+palette = 13=#B89BC0
+
+# Cyan
+palette = 6=#74A39A
+palette = 14=#92BEB4
+
+# White
+palette = 7=#D7B56D
+palette = 15=#F0D29E

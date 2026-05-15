@@ -1,0 +1,96 @@
+/**
+ * iNiR Courier preset for Adwaita-for-Steam
+ * Hand-authored; deployed in place of matugen-rendered output when Courier is active.
+ * Warm-sepia dispatch board.
+ */
+
+:root
+{
+	/* Accent */
+	--adw-accent-bg-rgb: 201, 138, 46 !important;
+	--adw-accent-fg-rgb: 14, 11, 6 !important;
+	--adw-accent-rgb: 201, 138, 46 !important;
+
+	/* Destructive */
+	--adw-destructive-bg-rgb: 216, 106, 60 !important;
+	--adw-destructive-fg-rgb: 14, 11, 6 !important;
+	--adw-destructive-rgb: 216, 106, 60 !important;
+
+	/* Success */
+	--adw-success-bg-rgb: 94, 122, 72 !important;
+	--adw-success-fg-rgb: 14, 11, 6 !important;
+	--adw-success-rgb: 94, 122, 72 !important;
+
+	/* Warning */
+	--adw-warning-bg-rgb: 158, 122, 166 !important;
+	--adw-warning-fg-rgb: 14, 11, 6 !important;
+	--adw-warning-fg-a: 0.8 !important;
+	--adw-warning-rgb: 158, 122, 166 !important;
+
+	/* Error */
+	--adw-error-bg-rgb: 216, 106, 60 !important;
+	--adw-error-fg-rgb: 14, 11, 6 !important;
+	--adw-error-rgb: 216, 106, 60 !important;
+
+	/* Window — BASE tier */
+	--adw-window-bg-rgb: 23, 16, 5 !important;
+	--adw-window-fg-rgb: 215, 181, 109 !important;
+
+	/* Views — RECESSED tier */
+	--adw-view-bg-rgb: 14, 11, 6 !important;
+	--adw-view-fg-rgb: 215, 181, 109 !important;
+
+	/* Header bar — CHROME tier */
+	--adw-headerbar-bg-rgb: 23, 16, 5 !important;
+	--adw-headerbar-fg-rgb: 215, 181, 109 !important;
+	--adw-headerbar-border-rgb: 42, 28, 8 !important;
+	--adw-headerbar-backdrop-rgb: 23, 16, 5 !important;
+	--adw-headerbar-shade-rgb: 0, 0, 0 !important;
+	--adw-headerbar-shade-a: 0.36 !important;
+	--adw-headerbar-darker-shade-rgb: 0, 0, 0 !important;
+	--adw-headerbar-darker-shade-a: 0.9 !important;
+
+	/* Sidebar — CHROME tier */
+	--adw-sidebar-bg-rgb: 23, 16, 5 !important;
+	--adw-sidebar-fg-rgb: 215, 181, 109 !important;
+	--adw-sidebar-backdrop-rgb: 23, 16, 5 !important;
+	--adw-sidebar-shade-rgb: 0, 0, 0 !important;
+	--adw-sidebar-shade-a: 0.36 !important;
+
+	/* Secondary sidebar — BASE tier */
+	--adw-secondary-sidebar-bg-rgb: 23, 16, 5 !important;
+	--adw-secondary-sidebar-fg-rgb: 138, 154, 114 !important;
+	--adw-secondary-sidebar-backdrop-rgb: 14, 11, 6 !important;
+	--adw-secondary-sidebar-shade-rgb: 0, 0, 0 !important;
+	--adw-secondary-sidebar-shade-a: 0.36 !important;
+
+	/* Cards — white overlay for glass-like depth */
+	--adw-card-bg-rgb: 255, 255, 255 !important;
+	--adw-card-bg-a: 0.06 !important;
+	--adw-card-fg-rgb: 215, 181, 109 !important;
+	--adw-card-shade-rgb: 0, 0, 0 !important;
+	--adw-card-shade-a: 0.36 !important;
+
+	/* Dialogs — ELEVATED tier */
+	--adw-dialog-bg-rgb: 42, 28, 8 !important;
+	--adw-dialog-fg-rgb: 215, 181, 109 !important;
+
+	/* Popovers — ELEVATED tier */
+	--adw-popover-bg-rgb: 42, 28, 8 !important;
+	--adw-popover-fg-rgb: 215, 181, 109 !important;
+	--adw-popover-shade-rgb: 0, 0, 0 !important;
+	--adw-popover-shade-a: 0.25 !important;
+
+	/* Thumbnails — ELEVATED tier */
+	--adw-thumbnail-bg-rgb: 42, 28, 8 !important;
+	--adw-thumbnail-fg-rgb: 215, 181, 109 !important;
+
+	/* Miscellaneous */
+	--adw-shade-rgb: 0, 0, 0 !important;
+	--adw-shade-a: 0.36 !important;
+
+	/* Skin-specific */
+	--adw-user-offline-rgb: 94, 122, 72 !important;
+	--adw-user-online-rgb: 201, 138, 46 !important;
+	--adw-user-ingame-rgb: 116, 163, 154 !important;
+}

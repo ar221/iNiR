@@ -1,0 +1,28 @@
+# Courier preset — lazygit theme
+# Hand-authored; deployed in place of ii-generator output when Courier is active.
+# This is the theme section for lazygit config.yml
+gui:
+    theme:
+      activeBorderColor:
+        - "#C98A2E"
+        - bold
+      inactiveBorderColor:
+        - "#8A9A72"
+      optionsTextColor:
+        - "#C98A2E"
+      selectedLineBgColor:
+        - "#171005"
+      selectedRangeBgColor:
+        - "#171005"
+      cherryPickedCommitFgColor:
+        - "#C98A2E"
+      cherryPickedCommitBgColor:
+        - "#171005"
+      markedBaseCommitFgColor:
+        - "#C98A2E"
+      markedBaseCommitBgColor:
+        - "#171005"
+      unstagedChangesColor:
+        - "#D86A3C"
+      defaultFgColor:
+        - "#F0D29E"

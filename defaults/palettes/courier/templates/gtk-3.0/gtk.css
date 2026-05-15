@@ -1,0 +1,78 @@
+/*
+ * GTK Colors — Courier preset (iNiR)
+ * Hand-authored; deployed in place of matugen-rendered output when Courier is active.
+ * Warm-sepia dispatch board. Square edges, hairline borders. No glassy SaaS chrome.
+ */
+
+@define-color accent_color #C98A2E;
+@define-color accent_fg_color #0E0B06;
+@define-color accent_bg_color #C98A2E;
+
+@define-color window_bg_color #0E0B06;
+@define-color window_fg_color #D7B56D;
+
+@define-color headerbar_bg_color #070502;
+@define-color headerbar_fg_color #D7B56D;
+
+@define-color popover_bg_color #171005;
+@define-color popover_fg_color #D7B56D;
+
+@define-color view_bg_color #0E0B06;
+@define-color view_fg_color #D7B56D;
+
+@define-color card_bg_color #0E0B06;
+@define-color card_fg_color #D7B56D;
+
+@define-color sidebar_bg_color @window_bg_color;
+@define-color sidebar_fg_color @window_fg_color;
+@define-color sidebar_border_color @window_bg_color;
+@define-color sidebar_backdrop_color @window_bg_color;
+
+/* Nautilus sidebar */
+.nautilus-window .sidebar,
+.nautilus-window sidebar,
+.nautilus-window placessidebar,
+.nautilus-window placessidebar list,
+placessidebar,
+placessidebar list {
+    background-color: #171005 !important;
+    color: #D7B56D !important;
+    border-right: none !important;
+}
+
+placessidebar row {
+    background-color: transparent !important;
+    color: #D7B56D !important;
+}
+
+placessidebar row:hover {
+    background-color: alpha(#C98A2E, 0.14) !important;
+}
+
+placessidebar row:selected,
+placessidebar row:selected:hover {
+    background-color: #C98A2E !important;
+    color: #0E0B06 !important;
+}
+
+.nautilus-window headerbar {
+    background-color: #070502 !important;
+    color: #D7B56D !important;
+}
+
+.nautilus-window .view {
+    background-color: #0E0B06 !important;
+    color: #D7B56D !important;
+}
+
+placessidebar image {
+    color: #D7B56D !important;
+}
+
+placessidebar row:selected image {
+    color: #0E0B06 !important;
+}
+
+separator.sidebar {
+    background-color: transparent !important;
+}

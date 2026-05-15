@@ -1,0 +1,130 @@
+# Courier preset — Zathura config
+# Hand-authored; deployed in place of ii-generator output when Courier is active.
+
+# ── Colors ──────────────────────────────────────────────────────────
+
+# General
+set default-bg                 "#0E0B06"
+set default-fg                 "#D7B56D"
+
+# Statusbar
+set statusbar-bg               "#171005"
+set statusbar-fg               "#D7B56D"
+
+# Inputbar
+set inputbar-bg                "#2A1C08"
+set inputbar-fg                "#D7B56D"
+
+# Notifications
+set notification-bg            "#171005"
+set notification-fg            "#D7B56D"
+set notification-error-bg      "#171005"
+set notification-error-fg      "#E89A6E"
+set notification-warning-bg    "#171005"
+set notification-warning-fg    "#B89BC0"
+
+# Search highlights
+set highlight-color            "#C98A2E"
+set highlight-active-color     "#74A39A"
+set highlight-fg               "#0E0B06"
+set highlight-transparency     0.3
+
+# Tab completion
+set completion-bg              "#171005"
+set completion-fg              "#8A9A72"
+set completion-highlight-bg    "#C98A2E"
+set completion-highlight-fg    "#0E0B06"
+set completion-group-bg        "#2A1C08"
+set completion-group-fg        "#C98A2E"
+
+# Recolor (PDF theming)
+set recolor-lightcolor         "#0E0B06"
+set recolor-darkcolor          "#D7B56D"
+set recolor                    "true"
+set recolor-keephue            "true"
+set recolor-reverse-video      "true"
+
+# Index mode
+set index-bg                   "#171005"
+set index-fg                   "#D7B56D"
+set index-active-bg            "#C98A2E"
+set index-active-fg            "#0E0B06"
+
+# Loading indicator
+set render-loading-bg          "#070502"
+set render-loading-fg          "#C98A2E"
+
+# ── Appearance ──────────────────────────────────────────────────────
+
+set font                       "monospace 11"
+set page-padding               4
+set statusbar-home-tilde       true
+set window-title-home-tilde    true
+set window-title-basename      true
+set guioptions                 "sv"
+
+# ── Behavior ────────────────────────────────────────────────────────
+
+set selection-clipboard        clipboard
+set adjust-open                "best-fit"
+set scroll-page-aware          true
+set scroll-step                80
+set smooth-scroll              true
+set incremental-search         true
+set search-hadjust             true
+set link-hadjust               true
+set show-recent                20
+set database                   "sqlite"
+set sandbox                    "none"
+set first-page-column          1:2
+
+# ── Zoom ────────────────────────────────────────────────────────────
+
+set zoom-min                   10
+set zoom-max                   1000
+set zoom-step                  10
+set n-completion-items         20
+
+# ── Keybinds ────────────────────────────────────────────────────────
+
+# Half-page scroll (vim-like)
+map <C-d>                      scroll half-down
+map <C-u>                      scroll half-up
+
+# Zoom
+map =                          zoom in
+map -                          zoom out
+map 0                          zoom reset
+
+# Toggle recolor (switch between themed/original PDF colors)
+map <C-r>                      recolor
+
+# Toggle statusbar
+map b                          toggle_statusbar
+
+# Dual page view
+map D                          set "pages-per-row 2"
+map <C-1>                      set "pages-per-row 1"
+map <C-2>                      set "pages-per-row 2"
+
+# Rotate
+map <C-Right>                  rotate rotate-cw
+map <C-Left>                   rotate rotate-ccw
+
+# Navigate by page
+map <C-n>                      navigate next
+map <C-p>                      navigate previous
+
+# Print
+map <C-Print>                  print
+
+# Fit modes
+map W                          adjust_window width
+map A                          adjust_window best-fit
+
+# Follow links
+map F                          follow
+
+# Quick mark / goto mark (bookmarks)
+map m                          mark_evaluate
+map '                          mark_evaluate

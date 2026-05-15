@@ -1,0 +1,40 @@
+/* Material You colors for ShyMaterial Firefox theme — Courier preset (iNiR)
+   Hand-authored; deployed in place of matugen-rendered output when Courier is active. */
+
+:root, #screenshots-component * {
+  /* === Material You Semantic Tokens === */
+  --m3-primary:              #C98A2E;
+  --m3-on-primary:           #0E0B06;
+  --m3-primary-container:    #2A1C08;
+  --m3-on-primary-container: #E8B54A;
+
+  --m3-secondary:              #74A39A;
+  --m3-on-secondary:           #0E0B06;
+  --m3-secondary-container:    #171005;
+  --m3-on-secondary-container: #92BEB4;
+
+  --m3-tertiary:              #9E7AA6;
+  --m3-on-tertiary:           #0E0B06;
+  --m3-tertiary-container:    #171005;
+  --m3-on-tertiary-container: #B89BC0;
+
+  --m3-error:              #D86A3C;
+  --m3-on-error:           #0E0B06;
+  --m3-error-container:    #171005;
+  --m3-on-error-container: #E89A6E;
+
+  --m3-surface:              #0E0B06;
+  --m3-on-surface:           #D7B56D;
+  --m3-on-surface-variant:   #8A9A72;
+
+  --m3-surface-container-lowest:  #070502;
+  --m3-surface-container-low:     #171005;
+  --m3-surface-container:         #21170A;
+  --m3-surface-container-high:    #2A1C08;
+  --m3-surface-container-highest: #3A2710;
+  --m3-surface-bright:            #2A1C08;
+  --m3-surface-dim:               #070502;
+
+  --m3-outline:         #5E7A48;
+  --m3-outline-variant: #2A1C08;
+}

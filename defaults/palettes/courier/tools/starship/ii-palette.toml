@@ -1,0 +1,31 @@
+# Courier preset — Starship palette
+# Hand-authored; deployed in place of ii-generator output when Courier is active.
+# Courier is already tuned — no muting/blending applied.
+
+[palettes.ii]
+primary = '#C98A2E'
+onPrimary = '#0E0B06'
+secondary = '#74A39A'
+onSecondary = '#0E0B06'
+tertiary = '#9E7AA6'
+onTertiary = '#0E0B06'
+surface = '#0E0B06'
+onSurface = '#D7B56D'
+background = '#0E0B06'
+foreground = '#F0D29E'
+black = '#0E0B06'
+red = '#C85A38'
+green = '#6E8E50'
+yellow = '#C98A2E'
+blue = '#74A39A'
+magenta = '#9E7AA6'
+cyan = '#74A39A'
+white = '#D7B56D'
+bright_black = '#8A9A72'
+bright_red = '#E89A6E'
+bright_green = '#7A9A60'
+bright_yellow = '#E8B54A'
+bright_blue = '#92BEB4'
+bright_magenta = '#B89BC0'
+bright_cyan = '#92BEB4'
+bright_white = '#F0D29E'
