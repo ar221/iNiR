@@ -363,11 +363,18 @@ AbstractBackgroundWidget {
                     const apps = (data.applications && data.applications.apps) || []
                     root.applied = apps.filter(a => a.is_submitted === true)
                     root.packageReady = apps.filter(a => a.is_placeholder === true)
-                    root.shortlist = data.shortlist || []
-                    root.nextAction = data.next_best_action || null
-                    root.directSubmittedTotal = (data.applications && data.applications.direct_submitted_total) || 0
-                    root.waitingFollowup = (data.applications && data.applications.waiting_followup) || 0
-                    root.staleCount = (data.applications && data.applications.stale_count) || 0
+                    root.shortlist = (data.shortlist && data.shortlist.targets) || []
+                    const nba = data.next_best_action
+                    if (nba && typeof nba === "string") {
+                        root.nextAction = { task: nba, why: "", date: "" }
+                    } else if (nba && typeof nba === "object") {
+                        root.nextAction = nba
+                    } else {
+                        root.nextAction = null
+                    }
+                    root.directSubmittedTotal = (data.applications && data.applications.direct_submitted_count) || 0
+                    root.waitingFollowup = ((data.applications && data.applications.waiting_followup) || []).length
+                    root.staleCount = ((data.applications && data.applications.stale) || []).length
                     root.lastSuccessAt = Date.now()
                     root.lastError = ""
                 } catch (e) {
