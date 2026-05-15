@@ -1745,6 +1745,132 @@ ContentPage {
         }
     }
 
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "work"
+        title: Translation.tr("Widget: Job Hunt Pulse")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.jobHuntPulse.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Vertical pipeline card — NEXT / APPLIED / PACKAGE READY / SHORTLIST, fed by job-pulse")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.jobHuntPulse.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.jobHuntPulse.cardOpacity ?? 0.95) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.jobHuntPulse.cardWidth ?? 440
+                    from: 320
+                    to: 640
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.cardWidth", value);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Sections")
+
+                SettingsSwitch {
+                    buttonIcon: "send"
+                    text: Translation.tr("Show APPLIED")
+                    checked: Config.options.background.widgets.jobHuntPulse.showApplied ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.showApplied", checked);
+                    }
+                }
+                SettingsSwitch {
+                    buttonIcon: "inventory_2"
+                    text: Translation.tr("Show PACKAGE READY")
+                    checked: Config.options.background.widgets.jobHuntPulse.showPackageReady ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.showPackageReady", checked);
+                    }
+                }
+                SettingsSwitch {
+                    buttonIcon: "list_alt"
+                    text: Translation.tr("Show SHORTLIST")
+                    checked: Config.options.background.widgets.jobHuntPulse.showShortlist ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.showShortlist", checked);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Data")
+
+                ConfigSpinBox {
+                    icon: "schedule"
+                    text: Translation.tr("Refresh interval (s)")
+                    value: Math.round((Config.options.background.widgets.jobHuntPulse.refreshIntervalMs ?? 300000) / 1000)
+                    from: 60
+                    to: 1800
+                    stepSize: 30
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.jobHuntPulse.refreshIntervalMs", value * 1000);
+                    }
+                }
+            }
+        }
+    }
+
     // ── Signature Widgets ─────────────────────────────────────────────
 
     SettingsCardSection {
