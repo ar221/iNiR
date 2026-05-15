@@ -722,6 +722,8 @@ Singleton {
         readonly property color colBorderDim: "#5e7a48"
         readonly property color colDivider: "#74a39a"
         readonly property color colText: "#d7b56d"
+        readonly property color colTextStrong: "#e8b54a"
+        readonly property color colTextDim: "#8a9a72"
         readonly property color colTextMuted: ColorUtils.transparentize(colText, 0.40)
 
         readonly property int radiusStructural: 0
@@ -736,29 +738,29 @@ Singleton {
     // and gradually inherited by shell modules that need operator density.
     // ═══════════════════════════════════════════════════════════════════
     mission: QtObject {
-        readonly property color colCanvas: root.m3colors.m3background
-        readonly property color colPanel: root.m3colors.m3surfaceContainerLowest
-        readonly property color colSurface: root.m3colors.m3surfaceContainerLow
-        readonly property color colSurfaceRaised: root.m3colors.m3surfaceContainer
-        readonly property color colSurfaceHover: ColorUtils.mix(colSurfaceRaised, root.m3colors.m3onSurface, 0.94)
-        readonly property color colSurfaceActive: ColorUtils.mix(colSurfaceRaised, root.m3colors.m3primary, 0.86)
+        readonly property color colCanvas: commandPreset ? root.courier.colCanvas : root.m3colors.m3background
+        readonly property color colPanel: commandPreset ? root.courier.colCanvas : root.m3colors.m3surfaceContainerLowest
+        readonly property color colSurface: commandPreset ? root.courier.colSurface : root.m3colors.m3surfaceContainerLow
+        readonly property color colSurfaceRaised: commandPreset ? root.courier.colSurfaceHover : root.m3colors.m3surfaceContainer
+        readonly property color colSurfaceHover: commandPreset ? root.courier.colSurfaceHover : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3onSurface, 0.94)
+        readonly property color colSurfaceActive: commandPreset ? root.courier.colSurfaceActive : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3primary, 0.86)
 
-        readonly property color colText: root.m3colors.m3onSurface
-        readonly property color colTextSecondary: root.m3colors.m3onSurfaceVariant
-        readonly property color colTextMuted: ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.34)
-        readonly property color colTextFaint: ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.55)
+        readonly property color colText: commandPreset ? root.courier.colText : root.m3colors.m3onSurface
+        readonly property color colTextSecondary: commandPreset ? root.courier.colTextDim : root.m3colors.m3onSurfaceVariant
+        readonly property color colTextMuted: commandPreset ? root.courier.colTextMuted : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.34)
+        readonly property color colTextFaint: commandPreset ? ColorUtils.transparentize(root.courier.colTextDim, 0.40) : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.55)
 
-        readonly property color colAccent: root.m3colors.m3primary
-        readonly property color colAccentMuted: ColorUtils.transparentize(root.m3colors.m3primary, 0.42)
-        readonly property color colAccentDim: ColorUtils.transparentize(root.m3colors.m3primary, 0.72)
-        readonly property color colAccentSurface: ColorUtils.transparentize(root.m3colors.m3primaryContainer, 0.48)
+        readonly property color colAccent: commandPreset ? root.courier.colBorder : root.m3colors.m3primary
+        readonly property color colAccentMuted: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.42) : ColorUtils.transparentize(root.m3colors.m3primary, 0.42)
+        readonly property color colAccentDim: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.72) : ColorUtils.transparentize(root.m3colors.m3primary, 0.72)
+        readonly property color colAccentSurface: commandPreset ? ColorUtils.transparentize(root.courier.colSurfaceActive, 0.48) : ColorUtils.transparentize(root.m3colors.m3primaryContainer, 0.48)
 
-        readonly property color colBorder: ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.12)
-        readonly property color colBorderSubtle: ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.48)
-        readonly property color colBorderHover: ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
-        readonly property color colBorderHot: ColorUtils.transparentize(root.m3colors.m3primary, 0.34)
-        readonly property color colGrid: ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.72)
-        readonly property color colScanline: ColorUtils.transparentize(root.m3colors.m3primary, 0.88)
+        readonly property color colBorder: commandPreset ? root.courier.colBorderDim : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.12)
+        readonly property color colBorderSubtle: commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.40) : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.48)
+        readonly property color colBorderHover: commandPreset ? root.courier.colBorder : ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
+        readonly property color colBorderHot: commandPreset ? root.courier.colBorder : ColorUtils.transparentize(root.m3colors.m3primary, 0.34)
+        readonly property color colGrid: commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.55) : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.72)
+        readonly property color colScanline: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.85) : ColorUtils.transparentize(root.m3colors.m3primary, 0.88)
 
         readonly property color colIdle: ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
         readonly property color colActive: root.m3colors.m3primary
@@ -766,10 +768,7 @@ Singleton {
         readonly property color colCritical: root.m3colors.m3error
         readonly property color colDone: root.m3colors.m3success
 
-        readonly property bool commandPreset: {
-            const preset = String(Config.options?.dashboard?.stylePreset ?? "default").toLowerCase()
-            return preset === "command"
-        }
+        readonly property bool commandPreset: String(Config.options?.dashboard?.stylePreset ?? "default").toLowerCase() === "command" || root.courierEverywhere
 
         readonly property int radiusSmall: 7
         readonly property int radiusNormal: 12

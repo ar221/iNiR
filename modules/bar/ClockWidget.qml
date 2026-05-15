@@ -20,9 +20,9 @@ Item {
         const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
         return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky"
     }
-    readonly property bool courierPreset: stylePreset === "courier"
-    readonly property color courierText: "#e8b54a"
-    readonly property color courierTextDim: "#8a9a72"
+    readonly property bool courierPreset: stylePreset === "courier" || Appearance.courierEverywhere
+    readonly property color courierText: Appearance.courier.colTextStrong
+    readonly property color courierTextDim: Appearance.courier.colTextDim
     readonly property color courierDivider: Appearance.courier.colDivider
     implicitWidth: rowLayout.implicitWidth
     implicitHeight: Appearance.sizes.barHeight
