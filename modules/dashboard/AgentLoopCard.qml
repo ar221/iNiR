@@ -9,6 +9,7 @@ DashboardCard {
     id: root
 
     headerText: "Agent Loop"
+    accentHeader: true
 
     property var phases: [
         { id: "context", label: "Context" },
@@ -29,7 +30,6 @@ DashboardCard {
     }
 
     readonly property bool running: Ai.requestRunning
-    readonly property color activeCol: Appearance.colors.colPrimary
 
     RowLayout {
         Layout.fillWidth: true
@@ -45,18 +45,19 @@ DashboardCard {
                 implicitHeight: 30
                 radius: 9
                 color: index === root.activePhase
-                    ? ColorUtils.transparentize(root.activeCol, 0.8)
-                    : Qt.rgba(1, 1, 1, 0.03)
+                    ? Appearance.mission.colAccentSurface
+                    : Appearance.mission.colSurfaceRaised
                 border.width: 1
                 border.color: index === root.activePhase
-                    ? ColorUtils.transparentize(root.activeCol, 0.45)
-                    : Qt.rgba(1, 1, 1, 0.06)
+                    ? Appearance.mission.colBorderHot
+                    : Appearance.mission.colBorderSubtle
 
                 StyledText {
                     anchors.centerIn: parent
                     text: modelData.label
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: index === root.activePhase ? Appearance.colors.colOnLayer0 : Appearance.colors.colSubtext
+                    font.family: Appearance.font.family.monospace
+                    color: index === root.activePhase ? Appearance.mission.colText : Appearance.mission.colTextMuted
                 }
             }
         }
@@ -66,9 +67,9 @@ DashboardCard {
         Layout.fillWidth: true
         implicitHeight: 38
         radius: 10
-        color: Qt.rgba(1, 1, 1, 0.03)
+        color: Appearance.mission.colSurfaceRaised
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.06)
+        border.color: Appearance.mission.colBorderSubtle
 
         RowLayout {
             anchors.fill: parent
@@ -80,8 +81,8 @@ DashboardCard {
                 text: Ai.waitingForApproval ? "rule" : (root.running ? "progress_activity" : "task_alt")
                 iconSize: 16
                 color: Ai.waitingForApproval
-                    ? Appearance.colors.colWarn
-                    : (root.running ? Appearance.colors.colPrimary : Appearance.colors.colDone)
+                    ? Appearance.mission.colWaiting
+                    : (root.running ? Appearance.mission.colActive : Appearance.mission.colDone)
             }
 
             StyledText {
@@ -90,13 +91,14 @@ DashboardCard {
                     ? "Awaiting tool approval"
                     : (root.running ? "Running · request in flight" : "Idle · ready")
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: Appearance.colors.colOnLayer1
+                color: Appearance.mission.colText
             }
 
             StyledText {
                 text: `Model: ${Ai.currentModelId ?? "n/a"}`
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colSubtext
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colTextMuted
             }
         }
     }
@@ -109,9 +111,9 @@ DashboardCard {
             Layout.fillWidth: true
             implicitHeight: 30
             radius: 8
-            color: Qt.rgba(1, 1, 1, 0.03)
+            color: Appearance.mission.colSurfaceRaised
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.color: Appearance.mission.colBorderSubtle
 
             RowLayout {
                 anchors.fill: parent
@@ -122,12 +124,13 @@ DashboardCard {
                 MaterialSymbol {
                     text: "lan"
                     iconSize: 14
-                    color: ClaudeCodeProxy.active ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                    color: ClaudeCodeProxy.active ? Appearance.mission.colActive : Appearance.mission.colTextMuted
                 }
                 StyledText {
                     text: ClaudeCodeProxy.active ? "Claude Proxy: ON" : "Claude Proxy: OFF"
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colOnLayer1
+                    font.family: Appearance.font.family.monospace
+                    color: Appearance.mission.colText
                 }
 
                 Item { Layout.fillWidth: true }
@@ -135,12 +138,13 @@ DashboardCard {
                 MaterialSymbol {
                     text: "hub"
                     iconSize: 14
-                    color: GptProxy.active ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                    color: GptProxy.active ? Appearance.mission.colActive : Appearance.mission.colTextMuted
                 }
                 StyledText {
                     text: GptProxy.active ? "GPT Proxy: ON" : "GPT Proxy: OFF"
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colOnLayer1
+                    font.family: Appearance.font.family.monospace
+                    color: Appearance.mission.colText
                 }
             }
         }
@@ -155,15 +159,16 @@ DashboardCard {
             implicitHeight: 32
             buttonRadius: 9
             enabled: Ai.requestRunning
-            colBackground: Qt.rgba(1, 1, 1, 0.04)
-            colBackgroundHover: Qt.rgba(1, 1, 1, 0.08)
+            colBackground: Appearance.mission.colSurfaceRaised
+            colBackgroundHover: Appearance.mission.colSurfaceHover
             onClicked: Ai.cancelCurrentRequest()
 
             contentItem: StyledText {
                 anchors.centerIn: parent
                 text: "Interrupt Current Request"
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colOnLayer1
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colText
             }
         }
 
@@ -172,8 +177,8 @@ DashboardCard {
             implicitHeight: 32
             buttonRadius: 9
             enabled: ClaudeCodeProxy.active || GptProxy.active
-            colBackground: Qt.rgba(1, 0.35, 0.35, 0.15)
-            colBackgroundHover: Qt.rgba(1, 0.35, 0.35, 0.24)
+            colBackground: ColorUtils.transparentize(Appearance.mission.colCritical, 0.84)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colCritical, 0.74)
             onClicked: {
                 if (ClaudeCodeProxy.active) ClaudeCodeProxy.stop()
                 if (GptProxy.active) GptProxy.stop()
@@ -183,7 +188,8 @@ DashboardCard {
                 anchors.centerIn: parent
                 text: "Stop Proxies"
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colError
+                font.family: Appearance.font.family.monospace
+                color: Appearance.mission.colCritical
             }
         }
     }

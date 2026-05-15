@@ -33,11 +33,11 @@ Singleton {
     }
     readonly property bool readyForDisplay: root.hasData
 
-    function _canRun(force: bool = false): bool {
+    function _canRun(force = false) {
         return root.enabled && Config.ready && (force || root.active || root._forceMode)
     }
 
-    function ensureInitialized(): void {
+    function ensureInitialized() {
         if (root._initialized)
             return
         root._initialized = true
@@ -47,7 +47,7 @@ Singleton {
         root._lastLon = root.configLon
     }
 
-    function _clearForceModeIfIdle(): void {
+    function _clearForceModeIfIdle() {
         if (root.active)
             return
         if (retryTimer.running || pendingForceRefreshTimer.running || locationDebounceTimer.running)
@@ -56,21 +56,21 @@ Singleton {
             root._forceMode = false
     }
 
-    function acquire(): void {
+    function acquire() {
         root._requestCount = Math.max(0, root._requestCount + 1)
     }
 
-    function release(): void {
+    function release() {
         if (root._requestCount > 0)
             root._requestCount -= 1
     }
 
-    function ensureRunning(): void {
+    function ensureRunning() {
         if (root._requestCount <= 0)
             root._requestCount = 1
     }
 
-    function stop(force: bool = false): void {
+    function stop(force = false) {
         if (!force && root._requestCount > 0)
             return
         root._requestCount = 0
@@ -82,7 +82,7 @@ Singleton {
             root._forceMode = false
     }
 
-    function _activate(): void {
+    function _activate() {
         root.ensureInitialized()
         if (root.hasRunningRequests())
             return
@@ -94,7 +94,7 @@ Singleton {
         root.fetchForecast(true)
     }
 
-    function _deactivate(): void {
+    function _deactivate() {
         retryTimer.stop()
         pendingForceRefreshTimer.stop()
         locationDebounceTimer.stop()
@@ -139,7 +139,7 @@ Singleton {
     }
     readonly property bool showVisibleCity: root.visibleCity.length > 0
 
-    function redactedLogCity(city): string {
+    function redactedLogCity(city) {
         if (root.hideLocation)
             return "[hidden]"
 
@@ -147,7 +147,7 @@ Singleton {
         return value.length > 0 ? value : "Unknown"
     }
 
-    function redactedLogLocationName(name): string {
+    function redactedLogLocationName(name) {
         if (root.hideLocation)
             return "[hidden]"
 
@@ -155,7 +155,7 @@ Singleton {
         return value.length > 0 ? value : "Unknown"
     }
 
-    function redactedLogCoordinates(lat, lon): string {
+    function redactedLogCoordinates(lat, lon) {
         if (root.hideLocation)
             return "[hidden]"
 
@@ -166,12 +166,12 @@ Singleton {
         return latNum.toFixed(5) + "," + lonNum.toFixed(5)
     }
 
-    function isNightNow(): bool {
+    function isNightNow() {
         const h = new Date().getHours();
         return h < 6 || h >= 18;
     }
 
-    function describeWeather(code): string {
+    function describeWeather(code) {
         const weatherCode = String(code ?? "113")
         const descriptions = {
             "113": Translation.tr("Sunny"),
@@ -262,7 +262,7 @@ Singleton {
         console.info("[Weather] Updated:", result.temp, root.redactedLogCity(result.city));
     }
 
-    function _degToCompass(deg): string {
+    function _degToCompass(deg) {
         if (deg === undefined || deg === null || isNaN(deg)) return "N"
         const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
         const idx = Math.round(((deg % 360) / 22.5)) % 16
@@ -271,7 +271,7 @@ Singleton {
 
     // Translate WMO weather codes (0-99, used by Open-Meteo) to wttr.in codes (113-395)
     // so that Icons.getWeatherIcon() and describeWeather() work correctly.
-    function _wmoToWttr(wmo): string {
+    function _wmoToWttr(wmo) {
         const code = Number(wmo ?? 0)
         if (code === 0)              return "113"  // Clear sky
         if (code === 1 || code === 2) return "116" // Mainly clear / partly cloudy
@@ -300,7 +300,7 @@ Singleton {
     }
 
     // Translate hour 0-23 to "12am"/"1pm" style label
-    function _hourLabel(h): string {
+    function _hourLabel(h) {
         if (h === 0)  return "12am"
         if (h < 12)  return h + "am"
         if (h === 12) return "12pm"
@@ -308,13 +308,13 @@ Singleton {
     }
 
     // Translate YYYY-MM-DD date string to "Today" (index 0) or short day abbreviation
-    function _dayLabel(dateStr, index): string {
+    function _dayLabel(dateStr, index) {
         if (index === 0) return "Today"
         const d = new Date(dateStr + "T12:00:00")  // noon to avoid DST edge
         return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]
     }
 
-    function refineForecastData(apiData): void {
+    function refineForecastData(apiData) {
         const hourlyRaw = apiData?.hourly
         const dailyRaw = apiData?.daily
         const units = apiData?.hourly_units ?? {}
@@ -390,7 +390,7 @@ Singleton {
         console.info("[Weather] Forecast updated — hourly:", root.hourly.length, "h, daily:", root.daily.length, "days")
     }
 
-    function fetchForecast(force: bool = false): void {
+    function fetchForecast(force = false) {
         if (!root._canRun(force))
             return
         const lat = root.location.lat
@@ -410,7 +410,7 @@ Singleton {
         forecastFetcher.running = true
     }
 
-    function refineOpenMeteoData(apiData): void {
+    function refineOpenMeteoData(apiData) {
         const current = apiData?.current
         if (!current) return
 
@@ -440,7 +440,7 @@ Singleton {
         console.info("[Weather] Updated via Open-Meteo:", result.temp, root.redactedLogCity(result.city))
     }
 
-    function fetchWeatherFallback(force: bool = false): void {
+    function fetchWeatherFallback(force = false) {
         if (!root._canRun(force))
             return
         const lat = root.location.lat
@@ -469,13 +469,13 @@ Singleton {
         openMeteoFetcher.running = true
     }
 
-    function _queueRetry(force: bool = false): void {
+    function _queueRetry(force = false) {
         if (root._canRun(force))
             retryTimer.start()
     }
 
     // Resolve location: manual coords > manual city > GPS > IP auto-detect
-    function resolveLocation(force: bool = false): void {
+    function resolveLocation(force = false) {
         if (!root._canRun(force))
             return
         if (gpsLocator.running || ipLocator.running || fallbackLocator.running
@@ -524,7 +524,7 @@ Singleton {
     }
 
     // Step 1: Get location from IP (primary method)
-    function getLocation(force: bool = false): void {
+    function getLocation(force = false) {
         if (!root._canRun(force))
             return
         if (ipLocator.running) return;
@@ -533,7 +533,7 @@ Singleton {
     }
 
     // Step 2: Fetch weather using coordinates (precise) or city name (fallback)
-    function fetchWeather(force: bool = false): void {
+    function fetchWeather(force = false) {
         if (!root._canRun(force))
             return
         if (!root.location.valid || fetcher.running) return;
@@ -555,13 +555,13 @@ Singleton {
         fetcher.running = true;
     }
 
-    function hasRunningRequests(): bool {
+    function hasRunningRequests() {
         return gpsLocator.running || ipLocator.running || fallbackLocator.running
             || forwardGeocoder.running || reverseGeocoder.running
             || fetcher.running || openMeteoFetcher.running || forecastFetcher.running;
     }
 
-    function getData(force: bool = false): void {
+    function getData(force = false) {
         if (!root._canRun(force))
             return
         root.ensureInitialized()
@@ -573,7 +573,7 @@ Singleton {
     }
 
     // Force refresh (useful for settings UI "refresh now" button)
-    function forceRefresh(): void {
+    function forceRefresh() {
         if (!root.enabled || !Config.ready)
             return
         root.ensureInitialized()

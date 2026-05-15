@@ -12,8 +12,9 @@ DockButton {
     property var appToplevel
     property var appListRoot
     property int lastFocused: -1
-    property real iconSize: Config.options?.dock?.iconSize ?? 56
-    readonly property real baseButtonSize: iconSize + 8
+    readonly property bool isRailVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
+    property real iconSize: root.isRailVertical ? (Config.options?.dock?.railIconSize ?? 32) : (Config.options?.dock?.iconSize ?? 56)
+    readonly property real baseButtonSize: iconSize + (root.isRailVertical ? 2 : 8)
     property real countDotWidth: 10
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
@@ -90,7 +91,7 @@ DockButton {
     enabled: !isSeparator
 
     readonly property real dockHeight: Config.options?.dock?.height ?? 80
-    readonly property real separatorSize: Math.max(dockHeight - baseButtonSize, 8)
+    readonly property real separatorSize: root.isRailVertical ? 20 : Math.max(dockHeight - baseButtonSize, 8)
 
     // Magnification scale — set by the delegate in DockApps.qml
     property real magnifyScale: 1.0
@@ -99,9 +100,10 @@ DockButton {
         ? (vertical ? separatorSize : 8)
         : baseButtonSize * magnifyScale
     implicitHeight: isSeparator
-        ? (vertical ? 8 : separatorSize)
+        ? (vertical ? (root.isRailVertical ? 7 : 8) : separatorSize)
         : baseButtonSize * magnifyScale
     background.visible: !isSeparator
+    toggled: root.isRailVertical && root.appIsActive
 
     // Hover shadow (disabled for angel — whole dock already has escalonado)
     StyledRectangularShadow {
@@ -120,9 +122,11 @@ DockButton {
         sourceComponent: Rectangle {
             width: root.vertical ? root.separatorSize : 1
             height: root.vertical ? 1 : root.separatorSize
-            color: Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
+            color: root.isRailVertical ? "#2b3338"
+                 : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
                  : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.7)
                  : Appearance.colors.colOutlineVariant
+            opacity: root.isRailVertical ? 0.65 : 1
         }
     }
 
@@ -366,9 +370,33 @@ DockButton {
                 tintOpacity: 0.1
             }
 
-            // Smart indicator: shows window count and which is focused
+            // Rail indicator: hard inner-edge active slit for vertical command rail.
             Loader {
-                active: root.hasWindows && !root.isSeparator
+                active: root.hasWindows && !root.isSeparator && root.isRailVertical
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: root.dockPosition === "right" ? parent.left : undefined
+                anchors.right: root.dockPosition === "left" ? parent.right : undefined
+
+                sourceComponent: Rectangle {
+                    width: root.appIsActive ? 4 : 2
+                    height: parent.height
+                    radius: 0
+                    color: root.appIsActive
+                        ? "#d08a24"
+                        : "#3b454b"
+                    opacity: root.appIsActive ? 1 : 0.42
+
+                    Behavior on width {
+                        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                    }
+                }
+            }
+
+            // Smart indicator: shows window count and which is focused.
+            Loader {
+                id: windowIndicatorLoader
+                active: root.hasWindows && !root.isSeparator && !root.isRailVertical
                 anchors {
                     top: iconImageLoader.bottom
                     topMargin: 2

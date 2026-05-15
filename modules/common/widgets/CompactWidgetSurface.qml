@@ -30,9 +30,7 @@ Item {
         id: surface
         anchors.fill: parent
         anchors.margins: 8
-        radius: root.angelEverywhere ? Appearance.angel.roundingNormal
-            : root.inirEverywhere ? Appearance.inir.roundingNormal
-            : Appearance.rounding.normal
+        radius: Appearance.rounding.unsharpen
         color: root.angelEverywhere ? Appearance.angel.colGlassCard
             : root.inirEverywhere ? Appearance.inir.colLayer1
             : root.colDarkSurface

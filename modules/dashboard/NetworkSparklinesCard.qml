@@ -10,6 +10,7 @@ import qs.services
 DashboardCard {
     id: root
     headerText: "Network"
+    accentHeader: true
 
     Component.onCompleted: NetworkUsage.ensureRunning()
     Component.onDestruction: NetworkUsage.stop()
@@ -19,7 +20,7 @@ DashboardCard {
         Layout.fillHeight: true
         Layout.minimumHeight: 50
         dataPoints: NetworkUsage.downloadHistory
-        lineColor: Appearance.colors.colPrimary
+        lineColor: Appearance.mission.colAccent
         currentSpeed: NetworkUsage.downloadSpeed
         maxSpeed: NetworkUsage.maxSpeed
         speedStr: NetworkUsage.downloadSpeedStr
@@ -31,7 +32,7 @@ DashboardCard {
         Layout.fillHeight: true
         Layout.minimumHeight: 50
         dataPoints: NetworkUsage.uploadHistory
-        lineColor: Appearance.colors.colTertiary
+        lineColor: Appearance.colors.colSecondary
         currentSpeed: NetworkUsage.uploadSpeed
         maxSpeed: NetworkUsage.maxSpeed
         speedStr: NetworkUsage.uploadSpeedStr

@@ -399,6 +399,26 @@
             "icon": "code"
           }
         ]
+      },
+      "todayStrip": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 100,
+        "y": 100,
+        "cardOpacity": 0.85,
+        "cardWidth": 720,
+        "showWeather": true,
+        "showTask": true,
+        "showReminder": true
+      },
+      "nowPlaying": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 100,
+        "y": 100,
+        "cardOpacity": 0.95,
+        "cardWidth": 560,
+        "showVisualizer": true
       }
     },
     "multiMonitor": {
@@ -419,7 +439,7 @@
     },
     "activeWindow": {
       "fadeOverflow": true,
-      "maxWidth": 280
+      "maxWidth": 760
     },
     "borderless": true,
     "bottom": false,
@@ -639,12 +659,19 @@
       "calendar": true,
       "weather": true,
       "notifications": true,
+      "network": false,
       "agentContext": false,
       "agentLoop": false,
       "sessionReview": false,
       "agentTrust": false,
       "agentCompanion": false,
-      "heroZone": false
+      "heroZone": true,
+      "agentStatus": false,
+      "serviceGrid": false,
+      "diskGauges": false,
+      "vaultPulse": false,
+      "recentRuns": false,
+      "integrationStatus": false
     },
     "activityConsole": {
       "enable": true,
@@ -658,6 +685,40 @@
       "repos": [
         "~/Github/inir",
         "~/Github/dotfiles"
+      ]
+    },
+    "serviceGrid": {
+      "services": [
+        "syncthing.service",
+        "claude-proxy.service",
+        "dictation-server.service",
+        "pipewire.service",
+        "bluetooth.service"
+      ],
+      "pollIntervalSec": 30
+    },
+    "diskGauges": {
+      "mounts": ["/", "/home"],
+      "pollIntervalSec": 60
+    },
+    "vaultPulse": {
+      "vaultPath": "",
+      "inboxPath": "00 Inbox/",
+      "countOrphans": true
+    },
+    "integrations": [
+      { "name": "GITHUB", "check": "none" },
+      { "name": "GMAIL", "check": "none" },
+      { "name": "GOOGLE CALENDAR", "check": "none" },
+      { "name": "SYNCTHING", "check": "none" },
+      { "name": "TELEGRAM", "check": "none" }
+    ],
+    "agentStatus": {
+      "agents": [
+        { "name": "ALFRED", "initial": "A", "domain": "system ops" },
+        { "name": "ORACLE", "initial": "O", "domain": "portfolio" },
+        { "name": "HERMES", "initial": "H", "domain": "messenger" },
+        { "name": "ELSA", "initial": "E", "domain": "inir ux" }
       ]
     }
   },
@@ -680,6 +741,7 @@
     "pinnedOnStartup": true,
     "showBackground": true,
     "iconSize": 56,
+    "railIconSize": 32,
     "separatePinnedFromRunning": true,
     "enableDragReorder": true,
     "style": "panel",

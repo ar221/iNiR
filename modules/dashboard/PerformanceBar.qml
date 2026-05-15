@@ -11,8 +11,8 @@ Item {
 
     property real value: 0
     property string label: ""
-    property color lowColor: Appearance.colors.colPrimary
-    property color highColor: Appearance.colors.colError
+    property color lowColor: Appearance.mission.colActive
+    property color highColor: Appearance.mission.colCritical
 
     // Tracks previous value for spike-pulse detection
     property real _previousValue: 0
@@ -32,7 +32,7 @@ Item {
             font.weight: Font.Bold
             font.family: Appearance.font.family.numbers
             // Dim at idle, fully visible at load — mix(onLayer0, dim, value) → value=1 → onLayer0
-            color: ColorUtils.mix(Appearance.colors.colOnLayer0, Qt.rgba(1, 1, 1, 0.4), root.value)
+            color: ColorUtils.mix(Appearance.mission.colText, Appearance.mission.colTextFaint, root.value)
         }
 
         // Bar container
@@ -78,7 +78,9 @@ Item {
             Rectangle {
                 id: barBg
                 anchors.fill: parent
-                color: Qt.rgba(1, 1, 1, 0.03)
+                color: Appearance.mission.colPanel
+                border.width: 1
+                border.color: Appearance.mission.colBorderSubtle
                 radius: 4
 
                 // Fill bar, anchored to bottom
@@ -115,8 +117,8 @@ Item {
             text: root.label
             font.pixelSize: 10
             font.letterSpacing: 1.0
-            font.family: Appearance.font.family.numbers
-            color: Qt.rgba(1, 1, 1, 0.4)
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colTextMuted
         }
     }
 

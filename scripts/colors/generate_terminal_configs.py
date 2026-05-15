@@ -1212,8 +1212,8 @@ rules = [
   {{ mime = "application/x-bzip2",         fg = "{red}" }},
   {{ mime = "application/x-7z-compressed", fg = "{red}" }},
   {{ mime = "application/x-rar",           fg = "{red}" }},
-  {{ name = "*",  fg = "{fg_dim}" }},
-  {{ name = "*/", fg = "{primary}" }},
+  {{ url = "*",  fg = "{fg_dim}" }},
+  {{ url = "*/", fg = "{primary}" }},
 ]
 """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)

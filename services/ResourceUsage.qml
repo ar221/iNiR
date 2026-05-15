@@ -144,12 +144,12 @@ Singleton {
         updateGpuUsageHistory()
     }
 
-    function clampPercentToUnit(value: real): real {
+    function clampPercentToUnit(value) {
         return Math.max(0, Math.min(1, value))
     }
 
 
-	function ensureRunning(): void {
+	function ensureRunning() {
 		root._runningRequested = true
 		if (!root._initRequested) {
 			root._initRequested = true
@@ -162,12 +162,12 @@ Singleton {
 		pollTimer.restart()
 	}
 
-	function acquire(): void {
+	function acquire() {
 		root._requestCount = Math.max(0, root._requestCount + 1)
 		root.ensureRunning()
 	}
 
-	function release(): void {
+	function release() {
 		if (root._requestCount > 0)
 			root._requestCount -= 1
 		if (root._requestCount <= 0) {
@@ -176,7 +176,7 @@ Singleton {
 		}
 	}
 
-	function stop(force: bool = false): void {
+	function stop(force = false) {
 		if (!force && root._requestCount > 0)
 			return
 		root._runningRequested = false

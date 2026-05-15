@@ -25,6 +25,8 @@ Scope {
     readonly property bool isLeft: root.position === "left"
     readonly property bool isPillStyle:   Config.options?.dock?.style === "pill"
     readonly property bool isMacosStyle:  Config.options?.dock?.style === "macos"
+    readonly property bool isRailStyle:   Config.options?.dock?.style === "rail"
+    readonly property bool isRailVertical: root.isRailStyle && root.isVertical
 
     // Track bar position to force dock recreation when bar changes
     readonly property bool barIsVertical: Config.options?.bar?.bottom !== undefined
@@ -69,10 +71,55 @@ Scope {
                 screen: panelLoader.modelData
                 visible: !GlobalStates.screenLocked && !GameMode.shouldHidePanels
 
-                property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (root.pinned || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
+                readonly property var focusedWindow: {
+                    if (!CompositorService.isNiri)
+                        return null
+                    const windows = NiriService.windows
+                    if (Array.isArray(windows)) {
+                        const focused = windows.find(w => w?.is_focused)
+                        if (focused)
+                            return focused
+                    }
+                    return NiriService.activeWindow
+                }
+                readonly property bool hasFocusedWindow: !!focusedWindow || !!ToplevelManager.activeToplevel?.activated
+                readonly property bool focusedWindowIsFullSize: focusedWindow ? (GameMode.isWindowFullscreen(focusedWindow) || focusedWindowFillsOutput(focusedWindow)) : false
+                // Courier Rail is normally visible. It only peeks away for normal/floating/split
+                // windows that do not fill the output, so the rail does not cover usable view.
+                readonly property bool railShouldYieldToFocusedWindow: root.isRailVertical && hasFocusedWindow && !focusedWindowIsFullSize
+                readonly property bool pinnedRevealAllowed: root.pinned && !railShouldYieldToFocusedWindow
 
-                readonly property real dockHeight: Config.options?.dock?.height ?? 80
+                function focusedWindowFillsOutput(window) {
+                    if (!window || !CompositorService.isNiri || window.is_floating)
+                        return false
+
+                    const layout = window.layout
+                    const tileSize = layout?.tile_size || layout?.window_size
+                    if (!tileSize || tileSize.length < 2)
+                        return false
+
+                    const workspace = NiriService.workspaces[window.workspace_id]
+                    const output = workspace ? NiriService.outputs[workspace.output] : null
+                    if (!output?.logical)
+                        return false
+
+                    // Niri reports the usable tile a little smaller than the raw output because
+                    // of gaps, borders, and shell reservations. Treat near-output tiles as the
+                    // user's explicit full-size state, but still yield for split/floating windows.
+                    const widthTolerance = Math.max(80, output.logical.width * 0.04)
+                    const heightTolerance = Math.max(140, output.logical.height * 0.10)
+                    return tileSize[0] >= output.logical.width - widthTolerance
+                        && tileSize[1] >= output.logical.height - heightTolerance
+                }
+
+                property bool reveal: !GlobalStates.coverflowSelectorOpen && GlobalStates.shellEntryReady && (pinnedRevealAllowed || (Config.options?.dock?.hoverToReveal && dockMouseArea.containsMouse) || (dockApps?.requestDockShow || dockAppsVertical?.requestDockShow) || (Config.options?.dock?.showOnDesktop !== false && !ToplevelManager.activeToplevel?.activated))
+
+                readonly property real dockHeight: root.isRailVertical ? ((Config.options?.dock?.railIconSize ?? 32) + 4) : (Config.options?.dock?.height ?? 80)
+                // Rail should reserve only the physical spine plus a hairline breathing gap.
+                // The normal dock keeps its larger buffer for magnification / float-dock feel.
+                readonly property real dockReservePadding: root.isRailVertical ? 1 : (Appearance.sizes.elevationMargin + 20)
                 readonly property real magnificationOverflow: {
+                    if (root.isRailVertical) return 0
                     const enabled = Config.options?.dock?.magnification?.enabled ?? true
                     if (!enabled) return 0
                     const iconSize = Config.options?.dock?.iconSize ?? 56
@@ -88,7 +135,7 @@ Scope {
                     right: !root.isLeft || !root.isVertical
                 }
 
-                exclusiveZone: GameMode.shouldHidePanels ? 0 : root.pinned ? (dockHeight + Appearance.sizes.elevationMargin + 20) : 0
+                exclusiveZone: GameMode.shouldHidePanels ? 0 : pinnedRevealAllowed ? (dockHeight + dockReservePadding) : 0
 
                 implicitWidth: root.isVertical
                     ? (dockHeight + magnificationOverflow + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut)
@@ -161,7 +208,7 @@ Scope {
 
                             // Use dockRoot dimensions to avoid binding loop
                             implicitWidth: root.isVertical ? (dockRoot.width - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut) : (dockRow.implicitWidth + 10)
-                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + 10) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
+                            implicitHeight: root.isVertical ? (dockColumn.implicitHeight + (root.isRailVertical ? 18 : 10)) : (dockRoot.height - Appearance.sizes.elevationMargin - Appearance.sizes.hyprlandGapsOut)
                             width: implicitWidth
                             height: implicitHeight
 
@@ -204,14 +251,17 @@ Scope {
                                 // Hide shared background in pill mode — each pill is its own background
                                 // Hide in macOS mode — DockMacBackground is the unified shelf
                                 visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
-                                color: auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
+                                color: root.isRailVertical ? "#080a0c"
+                                    : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
                                     : inirEverywhere ? Appearance.inir.colLayer1
                                     : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
-                                border.width: Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1
-                                border.color: Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
+                                border.width: root.isRailVertical ? 1 : (Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
+                                border.color: root.isRailVertical ? "#1a2025"
+                                    : Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
                                     : inirEverywhere ? Appearance.inir.colBorder
                                     : Appearance.colors.colLayer0Border
-                                radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                                radius: root.isRailVertical ? 2
+                                    : Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
                                     : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
 
@@ -272,8 +322,8 @@ Scope {
                                 // Theme accent line — inner edge of dock
                                 Rectangle {
                                     id: dockAccentLine
-                                    visible: !Appearance.gameModeMinimal
-                                    opacity: 0.5
+                                    visible: !Appearance.gameModeMinimal && !root.isRailVertical
+                                    opacity: root.isRailVertical ? 0.78 : 0.5
 
                                     // Position along inner edge based on dock position
                                     anchors {
@@ -310,7 +360,7 @@ Scope {
                                     ]
 
                                     // Dimensions: thin line
-                                    width: root.isVertical ? 2 : undefined
+                                    width: root.isVertical ? (root.isRailVertical ? 3 : 2) : undefined
                                     height: root.isVertical ? undefined : 2
 
                                     // Inset from edges for the gradient fade
@@ -322,8 +372,8 @@ Scope {
                                     gradient: Gradient {
                                         orientation: root.isVertical ? Gradient.Vertical : Gradient.Horizontal
                                         GradientStop { position: 0.0; color: "transparent" }
-                                        GradientStop { position: 0.3; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
-                                        GradientStop { position: 0.7; color: Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary }
+                                        GradientStop { position: 0.3; color: root.isRailVertical ? Appearance.colors.colSecondary : (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary) }
+                                        GradientStop { position: 0.7; color: root.isRailVertical ? Appearance.colors.colPrimary : (Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary) }
                                         GradientStop { position: 1.0; color: "transparent" }
                                     }
                                 }
@@ -377,8 +427,8 @@ Scope {
                                   id: dockColumn
                                   visible: root.isVertical
                                   anchors.centerIn: root.isMacosStyle ? macBackground : dockVisualBackground
-                                spacing: 2
-                                property real padding: 5
+                                spacing: root.isRailVertical ? 3 : 2
+                                property real padding: root.isRailVertical ? 1 : 5
 
                                 DockApps {
                                     id: dockAppsVertical

@@ -241,9 +241,7 @@ Item {
         Rectangle {
             id: chipBg
             anchors.fill: parent
-            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                : Appearance.rounding.small
+            radius: Appearance.rounding.unsharpen
             color: {
                 if (chipMA.containsPress)
                     return bg.inirEverywhere ? Appearance.inir.colLayer2Active
@@ -272,7 +270,7 @@ Item {
                 Rectangle {
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
-                    radius: 16
+                    radius: Appearance.rounding.unsharpen
                     color: ColorUtils.transparentize(chip._colPrimary, 0.84)
 
                     MaterialSymbol {
@@ -470,9 +468,7 @@ Item {
                     y: colTop + clampedIdx * (navItemH + navSpacing) + (navItemH - navBgH) / 2
                     width: leftRail.width - colLeft - colRight - navBgLeft
                     height: navBgH
-                    radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                          : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                          : Appearance.rounding.small
+                    radius: Appearance.rounding.unsharpen
                     color: bg.inirEverywhere  ? Appearance.inir.colSecondaryContainer
                          : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
                          : bg.auroraEverywhere ? bg.colDarkSurfaceHover
@@ -560,9 +556,7 @@ Item {
                                     leftMargin: 7
                                 }
                                 height: 38
-                                radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                      : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                      : Appearance.rounding.small
+                                radius: Appearance.rounding.unsharpen
 
                                 color: {
                                     if (navMA.containsPress)
@@ -696,9 +690,7 @@ Item {
                                     leftMargin: 7
                                 }
                                 height: 34
-                                radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                      : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                      : Appearance.rounding.small
+                                radius: Appearance.rounding.unsharpen
                                 color: {
                                     if (sysMA.containsPress)
                                         return bg.inirEverywhere  ? Appearance.inir.colLayer2Active
@@ -752,9 +744,7 @@ Item {
                                 leftMargin: 7
                             }
                             height: 34
-                            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                  : bg.inirEverywhere  ? Appearance.inir.roundingSmall
-                                  : Appearance.rounding.small
+                            radius: Appearance.rounding.unsharpen
                             color: {
                                 if (layoutMA.containsPress)
                                     return bg.inirEverywhere  ? Appearance.inir.colLayer2Active
@@ -1006,7 +996,7 @@ Item {
                                             id: ccSurface
                                             anchors.fill: parent
                                             implicitHeight: ccCard.implicitHeight + 10
-                                            radius: bg.angelEverywhere ? Appearance.angel.roundingNormal : bg.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
+                                            radius: Appearance.rounding.unsharpen
                                             color: bg.angelEverywhere ? Appearance.angel.colGlassCard
                                                 : bg.inirEverywhere ? Appearance.inir.colLayer1
                                                 : "transparent"
@@ -1275,6 +1265,9 @@ Item {
     // ── Section Header ───────────────────────────────────────────
     component SectionHeader: Item {
         id: sectionHeader
+        readonly property string monoFamily: (Appearance.font && Appearance.font.family && Appearance.font.family.mono)
+            ? Appearance.font.family.mono
+            : "monospace"
         required property string headerText
         property string headerIcon: ""
         property string badgeText: ""
@@ -1298,6 +1291,15 @@ Item {
             anchors.right: parent.right
             spacing: 8
 
+            // Courier signature tick — 2px primary stripe
+            Rectangle {
+                width: 2
+                height: 12
+                color: bg.inirEverywhere  ? Appearance.inir.colPrimary
+                     : bg.angelEverywhere ? Appearance.angel.colPrimary
+                     : Appearance.colors.colPrimary
+            }
+
             MaterialSymbol {
                 visible: sectionHeader.headerIcon !== ""
                 text: sectionHeader.headerIcon
@@ -1312,10 +1314,13 @@ Item {
                 Layout.fillWidth: true
                 text: sectionHeader.headerText
                 font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: bg.inirEverywhere  ? Appearance.inir.colText
-                     : bg.angelEverywhere ? Appearance.angel.colText
-                     : Appearance.colors.colOnLayer0
+                font.weight: Font.DemiBold
+                font.family: sectionHeader.monoFamily
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1.25
+                color: bg.inirEverywhere  ? Appearance.inir.colTextSecondary
+                     : bg.angelEverywhere ? Appearance.angel.colTextSecondary
+                     : Appearance.colors.colSubtext
             }
 
             // Badge (notification count)
@@ -1345,8 +1350,7 @@ Item {
             RippleButton {
                 visible: sectionHeader.showSecondaryAction
                 implicitWidth: 28; implicitHeight: 28
-                buttonRadius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                    : bg.inirEverywhere ? Appearance.inir.roundingSmall : 14
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: bg.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colLayer1, 0.35)
                     : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colGlassCard, 0.72)
                     : bg.auroraEverywhere ? bg.colDarkSurface
@@ -1371,8 +1375,7 @@ Item {
             RippleButton {
                 visible: sectionHeader.showAction
                 implicitWidth: 28; implicitHeight: 28
-                buttonRadius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                    : bg.inirEverywhere ? Appearance.inir.roundingSmall : 14
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: sectionHeader.actionToggled
                     ? (bg.inirEverywhere ? Appearance.inir.colSecondaryContainer
                      : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
@@ -1429,7 +1432,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 implicitHeight: 32
                 implicitWidth: dndChipContent.implicitWidth + 20
-                buttonRadius: Appearance.rounding.full
+                buttonRadius: Appearance.rounding.unsharpen
                 colBackground: Notifications.silent
                     ? (bg.inirEverywhere ? Appearance.inir.colSecondaryContainer
                         : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.60)
@@ -1597,7 +1600,7 @@ Item {
                 color: bg.angelEverywhere ? Appearance.angel.colPrimary
                     : bg.inirEverywhere ? Appearance.inir.colPrimary
                     : Appearance.colors.colPrimary
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.unsharpen
                 implicitWidth: bubbleLabel.implicitWidth + 24
                 implicitHeight: bubbleLabel.implicitHeight + 10
 
@@ -1645,9 +1648,7 @@ Item {
         Rectangle {
             id: qaBtnBg
             anchors.fill: parent
-            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                : Appearance.rounding.small
+            radius: Appearance.rounding.unsharpen
             color: {
                 if (qaBtnMA.containsPress)
                     return bg.inirEverywhere ? Appearance.inir.colLayer2Active
@@ -1682,7 +1683,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
-                    radius: 14
+                    radius: Appearance.rounding.unsharpen
                     color: qaBtn.toggled
                         ? ColorUtils.transparentize(qaBtn._colOnToggle, 0.82)
                         : ColorUtils.transparentize(qaBtn._colPrimary, 0.86)

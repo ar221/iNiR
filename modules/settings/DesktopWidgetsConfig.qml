@@ -1527,6 +1527,224 @@ ContentPage {
         }
     }
 
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "calendar_view_day"
+        title: Translation.tr("Widget: Today Strip")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.todayStrip.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Compact dispatch board — time, next event, weather, the day's task and reminder")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.todayStrip.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.todayStrip.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.todayStrip.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.todayStrip.cardWidth ?? 720
+                    from: 480
+                    to: 1080
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.cardWidth", value);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Cells")
+
+                SettingsSwitch {
+                    buttonIcon: "cloud"
+                    text: Translation.tr("Show weather")
+                    checked: Config.options.background.widgets.todayStrip.showWeather ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.showWeather", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Temperature and condition cell")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "task_alt"
+                    text: Translation.tr("Show task")
+                    checked: Config.options.background.widgets.todayStrip.showTask ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.showTask", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("The day's one thing, from the vault daily note")
+                    }
+                }
+
+                SettingsSwitch {
+                    buttonIcon: "notifications"
+                    text: Translation.tr("Show reminder")
+                    checked: Config.options.background.widgets.todayStrip.showReminder ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.todayStrip.showReminder", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("The day's reminder, from the vault daily note's Reminders section")
+                    }
+                }
+            }
+        }
+    }
+
+    SettingsCardSection {
+        visible: root.isIiActive
+        expanded: false
+        icon: "music_note"
+        title: Translation.tr("Widget: Now Playing")
+
+        SettingsGroup {
+            ConfigRow {
+                Layout.fillWidth: true
+
+                SettingsSwitch {
+                    Layout.fillWidth: false
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.nowPlaying.enable
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.enable", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Tall poster card — album art, track, progress, transport, Cava mini-spectrum")
+                    }
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.nowPlaying.placementStrategy
+                    onSelected: newValue => {
+                        Config.setNestedValue("background.widgets.nowPlaying.placementStrategy", newValue);
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Draggable"),
+                            icon: "drag_pan",
+                            value: "free"
+                        },
+                        {
+                            displayName: Translation.tr("Least busy"),
+                            icon: "category",
+                            value: "leastBusy"
+                        },
+                        {
+                            displayName: Translation.tr("Most busy"),
+                            icon: "shapes",
+                            value: "mostBusy"
+                        },
+                    ]
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Appearance")
+
+                ConfigSpinBox {
+                    icon: "opacity"
+                    text: Translation.tr("Card opacity (%)")
+                    value: Math.round((Config.options.background.widgets.nowPlaying.cardOpacity ?? 0.85) * 100)
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.cardOpacity", value / 100);
+                    }
+                }
+
+                ConfigSpinBox {
+                    icon: "width"
+                    text: Translation.tr("Card width (px)")
+                    value: Config.options.background.widgets.nowPlaying.cardWidth ?? 560
+                    from: 240
+                    to: 720
+                    stepSize: 10
+                    onValueChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.cardWidth", value);
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Visualizer")
+
+                SettingsSwitch {
+                    buttonIcon: "graphic_eq"
+                    text: Translation.tr("Show visualizer")
+                    checked: Config.options.background.widgets.nowPlaying.showVisualizer ?? true
+                    onCheckedChanged: {
+                        Config.setNestedValue("background.widgets.nowPlaying.showVisualizer", checked);
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Cava mini-spectrum — runs only while music plays")
+                    }
+                }
+            }
+        }
+    }
+
     // ── Signature Widgets ─────────────────────────────────────────────
 
     SettingsCardSection {

@@ -610,6 +610,26 @@ Singleton {
                         property bool showPackageUpdates: true
                         property bool showServiceHealth: true
                     }
+                    property JsonObject todayStrip: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free" // "free", "leastBusy", "mostBusy"
+                        property real x: 100
+                        property real y: 100
+                        property real cardOpacity: 0.85
+                        property real cardWidth: 720
+                        property bool showWeather: true
+                        property bool showTask: true
+                        property bool showReminder: true
+                    }
+                    property JsonObject nowPlaying: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 100
+                        property real y: 100
+                        property real cardOpacity: 0.95
+                        property real cardWidth: 560
+                        property bool showVisualizer: true
+                    }
                     property JsonObject lissajous: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
@@ -755,7 +775,7 @@ Singleton {
                 property bool bottom: false // Instead of top
                 property int height: -1 // -1: use theme default | positive value: override bar height in px
                 property string density: "default" // "compact", "default", "airy" — controls spacing/padding rhythm
-                property string stylePreset: "dusky" // "dusky", "clean", "glass" — controls visual language of bar groups/widgets
+                property string stylePreset: "dusky" // "dusky", "clean", "glass", "courier" — controls visual language of bar groups/widgets
                 property string laneSeparator: "subtle" // "off", "subtle", "strong" — separator between utility and ambient lanes
                 property string ambientVisibility: "auto" // "auto", "always", "hidden" — ambient lane overflow policy
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
@@ -988,13 +1008,14 @@ Singleton {
             }
 
             property JsonObject dock: JsonObject {
-                property string style: "panel" // "panel" | "pill"
+                property string style: "panel" // "panel" | "pill" | "macos" | "rail"
                 property bool cardStyle: false
                 property bool enable: false
                 property bool monochromeIcons: true
                 property string position: "bottom" // "top", "bottom", "left", "right"
                 property real height: 60
                 property real iconSize: 35
+                property real railIconSize: 32
                 property real hoverRegionHeight: 2
                 property bool pinnedOnStartup: false
                 property bool hoverToReveal: true // When false, only reveals on empty workspace

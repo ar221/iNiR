@@ -166,10 +166,10 @@ AbstractBackgroundWidget {
         }
     }
 
-    // Resize grip — bottom-right corner, edit-mode only
+    // Resize grip — bottom-right corner, always visible (subtle hatching).
     Item {
         id: resizeGrip
-        visible: GlobalStates.widgetEditMode
+        visible: true
         width: 20
         height: 20
         anchors.bottom: parent.bottom

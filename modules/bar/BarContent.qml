@@ -96,34 +96,51 @@ Item { // Bar content region
     }
     readonly property string barStylePreset: {
         const preset = String(Config.options?.bar?.stylePreset ?? "dusky").toLowerCase()
-        return (preset === "clean" || preset === "glass") ? preset : "dusky"
+        return (preset === "clean" || preset === "glass" || preset === "courier") ? preset : "dusky"
     }
+    // Courier Console preset — warm-terminal palette, square hard edges
+    readonly property bool courierPreset: barStylePreset === "courier"
+    readonly property bool railTopStripQuiet: (Config.options?.dock?.style === "rail")
+        && ((Config.options?.dock?.position ?? "bottom") === "left" || (Config.options?.dock?.position ?? "bottom") === "right")
+    readonly property color courierBarBg: "#0e0b06"
+    readonly property color courierBorder: "#c98a2e"
+    readonly property color courierBorderDim: "#5e7a48"
+    readonly property color courierDivider: "#74a39a"
     // Density tokens (compact/default/airy)
     readonly property int sideClusterGap: barDensity === "compact" ? 5 : (barDensity === "airy" ? 10 : 8)
     readonly property int centerSegmentGap: barDensity === "compact" ? 3 : (barDensity === "airy" ? 8 : 6)
     readonly property int missionClusterPadding: barDensity === "compact" ? 3 : (barDensity === "airy" ? 6 : 5)
     readonly property int utilityClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
     readonly property int ambientClusterPadding: barDensity === "compact" ? 2 : (barDensity === "airy" ? 5 : 4)
-    // Style tokens (dusky/clean/glass)
-    readonly property int rightChipHorizontalPadding: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 8)
-    readonly property int rightChipVerticalPadding: barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 3)
-    readonly property int rightIndicatorSpacing: barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 8)
-    readonly property real rightChipBackgroundAlpha: barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92)
-    readonly property int rightIndicatorIconSize: barStylePreset === "clean"
+    // Style tokens (dusky/clean/glass/courier)
+    readonly property int rightChipHorizontalPadding: courierPreset ? 9 : (barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 11 : 8))
+    readonly property int rightChipVerticalPadding: courierPreset ? 4 : (barStylePreset === "clean" ? 5 : (barStylePreset === "glass" ? 5 : 3))
+    readonly property int rightIndicatorSpacing: courierPreset ? 9 : (barStylePreset === "clean" ? 10 : (barStylePreset === "glass" ? 13 : 8))
+    readonly property real rightChipBackgroundAlpha: courierPreset ? 0.98 : (barStylePreset === "glass" ? 0.68 : (barStylePreset === "clean" ? 1.0 : 0.92))
+    readonly property int rightIndicatorIconSize: courierPreset
         ? Appearance.font.pixelSize.normal
-        : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger)
+        : (barStylePreset === "clean"
+            ? Appearance.font.pixelSize.normal
+            : (barStylePreset === "glass" ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.larger))
+    readonly property color courierChipBg: "#171005"
+    readonly property color courierChipHover: "#21170a"
+    readonly property color courierChipActive: "#2a1c08"
+    readonly property color courierChipText: "#d7b56d"
     readonly property int calendarTextPixelSize: (root.useShortenedForm > 0 || barDensity === "compact")
         ? Appearance.font.pixelSize.smaller
         : Appearance.font.pixelSize.small
     readonly property int calendarTitleMaxChars: {
         if (root.useShortenedForm === 2)
-            return 7;
+            return 12;
         if (root.useShortenedForm === 1)
-            return 9;
+            return 18;
         return barDensity === "compact"
-            ? 11
-            : (barDensity === "airy" ? 16 : 14);
+            ? 24
+            : (barDensity === "airy" ? 34 : 28);
     }
+    readonly property int resourceTextPixelSize: barDensity === "compact"
+        ? Appearance.font.pixelSize.smaller
+        : Appearance.font.pixelSize.small
     readonly property string laneSeparatorMode: {
         const mode = String(Config.options?.bar?.laneSeparator ?? "subtle").toLowerCase()
         return (mode === "off" || mode === "strong") ? mode : "subtle"
@@ -258,7 +275,8 @@ Item { // Bar content region
         Layout.bottomMargin: Appearance.sizes.baseBarHeight / 3
         Layout.fillHeight: true
         implicitWidth: 1
-        color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+        color: root.courierPreset ? root.courierBorderDim
+            : root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
     }
 
     component AmbientLaneSeparator: Rectangle {
@@ -267,7 +285,8 @@ Item { // Bar content region
         Layout.fillHeight: true
         implicitWidth: root.ambientLaneSeparatorWidth
         radius: implicitWidth
-        color: root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
+        color: root.courierPreset ? root.courierBorderDim
+            : root.inirEverywhere ? Appearance.inir.colBorderSubtle : root.separatorColor
         opacity: root.ambientLaneSeparatorOpacity
     }
 
@@ -307,6 +326,12 @@ Item { // Bar content region
 
         // Color logic per global style and corner style
         color: {
+            if (root.railTopStripQuiet) {
+                return ColorUtils.applyAlpha("#07090b", 0.88)
+            }
+            if (root.courierPreset) {
+                return ColorUtils.applyAlpha(root.courierBarBg, 0.97)
+            }
             if (root.angelEverywhere) {
                 return ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
             }
@@ -331,6 +356,9 @@ Item { // Bar content region
             if (customRounding >= 0) {
                 return customRounding
             }
+            if (root.courierPreset) {
+                return 0
+            }
             if (root.angelEverywhere) {
                 return (cornerStyle === 1 || cornerStyle === 3) ? Appearance.angel.roundingNormal : 0
             }
@@ -350,6 +378,8 @@ Item { // Bar content region
 
         // Border logic per global style
         border.width: {
+            if (root.railTopStripQuiet) return 1
+            if (root.courierPreset) return 1
             if (root.angelEverywhere) return Appearance.angel.panelBorderWidth
             if (root.inirEverywhere) {
                 return (cornerStyle === 1 || cornerStyle === 3) ? 1 : 0
@@ -360,6 +390,8 @@ Item { // Bar content region
             return floatingStyle ? 1 : 0
         }
         border.color: {
+            if (root.railTopStripQuiet) return "#151b20"
+            if (root.courierPreset) return root.courierBorder
             if (root.angelEverywhere) return Appearance.angel.colPanelBorder
             if (root.inirEverywhere) {
                 return Appearance.inir.colBorder
@@ -496,7 +528,7 @@ Item { // Bar content region
                 visible: (Config.options?.bar?.modules?.activeWindow ?? true) && root.useShortenedForm === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 280
+                Layout.maximumWidth: Config.options?.bar?.activeWindow?.maxWidth ?? 760
             }
         }
     }
@@ -514,6 +546,9 @@ Item { // Bar content region
             id: leftCenterGroup
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
+            readonly property bool hasPlugins: PluginRegistry.barPlugins.some(p => p.position === "leftCenter" && p.visible)
+            readonly property bool hasContent: mediaRevealer.reveal || hasPlugins
+            showBackground: hasContent
 
             Loader {
                 active: false  // Replaced by MiniRings in right section
@@ -735,22 +770,26 @@ Item { // Bar content region
                 implicitWidth: indicatorsRowLayout.implicitWidth + root.rightChipHorizontalPadding * 2
                 implicitHeight: indicatorsRowLayout.implicitHeight + root.rightChipVerticalPadding * 2
 
-                buttonRadius: Appearance.rounding.full
+                buttonRadius: root.courierPreset ? 0 : Appearance.rounding.full
 
                 colBackground: rightSidebarButton.containsMouse
                     ? ColorUtils.applyAlpha(
-                        (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover),
+                        root.courierPreset
+                            ? root.courierChipHover
+                            : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover),
                         root.rightChipBackgroundAlpha
                     )
                     : "transparent"
-                colBackgroundHover: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover
-                colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active
-                colBackgroundToggled: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer
-                colBackgroundToggledHover: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover
-                colRippleToggled: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive
+                colBackgroundHover: root.courierPreset ? root.courierChipHover : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer1Hover)
+                colRipple: root.courierPreset ? root.courierChipActive : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer1Active)
+                colBackgroundToggled: root.courierPreset ? root.courierChipBg : (Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer)
+                colBackgroundToggledHover: root.courierPreset ? root.courierChipHover : (Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover)
+                colRippleToggled: root.courierPreset ? root.courierChipActive : (Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive)
 
                 toggled: GlobalStates.sidebarRightOpen
-                property color colText: toggled
+                property color colText: root.courierPreset
+                    ? (toggled ? root.courierBorder : root.courierChipText)
+                    : toggled
                     ? Appearance.m3colors.m3onSecondaryContainer
                     : rightSidebarButton.containsMouse
                         ? Appearance.colors.colOnLayer1
@@ -771,7 +810,7 @@ Item { // Bar content region
                     readonly property bool hasAlertGroup: ((Config.options?.bar?.modules?.micIndicator ?? true) && (Privacy.micActive || (Audio?.micBeingAccessed ?? false)) && !(Audio.source?.audio?.muted ?? false))
                         || ((Config.options?.bar?.modules?.batteryAlert ?? true) && Battery.available && Battery.isLowAndNotCharging)
                         || FocusMode.active
-                    readonly property bool hasStatusGroup: ClaudeCodeProxy.active || calEventRevealer.reveal || (Notifications.silent || Notifications.unread > 0)
+                    readonly property bool hasStatusGroup: ClaudeCodeProxy.active || (Notifications.silent || Notifications.unread > 0)
                     spacing: 0
 
                     Revealer {
@@ -887,77 +926,7 @@ Item { // Bar content region
                             onClicked: ClaudeCodeProxy.toggle()
                         }
                     }
-                    // Next calendar event indicator — visible when event within 2 hours
-                    Revealer {
-                        id: calEventRevealer
-                        property var _now: new Date()
-                        readonly property var _nextEvent: {
-                            var upcoming = CalendarSync.list.filter(function(e) {
-                                var dt = new Date(e.dateTime)
-                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 7200000
-                            }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
-                            return upcoming.length > 0 ? upcoming[0] : null
-                        }
-                        readonly property int _msUntil: _nextEvent ? (new Date(_nextEvent.dateTime) - _now) : -1
-                        readonly property bool imminent: _msUntil >= 0 && _msUntil < 300000
-                        readonly property string _deltaText: {
-                            if (_msUntil < 0) return ""
-                            var mins = Math.floor(_msUntil / 60000)
-                            if (mins < 60) return "· " + mins + "m"
-                            var h = Math.floor(mins / 60)
-                            var m = mins % 60
-                            return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
-                        }
 
-                        reveal: _nextEvent !== null
-                        Layout.fillHeight: true
-                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
-                        Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
-
-                        // Refresh _now only while an event is within the 3h horizon; idle otherwise.
-                        // Interval narrows as imminence grows so the countdown stays accurate near T-0.
-                        Timer {
-                            readonly property bool _hasSoon: CalendarSync.list.some(function(e) {
-                                var dt = new Date(e.dateTime)
-                                return dt > calEventRevealer._now && (dt - calEventRevealer._now) <= 10800000
-                            })
-                            interval: calEventRevealer.imminent ? 10000 : 30000
-                            running: _hasSoon
-                            repeat: true
-                            onTriggered: calEventRevealer._now = new Date()
-                        }
-
-                        Row {
-                            spacing: 3
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Text {
-                                id: calEventTitle
-                                readonly property string _raw: calEventRevealer._nextEvent?.title ?? ""
-                                readonly property int _maxChars: root.calendarTitleMaxChars
-                                text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
-                                font.family: Appearance.font.family.main
-                                font.pixelSize: root.calendarTextPixelSize
-                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
-                                Behavior on color {
-                                    enabled: Appearance.animationsEnabled
-                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-                                }
-                            }
-                            Text {
-                                text: calEventRevealer._deltaText
-                                font.family: Appearance.font.family.main
-                                font.pixelSize: root.calendarTextPixelSize
-                                color: calEventRevealer.imminent ? Appearance.colors.colPersonalAccent : rightSidebarButton.colText
-                                Behavior on color {
-                                    enabled: Appearance.animationsEnabled
-                                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-                                }
-                            }
-                        }
-                    }
                     HyprlandXkbIndicator {
                         Layout.alignment: Qt.AlignVCenter
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
@@ -1034,32 +1003,204 @@ Item { // Bar content region
                 }
             }
 
+            Item {
+                id: rightCalendarEventState
+                visible: false
+                Layout.preferredWidth: 0
+                Layout.preferredHeight: 0
+
+                property var now: new Date()
+                readonly property var nextEvent: {
+                    var upcoming = CalendarSync.list.filter(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > rightCalendarEventState.now && (dt - rightCalendarEventState.now) <= 7200000
+                    }).sort(function(a, b) { return new Date(a.dateTime) - new Date(b.dateTime) })
+                    return upcoming.length > 0 ? upcoming[0] : null
+                }
+                readonly property int msUntil: nextEvent ? (new Date(nextEvent.dateTime) - now) : -1
+                readonly property bool imminent: msUntil >= 0 && msUntil < 300000
+                readonly property string deltaText: {
+                    if (msUntil < 0) return ""
+                    var mins = Math.floor(msUntil / 60000)
+                    if (mins < 60) return "· " + mins + "m"
+                    var h = Math.floor(mins / 60)
+                    var m = mins % 60
+                    return m > 0 ? ("· " + h + "h" + m + "m") : ("· " + h + "h")
+                }
+
+                Timer {
+                    readonly property bool hasSoon: CalendarSync.list.some(function(e) {
+                        var dt = new Date(e.dateTime)
+                        return dt > rightCalendarEventState.now && (dt - rightCalendarEventState.now) <= 10800000
+                    })
+                    interval: rightCalendarEventState.imminent ? 10000 : 30000
+                    running: hasSoon
+                    repeat: true
+                    onTriggered: rightCalendarEventState.now = new Date()
+                }
+            }
+
             // High-priority utility cluster: timer + shell updates + tray
             BarGroup {
+                id: utilityTrayGroup
+                visible: ShellUpdates.hasUpdate || ((Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0)
                 padding: root.utilityClusterPadding
 
                 TimerIndicator {
                     Layout.alignment: Qt.AlignVCenter
                 }
-            }
-
-            BarGroup {
-                padding: root.utilityClusterPadding
 
                 ShellUpdateIndicator {
                     Layout.alignment: Qt.AlignVCenter
                 }
-            }
-
-            BarGroup {
-                visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
-                padding: root.utilityClusterPadding
 
                 SysTray {
-                    visible: parent.visible
+                    visible: (Config.options?.bar?.modules?.sysTray ?? true) && root.useShortenedForm === 0
                     Layout.fillWidth: false
                     Layout.fillHeight: true
                     invertSide: Config.options?.bar?.bottom ?? false
+                }
+            }
+
+            // Compact system monitor: quick vitals glance before the calendar/event chip.
+            BarGroup {
+                id: rightSystemMonitorGroup
+                visible: (Config.options?.bar?.modules?.resources ?? true) && root.useShortenedForm === 0
+                padding: root.utilityClusterPadding + 1
+
+                Component.onCompleted: ResourceUsage.acquire()
+                Component.onDestruction: ResourceUsage.release()
+
+                function kbToGiB(kb) {
+                    const gb = Math.max(0, kb) / (1024 * 1024)
+                    return (gb >= 10 ? gb.toFixed(0) : gb.toFixed(1)) + "G"
+                }
+
+                function bytesToGiB(bytes) {
+                    const gb = Math.max(0, bytes) / (1024 * 1024 * 1024)
+                    return (gb >= 10 ? gb.toFixed(0) : gb.toFixed(1)) + "G"
+                }
+
+                readonly property bool hasVramMetric: ResourceUsage.vramTotal > 1
+                readonly property string cpuMetric: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp.toString() + "°" : "--"
+                readonly property string ramMetric: kbToGiB(ResourceUsage.memoryUsed)
+                readonly property string gpuMetric: hasVramMetric
+                    ? bytesToGiB(ResourceUsage.vramUsed)
+                    : (ResourceUsage.gpuTemp > 0 ? ResourceUsage.gpuTemp.toString() + "°" : "--")
+
+                readonly property color cpuColor: ResourceUsage.cpuTemp >= (Config.options?.bar?.resources?.tempWarningThreshold ?? 80)
+                    ? Appearance.colors.colError
+                    : (ResourceUsage.cpuTemp >= (Config.options?.bar?.resources?.tempCautionThreshold ?? 70)
+                        ? Appearance.m3colors.m3tertiary
+                        : root.courierChipText)
+                readonly property color ramColor: ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryWarningThreshold ?? 95)
+                    ? Appearance.colors.colError
+                    : (ResourceUsage.memoryUsedPercentage * 100 >= (Config.options?.bar?.resources?.memoryCautionThreshold ?? 80)
+                        ? Appearance.m3colors.m3tertiary
+                        : root.courierChipText)
+                readonly property color gpuColor: hasVramMetric
+                    ? (ResourceUsage.vramUsedPercentage * 100 >= (Config.options?.bar?.resources?.gpuWarningThreshold ?? 90)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.vramUsedPercentage * 100 >= (Config.options?.bar?.resources?.gpuCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText))
+                    : (ResourceUsage.gpuTemp >= (Config.options?.bar?.resources?.tempWarningThreshold ?? 80)
+                        ? Appearance.colors.colError
+                        : (ResourceUsage.gpuTemp >= (Config.options?.bar?.resources?.tempCautionThreshold ?? 70)
+                            ? Appearance.m3colors.m3tertiary
+                            : root.courierChipText))
+
+                RowLayout {
+                    spacing: 2
+                    Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        text: "developer_board"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.cpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.cpuMetric
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.cpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+
+                RowLayout {
+                    spacing: 2
+                    Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        text: "memory"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.ramColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.ramMetric
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.ramColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+
+                RowLayout {
+                    spacing: 2
+                    Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        text: "memory_alt"
+                        iconSize: root.rightIndicatorIconSize
+                        fill: root.barIconProfileFill
+                        color: rightSystemMonitorGroup.gpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Text {
+                        text: rightSystemMonitorGroup.gpuMetric
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: root.resourceTextPixelSize
+                        color: rightSystemMonitorGroup.gpuColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+            }
+
+            // Calendar/event chip: own readable slot immediately left of the system tray cluster.
+            BarGroup {
+                id: rightCalendarEventGroup
+                visible: rightCalendarEventState.nextEvent !== null
+                padding: root.utilityClusterPadding + 1
+
+                MaterialSymbol {
+                    text: "event"
+                    iconSize: root.rightIndicatorIconSize
+                    fill: root.barIconProfileFill
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    readonly property string _raw: rightCalendarEventState.nextEvent?.title ?? ""
+                    readonly property int _maxChars: root.calendarTitleMaxChars
+                    text: _raw.length > _maxChars ? _raw.substring(0, Math.max(1, _maxChars - 1)) + "…" : _raw
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.calendarTextPixelSize
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    text: rightCalendarEventState.deltaText
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: root.calendarTextPixelSize
+                    color: rightCalendarEventState.imminent ? Appearance.colors.colPersonalAccent : root.courierChipText
+                    Layout.alignment: Qt.AlignVCenter
                 }
             }
 
@@ -1069,7 +1210,7 @@ Item { // Bar content region
             }
 
             AmbientLaneSeparator {
-                visible: root.showAmbientLaneSeparator
+                visible: false
             }
 
             // Weather

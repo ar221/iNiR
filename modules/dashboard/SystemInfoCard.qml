@@ -11,6 +11,7 @@ import qs.services
 DashboardCard {
     id: root
     headerText: "System"
+    accentHeader: true
 
     property string _kernelVersion: "..."
     property string _packageCount: "..."
@@ -59,31 +60,40 @@ DashboardCard {
                 visible: infoRow.index > 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: Qt.rgba(1, 1, 1, 0.04)
+                color: Appearance.mission.colGrid
             }
 
-            RowLayout {
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.topMargin: 8
-                Layout.bottomMargin: 8
-                spacing: 8
+                implicitHeight: 34
+                radius: Appearance.mission.radiusSmall
+                color: infoRow.index % 2 === 0 ? ColorUtils.transparentize(Appearance.mission.colSurfaceRaised, 0.22) : "transparent"
 
-                StyledText {
-                    text: infoRow.modelData.label
-                    font.pixelSize: 11
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 0.5
-                    color: Qt.rgba(1, 1, 1, 0.3)
-                    Layout.preferredWidth: 74
-                }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 8
 
-                StyledText {
-                    text: infoRow.modelData.value
-                    font.pixelSize: 13
-                    color: Appearance.colors.colTertiary
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignRight
+                    StyledText {
+                        text: infoRow.modelData.label
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        font.family: Appearance.font.family.monospace
+                        font.letterSpacing: 1.0
+                        color: Appearance.mission.colTextMuted
+                        Layout.preferredWidth: 74
+                    }
+
+                    StyledText {
+                        text: infoRow.modelData.value
+                        font.pixelSize: 13
+                        font.family: Appearance.font.family.monospace
+                        color: infoRow.index === 1 ? Appearance.mission.colAccent : Appearance.mission.colText
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignRight
+                    }
                 }
             }
         }

@@ -34,12 +34,43 @@ Item {
     readonly property bool sectionAgentCompanion: (Config.options?.dashboard?.sections?.agentCompanion ?? false)
         && (Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false)
     readonly property bool commandPreset: Appearance.mission.commandPreset
-    readonly property bool sectionHeroZone: commandPreset
-        && (Config.options?.dashboard?.sections?.heroZone ?? true)
+    // Hero band is preset-agnostic — it is the focal landing zone for every layout.
+    readonly property bool sectionHeroZone: Config.options?.dashboard?.sections?.heroZone ?? true
+    // Network sparklines are opt-in detail — kept off the default render to reduce mass.
+    readonly property bool sectionNetwork: Config.options?.dashboard?.sections?.network ?? false
+    readonly property bool sectionAgentStatus: commandPreset
+        && (Config.options?.dashboard?.sections?.agentStatus ?? false)
+    readonly property bool sectionServiceGrid: commandPreset
+        && (Config.options?.dashboard?.sections?.serviceGrid ?? false)
+    readonly property bool sectionDiskGauges: commandPreset
+        && (Config.options?.dashboard?.sections?.diskGauges ?? false)
+    readonly property bool sectionVaultPulse: commandPreset
+        && (Config.options?.dashboard?.sections?.vaultPulse ?? false)
+    readonly property bool sectionRecentRuns: commandPreset
+        && (Config.options?.dashboard?.sections?.recentRuns ?? false)
+    readonly property bool sectionIntegrationStatus: commandPreset
+        && (Config.options?.dashboard?.sections?.integrationStatus ?? false)
+    readonly property bool _anyWidgetStackVisible: sectionServiceGrid
+        || sectionDiskGauges || sectionVaultPulse || sectionRecentRuns
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
-        spacing: 20
+        spacing: 18
+
+        // ════════════════════════════════════════════
+        // HERO BAND — full-width focal landing zone
+        // ════════════════════════════════════════════
+        Loader {
+            Layout.fillWidth: true
+            active: root.sectionHeroZone
+            visible: active
+            sourceComponent: HeroZone {}
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 20
 
         // ════════════════════════════════════════════
         // LEFT COLUMN — Identity & Controls (scrollable)
@@ -69,6 +100,13 @@ Item {
                 QuickTogglesCard {
                     Layout.fillWidth: true
                     visible: root.sectionQuickToggles
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.sectionAgentStatus
+                    visible: active
+                    sourceComponent: AgentStatusCard {}
                 }
 
                 MediaCard {
@@ -111,23 +149,75 @@ Item {
 
                 NetworkSparklinesCard {
                     Layout.fillWidth: true
-                    visible: root.sectionPerformance && !root.commandPreset
+                    visible: root.sectionNetwork && !root.commandPreset
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: root.commandPreset
+                    // Default preset: the feed is the column's primary focus, so it
+                    // claims the dominant height block below the summarized cards.
+                    Layout.preferredHeight: root.commandPreset ? -1 : (
+                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 320 : 440
+                    )
+                    spacing: 12
+                    visible: root.sectionActivityConsole || root._anyWidgetStackVisible
+
+                    ActivityConsoleCard {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.sectionActivityConsole
+                    }
+
+                    Flickable {
+                        Layout.preferredWidth: 280
+                        Layout.fillHeight: true
+                        contentHeight: widgetStack.implicitHeight
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        visible: root._anyWidgetStackVisible
+
+                        ColumnLayout {
+                            id: widgetStack
+                            width: parent.width
+                            spacing: 12
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionServiceGrid
+                                visible: active
+                                sourceComponent: ServiceGridCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionDiskGauges
+                                visible: active
+                                sourceComponent: DiskGaugesCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionVaultPulse
+                                visible: active
+                                sourceComponent: VaultPulseCard {}
+                            }
+
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.sectionRecentRuns
+                                visible: active
+                                sourceComponent: RecentRunsCard {}
+                            }
+                        }
+                    }
                 }
 
                 Loader {
                     Layout.fillWidth: true
-                    active: root.sectionHeroZone
+                    active: root.sectionIntegrationStatus
                     visible: active
-                    sourceComponent: HeroZone {}
-                }
-
-                ActivityConsoleCard {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: root.commandPreset ? -1 : (
-                        (root.sectionAgentContext || root.sectionAgentLoop || root.sectionAgentTrust) ? 260 : 340
-                    )
-                    Layout.fillHeight: root.commandPreset
-                    visible: root.sectionActivityConsole
+                    sourceComponent: IntegrationStatusBar {}
                 }
 
                 Loader {
@@ -200,6 +290,7 @@ Item {
                     }
                 }
             }
+        }
         }
     }
 

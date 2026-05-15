@@ -369,6 +369,24 @@ apply_shell_scale() {
     export QT_SCALE_FACTOR=1
 }
 
+find_live_niri_socket() {
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    local candidate
+
+    # Stale niri sockets can survive compositor restarts. Only export a socket
+    # that actually answers IPC; otherwise QS loads but NiriService, previews,
+    # and focus/fullscreen checks are dead.
+    for candidate in "$runtime_dir"/niri.wayland-*.sock "$runtime_dir/niri/socket"; do
+        [[ -S "$candidate" ]] || continue
+        if NIRI_SOCKET="$candidate" niri msg version >/dev/null 2>&1; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 apply_qt_runtime_env() {
     # Ensure WAYLAND_DISPLAY is set — required for Qt to select the wayland
     # platform backend.  When systemd starts inir.service at boot, the
@@ -398,20 +416,14 @@ apply_qt_runtime_env() {
     # path regardless of import-environment timing.
     # Niri socket format: $XDG_RUNTIME_DIR/niri.wayland-N.PID.sock
     # Older/some builds also use: $XDG_RUNTIME_DIR/niri/socket
-    if [[ -z "${NIRI_SOCKET:-}" ]]; then
-        local _runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-        local _niri_cand
-        # Current Niri format: niri.wayland-N.PID.sock
-        for _niri_cand in "$_runtime_dir"/niri.wayland-*.sock; do
-            if [[ -S "$_niri_cand" ]]; then
-                export NIRI_SOCKET="$_niri_cand"
-                break
-            fi
-        done
-        # Legacy/alternative path
-        if [[ -z "${NIRI_SOCKET:-}" && -S "$_runtime_dir/niri/socket" ]]; then
-            export NIRI_SOCKET="$_runtime_dir/niri/socket"
-        fi
+    local _niri_socket_ok=""
+    if [[ -n "${NIRI_SOCKET:-}" && -S "${NIRI_SOCKET:-}" ]]; then
+        NIRI_SOCKET="$NIRI_SOCKET" niri msg version >/dev/null 2>&1 && _niri_socket_ok=1
+    fi
+    if [[ -z "$_niri_socket_ok" ]]; then
+        local _live_niri_socket=""
+        _live_niri_socket="$(find_live_niri_socket || true)"
+        [[ -n "$_live_niri_socket" ]] && export NIRI_SOCKET="$_live_niri_socket"
     fi
 
     # Qt platform theme drives icon resolution (QIcon::fromTheme) and widget styling.
@@ -645,17 +657,14 @@ ensure_systemd_graphical_env() {
     # NIRI_SOCKET — required for NiriService IPC (workspaces, windows, outputs).
     # Propagate to systemd user manager so service restarts also inherit it.
     # Niri socket format: $XDG_RUNTIME_DIR/niri.wayland-N.PID.sock
-    if ! grep -q '^NIRI_SOCKET=' <<< "$sys_env" 2>/dev/null; then
-        local _niri_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    local _systemd_niri_socket="$(grep '^NIRI_SOCKET=' <<< "$sys_env" 2>/dev/null | cut -d= -f2- || true)"
+    local _systemd_niri_ok=""
+    if [[ -n "$_systemd_niri_socket" && -S "$_systemd_niri_socket" ]]; then
+        NIRI_SOCKET="$_systemd_niri_socket" niri msg version >/dev/null 2>&1 && _systemd_niri_ok=1
+    fi
+    if [[ -z "$_systemd_niri_ok" ]]; then
         local _niri_found=""
-        local _nc
-        for _nc in "$_niri_runtime"/niri.wayland-*.sock; do
-            if [[ -S "$_nc" ]]; then
-                _niri_found="$_nc"
-                break
-            fi
-        done
-        [[ -z "$_niri_found" && -S "$_niri_runtime/niri/socket" ]] && _niri_found="$_niri_runtime/niri/socket"
+        _niri_found="$(find_live_niri_socket || true)"
         [[ -n "$_niri_found" ]] && vars_to_import+=("NIRI_SOCKET=$_niri_found")
     fi
 
@@ -765,6 +774,18 @@ restart_shell() {
 
     if is_inir_service_enabled; then
         ensure_service_unit_available
+        # A manually launched qs instance can coexist with an enabled but inactive
+        # service. Kill the matching path first; otherwise systemd restart exits
+        # cleanly with "already running" and leaves stale QS env in place.
+        if has_instances "$dir"; then
+            [[ -z "$quiet" ]] && printf 'Stopping existing iNiR instance... '
+            kill_shell "$dir"
+            if ! wait_for_stop "$dir"; then
+                echo "Timed out waiting for iNiR to stop" >&2
+                exit 1
+            fi
+            [[ -z "$quiet" ]] && printf 'done.\n'
+        fi
         [[ -z "$quiet" ]] && printf 'Restarting iNiR service... '
         restart_inir_service_or_fail "$dir" "$quiet"
         return 0

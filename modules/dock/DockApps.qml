@@ -25,12 +25,14 @@ Item {
     property bool vertical: false
     property string dockPosition: "bottom"
     property var parentWindow: null
+    readonly property bool railVertical: (Config.options?.dock?.style === "rail") && root.vertical && (root.dockPosition === "left" || root.dockPosition === "right")
 
     property Item lastHoveredButton
     property bool buttonHovered: false
 
     // ─── Magnification ───────────────────────────────────────────────
-    readonly property bool magnifyEnabled: (Config.options?.dock?.magnification?.enabled ?? true)
+    readonly property bool magnifyEnabled: !root.railVertical
+        && (Config.options?.dock?.magnification?.enabled ?? true)
         && Appearance.animationsEnabled
     property real magnifyMousePos: -1  // Cursor position along dock axis (-1 = not hovering)
     readonly property real magnifyMaxScale: Config.options?.dock?.magnification?.maxScale ?? 1.8
@@ -559,7 +561,7 @@ Item {
 
     StyledListView {
         id: listView
-        spacing: 2
+        spacing: root.railVertical ? 5 : 2
         orientation: root.vertical ? ListView.Vertical : ListView.Horizontal
         anchors {
             top: root.vertical ? undefined : parent.top

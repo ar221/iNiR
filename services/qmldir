@@ -29,6 +29,7 @@ singleton FocusMode 1.0 FocusMode.qml
 singleton FontSyncService 1.0 FontSyncService.qml
 singleton GameMode 1.0 GameMode.qml
 singleton GowallService 1.0 GowallService.qml
+singleton GptProxy 1.0 GptProxy.qml
 singleton GlobalActions 1.0 GlobalActions.qml
 HyprlandData 1.0 HyprlandData.qml
 singleton HyprlandKeybinds 1.0 HyprlandKeybinds.qml
