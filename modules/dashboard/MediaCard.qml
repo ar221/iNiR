@@ -145,29 +145,15 @@ DashboardCard {
         }
     }
 
-    // ── Idle placeholder (~72px — mirrors identity strip height at top) ──
+    // ── Idle placeholder — Courier receipt (EMPTY state) ──
     Component {
         id: idlePlaceholder
 
-        Item {
-            implicitHeight: 40
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 8
-
-                MaterialSymbol {
-                    text: "music_off"
-                    iconSize: 16
-                    color: Qt.rgba(1, 1, 1, 0.2)
-                }
-
-                StyledText {
-                    text: "Not playing"
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Qt.rgba(1, 1, 1, 0.25)
-                }
-            }
+        CourierReceipt {
+            state: "EMPTY"
+            source: MprisController.activePlayer ? "mpris.player" : "no mpris client"
+            route: "playerctl / mpris2"
+            repair: "spotify, mpv, or any mpris2-aware player"
         }
     }
 }

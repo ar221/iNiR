@@ -119,15 +119,15 @@ DashboardCard {
         }
     }
 
-    // ── No events placeholder ──
-    StyledText {
+    // ── No events placeholder — Courier receipt (EMPTY state) ──
+    CourierReceipt {
         visible: Events.list.length === 0
         Layout.fillWidth: true
-        text: "No upcoming events"
-        font.pixelSize: 11
-        color: Qt.rgba(1, 1, 1, 0.2)
-        horizontalAlignment: Text.AlignHCenter
         Layout.topMargin: 8
+        state: "EMPTY"
+        source: "caldav-events.json"
+        route: "calendar-sync.timer"
+        repair: "systemctl --user start calendar-sync"
     }
 
     Item { Layout.fillHeight: true }

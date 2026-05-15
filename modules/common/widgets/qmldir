@@ -17,6 +17,7 @@ ClippedFilledCircularProgress 1.0 ClippedFilledCircularProgress.qml
 ClippedProgressBar 1.0 ClippedProgressBar.qml
 CollapsibleSection 1.0 CollapsibleSection.qml
 CompactWidgetSurface 1.0 CompactWidgetSurface.qml
+CourierReceipt 1.0 CourierReceipt.qml
 CompositorFocusGrab 1.0 CompositorFocusGrab.qml
 ConfigRow 1.0 ConfigRow.qml
 ConfigSelectionArray 1.0 ConfigSelectionArray.qml

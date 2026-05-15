@@ -88,6 +88,8 @@ def read_colors():
             return None
 
     return {
+        # Material schema (back-compat) — preserved for any DM swap that still
+        # reads the original 8 keys.
         "primaryColor": dark.get("primary", "#cba6f7"),
         "onPrimaryColor": dark.get("on_primary", "#1e1e2e"),
         "surfaceColor": dark.get("surface", "#1e1e2e"),
@@ -96,7 +98,166 @@ def read_colors():
         "onSurfaceVariantColor": dark.get("on_surface_variant", "#9399b2"),
         "backgroundColor": dark.get("background", "#1e1e2e"),
         "errorColor": dark.get("error", "#f38ba8"),
+        # Courier extended schema (wedge C) — 9 additive color keys consumed
+        # by Main.qml's Courier dispatch-board composition. When globalStyle is
+        # Material, the same source keys read Material values — Courier QML
+        # renders structurally but in Material colors (clean fallback).
+        "colCanvas": dark.get("background", "#0E0B06"),
+        "colSurfaceHover": dark.get("surface_container", "#21170A"),
+        "colSurfaceActive": dark.get("surface_container_high", "#2A1C08"),
+        "colBorder": dark.get("primary", "#C98A2E"),
+        "colBorderDim": dark.get("outline", "#5E7A48"),
+        "colText": dark.get("on_surface", "#D7B56D"),
+        "colTextStrong": dark.get("on_primary_container", "#E8B54A"),
+        "colTextDim": dark.get("on_surface_variant", "#8A9A72"),
+        "colDivider": dark.get("secondary", "#74A39A"),
     }
+
+
+def read_hostname_and_last_session():
+    """Return (hostname, last_session_str) for the Courier session strip.
+
+    Hostname: socket.gethostname() — always available.
+    Last session: parsed from `last -F -n 2 <user>` line 2 (the most recent
+    completed session — line 1 is typically still-logged-in). Falls back to
+    "—" on any parse failure. No utmp library dependency.
+
+    Brief §5.3 pseudocode had off-by-one slice indices (parts[4:9]); verified
+    against live `last -F` output, the date tokens land at parts[3:8] when
+    SOURCE is non-empty (the typical case). Corrected here.
+    """
+    import socket
+
+    try:
+        hostname = socket.gethostname()
+    except Exception:
+        hostname = "host"
+
+    last_session = "—"
+    try:
+        username = _sudo_user or os.environ.get("USER", "")
+        if not username:
+            return hostname, last_session
+        proc = subprocess.run(
+            ["last", "-F", "-n", "2", username],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        # Filter to lines mentioning the user (skips "wtmp begins ..." footer).
+        user_lines = [
+            l for l in proc.stdout.splitlines() if l.strip() and username in l.split()[:1]
+        ]
+        if len(user_lines) >= 2:
+            from datetime import datetime
+
+            parts = user_lines[1].split()
+            # Format: "ayaz  pts/4  tmux(...)  Fri May 15 15:07:29 2026 - ..."
+            # tokens: [0]=user [1]=tty [2]=source [3..8]=date5 [8]=- [9..]=end+dur
+            # Slice [3:8] = ["Fri","May","15","15:07:29","2026"]
+            if len(parts) >= 8:
+                try:
+                    dt = datetime.strptime(
+                        " ".join(parts[3:8]), "%a %b %d %H:%M:%S %Y"
+                    )
+                    last_session = dt.strftime("%Y-%m-%d %H:%M")
+                except ValueError:
+                    pass
+    except Exception:
+        pass
+
+    return hostname, last_session
+
+
+def write_receipts():
+    """Stage last 5 session events as JSON for SDDM Main.qml receipt rows.
+
+    Output: ``$ASSETS_DIR/receipts.json`` — a JSON array of dicts with keys
+    ``time``, ``event``, ``actor``, ``verb`` (column order locked by brief
+    §3.2 receipts strip + §6.2 vocabulary-parity divergence note).
+
+    Contract for the QML side: Main.qml loads this with XMLHttpRequest at
+    Component.onCompleted, populates `root.receipts` (array of objects).
+    If the file is missing, malformed, or empty, the QML side renders an
+    empty strip — no hardcoded fallback.
+
+    Data source: `last -n 10 <user>` (non-`-F` short form). Filters out
+    the trailing "wtmp begins ..." line and any line not led by the user.
+    Soft-fails on any subprocess / parse / IO error.
+
+    Time parsing intentionally avoids ``datetime.strptime`` on year-less
+    short-form date tokens — that path emits a DeprecationWarning under
+    Python 3.13+ and is slated to become an error in 3.15. The HH:MM
+    token is at a stable index in the short-form output, so a direct
+    structural read is both deprecation-safe and cheaper.
+    """
+    import re
+
+    _hhmm_re = re.compile(r"^\d{2}:\d{2}$")
+
+    receipts = []
+    try:
+        username = _sudo_user or os.environ.get("USER", "")
+        if not username:
+            return _write_receipts_file(receipts)
+        proc = subprocess.run(
+            ["last", "-n", "10", username],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        for line in proc.stdout.splitlines():
+            parts = line.split()
+            # Guard: skip "wtmp begins ..." (parts[0] = "wtmp") and short rows.
+            if len(parts) < 7 or parts[0] != username:
+                continue
+            tty_or_src = parts[1]
+            # Short-form date tokens: parts[3..7] = ["Fri","May","15","15:07"]
+            # parts[6] is the HH:MM token — pick it directly, no strptime.
+            time_str = parts[6] if _hhmm_re.match(parts[6]) else "—"
+            receipts.append(
+                {
+                    "time": time_str,
+                    "event": "session." + (
+                        tty_or_src if tty_or_src.startswith("tty") else "remote"
+                    ),
+                    "actor": username,
+                    "verb": "login",
+                }
+            )
+            if len(receipts) >= 5:
+                break
+    except Exception as e:
+        print(f"[sddm-pixel] receipts parse failed: {e}")
+
+    return _write_receipts_file(receipts)
+
+
+def _write_receipts_file(receipts):
+    """Write receipts list to assets/receipts.json. Returns True on success."""
+    if not os.path.isdir(ASSETS_DIR):
+        try:
+            os.makedirs(ASSETS_DIR, exist_ok=True)
+        except Exception as e:
+            print(f"[sddm-pixel] receipts dir create failed: {e}")
+            return False
+    out_path = os.path.join(ASSETS_DIR, "receipts.json")
+    try:
+        with open(out_path, "w") as f:
+            json.dump(receipts, f)
+        try:
+            os.chmod(out_path, 0o644)
+        except Exception:
+            pass
+        print(f"[sddm-pixel] Receipts staged: {len(receipts)} rows")
+        return True
+    except PermissionError:
+        print(f"[sddm-pixel] Permission denied writing {out_path}.")
+        print("[sddm-pixel] Re-run install-pixel-sddm.sh to fix ownership.")
+        return False
+    except Exception as e:
+        print(f"[sddm-pixel] Receipts write failed: {e}")
+        return False
 
 
 def read_wallpaper():
@@ -322,6 +483,11 @@ def main():
 
     colors = read_colors()
     if colors:
+        # Wedge C: enrich colors dict with Courier session-strip metadata
+        # before update_theme_conf fans out the keys.
+        hostname, last_session = read_hostname_and_last_session()
+        colors["hostname"] = hostname
+        colors["lastSession"] = last_session
         if update_theme_conf(colors):
             print(f"[sddm-pixel] Colors synced (primary: {colors['primaryColor']})")
         else:
@@ -336,6 +502,11 @@ def main():
         print("[sddm-pixel] No wallpaper path found, keeping existing background")
 
     update_avatar()
+
+    # Wedge C: stage real session events for the Courier receipts strip.
+    # Runs unconditionally — the assets dir is guaranteed to exist after
+    # install-pixel-sddm.sh, and receipts.json is a no-op if `last` is empty.
+    write_receipts()
 
 
 if __name__ == "__main__":

@@ -868,32 +868,18 @@ DashboardCard {
             anchors.fill: parent
             visible: root.visibleEntryCount === 0
 
-            ColumnLayout {
+            CourierReceipt {
                 anchors.centerIn: parent
-                spacing: 6
+                width: parent.width - 32
 
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "travel_explore"
-                    iconSize: 24
-                    color: Appearance.mission.colTextFaint
-                }
+                readonly property bool feedIsEmpty: root.entryModel.count === 0
 
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "No events in current filters"
-                    font.pixelSize: 12
-                    font.weight: Font.DemiBold
-                    color: Appearance.mission.colTextMuted
-                }
-
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "Press ALL to restore feed"
-                    font.pixelSize: 10
-                    font.family: Appearance.font.family.monospace
-                    color: Appearance.mission.colTextFaint
-                }
+                state: feedIsEmpty ? "EMPTY" : "FILTERED"
+                source: "activity-feed.jsonl"
+                route: feedIsEmpty ? "~/.local/state/inir/activity-feed.jsonl" : ""
+                repair: feedIsEmpty
+                    ? "wait for new events, or check the activity-feed pipeline"
+                    : "press ALL to restore the feed"
             }
         }
 

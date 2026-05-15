@@ -194,16 +194,13 @@ AbstractBackgroundWidget {
                 anchors.right: parent.right
                 spacing: 1
 
-                // Muted em-dash when there's no upcoming event today
-                // (also covers a missing / empty / unparseable events file —
-                // CalendarSync degrades to an empty list, nextEvent → null).
-                StyledText {
+                CourierReceipt {
                     Layout.fillWidth: true
                     visible: !root.nextEvent
-                    text: "—"
-                    font.pixelSize: Appearance.font.pixelSize.large
-                    font.weight: Font.Bold
-                    color: Appearance.colors.colSubtext
+                    density: "compact"
+                    state: "EMPTY"
+                    source: "caldav"
+                    omitStateLabel: false
                 }
 
                 StyledText {

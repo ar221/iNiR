@@ -334,23 +334,12 @@ DashboardCard {
             anchors.fill: parent
             visible: root.dedupedList.length === 0
 
-            ColumnLayout {
+            CourierReceipt {
                 anchors.centerIn: parent
-                spacing: 8
-
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "notifications_none"
-                    iconSize: 32
-                    color: Qt.rgba(1, 1, 1, 0.15)
-                }
-
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "All caught up"
-                    font.pixelSize: 11
-                    color: Qt.rgba(1, 1, 1, 0.2)
-                }
+                width: parent.width - 32
+                state: "EMPTY"
+                source: "org.freedesktop.Notifications"
+                route: "notification daemon (D-Bus)"
             }
         }
     }
