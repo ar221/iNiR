@@ -40,11 +40,16 @@ Item {
         propagateComposedEvents: true
     }
 
+    // — Modifier tracker — keeps current keyboard modifiers live for the TapHandler below.
+    HoverHandler {
+        id: _modProbe
+    }
+
     // — Shift+click → Obsidian. TapHandler coexists with parent drag. —
     TapHandler {
         gesturePolicy: TapHandler.ReleaseWithinBounds
-        onTapped: (eventPoint, button) => {
-            if ((eventPoint.event && eventPoint.event.modifiers & Qt.ShiftModifier)
+        onTapped: {
+            if ((_modProbe.point.modifiers & Qt.ShiftModifier)
                 && root.obsidianPath.length > 0) {
                 const enc = encodeURIComponent
                 const uri = "obsidian://open?vault=" + enc(root.vaultName)
