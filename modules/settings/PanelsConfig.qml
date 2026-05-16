@@ -407,7 +407,8 @@ ContentPage {
                         { displayName: Translation.tr("Panel"), icon: "dock_to_bottom", value: "panel" },
                         { displayName: Translation.tr("Pill"),  icon: "interests",       value: "pill"  },
                         { displayName: Translation.tr("macOS"), icon: "desktop_mac",     value: "macos" },
-                        { displayName: Translation.tr("Rail"),  icon: "dock_to_right",   value: "rail"  }
+                        { displayName: Translation.tr("Rail"),  icon: "dock_to_right",   value: "rail"  },
+                        { displayName: Translation.tr("Courier"), icon: "view_sidebar",  value: "courier" }
                     ]
                 }
             }
