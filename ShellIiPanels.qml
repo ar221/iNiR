@@ -75,7 +75,16 @@ Item {
         defaultComponent: VerticalBar {}
     }
     ContractPanelLoader { identifier: "iiBackground"; slotName: "background"; defaultComponent: Background {} }
-    ContractPanelLoader { identifier: "iiDock"; slotName: "dock"; extraCondition: Config.options?.dock?.enable ?? true; defaultComponent: Dock {} }
+    ContractPanelLoader {
+        identifier: "iiDock"; slotName: "dock"
+        extraCondition: (Config.options?.dock?.enable ?? true) && (Config.options?.dock?.style !== "courier")
+        defaultComponent: Dock {}
+    }
+    ContractPanelLoader {
+        identifier: "iiCourierRail"; slotName: "dock"
+        extraCondition: (Config.options?.dock?.enable ?? true) && (Config.options?.dock?.style === "courier")
+        defaultComponent: CourierRail {}
+    }
     ContractPanelLoader { identifier: "iiLock"; slotName: "lock"; defaultComponent: Lock {} }
     ContractPanelLoader { identifier: "iiMediaControls"; slotName: "mediaControls"; defaultComponent: MediaControls {} }
     ContractPanelLoader { identifier: "iiSidebarLeft"; slotName: "sidebarLeft"; defaultComponent: SidebarLeft {} }
