@@ -152,6 +152,9 @@ DashboardCard {
         CourierReceipt {
             state: "EMPTY"
             source: MprisController.activePlayer ? "mpris.player" : "no mpris client"
+            lastSignal: MprisController.lastActivePlayerSignalTime > 0
+                ? DateUtils.formatLastSignal(MprisController.lastActivePlayerSignalTime, "default")
+                : ""
             route: "playerctl / mpris2"
             repair: "spotify, mpv, or any mpris2-aware player"
         }

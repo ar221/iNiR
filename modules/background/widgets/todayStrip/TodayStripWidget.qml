@@ -200,6 +200,9 @@ AbstractBackgroundWidget {
                     density: "compact"
                     state: "EMPTY"
                     source: "caldav"
+                    lastSignal: CalendarSync.lastSync !== ""
+                        ? DateUtils.formatLastSignal(new Date(CalendarSync.lastSync).getTime(), "compact")
+                        : ""
                     omitStateLabel: false
                 }
 

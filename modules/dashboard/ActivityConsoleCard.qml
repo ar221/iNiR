@@ -873,9 +873,15 @@ DashboardCard {
                 width: parent.width - 32
 
                 readonly property bool feedIsEmpty: root.entryModel.count === 0
+                readonly property real feedSignalMs: feedIsEmpty
+                    ? (typeof feedFile.lastModified === "number" ? feedFile.lastModified : 0)
+                    : root.entryModel.count > 0 ? root.entryModel.get(0).ts * 1000 : 0
 
                 state: feedIsEmpty ? "EMPTY" : "FILTERED"
                 source: "activity-feed.jsonl"
+                lastSignal: feedSignalMs > 0
+                    ? DateUtils.formatLastSignal(feedSignalMs, "default")
+                    : ""
                 route: feedIsEmpty ? "~/.local/state/inir/activity-feed.jsonl" : ""
                 repair: feedIsEmpty
                     ? "wait for new events, or check the activity-feed pipeline"

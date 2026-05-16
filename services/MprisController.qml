@@ -63,6 +63,8 @@ Singleton {
 		return players[0] ?? null;
 	}
 
+	property real lastActivePlayerSignalTime: 0
+
 	readonly property bool isYtMusicActive: {
 		if (!(Config.options?.sidebar?.ytmusic?.enable ?? false)) return false;
 		if (activePlayer) return _isYtMusicMpv(activePlayer);
@@ -453,6 +455,7 @@ Singleton {
 			}
 
 			function onPlaybackStateChanged() {
+				root.lastActivePlayerSignalTime = Date.now();
 				// Increment version to force activePlayer re-evaluation
 				root._playbackStateVersion++;
 				// Update tracked player if this one started playing
@@ -465,6 +468,7 @@ Singleton {
 			
 			// Rebuild when track title changes (affects isRealPlayer filter)
 			function onTrackTitleChanged() {
+				root.lastActivePlayerSignalTime = Date.now();
 				root._rebuildPlayerList();
 			}
 		}
@@ -487,7 +491,10 @@ Singleton {
 		}
 	}
 
-	onActivePlayerChanged: this.updateTrack();
+	onActivePlayerChanged: {
+		this.lastActivePlayerSignalTime = Date.now();
+		this.updateTrack();
+	}
 
 	function updateTrack() {
 		this.activeTrack = {

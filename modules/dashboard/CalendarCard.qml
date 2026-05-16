@@ -126,6 +126,9 @@ DashboardCard {
         Layout.topMargin: 8
         state: "EMPTY"
         source: "caldav-events.json"
+        lastSignal: CalendarSync.lastSync !== ""
+            ? DateUtils.formatLastSignal(new Date(CalendarSync.lastSync).getTime(), "default")
+            : ""
         route: "calendar-sync.timer"
         repair: "systemctl --user start calendar-sync"
     }
