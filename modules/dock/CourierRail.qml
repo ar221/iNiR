@@ -8,6 +8,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 
 Scope {
@@ -19,6 +20,60 @@ Scope {
     readonly property int iconSize: Config.options?.dock?.railIconSize ?? 32
     readonly property int buttonSize: iconSize + 4
     readonly property var emptyList: []
+
+    // Unity-style auto-hide state (shared across per-screen rails)
+    // - Default visibility: only when current workspace has <= 1 window (auto-hide on crowd).
+    // - Hotkey reveal: super+<key> → courierRail toggle; overlays without re-claiming space.
+    // - Hotkey reset: workspace switch or focus change away from the captured focused window
+    //   re-hides the hotkey overlay so the next reveal is intentional.
+    property bool visibleByHotkey: false
+    property int capturedFocusedWindowId: -1
+
+    function _currentFocusedWindowId() {
+        const wins = NiriService?.windows ?? []
+        for (let i = 0; i < wins.length; i++) {
+            if (wins[i]?.is_focused) return wins[i].id ?? -1
+        }
+        return -1
+    }
+
+    function toggleHotkey() {
+        if (visibleByHotkey) {
+            visibleByHotkey = false
+            capturedFocusedWindowId = -1
+        } else {
+            visibleByHotkey = true
+            capturedFocusedWindowId = _currentFocusedWindowId()
+        }
+    }
+
+    function hideHotkey() {
+        visibleByHotkey = false
+        capturedFocusedWindowId = -1
+    }
+
+    // Reset hotkey reveal when focus leaves the captured window or workspace changes.
+    Connections {
+        target: NiriService
+        function onWindowsChanged() {
+            if (!root.visibleByHotkey) return
+            const id = root._currentFocusedWindowId()
+            if (id !== root.capturedFocusedWindowId) root.hideHotkey()
+        }
+        function onFocusedWorkspaceIdChanged() {
+            if (root.visibleByHotkey) root.hideHotkey()
+        }
+    }
+
+    IpcHandler {
+        target: "courierRail"
+        function toggle(): void { root.toggleHotkey() }
+        function show(): void {
+            root.visibleByHotkey = true
+            root.capturedFocusedWindowId = root._currentFocusedWindowId()
+        }
+        function hide(): void { root.hideHotkey() }
+    }
 
     Variants {
         model: {
@@ -41,14 +96,51 @@ Scope {
                 id: railWindow
                 screen: screenLoader.modelData
                 color: "transparent"
-                visible: !GlobalStates.screenLocked && !GameMode.shouldHidePanels
+
+                // --- Auto-hide derivation (per-screen) ---
+                // windowsOnCurrentWorkspace: number of Niri windows on THIS screen's active workspace.
+                // visibleByDefault: rail shows + claims exclusive zone only when the workspace has ≤ 1 window.
+                // When more windows arrive the rail auto-hides; super+<key> hotkey reveals it as a non-reflowing overlay.
+                property int workspaceWindowCount: 0
+                readonly property bool visibleByDefault: workspaceWindowCount <= 1
+                readonly property bool effectivelyVisible: !GlobalStates.screenLocked
+                    && !GameMode.shouldHidePanels
+                    && (visibleByDefault || root.visibleByHotkey)
+
+                function recomputeWorkspaceWindowCount() {
+                    if (!CompositorService.isNiri) { workspaceWindowCount = 0; return }
+                    const screenName = railWindow.screen?.name ?? ""
+                    const allWs = NiriService?.allWorkspaces ?? []
+                    let activeWsId = null
+                    for (let i = 0; i < allWs.length; i++) {
+                        const ws = allWs[i]
+                        if (ws?.output === screenName && ws?.is_active) { activeWsId = ws.id; break }
+                    }
+                    if (activeWsId === null) { workspaceWindowCount = 0; return }
+                    const wins = NiriService?.windows ?? []
+                    let n = 0
+                    for (let j = 0; j < wins.length; j++) {
+                        if (wins[j]?.workspace_id === activeWsId) n++
+                    }
+                    workspaceWindowCount = n
+                }
+
+                Connections {
+                    target: NiriService
+                    function onWindowsChanged() { railWindow.recomputeWorkspaceWindowCount() }
+                    function onAllWorkspacesChanged() { railWindow.recomputeWorkspaceWindowCount() }
+                    function onFocusedWorkspaceIdChanged() { railWindow.recomputeWorkspaceWindowCount() }
+                }
+
+                visible: effectivelyVisible
                 anchors.left: true
                 anchors.top: true
                 anchors.bottom: true
                 implicitWidth: root.railWidth
                 WlrLayershell.namespace: "quickshell:courierrail"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.exclusiveZone: GameMode.shouldHidePanels ? 0 : root.railWidth
+                // Only claim exclusive zone on default visibility; hotkey reveal overlays without reflowing windows.
+                WlrLayershell.exclusiveZone: (GameMode.shouldHidePanels || !visibleByDefault) ? 0 : root.railWidth
 
                 property var dockItems: []
                 property Item previewAnchorItem: null
@@ -147,7 +239,7 @@ Scope {
                     function onIgnoredAppRegexesChanged() { railWindow.rebuildDockItems() }
                     function onScopeChanged() { railWindow.rebuildDockItems() }
                 }
-                Component.onCompleted: rebuildDockItems()
+                Component.onCompleted: { rebuildDockItems(); recomputeWorkspaceWindowCount() }
 
                 Rectangle {
                     anchors.fill: parent
