@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import qs
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
@@ -10,6 +11,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Widgets
 
 Scope {
     id: root
@@ -52,14 +54,12 @@ Scope {
         capturedFocusedWindowId = -1
     }
 
-    // Reset hotkey reveal when focus leaves the captured window or workspace changes.
+    // Reset hotkey reveal only on explicit workspace switch — focus-id tracking was
+    // too eager (NiriService.onWindowsChanged fires on any window-state update, dismissing
+    // the rail before user could interact). Per Ayaz: hotkey reveal sticks until toggled
+    // off or workspace changes.
     Connections {
         target: NiriService
-        function onWindowsChanged() {
-            if (!root.visibleByHotkey) return
-            const id = root._currentFocusedWindowId()
-            if (id !== root.capturedFocusedWindowId) root.hideHotkey()
-        }
         function onFocusedWorkspaceIdChanged() {
             if (root.visibleByHotkey) root.hideHotkey()
         }
@@ -132,6 +132,22 @@ Scope {
                     function onFocusedWorkspaceIdChanged() { railWindow.recomputeWorkspaceWindowCount() }
                 }
 
+                // Niri gap toggle: kill niri gaps when rail visible (single-window flush mode),
+                // restore when hidden. Debounced 150ms to avoid thrash on rapid workspace switching.
+                property bool _lastGapState: false
+                Timer {
+                    id: gapToggleDebounce
+                    interval: 150
+                    repeat: false
+                    onTriggered: {
+                        const wantGapOff = railWindow.effectivelyVisible
+                        if (wantGapOff === railWindow._lastGapState) return
+                        railWindow._lastGapState = wantGapOff
+                        Quickshell.execDetached(["/home/ayaz/.local/bin/courier-rail-gap", wantGapOff ? "on" : "off"])
+                    }
+                }
+                onEffectivelyVisibleChanged: gapToggleDebounce.restart()
+
                 visible: effectivelyVisible
                 anchors.left: true
                 anchors.top: true
@@ -139,8 +155,9 @@ Scope {
                 implicitWidth: root.railWidth
                 WlrLayershell.namespace: "quickshell:courierrail"
                 WlrLayershell.layer: WlrLayer.Top
-                // Only claim exclusive zone on default visibility; hotkey reveal overlays without reflowing windows.
-                WlrLayershell.exclusiveZone: (GameMode.shouldHidePanels || !visibleByDefault) ? 0 : root.railWidth
+                // Claim exclusive zone whenever rail is shown (default-visible OR hotkey reveal).
+                // Per Ayaz: hotkey reveal should push the focused window right + kill gaps too.
+                WlrLayershell.exclusiveZone: (GameMode.shouldHidePanels || !effectivelyVisible) ? 0 : root.railWidth
 
                 property var dockItems: []
                 property Item previewAnchorItem: null
@@ -239,7 +256,7 @@ Scope {
                     function onIgnoredAppRegexesChanged() { railWindow.rebuildDockItems() }
                     function onScopeChanged() { railWindow.rebuildDockItems() }
                 }
-                Component.onCompleted: { rebuildDockItems(); recomputeWorkspaceWindowCount() }
+                Component.onCompleted: { rebuildDockItems(); recomputeWorkspaceWindowCount(); gapToggleDebounce.restart() }
 
                 Rectangle {
                     anchors.fill: parent
@@ -261,7 +278,13 @@ Scope {
                         anchors.bottomMargin: root.railPadding
                         spacing: root.itemGap
 
-                        Repeater { model: ScriptModel { values: railWindow.pinnedItems; objectProp: "uniqueId" }; delegate: railItemDelegate }
+                        Repeater {
+                            model: ScriptModel {
+                                values: railWindow.pinnedItems
+                                objectProp: "uniqueId"
+                            }
+                            delegate: railItemDelegate
+                        }
 
                         Rectangle {
                             visible: railWindow.showDivider
@@ -271,7 +294,13 @@ Scope {
                             color: Appearance.courier.colBorderDim
                         }
 
-                        Repeater { model: ScriptModel { values: railWindow.runningItems; objectProp: "uniqueId" }; delegate: railItemDelegate }
+                        Repeater {
+                            model: ScriptModel {
+                                values: railWindow.runningItems
+                                objectProp: "uniqueId"
+                            }
+                            delegate: railItemDelegate
+                        }
 
                         Item { Layout.fillHeight: true }
 
@@ -292,20 +321,20 @@ Scope {
                                     anchors.centerIn: parent
                                     text: "[EMPTY]"
                                     color: Appearance.courier.colBorder
-                                    font.family: Appearance.font.family.mono
+                                    font.family: Appearance.font.family.monospace
                                     font.pixelSize: Appearance.font.pixelSize.smallest
                                     font.letterSpacing: 1.2
                                 }
                             }
 
-                            StyledText { text: "DOCK"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "─────"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "pinned"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "none"; color: Appearance.courier.colText; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "DOCK"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "─────"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "pinned"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "none"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                             Item { width: 1; height: 4 }
-                            StyledText { text: "route"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "+ from"; color: Appearance.courier.colText; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "  launcher"; color: Appearance.courier.colText; font.family: Appearance.font.family.mono; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "route"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "+ from"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "  launcher"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                         }
                     }
                 }

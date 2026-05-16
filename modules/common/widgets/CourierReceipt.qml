@@ -269,18 +269,6 @@ Rectangle {
                 renderType: Text.NativeRendering
             }
 
-            HoverHandler {
-                id: repairHover
-                enabled: repairRow.visible && repairText.truncated
-            }
-
-            PopupToolTip {
-                parent: repairText
-                targetItem: repairText
-                visible: repairHover.hovered && repairText.truncated
-                text: repairText.text
-                position: "top"
-            }
         }
     }
 }
