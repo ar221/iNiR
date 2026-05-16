@@ -24,6 +24,7 @@ import qs.modules.background.widgets.timeCalendar
 import qs.modules.background.widgets.todayStrip
 import qs.modules.background.widgets.nowPlaying
 import qs.modules.background.widgets.jobHuntPulse
+import qs.modules.background.widgets.commandRoom
 import qs.modules.background.widgets.systemRings
 import qs.modules.background.widgets.contextCard
 import qs.modules.background.widgets.network
@@ -1163,6 +1164,19 @@ Variants {
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.jobHuntPulse?.enable ?? false
                     sourceComponent: JobHuntPulseWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
+                    }
+                }
+
+                FadeLoader {
+                    shown: bgRoot.backgroundWidgetsOptions.commandRoom?.enable ?? false
+                    sourceComponent: CommandRoomWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
                         scaledScreenWidth: bgRoot.screen.width
