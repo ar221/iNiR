@@ -18,6 +18,12 @@ AbstractWidget {
     required property int scaledScreenWidth
     required property int scaledScreenHeight
     required property real wallpaperScale
+    // Option C: widgets live in SCREEN coords. canvasOffsetX/Y is the canvas's
+    // screen-coord position (negative when parallax shifts canvas left, positive
+    // when shifted right). Clamp uses this so the visible drop bounds always
+    // match the physical monitor edges regardless of canvas overshoot.
+    property real canvasOffsetX: 0
+    property real canvasOffsetY: 0
     property bool visibleWhenLocked: false
     property var configEntry: Config.options?.background?.widgets?.[configEntryName] ?? {}
     property string placementStrategy: configEntry.placementStrategy
@@ -25,17 +31,25 @@ AbstractWidget {
         const numeric = Number(value)
         return Math.round(Number.isFinite(numeric) ? numeric : 0)
     }
+    // Clamp bounds: widget x lives in canvas-local coords. To keep the widget
+    // visible on the physical screen, its canvas-x must satisfy
+    //   screen_left  <= canvasOffsetX + x            -> x >= -canvasOffsetX
+    //   screen_right >= canvasOffsetX + x + width    -> x <= scaledScreenWidth - canvasOffsetX - width
+    // (scaledScreenWidth equals the monitor width since every widget is now
+    //  fed bgRoot.screen.width — no division by wallpaperScale.)
     property real targetX: {
         const rawX = Number(configEntry?.x ?? 0)
         const safeX = Number.isFinite(rawX) ? rawX : 0
-        const maxX = Math.max(0, scaledScreenWidth - width)
-        return _snapToPixel(Math.max(0, Math.min(safeX, maxX)))
+        const minX = Math.max(0, -canvasOffsetX)
+        const maxX = Math.max(minX, scaledScreenWidth - canvasOffsetX - width)
+        return _snapToPixel(Math.max(minX, Math.min(safeX, maxX)))
     }
     property real targetY: {
         const rawY = Number(configEntry?.y ?? 0)
         const safeY = Number.isFinite(rawY) ? rawY : 0
-        const maxY = Math.max(0, scaledScreenHeight - height)
-        return _snapToPixel(Math.max(0, Math.min(safeY, maxY)))
+        const minY = Math.max(0, -canvasOffsetY)
+        const maxY = Math.max(minY, scaledScreenHeight - canvasOffsetY - height)
+        return _snapToPixel(Math.max(minY, Math.min(safeY, maxY)))
     }
 
     Binding {
@@ -95,9 +109,13 @@ AbstractWidget {
             newX = _snapToGrid(newX, _gridCellW)
             newY = _snapToGrid(newY, _gridCellH)
         }
-        // Clamp to canvas bounds
-        newX = Math.max(0, Math.min(newX, scaledScreenWidth - width))
-        newY = Math.max(0, Math.min(newY, scaledScreenHeight - height))
+        // Clamp to visible screen bounds (Option C — see targetX comment above)
+        const minX = Math.max(0, -canvasOffsetX)
+        const maxX = Math.max(minX, scaledScreenWidth - canvasOffsetX - width)
+        const minY = Math.max(0, -canvasOffsetY)
+        const maxY = Math.max(minY, scaledScreenHeight - canvasOffsetY - height)
+        newX = Math.max(minX, Math.min(newX, maxX))
+        newY = Math.max(minY, Math.min(newY, maxY))
         root.targetX = newX
         root.targetY = newY
         root.x = newX

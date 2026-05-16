@@ -1072,6 +1072,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1084,6 +1086,8 @@ Variants {
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
                         wallpaperSafetyTriggered: bgRoot.wallpaperSafetyTriggered
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1095,17 +1099,25 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.systemMonitor?.enable ?? false
+                    // Option C: normalized to match the other 12 widgets — all clamp in
+                    // screen coords. Previously divided screen by effectiveWallpaperScale
+                    // and passed wallpaperScale=effectiveWallpaperScale, which was the old
+                    // canvas-coord convention.
                     sourceComponent: SystemMonitorWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
-                        scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale
-                        scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale
-                        wallpaperScale: bgRoot.effectiveWallpaperScale
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1117,6 +1129,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1128,6 +1142,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1139,6 +1155,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1150,6 +1168,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1161,6 +1181,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1172,6 +1194,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1183,6 +1207,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1194,6 +1220,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1205,6 +1233,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1216,6 +1246,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
 
@@ -1227,6 +1259,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
+                        canvasOffsetX: widgetCanvas.x
+                        canvasOffsetY: widgetCanvas.y
                     }
                 }
             }
