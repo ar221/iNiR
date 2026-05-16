@@ -233,8 +233,13 @@ Singleton {
     // Public API
     function getPreviewUrl(windowId: int): string {
         const cached = previewCache[windowId]
-        if (!cached) return ""
-        return "file://" + cached.path + "?" + cached.timestamp
+        if (cached) return "file://" + cached.path + "?" + cached.timestamp
+        return fallbackPreviewUrl(windowId)
+    }
+
+    function fallbackPreviewUrl(windowId: int): string {
+        if (!windowId) return ""
+        return "file://" + root.previewDir + "/window-" + windowId + ".png?" + Date.now()
     }
     
     function hasPreview(windowId: int): bool {

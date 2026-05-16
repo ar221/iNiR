@@ -14,6 +14,7 @@ PopupWindow {
     id: root
 
     required property bool dockHovered
+    required property Item fallbackAnchorItem
     property var appEntry
     property Item anchorItem
     property string dockPosition: Config.options?.dock?.position ?? "bottom"
@@ -99,7 +100,7 @@ PopupWindow {
 
     anchor {
         adjustment: PopupAdjustment.Slide
-        item: root.anchorItem
+        item: root.anchorItem ?? root.fallbackAnchorItem
         gravity: root.isBottom ? Edges.Top : (root.isTop ? Edges.Bottom : (root.isLeft ? Edges.Right : Edges.Left))
         edges: root.isBottom ? Edges.Top : (root.isTop ? Edges.Bottom : (root.isLeft ? Edges.Right : Edges.Left))
     }

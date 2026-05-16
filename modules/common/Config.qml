@@ -1051,7 +1051,7 @@ Singleton {
                 property bool keepPreviewOnClick: false // Keep preview open when clicking a window thumbnail
                 // Drag & drop reordering
                 property bool enableDragReorder: true // Allow drag to reorder pinned apps
-                property string scope: "workspace" // "workspace" = show only apps on focused workspace; "global" = all running apps
+                property string scope: "global" // "workspace" = show only apps on focused workspace; "global" = all running apps
             }
 
             property JsonObject controlPanel: JsonObject {

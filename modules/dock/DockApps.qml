@@ -56,7 +56,14 @@ Item {
     function showPreviewPopup(appEntry: var, button: Item): void {
         // Respect hoverPreview setting
         if (Config.options?.dock?.hoverPreview === false) return
-        dockPreviewPopup.show(appEntry, button)
+        if (button) {
+            const pos = root.mapFromItem(button, 0, 0)
+            previewAnchorProxy.x = pos.x
+            previewAnchorProxy.y = pos.y
+            previewAnchorProxy.width = button.width
+            previewAnchorProxy.height = button.height
+        }
+        dockPreviewPopup.show(appEntry, previewAnchorProxy)
     }
 
     Layout.fillHeight: !vertical
@@ -340,7 +347,7 @@ Item {
         // Use NiriService's live workspace map instead of relying on transient
         // niriWorkspaceId tags in sortedToplevels, which can briefly go stale
         // during workspace switches and flash the dock empty.
-        const dockScope = Config.options?.dock?.scope ?? "workspace";
+        const dockScope = Config.options?.dock?.scope ?? "global";
         let filteredToplevels = allToplevels;
         if (dockScope === "workspace" && CompositorService.isNiri) {
             const screenName = root.parentWindow?.screen?.name ?? "";
@@ -558,6 +565,12 @@ Item {
     }
     // Also reset when drag starts
     onDragActiveChanged: if (dragActive) magnifyMousePos = -1
+
+    Item {
+        id: previewAnchorProxy
+        width: root.vertical ? root.width : 1
+        height: root.vertical ? 1 : root.height
+    }
 
     StyledListView {
         id: listView
@@ -823,6 +836,7 @@ Item {
         id: dockPreviewPopup
         dockHovered: root.buttonHovered
         dockPosition: root.dockPosition
+        fallbackAnchorItem: root
         anchor.window: root.parentWindow
     }
 

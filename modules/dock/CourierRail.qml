@@ -168,6 +168,8 @@ Scope {
                 property var _cachedIgnoredRegexes: []
                 property var _lastIgnoredRegexStrings: []
 
+                Item { id: previewAnchorFallback; width: 1; height: 1 }
+
                 readonly property var pinnedItems: dockItems.filter(item => item.section === "pinned")
                 readonly property var runningItems: dockItems.filter(item => item.section === "running")
                 readonly property bool showDivider: pinnedItems.length > 0 && runningItems.length > 0
@@ -195,7 +197,7 @@ Scope {
                         allToplevels = _lastGoodToplevels.length ? _lastGoodToplevels : ToplevelManager.toplevels.values
                     }
 
-                    const dockScope = Config.options?.dock?.scope ?? "workspace"
+                    const dockScope = Config.options?.dock?.scope ?? "global"
                     if (dockScope === "workspace" && CompositorService.isNiri) {
                         const screenName = railWindow.screen?.name ?? ""
                         allToplevels = NiriService.filterCurrentWorkspace(allToplevels, screenName)
@@ -244,8 +246,18 @@ Scope {
                     return true
                 }
 
-                function openPreview(entry, anchorItem) { previewEntry = entry; previewAnchorItem = anchorItem }
-                function closePreview() { previewEntry = null; previewAnchorItem = null; previewHovered = false }
+                function openPreview(entry, anchorItem) {
+                    if (anchorItem) {
+                        const pos = previewAnchorFallback.parent.mapFromItem(anchorItem, 0, 0)
+                        previewAnchorFallback.x = pos.x
+                        previewAnchorFallback.y = pos.y
+                        previewAnchorFallback.width = anchorItem.width
+                        previewAnchorFallback.height = anchorItem.height
+                    }
+                    previewEntry = entry
+                    previewAnchorItem = previewAnchorFallback
+                }
+                function closePreview() { previewEntry = null; previewAnchorItem = previewAnchorFallback; previewHovered = false }
 
                 Connections { target: ToplevelManager.toplevels; function onValuesChanged() { railWindow.rebuildDockItems() } }
                 Connections { target: CompositorService; function onSortedToplevelsChanged() { railWindow.rebuildDockItems() } }
@@ -438,7 +450,7 @@ Scope {
                 PopupWindow {
                     visible: railWindow.previewEntry !== null && railWindow.previewAnchorItem !== null && !GameMode.shouldHidePanels
                     color: "transparent"
-                    anchor.item: railWindow.previewAnchorItem
+                    anchor.item: railWindow.previewAnchorItem ?? previewAnchorFallback
                     anchor.adjustment: PopupAdjustment.Slide
                     anchor.gravity: Edges.Right
                     anchor.edges: Edges.Left

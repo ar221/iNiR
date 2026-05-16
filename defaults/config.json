@@ -755,6 +755,7 @@
     "showBackground": true,
     "iconSize": 56,
     "railIconSize": 32,
+    "scope": "global",
     "separatePinnedFromRunning": true,
     "enableDragReorder": true,
     "style": "panel",

@@ -227,6 +227,7 @@ Button {
                 Qt.callLater(() => {
                     const url = WindowPreviewService.getPreviewUrl(windowId)
                     if (url) previewUrl = url
+                    if (windowPreview.status !== Image.Ready) WindowPreviewService.captureForTaskView()
                 })
             }
         }
