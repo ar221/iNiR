@@ -141,3 +141,9 @@ docs-site/
 prompt-framework-opencode.md
 version.json
 .superpowers/
+
+# ── Browser/MCP scratch (chrome-devtools, playwright) ────────
+.playwright-mcp/
+
+# ── Root-level dev session screenshots (move to ~/Pictures/Screenshots/inir-dev-sessions/) ──
+/*.png

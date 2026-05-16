@@ -14,6 +14,8 @@ Canonical specs:
 
 Rollout rule: wedge, verify, then expand. Bar first; cockpit/dashboard next; sidebars only where the command grammar helps. Narrow/mobile surfaces follow the Courier translation rule: **desktop = command board; mobile = dispatch packet**. Rails collapse into strips/drawers, ledgers summarize before expanding, touch targets stay real, and a narrow-width check is part of done.
 
+Watchtower reference rule: desktop command surfaces may use board + rail + inspector layouts, but mobile must translate into a dispatch packet sequence: mission, resident/source, command controls, primary viewport, expandable receipts. Do not compress a desktop grid into a single narrow column.
+
 ## Core Workflow
 
 ```text
@@ -27,6 +29,7 @@ Reference -> Inspect -> Extract Motifs -> Reject Costume -> Translate To iNiR ->
 - `direction-matrix-template.md`: comparison matrix for multiple iNiR-native visual directions.
 - `motion-grammar.md`: named shell motion beats and motion rules.
 - `surface-calibration.md`: first pilot spec for an internal calibration deck.
+- `screenshot-archive-regression.md`: turns `/home/ayaz/Pictures/Screenshots` into design-memory, regression fixtures, and Courier/QML review gates.
 - `huashu-extraction-notes.md`: worked example from Huashu Design.
 - `frontend-architect-adapter.md`: adapts a general anti-slop frontend prompt into iNiR-safe web/design rules.
 
@@ -42,4 +45,4 @@ It may require a fresh agent/session before it appears in the skill registry.
 
 ## Rule
 
-Do not let references become costumes. Extract, translate, gate, pilot.
+Do not let references become costumes. Extract, translate, gate, pilot. Do not let mistakes stay as screenshots; convert them into fixtures, tokens, or review gates.
