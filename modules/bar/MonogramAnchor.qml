@@ -22,10 +22,14 @@ RippleButton {
         : Appearance.colors.colOnLayer1
 
     readonly property color monogramColor: marketState === "open" ? marketOpenColor : marketClosedColor
+    readonly property color invaderColor: marketState === "open" ? Appearance.colors.colPersonalAccent : "#c66b4e"
 
     property real buttonPadding: 5
-    implicitWidth: 28 + buttonPadding * 2
-    implicitHeight: 28 + buttonPadding * 2
+    readonly property int _monogramSize: 28
+    readonly property int _invaderSize: 21
+    readonly property int _glyphGap: 4
+    implicitWidth: _monogramSize + _glyphGap + _invaderSize + buttonPadding * 2
+    implicitHeight: _monogramSize + buttonPadding * 2
 
     buttonRadius: 4
     colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
@@ -84,24 +88,70 @@ RippleButton {
         ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
     }
 
-    Rectangle {
-        id: monogramCircle
+    Row {
         anchors.centerIn: parent
-        width: 28
-        height: 28
-        radius: width / 2
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.0; color: root._gradStart }
-            GradientStop { position: 1.0; color: root._gradEnd }
+        spacing: root._glyphGap
+
+        Rectangle {
+            id: monogramCircle
+            width: root._monogramSize
+            height: root._monogramSize
+            radius: width / 2
+            gradient: Gradient {
+                orientation: Gradient.Vertical
+                GradientStop { position: 0.0; color: root._gradStart }
+                GradientStop { position: 1.0; color: root._gradEnd }
+            }
+
+            StyledText {
+                anchors.centerIn: parent
+                text: root.monogramText
+                font.pixelSize: 13
+                font.weight: Font.Bold
+                color: "#ffffff"
+            }
         }
 
-        StyledText {
-            anchors.centerIn: parent
-            text: root.monogramText
-            font.pixelSize: 13
-            font.weight: Font.Bold
-            color: "#ffffff"
+        Item {
+            id: claudeCodeInvader
+            width: root._invaderSize
+            height: root._monogramSize
+
+            readonly property int px: 3
+            readonly property int spriteTop: 2
+            readonly property var blocks: [
+                // body: 5×5 block, with two dark eyes punched out
+                { x: 1, y: 1, w: 5, h: 1, eye: false },
+                { x: 1, y: 2, w: 1, h: 1, eye: false },
+                { x: 2, y: 2, w: 1, h: 1, eye: true },
+                { x: 3, y: 2, w: 1, h: 1, eye: false },
+                { x: 4, y: 2, w: 1, h: 1, eye: true },
+                { x: 5, y: 2, w: 1, h: 1, eye: false },
+                { x: 1, y: 3, w: 5, h: 1, eye: false },
+                { x: 1, y: 4, w: 5, h: 1, eye: false },
+                { x: 1, y: 5, w: 5, h: 1, eye: false },
+                // side arms
+                { x: 0, y: 3, w: 1, h: 2, eye: false },
+                { x: 6, y: 3, w: 1, h: 2, eye: false },
+                // feet
+                { x: 2, y: 6, w: 1, h: 1, eye: false },
+                { x: 4, y: 6, w: 1, h: 1, eye: false }
+            ]
+
+            Repeater {
+                model: claudeCodeInvader.blocks
+
+                Rectangle {
+                    x: modelData.x * claudeCodeInvader.px
+                    y: claudeCodeInvader.spriteTop + modelData.y * claudeCodeInvader.px
+                    width: modelData.w * claudeCodeInvader.px
+                    height: modelData.h * claudeCodeInvader.px
+                    radius: 0
+                    color: modelData.eye ? Appearance.colors.colLayer0 : root.invaderColor
+                    opacity: modelData.eye ? 0.95 : (root.marketState === "open" ? 0.95 : 0.88)
+                    antialiasing: false
+                }
+            }
         }
     }
 }
