@@ -121,7 +121,7 @@ DashboardCard {
 
     // ── No events placeholder — Courier receipt (EMPTY state) ──
     CourierReceipt {
-        visible: Events.list.length === 0
+        visible: !CalendarSync.available
         Layout.fillWidth: true
         Layout.topMargin: 8
         state: "EMPTY"

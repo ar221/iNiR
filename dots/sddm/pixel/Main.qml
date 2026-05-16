@@ -18,6 +18,10 @@ MouseArea {
     property var receipts: []
     property string footerTimestamp: Qt.formatDateTime(new Date(), "yyyy-MM-dd hh:mm:ss")
     property bool cursorOn: true
+    property int failedAttempts: 0
+    property real lastInputAt: Date.now()
+    property int lockoutRemainingMs: 0
+    property string preShutdownState: "READY"
 
     readonly property int _nameRole:     Qt.UserRole + 1
     readonly property int _realNameRole: Qt.UserRole + 2
@@ -66,10 +70,15 @@ MouseArea {
     readonly property string lastSessionStr:  config.lastSession      || "-"
 
     readonly property color stateColor: {
+        if (root.greeterState === "SHUTDOWN") return root.colBorder
+        if (root.greeterState === "LOCKED" || root.greeterState === "STANDBY") return root.colBorderDim
         if (root.greeterState === "DENIED") return "#D86A3C"
         if (root.greeterState === "AUTH") return root.colBorder
         return root.colTextStrong
     }
+    readonly property bool isLocked: root.greeterState === "LOCKED"
+    readonly property bool isStandby: root.greeterState === "STANDBY"
+    readonly property bool isShutdown: root.greeterState === "SHUTDOWN"
 
     function symFont(): string {
         return materialSymbolsFont.status === FontLoader.Ready ? materialSymbolsFont.name : ""
@@ -95,11 +104,27 @@ MouseArea {
     }
 
     function attemptLogin() {
-        if (root.loginInProgress || passwordBox.text.length === 0) return
+        if (root.loginInProgress || root.isLocked || root.isShutdown || passwordBox.text.length === 0) return
         root.loginInProgress = true
         root.loginFailed = false
         root.greeterState = "AUTH"
         sddm.login(root.currentUserLogin, passwordBox.text, root.currentSessionIndex)
+    }
+
+    function noteInput() {
+        root.lastInputAt = Date.now()
+        if (root.greeterState === "STANDBY") root.greeterState = "READY"
+    }
+
+    function openShutdownLedger() {
+        if (root.greeterState !== "SHUTDOWN") {
+            root.preShutdownState = root.greeterState
+            root.greeterState = "SHUTDOWN"
+        }
+    }
+
+    function closeShutdownLedger() {
+        root.greeterState = root.preShutdownState
     }
 
     TextConstants { id: textConstants }
@@ -107,12 +132,99 @@ MouseArea {
 
     Connections {
         target: sddm
-        function onLoginSucceeded() { unlockFadeAnim.start() }
+        function onLoginSucceeded() {
+            root.failedAttempts = 0
+            root.lockoutRemainingMs = 0
+            unlockFadeAnim.start()
+        }
         function onLoginFailed() {
             root.loginInProgress = false
             root.loginFailed = true
-            root.greeterState = "DENIED"
+            root.failedAttempts += 1
+            if (root.failedAttempts >= 3) {
+                root.lockoutRemainingMs = 60000
+                root.greeterState = "LOCKED"
+            } else {
+                root.greeterState = "DENIED"
+            }
             passwordBox.text = ""
+        }
+    }
+
+    Timer {
+        id: lockoutTimer
+        interval: 1000
+        running: root.greeterState === "LOCKED"
+        repeat: true
+        onTriggered: {
+            root.lockoutRemainingMs = Math.max(0, root.lockoutRemainingMs - 1000)
+            if (root.lockoutRemainingMs <= 0) {
+                root.failedAttempts = 0
+                root.greeterState = "READY"
+            }
+        }
+    }
+
+    Timer {
+        id: idleTimer
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (root.greeterState === "READY" && Date.now() - root.lastInputAt > 300000)
+                root.greeterState = "STANDBY"
+        }
+    }
+
+    Rectangle {
+        id: sessionPicker
+        visible: sessionModel.count > 1
+        anchors.top: parent.top
+        anchors.topMargin: 16
+        anchors.left: parent.left
+        anchors.leftMargin: 64
+        anchors.right: parent.right
+        anchors.rightMargin: 64
+        height: 32
+        radius: 0
+        color: "transparent"
+        opacity: root.isStandby ? 0.4 : 1
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
+
+        RowLayout {
+            anchors.fill: parent
+            spacing: 8
+
+            Repeater {
+                model: sessionModel
+                delegate: Rectangle {
+                    required property int index
+                    readonly property bool selected: index === root.currentSessionIndex
+                    readonly property bool defaultSession: index === sessionModel.lastIndex
+                    radius: 0
+                    height: 28
+                    color: selected ? root.colSurfaceActive : (pillMouse.containsMouse ? root.colSurfaceHover : "transparent")
+                    border.color: root.colBorder
+                    border.width: selected ? 1 : 0
+                    Layout.preferredWidth: sessionText.implicitWidth + 32
+
+                    Text {
+                        id: sessionText
+                        anchors.centerIn: parent
+                        text: (defaultSession ? "> " : "") + String(sessionModel.data(sessionModel.index(index, 0), root._sessNameRole) || "Desktop")
+                        color: selected ? root.colTextStrong : root.colText
+                        font.family: "JetBrains Mono"
+                        font.pixelSize: 12
+                    }
+
+                    MouseArea {
+                        id: pillMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.currentSessionIndex = index
+                    }
+                }
+            }
         }
     }
 
@@ -127,7 +239,7 @@ MouseArea {
     Rectangle {
         id: sessionStrip
         anchors.top: parent.top
-        anchors.topMargin: 48
+        anchors.topMargin: sessionPicker.visible ? 64 : 48
         anchors.left: parent.left
         anchors.leftMargin: 64
         anchors.right: parent.right
@@ -137,6 +249,8 @@ MouseArea {
         color: root.colSurface
         border.color: root.colBorder
         border.width: 1
+        opacity: root.isStandby ? 0.4 : 1
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
 
         Repeater {
             model: 4
@@ -187,7 +301,14 @@ MouseArea {
             Text { text: "LAST SESSION"; color: root.colTextDim; font.family: "JetBrains Mono"; font.pixelSize: 11; font.letterSpacing: 1.4 }
             Text { text: root.lastSessionStr; color: root.colText; font.family: "JetBrains Mono"; font.pixelSize: 14 }
             Text { text: "STATE"; color: root.colTextDim; font.family: "JetBrains Mono"; font.pixelSize: 11; font.letterSpacing: 1.4 }
-            Text { text: root.greeterState; color: root.stateColor; font.family: "JetBrains Mono"; font.pixelSize: 14 }
+            Text {
+                text: root.greeterState === "LOCKED"
+                    ? "LOCKED " + Qt.formatDateTime(new Date(root.lockoutRemainingMs), "mm:ss")
+                    : root.greeterState
+                color: root.stateColor
+                font.family: "JetBrains Mono"
+                font.pixelSize: 14
+            }
         }
     }
 
@@ -202,6 +323,8 @@ MouseArea {
         color: root.colSurface
         border.color: root.colBorder
         border.width: 1
+        opacity: root.isStandby ? 0.4 : 1
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
 
         ColumnLayout {
             anchors.fill: parent
@@ -217,6 +340,7 @@ MouseArea {
                 color: root.colSurfaceHover
                 border.color: root.greeterState === "DENIED" ? "#D86A3C" : root.colBorder
                 border.width: passwordBox.activeFocus || root.greeterState === "AUTH" ? 2 : 1
+                visible: !root.isStandby
 
                 RowLayout {
                     anchors.fill: parent
@@ -250,7 +374,7 @@ MouseArea {
                         cursorVisible: false
                         cursorDelegate: Item {}
                         inputMethodHints: Qt.ImhSensitiveData
-                        enabled: !root.loginInProgress
+                        enabled: !root.loginInProgress && !root.isLocked
                         focus: true
                         font.pixelSize: 16
                         onTextChanged: {
@@ -276,12 +400,14 @@ MouseArea {
 
                 Rectangle {
                     id: authButton
+                    visible: !root.isShutdown
                     width: 184
                     height: 44
                     radius: 0
                     color: authMouse.pressed ? Qt.darker(root.colSurfaceActive, 1.1) : root.colSurfaceActive
                     border.color: root.colBorder
                     border.width: authMouse.containsMouse ? 2 : 1
+                    opacity: root.isLocked ? 0.4 : 1
 
                     Text {
                         anchors.centerIn: parent
@@ -296,12 +422,14 @@ MouseArea {
                         id: authMouse
                         anchors.fill: parent
                         hoverEnabled: true
+                        enabled: !root.isLocked
                         onClicked: root.attemptLogin()
                     }
                 }
 
                 Rectangle {
                     id: powerButton
+                    visible: !root.isShutdown
                     width: 130
                     height: 44
                     radius: 0
@@ -322,7 +450,85 @@ MouseArea {
                     MouseArea {
                         anchors.fill: parent
                         enabled: sddm.canPowerOff
+                        onClicked: root.openShutdownLedger()
+                    }
+                }
+
+                Rectangle {
+                    visible: root.isShutdown
+                    width: 184
+                    height: 44
+                    radius: 0
+                    color: shutdownRestartMouse.pressed ? Qt.darker(root.colSurfaceActive, 1.1) : root.colSurfaceActive
+                    border.color: root.colBorder
+                    border.width: 1
+                    opacity: sddm.canReboot ? 1 : 0.4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "[ RESTART ]"
+                        color: root.colTextStrong
+                        font.family: "JetBrains Mono"
+                        font.pixelSize: 12
+                        font.letterSpacing: 0.8
+                    }
+
+                    MouseArea {
+                        id: shutdownRestartMouse
+                        anchors.fill: parent
+                        enabled: sddm.canReboot
+                        onClicked: sddm.reboot()
+                    }
+                }
+
+                Rectangle {
+                    visible: root.isShutdown
+                    width: 184
+                    height: 44
+                    radius: 0
+                    color: shutdownPowerMouse.pressed ? Qt.darker(root.colSurfaceActive, 1.1) : root.colSurfaceActive
+                    border.color: root.colBorder
+                    border.width: 1
+                    opacity: sddm.canPowerOff ? 1 : 0.4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "[ SHUTDOWN ]"
+                        color: root.colTextStrong
+                        font.family: "JetBrains Mono"
+                        font.pixelSize: 12
+                        font.letterSpacing: 0.8
+                    }
+
+                    MouseArea {
+                        id: shutdownPowerMouse
+                        anchors.fill: parent
+                        enabled: sddm.canPowerOff
                         onClicked: sddm.powerOff()
+                    }
+                }
+
+                Rectangle {
+                    visible: root.isShutdown
+                    width: 130
+                    height: 44
+                    radius: 0
+                    color: "transparent"
+                    border.color: root.colBorderDim
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "[ CANCEL ]"
+                        color: root.colText
+                        font.family: "JetBrains Mono"
+                        font.pixelSize: 12
+                        font.letterSpacing: 0.8
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: root.closeShutdownLedger()
                     }
                 }
             }
@@ -342,6 +548,8 @@ MouseArea {
         color: root.colSurface
         border.color: root.colBorder
         border.width: 1
+        opacity: root.isStandby ? 0.4 : 1
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
 
         Column {
             anchors.fill: parent
@@ -418,11 +626,35 @@ MouseArea {
     }
 
     onClicked: function(mouse) {
+        root.noteInput()
         passwordBox.forceActiveFocus()
     }
-    onPositionChanged: { passwordBox.forceActiveFocus() }
+    onPositionChanged: {
+        root.noteInput()
+        passwordBox.forceActiveFocus()
+    }
 
     Keys.onPressed: function(event) {
+        root.noteInput()
+
+        if (root.isShutdown && event.key === Qt.Key_Escape) {
+            root.closeShutdownLedger()
+            event.accepted = true
+            return
+        }
+
+        if (root.isShutdown && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+            event.accepted = true
+            return
+        }
+
+        if (root.isLocked) {
+            if (event.key === Qt.Key_Escape || (event.text && event.text.length > 0 && event.text.charCodeAt(0) >= 32)) {
+                event.accepted = true
+                return
+            }
+        }
+
         if (event.key === Qt.Key_Escape) {
             if (root.keyboardOpen) { root.keyboardOpen = false; return }
             if (passwordBox.text.length > 0) passwordBox.text = ""
