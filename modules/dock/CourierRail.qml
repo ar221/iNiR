@@ -487,10 +487,14 @@ Scope {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: Appearance.courier.radiusMicro
-                            color: Appearance.courier.colSurface
+                            // Apollo palette literal — Courier preview popup chrome wedge
+                            // 2026-05-17. Per-component swap (Open Call B path A); tonal
+                            // continuity with rail canvas + bar AR identity block so
+                            // hover-preview reads as rail-extension, not Material card.
+                            radius: Appearance.apollo.radiusMicro
+                            color: Appearance.apollo.colSurface
                             border.width: 1
-                            border.color: Appearance.courier.colBorderDim
+                            border.color: Appearance.apollo.colBorderDim
 
                             RowLayout {
                                 id: previewLayout
