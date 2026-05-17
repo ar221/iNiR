@@ -9,12 +9,20 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    property string sourcePath: Directories.statePath + "/command-room/cockpit.json"
+    property string sourcePath: Directories.homePath + "/.local/state/command-room/cockpit.json"
     property bool available: false
     property string lastError: ""
     property string generatedAt: ""
     property var openTasks: []
+    property var observability: ({})
+    property var anomalies: []
     property int openTaskCount: openTasks.length
+    property int runningRunCount: Number(observability?.running_runs ?? 0)
+    property int staleRunCount: Number(observability?.stale_runs ?? 0)
+    property int pendingApprovalCount: Number(observability?.pending_approvals ?? 0)
+    property int queuedDeliveryCount: Number(observability?.queued_deliveries ?? 0)
+    property int pendingMemoryWriteCount: Number(observability?.pending_memory_writes ?? 0)
+    property int anomalyCount: anomalies.length
     property int ageMinutes: {
         void ageTicker.tick
         if (!generatedAt || generatedAt.length === 0)
@@ -44,10 +52,16 @@ Singleton {
         lastError = message
         generatedAt = ""
         openTasks = []
+        observability = ({})
+        anomalies = []
     }
 
     function _readArray(value) {
         return Array.isArray(value) ? value : []
+    }
+
+    function _readObject(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : ({})
     }
 
     function _parseProjection(text) {
@@ -59,8 +73,11 @@ Singleton {
         try {
             const envelope = JSON.parse(text)
             const data = envelope?.data ?? envelope ?? {}
+            const obs = _readObject(envelope?.observability ?? data?.observability)
             generatedAt = String(data.generated_at ?? envelope?.generated_at ?? "")
             openTasks = _readArray(data.open_tasks ?? data.openTasks)
+            observability = obs
+            anomalies = _readArray(obs.anomalies)
             lastError = ""
             available = true
             retryTimer.stop()

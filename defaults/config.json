@@ -432,6 +432,16 @@
         "showShortlist": true,
         "refreshIntervalMs": 300000,
         "vaultName": "Ayaz OS"
+      },
+      "commandRoom": {
+        "enable": false,
+        "placementStrategy": "free",
+        "x": 100,
+        "y": 100,
+        "cardOpacity": 0.95,
+        "cardWidth": 500,
+        "maxTasks": 3,
+        "maxAnomalies": 2
       }
     },
     "multiMonitor": {
