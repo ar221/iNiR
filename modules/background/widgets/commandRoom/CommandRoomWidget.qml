@@ -21,10 +21,16 @@ AbstractBackgroundWidget {
     readonly property real cardWidth: commandRoomConfig?.cardWidth ?? 460
     readonly property real cardOpacity: commandRoomConfig?.cardOpacity ?? 0.95
     readonly property int maxTasks: commandRoomConfig?.maxTasks ?? 3
+    readonly property int maxAnomalies: commandRoomConfig?.maxAnomalies ?? 2
     readonly property point screenPos: root.mapToItem(null, 0, 0)
     readonly property var visibleTasks: CommandRoom.openTasks.slice(0, Math.max(0, maxTasks))
-    readonly property string statusLabel: CommandRoom.freshnessState.toUpperCase()
+    readonly property var visibleAnomalies: CommandRoom.anomalies.slice(0, Math.max(0, maxAnomalies))
+    readonly property string statusLabel: CommandRoom.anomalyCount > 0 ? "ALERT" : CommandRoom.freshnessState.toUpperCase()
     readonly property color statusColor: {
+        if (CommandRoom.anomalyCount > 0)
+            return Appearance.colors.colError
+        if (CommandRoom.staleRunCount > 0)
+            return Appearance.colors.colTertiary
         if (CommandRoom.freshnessState === "fresh")
             return Appearance.m3colors.m3primary
         if (CommandRoom.freshnessState === "stale")
@@ -163,6 +169,25 @@ AbstractBackgroundWidget {
             }
 
             StyledText {
+                text: CommandRoom.runningRunCount + " RUNNING"
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.DemiBold
+                font.letterSpacing: 1.1
+                color: CommandRoom.staleRunCount > 0 ? Appearance.colors.colTertiary : Appearance.colors.colSubtext
+            }
+
+            StyledText {
+                visible: CommandRoom.anomalyCount > 0
+                text: CommandRoom.anomalyCount + " ANOM"
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.Bold
+                font.letterSpacing: 1.1
+                color: Appearance.colors.colError
+            }
+
+            StyledText {
                 Layout.fillWidth: true
                 text: CommandRoom.generatedAt.length > 0 ? "projection / " + CommandRoom.generatedAt : Directories.shortHomePath(CommandRoom.sourcePath)
                 font.family: Appearance.font.family.monospace
@@ -171,6 +196,67 @@ AbstractBackgroundWidget {
                 color: Appearance.colors.colSubtext
                 elide: Text.ElideRight
                 maximumLineCount: 1
+            }
+        }
+
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3
+            columnSpacing: 8
+            rowSpacing: 8
+
+            MetricPill { label: "RUN"; value: String(CommandRoom.runningRunCount); hot: CommandRoom.staleRunCount > 0 }
+            MetricPill { label: "APPROVE"; value: String(CommandRoom.pendingApprovalCount); hot: CommandRoom.pendingApprovalCount > 0 }
+            MetricPill { label: "QUEUE"; value: String(CommandRoom.queuedDeliveryCount + CommandRoom.pendingMemoryWriteCount); hot: (CommandRoom.queuedDeliveryCount + CommandRoom.pendingMemoryWriteCount) > 0 }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: CommandRoom.anomalyCount > 0
+            spacing: 6
+
+            StyledText {
+                Layout.fillWidth: true
+                text: "OBSERVABILITY FLAGS"
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.Bold
+                font.letterSpacing: 1.4
+                color: Appearance.colors.colError
+            }
+
+            Repeater {
+                model: root.visibleAnomalies
+
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    implicitHeight: anomalyText.implicitHeight + 12
+                    radius: 4
+                    color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                    border.width: 1
+                    border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.55)
+
+                    StyledText {
+                        id: anomalyText
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        text: String(parent.modelData?.type ?? "anomaly").replace(/_/g, " ").toUpperCase()
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: 1.1
+                        color: Appearance.colors.colOnLayer0
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+                }
             }
         }
 
@@ -266,6 +352,42 @@ AbstractBackgroundWidget {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    component MetricPill: Rectangle {
+        required property string label
+        required property string value
+        property bool hot: false
+
+        Layout.fillWidth: true
+        implicitHeight: metricRow.implicitHeight + 10
+        radius: 4
+        color: ColorUtils.transparentize(hot ? Appearance.colors.colTertiary : Appearance.colors.colLayer1, hot ? 0.86 : 0.42)
+        border.width: 1
+        border.color: ColorUtils.transparentize(hot ? Appearance.colors.colTertiary : Appearance.colors.colOnLayer0, hot ? 0.45 : 0.9)
+
+        RowLayout {
+            id: metricRow
+            anchors.centerIn: parent
+            spacing: 5
+
+            StyledText {
+                text: value
+                font.family: Appearance.font.family.numbers
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.weight: Font.Bold
+                color: hot ? Appearance.colors.colTertiary : Appearance.colors.colOnLayer0
+            }
+
+            StyledText {
+                text: label
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.weight: Font.DemiBold
+                font.letterSpacing: 1
+                color: Appearance.colors.colSubtext
             }
         }
     }
