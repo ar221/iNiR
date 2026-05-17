@@ -122,7 +122,7 @@ DockButton {
         sourceComponent: Rectangle {
             width: root.vertical ? root.separatorSize : 1
             height: root.vertical ? 1 : root.separatorSize
-            color: root.isRailVertical ? "#2b3338"
+            color: root.isRailVertical ? Appearance.apollo.colBorderDim
                  : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
                  : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.7)
                  : Appearance.colors.colOutlineVariant
@@ -383,8 +383,8 @@ DockButton {
                     height: parent.height
                     radius: 0
                     color: root.appIsActive
-                        ? "#d08a24"
-                        : "#3b454b"
+                        ? Appearance.apollo.colBorder
+                        : Appearance.apollo.colBorderDim
                     opacity: root.appIsActive ? 1 : 0.42
 
                     Behavior on width {

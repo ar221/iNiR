@@ -251,16 +251,16 @@ Scope {
                                 // Hide shared background in pill mode — each pill is its own background
                                 // Hide in macOS mode — DockMacBackground is the unified shelf
                                 visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
-                                color: root.isRailVertical ? "#080a0c"
+                                color: root.isRailVertical ? Appearance.apollo.colCanvas
                                     : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
                                     : inirEverywhere ? Appearance.inir.colLayer1
                                     : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
                                 border.width: root.isRailVertical ? 1 : (Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
-                                border.color: root.isRailVertical ? "#1a2025"
+                                border.color: root.isRailVertical ? Appearance.apollo.colBorderDim
                                     : Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
                                     : inirEverywhere ? Appearance.inir.colBorder
                                     : Appearance.colors.colLayer0Border
-                                radius: root.isRailVertical ? 2
+                                radius: root.isRailVertical ? Appearance.apollo.radiusMicro
                                     : Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
                                     : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
