@@ -23,7 +23,9 @@ Item {
     readonly property bool courierPreset: stylePreset === "courier" || Appearance.courierEverywhere
     readonly property color courierText: Appearance.courier.colTextStrong
     readonly property color courierTextDim: Appearance.courier.colTextDim
-    readonly property color courierDivider: Appearance.courier.colDivider
+    // Courier wedge 2026-05-17: route divider to Apollo dusty-teal `#6FC5C0`
+    // (canonical Apollo signal-cyan) instead of courier sage `#74a39a`.
+    readonly property color courierDivider: Appearance.apollo.colDivider
     implicitWidth: rowLayout.implicitWidth
     implicitHeight: Appearance.sizes.barHeight
 

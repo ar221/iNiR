@@ -16,13 +16,14 @@ RippleButton {
     property string monogramText: Config.options?.bar?.identity?.monogram?.text ?? "AR"
     property string marketState: "closed" // "open" | "closed"
 
-    readonly property color marketOpenColor: Appearance.colors.colPersonalAccent
-    readonly property color marketClosedColor: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText
-        : Appearance.colors.colOnLayer1
-
-    readonly property color monogramColor: marketState === "open" ? marketOpenColor : marketClosedColor
-    readonly property color invaderColor: marketState === "open" ? Appearance.colors.colPersonalAccent : "#c66b4e"
+    // Apollo palette literal — Courier wedge 2026-05-17.
+    // Per-component gating (Open Call B path A): no Appearance.apolloActive Singleton property,
+    // each token consumed directly. Acknowledged-brittle if palette switches away from apollo.
+    // Per Open Call A (apollo-amber both states), invader fill is fixed across market states;
+    // the equity-alarm distinct red register is intentionally flattened.
+    readonly property color monogramTextColor: marketState === "open" ? Appearance.apollo.colTextStrong : Appearance.apollo.colText
+    readonly property color invaderColor: Appearance.apollo.colAmberDim
+    readonly property color invaderEyeColor: Appearance.apollo.colCanvas
 
     property real buttonPadding: 5
     readonly property int _monogramSize: 28
@@ -75,19 +76,6 @@ RippleButton {
         }
     }
 
-    // Market-aware gradient tinting
-    property color _gradStart: marketState === "open" ? ColorUtils.mix(Appearance.colors.colPersonalAccent, "#ffffff", 0.6) : Qt.rgba(1, 1, 1, 0.55)
-    property color _gradEnd: marketState === "open" ? Appearance.colors.colPersonalAccent : Qt.rgba(1, 1, 1, 0.28)
-
-    Behavior on _gradStart {
-        enabled: Appearance.animationsEnabled
-        ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-    }
-    Behavior on _gradEnd {
-        enabled: Appearance.animationsEnabled
-        ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
-    }
-
     Row {
         anchors.centerIn: parent
         spacing: root._glyphGap
@@ -96,19 +84,23 @@ RippleButton {
             id: monogramCircle
             width: root._monogramSize
             height: root._monogramSize
-            radius: width / 2
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { position: 0.0; color: root._gradStart }
-                GradientStop { position: 1.0; color: root._gradEnd }
-            }
+            radius: Appearance.apollo.radiusMicro
+            color: Appearance.apollo.colSurface
+            border.width: Appearance.apollo.borderWidth
+            border.color: Appearance.apollo.colBorder
+            antialiasing: true
 
             StyledText {
                 anchors.centerIn: parent
                 text: root.monogramText
                 font.pixelSize: 13
                 font.weight: Font.Bold
-                color: "#ffffff"
+                color: root.monogramTextColor
+
+                Behavior on color {
+                    enabled: Appearance.animationsEnabled
+                    ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                }
             }
         }
 
@@ -147,7 +139,7 @@ RippleButton {
                     width: modelData.w * claudeCodeInvader.px
                     height: modelData.h * claudeCodeInvader.px
                     radius: 0
-                    color: modelData.eye ? Appearance.colors.colLayer0 : root.invaderColor
+                    color: modelData.eye ? root.invaderEyeColor : root.invaderColor
                     opacity: modelData.eye ? 0.95 : (root.marketState === "open" ? 0.95 : 0.88)
                     antialiasing: false
                 }
