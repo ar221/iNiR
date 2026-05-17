@@ -1,0 +1,70 @@
+/**
+ * Apollo preset — Vesktop / Discord theme (iNiR)
+ * Hand-authored; deployed in place of matugen-rendered output when Apollo is active.
+ * Mission-clock amber palette. Schema mirrors the matugen discord.css template.
+ */
+
+@import url("https://refact0r.github.io/midnight-discord/build/midnight.css");
+
+/* color options */
+:root {
+    --colors: on;
+
+    /* text colors */
+    --text-0: #0E0B08;        /* text on colored elements */
+    --text-1: #F2E3C6;        /* default text on colored elements */
+    --text-2: #F2E3C6;        /* headings and important text */
+    --text-3: #C9B28B;        /* normal text */
+    --text-4: #98876F;        /* icon buttons and channels */
+    --text-5: #5A4420;        /* muted channels/chats and timestamps */
+
+    /* background and dark colors */
+    --bg-1: #050302;          /* dark buttons when clicked */
+    --bg-2: #1C150C;          /* dark buttons */
+    --bg-3: #1C150C;          /* spacing, secondary elements */
+    --bg-4: #0E0B08;          /* main background color */
+    --hover: #2B1F10;         /* channels and buttons when hovered */
+    --active: #3A2710;        /* channels and buttons when clicked or selected */
+    --active-2: #0E0B08;      /* extra state for transparent buttons */
+    --message-hover: #1C150C; /* messages when hovered */
+
+    /* accent colors */
+    --accent-1: #FFB648;      /* links and other accent text */
+    --accent-2: #FFB648;      /* small accent elements */
+    --accent-3: #6FC5C0;      /* accent buttons */
+    --accent-4: #1C150C;      /* accent buttons when hovered */
+    --accent-5: #D28BD8;      /* accent buttons when clicked */
+    --accent-new: #FF5A4E;    /* stuff that's normally red like mute/deafen buttons */
+    --mention: linear-gradient(
+        to right,
+        color-mix(in hsl, #3A2710, transparent 70%) 60%,
+        transparent
+    );
+    --mention-hover: linear-gradient(
+        to right,
+        color-mix(in hsl, #3A2710, transparent 75%) 60%,
+        transparent
+    );
+    --reply: linear-gradient(
+        to right,
+        color-mix(in hsl, #1C150C, transparent 70%) 60%,
+        transparent
+    );
+    --reply-hover: linear-gradient(
+        to right,
+        color-mix(in hsl, #1C150C, transparent 75%) 60%,
+        transparent
+    );
+
+    /* status indicator colors */
+    --online: #A8C97B;
+    --dnd: #FF5A4E;
+    --idle: #D28BD8;
+    --streaming: #6FC5C0;
+    --offline: #98876F;
+
+    /* border colors */
+    --border-light: #2B1F10;
+    --border: #3A2710;
+    --button-border: #2B1F10;
+}

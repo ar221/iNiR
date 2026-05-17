@@ -1,0 +1,53 @@
+# Newsboat Apollo colors — hand-authored preset (iNiR)
+# Hand-authored; deployed in place of newsboat-colors output when Apollo is active.
+# 256-color indices precomputed from Apollo hex palette via the standard
+# 6x6x6 cube + greyscale-ramp mapping (matches newsboat-colors algorithm).
+#
+# Token mapping:
+#   surface         #0E0B08 -> color232  (deep warm-black canvas)
+#   on_surface      #F2E3C6 -> color230  (cream text)
+#   primary         #FFB648 -> color215  (bright amber)
+#   on_primary      #2B1F10 -> color234
+#   primary_ctr     #3A2710 -> color234
+#   on_primary_ctr  #FFD080 -> color222  (amber-bright)
+#   secondary_ctr   #1C150C -> color233
+#   on_secondary    #8FE2DD -> color122  (teal-bright)
+#   tertiary        #D28BD8 -> color176  (violet)
+#   error           #FF5A4E -> color203  (ember)
+#   variant         #C9B28B -> color180  (warm beige — secondary text)
+#   muted           #98876F -> color101  (bronze-dim)
+#   success         #A8C97B -> color150  (sage)
+
+# base colors
+color listnormal          color230  color232
+color listfocus           color232  color215         bold
+color listnormal_unread   color215  color232         bold
+color listfocus_unread    color222  color234         bold
+color info                color122  color233         bold
+color article             color230  color232
+
+# article highlights
+highlight article "(^Feed:.*|^Title:.*|^Author:.*)" color215 color232 bold
+highlight article "(^Link:.*|^Date:.*)" color180 color232
+highlight article "https?://[^ ]+" color176 color232 underline
+highlight article "^(Title):.*$" color215 color232 bold
+highlight article "\\[[0-9][0-9]*\\]" color122 color232 bold
+highlight article "\\[image\\ [0-9]+\\]" color176 color232 bold
+highlight article "\\[embedded flash: [0-9][0-9]*\\]" color176 color232 bold
+highlight article ":.*\\(link\\)$" color122 color232
+highlight article ":.*\\(image\\)$" color176 color232
+highlight article ":.*\\(embedded flash\\)$" color122 color232
+
+# list highlights
+highlight articlelist "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]+" color180 color232
+highlight articlelist "\\|[^\\|]+\\|" color122 color232
+highlight articlelist "\\(YouTube\\)" color203 color232
+highlight articlelist "\\(PeerTube\\)" color203 color232
+highlight articlelist "\\|r/" color176 color232
+highlight feedlist "\\(YouTube\\)" color203 color232
+highlight feedlist "\\(PeerTube\\)" color203 color232
+highlight feedlist " r/" color176 color232
+highlight feedlist "\\([0-9]+/[0-9]+\\)" color180 color232
+
+highlight all "---.*---" color215 color232 bold
+highlight feedlist "^.*\\(0/0\\)" color232 color232 invis

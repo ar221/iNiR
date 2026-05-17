@@ -15,6 +15,7 @@ Singleton {
     property QtObject animationCurves
     property QtObject aurora
     property QtObject courier
+    property QtObject apollo
     property QtObject mission
     property QtObject inir
     property QtObject angel
@@ -726,6 +727,54 @@ Singleton {
         readonly property color colTextDim: "#8a9a72"
         readonly property color colTextMuted: ColorUtils.transparentize(colText, 0.40)
 
+        readonly property int radiusStructural: 0
+        readonly property int radiusMicro: 2
+        readonly property int radiusMax: 4
+        readonly property real borderWidth: 1
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // APOLLO — Ayaz OS Design System fixed-palette (mission-clock amber)
+    // Token names mirror courier's. Color values pulled from the canonical
+    // Ayaz OS Design System bundle (`--ap-*` family in colors_and_type.css),
+    // matching defaults/palettes/apollo/state/colors.json.
+    //
+    // Apollo is a PALETTE, not a grammar. The forward grammar is courier.
+    // Consumers that want Apollo grammar-shaped tokens (square radii,
+    // 1px borders, dispatch-board cards) should compose `apollo` palette
+    // values inside the existing `courier`/`mission` grammar QtObjects
+    // rather than reading `apollo` directly — keeps Courier Console as
+    // the single source of structural grammar.
+    // ═══════════════════════════════════════════════════════════════════
+    apollo: QtObject {
+        readonly property color colCanvas: "#0E0B08"        // --ap-bg
+        readonly property color colCanvasDeepest: "#050302" // --ap-bg-deepest
+        readonly property color colSurface: "#1C150C"       // --ap-bg-panel
+        readonly property color colSurfaceHover: "#2B1F10"  // --ap-bg-element
+        readonly property color colSurfaceActive: "#3A2710" // --ap-warm-mid
+        readonly property color colBorder: "#FFB648"        // --ap-amber (primary)
+        readonly property color colBorderDim: "#5A4420"     // --ap-amber-deep
+        readonly property color colDivider: "#6FC5C0"       // --ap-teal
+        readonly property color colText: "#F2E3C6"          // --ap-cream
+        readonly property color colTextStrong: "#FFD080"    // --ap-amber-bright
+        readonly property color colTextDim: "#C9B28B"       // --ap-bronze
+        readonly property color colTextMuted: ColorUtils.transparentize(colText, 0.40)
+
+        // Apollo amber family — for downstream consumers that want raw access
+        readonly property color colAmber: "#FFB648"         // --ap-amber
+        readonly property color colAmberBright: "#FFD080"   // --ap-amber-bright
+        readonly property color colAmberDim: "#C99545"      // --ap-amber-dim
+        readonly property color colAmberDeep: "#5A4420"     // --ap-amber-deep
+
+        // VL semantic signals (mirror --vl-*; identical to --ap-* counterparts)
+        readonly property color colSignalSage: "#A8C97B"    // --ap-sage (success / readiness)
+        readonly property color colSignalCyan: "#6FC5C0"    // --ap-teal (route / source)
+        readonly property color colSignalEmber: "#FF5A4E"   // --ap-ember (alarm / warning)
+        readonly property color colSignalViolet: "#D28BD8"  // --ap-violet (model / token)
+        readonly property color colSignalBronze: "#98876F"  // --ap-bronze-dim (muted)
+
+        // Mirror courier's structural grammar so a future apollo-grammar fork
+        // (if ever needed) can compose against the same shape.
         readonly property int radiusStructural: 0
         readonly property int radiusMicro: 2
         readonly property int radiusMax: 4

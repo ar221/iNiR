@@ -1,0 +1,41 @@
+/* Material You colors for ShyMaterial Firefox theme — Apollo preset (iNiR)
+   Hand-authored; deployed in place of matugen-rendered output when Apollo is active.
+   Tokens mirror defaults/palettes/apollo/state/colors.json. */
+
+:root, #screenshots-component * {
+  /* === Material You Semantic Tokens === */
+  --m3-primary:              #FFB648;
+  --m3-on-primary:           #2B1F10;
+  --m3-primary-container:    #3A2710;
+  --m3-on-primary-container: #FFD080;
+
+  --m3-secondary:              #6FC5C0;
+  --m3-on-secondary:           #0E0B08;
+  --m3-secondary-container:    #1C150C;
+  --m3-on-secondary-container: #8FE2DD;
+
+  --m3-tertiary:              #D28BD8;
+  --m3-on-tertiary:           #0E0B08;
+  --m3-tertiary-container:    #1C150C;
+  --m3-on-tertiary-container: #EBA9F0;
+
+  --m3-error:              #FF5A4E;
+  --m3-on-error:           #0E0B08;
+  --m3-error-container:    #1C150C;
+  --m3-on-error-container: #FF8274;
+
+  --m3-surface:              #0E0B08;
+  --m3-on-surface:           #F2E3C6;
+  --m3-on-surface-variant:   #C9B28B;
+
+  --m3-surface-container-lowest:  #050302;
+  --m3-surface-container-low:     #1C150C;
+  --m3-surface-container:         #1C150C;
+  --m3-surface-container-high:    #2B1F10;
+  --m3-surface-container-highest: #3A2710;
+  --m3-surface-bright:            #3A2710;
+  --m3-surface-dim:               #050302;
+
+  --m3-outline:         #5A4420;
+  --m3-outline-variant: #3A2710;
+}
