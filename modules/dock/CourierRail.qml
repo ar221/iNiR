@@ -272,14 +272,18 @@ Scope {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Appearance.courier.colCanvas
+                    // Apollo palette literal — Courier dock wedge 2026-05-17.
+                    // Per-component gating (Open Call B path A); unconditional swap,
+                    // matches bar wedge 5619af4f pattern. Tonal continuity with AR
+                    // identity block: same warm-near-black canvas + amber primary frame.
+                    color: Appearance.apollo.colCanvas
 
                     Rectangle {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         anchors.right: parent.right
                         width: 1
-                        color: Appearance.courier.colBorder
+                        color: Appearance.apollo.colBorder
                     }
 
                     ColumnLayout {
@@ -303,7 +307,7 @@ Scope {
                             Layout.alignment: Qt.AlignHCenter
                             width: 20
                             height: 1
-                            color: Appearance.courier.colBorderDim
+                            color: Appearance.apollo.colBorderDim
                         }
 
                         Repeater {
@@ -326,27 +330,29 @@ Scope {
                                 height: emptyPill.implicitHeight + 4
                                 radius: 0
                                 border.width: 1
-                                border.color: Appearance.courier.colBorder
-                                color: ColorUtils.transparentize(Appearance.courier.colBorder, 0.85)
+                                border.color: Appearance.apollo.colBorder
+                                // Open Call C path B — 0.92 keeps pill ambient; amber-primary
+                                // reserved for active-slit hot signal.
+                                color: ColorUtils.transparentize(Appearance.apollo.colBorder, 0.92)
                                 StyledText {
                                     id: emptyPill
                                     anchors.centerIn: parent
                                     text: "[EMPTY]"
-                                    color: Appearance.courier.colBorder
+                                    color: Appearance.apollo.colBorder
                                     font.family: Appearance.font.family.monospace
                                     font.pixelSize: Appearance.font.pixelSize.smallest
                                     font.letterSpacing: 1.2
                                 }
                             }
 
-                            StyledText { text: "DOCK"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "─────"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "pinned"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "none"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "DOCK"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "─────"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "pinned"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "none"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                             Item { width: 1; height: 4 }
-                            StyledText { text: "route"; color: Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "+ from"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "  launcher"; color: Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "route"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "+ from"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "  launcher"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                         }
                     }
                 }
@@ -363,8 +369,24 @@ Scope {
                         width: root.buttonSize
                         height: root.buttonSize
 
-                        Rectangle { anchors.fill: parent; radius: Appearance.courier.radiusMicro; color: mouseArea.pressed ? Appearance.courier.colSurfaceActive : (mouseArea.containsMouse ? Appearance.courier.colSurfaceHover : "transparent") }
-                        Rectangle { visible: appItem.hasWindows; width: appItem.isFocused ? 4 : 3; anchors.top: parent.top; anchors.bottom: parent.bottom; anchors.right: parent.right; color: appItem.isFocused ? Appearance.courier.colBorder : Appearance.courier.colBorderDim }
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Appearance.apollo.radiusMicro
+                            color: mouseArea.pressed ? Appearance.apollo.colSurfaceActive
+                                : (mouseArea.containsMouse ? Appearance.apollo.colSurfaceHover : "transparent")
+                            Behavior on color {
+                                enabled: Appearance.animationsEnabled
+                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                            }
+                        }
+                        Rectangle {
+                            visible: appItem.hasWindows
+                            width: appItem.isFocused ? 4 : 3
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.right: parent.right
+                            color: appItem.isFocused ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim
+                        }
 
                         IconImage {
                             anchors.centerIn: parent
