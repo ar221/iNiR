@@ -182,18 +182,6 @@ Scope {
         }
     }
 
-    // ── IPC handler ──
-    IpcHandler {
-        target: "dashboard"
-
-        function toggle(): void {
-            GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen
-        }
-        function open(): void {
-            GlobalStates.dashboardOpen = true
-        }
-        function close(): void {
-            GlobalStates.dashboardOpen = false
-        }
-    }
+    // IPC handler lives in shell.qml so it routes through the LazyLoader
+    // (`_dashboardRequested`) and can bootstrap this module from cold.
 }
