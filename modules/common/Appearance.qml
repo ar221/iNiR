@@ -789,29 +789,71 @@ Singleton {
     // and gradually inherited by shell modules that need operator density.
     // ═══════════════════════════════════════════════════════════════════
     mission: QtObject {
-        readonly property color colCanvas: commandPreset ? root.courier.colCanvas : root.m3colors.m3background
-        readonly property color colPanel: commandPreset ? root.courier.colCanvas : root.m3colors.m3surfaceContainerLowest
-        readonly property color colSurface: commandPreset ? root.courier.colSurface : root.m3colors.m3surfaceContainerLow
-        readonly property color colSurfaceRaised: commandPreset ? root.courier.colSurfaceHover : root.m3colors.m3surfaceContainer
-        readonly property color colSurfaceHover: commandPreset ? root.courier.colSurfaceHover : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3onSurface, 0.94)
-        readonly property color colSurfaceActive: commandPreset ? root.courier.colSurfaceActive : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3primary, 0.86)
+        // Apollo branch (top of each property) gates on Appearance.apolloActive
+        // per Call B; falls through to courier (commandPreset) then m3.
+        readonly property color colCanvas: root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.m3colors.m3background
+        readonly property color colPanel: root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.m3colors.m3surfaceContainerLowest
+        readonly property color colSurface: root.apolloActive ? root.apollo.colSurface
+            : commandPreset ? root.courier.colSurface
+            : root.m3colors.m3surfaceContainerLow
+        readonly property color colSurfaceRaised: root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : root.m3colors.m3surfaceContainer
+        readonly property color colSurfaceHover: root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3onSurface, 0.94)
+        readonly property color colSurfaceActive: root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : ColorUtils.mix(colSurfaceRaised, root.m3colors.m3primary, 0.86)
 
-        readonly property color colText: commandPreset ? root.courier.colText : root.m3colors.m3onSurface
-        readonly property color colTextSecondary: commandPreset ? root.courier.colTextDim : root.m3colors.m3onSurfaceVariant
-        readonly property color colTextMuted: commandPreset ? root.courier.colTextMuted : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.34)
-        readonly property color colTextFaint: commandPreset ? ColorUtils.transparentize(root.courier.colTextDim, 0.40) : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.55)
+        readonly property color colText: root.apolloActive ? root.apollo.colText
+            : commandPreset ? root.courier.colText
+            : root.m3colors.m3onSurface
+        readonly property color colTextSecondary: root.apolloActive ? root.apollo.colTextDim
+            : commandPreset ? root.courier.colTextDim
+            : root.m3colors.m3onSurfaceVariant
+        readonly property color colTextMuted: root.apolloActive ? root.apollo.colTextMuted
+            : commandPreset ? root.courier.colTextMuted
+            : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.34)
+        readonly property color colTextFaint: root.apolloActive ? ColorUtils.transparentize(root.apollo.colTextDim, 0.40)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colTextDim, 0.40)
+            : ColorUtils.transparentize(root.m3colors.m3onSurfaceVariant, 0.55)
 
-        readonly property color colAccent: commandPreset ? root.courier.colBorder : root.m3colors.m3primary
-        readonly property color colAccentMuted: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.42) : ColorUtils.transparentize(root.m3colors.m3primary, 0.42)
-        readonly property color colAccentDim: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.72) : ColorUtils.transparentize(root.m3colors.m3primary, 0.72)
-        readonly property color colAccentSurface: commandPreset ? ColorUtils.transparentize(root.courier.colSurfaceActive, 0.48) : ColorUtils.transparentize(root.m3colors.m3primaryContainer, 0.48)
+        readonly property color colAccent: root.apolloActive ? root.apollo.colAmberBright
+            : commandPreset ? root.courier.colBorder
+            : root.m3colors.m3primary
+        readonly property color colAccentMuted: root.apolloActive ? ColorUtils.transparentize(root.apollo.colAmberBright, 0.42)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.42)
+            : ColorUtils.transparentize(root.m3colors.m3primary, 0.42)
+        readonly property color colAccentDim: root.apolloActive ? ColorUtils.transparentize(root.apollo.colAmberBright, 0.72)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.72)
+            : ColorUtils.transparentize(root.m3colors.m3primary, 0.72)
+        readonly property color colAccentSurface: root.apolloActive ? ColorUtils.transparentize(root.apollo.colSurfaceActive, 0.48)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colSurfaceActive, 0.48)
+            : ColorUtils.transparentize(root.m3colors.m3primaryContainer, 0.48)
 
-        readonly property color colBorder: commandPreset ? root.courier.colBorderDim : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.12)
-        readonly property color colBorderSubtle: commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.40) : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.48)
-        readonly property color colBorderHover: commandPreset ? root.courier.colBorder : ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
-        readonly property color colBorderHot: commandPreset ? root.courier.colBorder : ColorUtils.transparentize(root.m3colors.m3primary, 0.34)
-        readonly property color colGrid: commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.55) : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.72)
-        readonly property color colScanline: commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.85) : ColorUtils.transparentize(root.m3colors.m3primary, 0.88)
+        readonly property color colBorder: root.apolloActive ? root.apollo.colBorderDim
+            : commandPreset ? root.courier.colBorderDim
+            : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.12)
+        readonly property color colBorderSubtle: root.apolloActive ? ColorUtils.transparentize(root.apollo.colBorderDim, 0.40)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.40)
+            : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.48)
+        readonly property color colBorderHover: root.apolloActive ? root.apollo.colBorder
+            : commandPreset ? root.courier.colBorder
+            : ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
+        readonly property color colBorderHot: root.apolloActive ? root.apollo.colBorder
+            : commandPreset ? root.courier.colBorder
+            : ColorUtils.transparentize(root.m3colors.m3primary, 0.34)
+        readonly property color colGrid: root.apolloActive ? ColorUtils.transparentize(root.apollo.colBorderDim, 0.55)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colBorderDim, 0.55)
+            : ColorUtils.transparentize(root.m3colors.m3outlineVariant, 0.72)
+        readonly property color colScanline: root.apolloActive ? ColorUtils.transparentize(root.apollo.colBorder, 0.85)
+            : commandPreset ? ColorUtils.transparentize(root.courier.colBorder, 0.85)
+            : ColorUtils.transparentize(root.m3colors.m3primary, 0.88)
 
         readonly property color colIdle: ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
         readonly property color colActive: root.m3colors.m3primary

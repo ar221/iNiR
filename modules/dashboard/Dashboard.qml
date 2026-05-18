@@ -113,10 +113,10 @@ Scope {
             height: Math.min(parent.height * 0.94, 1100)
 
             clip: true
-            color: Appearance.courierEverywhere ? Appearance.courier.colCanvas : Appearance.colors.colLayer0
-            radius: Appearance.courierEverywhere ? Appearance.courier.radiusMicro : 24
+            color: Appearance.mission.colCanvas
+            radius: Appearance.mission.commandPreset ? Appearance.mission.radiusLarge : 24
             border.width: 1
-            border.color: Appearance.courierEverywhere ? Appearance.courier.colBorder : Qt.rgba(1, 1, 1, 0.06)
+            border.color: Appearance.mission.colBorder
 
             // ── Shadow ──
             StyledRectangularShadow {
