@@ -137,6 +137,70 @@ ColumnLayout {
         }
     }
 
+    // ── PaletteSwatch ──────────────────────────────────────────────────
+    // Index-driven so the ripple (INI-20) can address each chip by
+    // _chipItems[index]. Carries a _rippleScale hook composed multiplicatively
+    // with the existing 1.4 hover lift. Behavior on color cross-fades on
+    // matugen regen so palette swaps feel seeded, not snapped.
+    component PaletteSwatch : Rectangle {
+        id: swatch
+        required property int swatchIndex
+
+        readonly property var _palette: [
+            Appearance.m3colors.m3primary,
+            Appearance.m3colors.m3secondary,
+            Appearance.m3colors.m3tertiary,
+            Appearance.m3colors.m3surfaceContainer,
+            Appearance.m3colors.m3error,
+            Appearance.m3colors.m3outline
+        ]
+        readonly property color swatchColor: _palette[swatchIndex] ?? Appearance.m3colors.m3outline
+
+        // Ripple hook — driven by paletteRippleAnim in INI-20. Default 1.0
+        // keeps hover-only behaviour identical to pre-INI-19 chip.
+        property real _rippleScale: 1.0
+
+        Layout.fillWidth: true
+        implicitHeight: 18
+        radius: 2
+        color: swatch.swatchColor
+        clip: false
+
+        Behavior on color {
+            enabled: Appearance.animationsEnabled
+            ColorAnimation {
+                duration: Appearance.animation.elementMoveFast.duration
+                easing.type: Appearance.animation.elementMoveFast.type
+                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+            }
+        }
+
+        transform: Scale {
+            origin.x: 0
+            origin.y: swatch.height
+            xScale: (mouseArea.containsMouse ? 1.4 : 1.0) * swatch._rippleScale
+            yScale: (mouseArea.containsMouse ? 1.4 : 1.0) * swatch._rippleScale
+            Behavior on yScale {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            }
+            Behavior on xScale {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            }
+        }
+
+        MouseArea {
+            id: mouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                Quickshell.clipboardText = swatch.swatchColor.toString().toUpperCase()
+            }
+        }
+    }
+
     // ── Tier A: 2×4 recent-wallpaper grid ──────────────────────────────
     GridLayout {
         Layout.fillWidth: true
@@ -150,48 +214,27 @@ ColumnLayout {
         }
     }
 
+    // ── Hairline divider — Courier "two related blocks, formally separated" ─
+    // Hard 1px colLayer1 separator. NOT a SectionHeader fade (different idiom).
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Appearance.colors.colLayer1
+    }
+
     // ── Tier B: 6 matugen swatches ──────────────────────────────────────
     RowLayout {
         Layout.fillWidth: true
         spacing: 2
 
-        component PaletteSwatch : Rectangle {
-            id: swatch
-            required property color swatchColor
-            required property string label
-
-            Layout.fillWidth: true
-            implicitHeight: 18
-            radius: 2
-            color: swatch.swatchColor
-            clip: false
-
-            transform: Scale {
-                origin.x: 0
-                origin.y: swatch.height
-                yScale: mouseArea.containsMouse ? 1.4 : 1.0
-                Behavior on yScale {
-                    enabled: Appearance.animationsEnabled
-                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-                }
+        Repeater {
+            model: 6
+            delegate: PaletteSwatch {
+                required property int index
+                swatchIndex: index
             }
-
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    Quickshell.clipboardText = swatch.swatchColor.toString().toUpperCase()
-                }
-            }
+            // Note: with ComponentBehavior:Bound, the delegate root must
+            // declare `required property int index` to receive the model role.
         }
-
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3primary;           label: "Primary" }
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3secondary;         label: "Secondary" }
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3tertiary;          label: "Tertiary" }
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3surfaceContainer;  label: "Surface" }
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3error;             label: "Error" }
-        PaletteSwatch { swatchColor: Appearance.m3colors.m3outline;           label: "Outline" }
     }
 }
