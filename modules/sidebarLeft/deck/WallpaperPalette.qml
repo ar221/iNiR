@@ -41,6 +41,7 @@ ColumnLayout {
         required property int index
         readonly property string _path: (cell.index < root._count) ? root._paths[cell.index] : ""
         readonly property bool _filled: _path.length > 0
+        readonly property bool _isActive: _filled && Wallpapers.isCurrentWallpaperPath(_path, "main")
 
         Layout.fillWidth: true
         Layout.preferredHeight: 60
@@ -101,6 +102,26 @@ ColumnLayout {
                         height: cell.height
                         radius: 3
                     }
+                }
+            }
+        }
+
+        // Active-wallpaper ring — operational accent, NOT m3primary.
+        // Matches shell-wide convention (QuickWallpaperItem, WallpaperConfig,
+        // NavigationRail). border.width animates to keep the ring migration
+        // legible when wallpaper changes.
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            radius: 3
+            border.width: cell._isActive ? 2 : 0
+            border.color: Appearance.colors.colPrimary
+            Behavior on border.width {
+                enabled: Appearance.animationsEnabled
+                NumberAnimation {
+                    duration: Appearance.animation.elementMoveFast.duration
+                    easing.type: Appearance.animation.elementMoveFast.type
+                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                 }
             }
         }
