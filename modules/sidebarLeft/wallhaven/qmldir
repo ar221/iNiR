@@ -1,0 +1,4 @@
+module qs.modules.sidebarLeft.wallhaven
+WallhavenImage 1.0 WallhavenImage.qml
+WallhavenImageContextMenu 1.0 WallhavenImageContextMenu.qml
+WallhavenResponse 1.0 WallhavenResponse.qml

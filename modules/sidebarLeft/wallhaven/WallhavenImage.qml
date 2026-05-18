@@ -3,7 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import qs.modules.sidebarLeft.anime
+import qs.modules.sidebarLeft.wallhaven
 import QtQml
 import QtQuick
 import QtQuick.Controls
@@ -18,8 +18,6 @@ Button {
     property var imageData
     property var fallbackTags: []
     property var rowHeight
-    property bool aspectCrop: false
-    property bool manualDownload: false
     property string previewDownloadPath
     property string downloadPath
     property string nsfwPath
@@ -29,7 +27,7 @@ Button {
     property real imageRadius: Appearance.rounding.small
     property bool showBackground: true  // When false, no background rectangle behind image
 
-    // Allow consumers (e.g. Wallhaven) to opt-out of hover tooltips
+    // Allow consumers to opt-out of hover tooltips
     property bool enableTooltip: true
     property bool buttonHovered: false
 
@@ -41,8 +39,6 @@ Button {
         interval: 450
         repeat: false
         onTriggered: {
-            if (!root.aspectCrop)
-                return
             if (!root.imageData || !root.imageData.id)
                 return
             if (root.imageData.tags && root.imageData.tags.length > 0)
@@ -57,7 +53,7 @@ Button {
             return root.imageData.tags
         if (root.fallbackTags && root.fallbackTags.length > 0)
             return root.fallbackTags
-        if (root.aspectCrop && root.tagsRequested)
+        if (root.tagsRequested)
             return Translation.tr("Loading tags…")
         return ""
     }
@@ -65,8 +61,6 @@ Button {
     hoverEnabled: true
 
     onHoveredChanged: {
-        if (!root.aspectCrop)
-            return
         if (root.hovered) {
             // Only start the timer if tags are not already present.
             if (!(root.imageData && root.imageData.tags && root.imageData.tags.length > 0)) {
@@ -74,21 +68,6 @@ Button {
             }
         } else {
             tagFetchTimer.stop()
-        }
-    }
-    
-    Process {
-        id: downloadProcess
-        running: false
-        command: ["/usr/bin/bash", "-c", `mkdir -p '${root.previewDownloadPath}' && [ -f ${root.filePath} ] || curl -sSL '${root.imageData.preview_url ?? root.imageData.sample_url}' -o '${root.filePath}'`]
-        onExited: (exitCode, exitStatus) => {
-            imageObject.source = `${previewDownloadPath}/${root.fileName}`
-        }
-    }
-
-    Component.onCompleted: {
-        if (root.manualDownload) {
-            downloadProcess.running = true
         }
     }
 
@@ -117,7 +96,8 @@ Button {
             anchors.fill: parent
             width: root.rowHeight * modelData.aspect_ratio
             height: root.rowHeight
-            fillMode: root.aspectCrop ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+            // Wallhaven thumbnails are aspect-cropped for grid presentation
+            fillMode: Image.PreserveAspectCrop
             source: modelData.preview_url
             sourceSize.width: root.rowHeight * modelData.aspect_ratio
             sourceSize.height: root.rowHeight
@@ -202,12 +182,12 @@ Button {
             z: 1000
         }
 
-        BooruImageContextMenu {
+        WallhavenImageContextMenu {
             id: contextMenu
             z: 1000
             anchorItem: menuAnchor
             anchorHovered: root.hovered || root.buttonHovered
-            
+
             model: [
                 {
                     iconName: "open_in_new",
@@ -237,7 +217,7 @@ Button {
                     action: () => {
                         const targetPath = root.imageData.is_nsfw ? root.nsfwPath : root.downloadPath;
                         const localPath = `${targetPath}/${root.fileName}`;
-                        Quickshell.execDetached(["/usr/bin/bash", "-c", 
+                        Quickshell.execDetached(["/usr/bin/bash", "-c",
                             `mkdir -p '${targetPath}' && curl '${root.imageData.file_url}' -o '${localPath}' && notify-send '${Translation.tr("Download complete")}' '${localPath}' -a 'Shell'`
                         ])
                         if (Config.options?.sidebar?.openFolderOnDownload ?? false)

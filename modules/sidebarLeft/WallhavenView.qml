@@ -3,7 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import qs.modules.sidebarLeft.anime
+import qs.modules.sidebarLeft.wallhaven
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -344,7 +344,7 @@ Item {
                 model: ScriptModel {
                     values: root.responses
                 }
-                delegate: BooruResponse {
+                delegate: WallhavenResponse {
                     responseData: modelData
                     tagInputField: root.inputField
                     previewDownloadPath: root.previewDownloadPath

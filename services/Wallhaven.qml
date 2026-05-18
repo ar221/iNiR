@@ -8,12 +8,12 @@ import QtQuick
 
 /**
  * Simple wallpaper search service for wallhaven.cc
- * Reuses BooruResponseData so it can be rendered with existing Booru UI components.
+ * Uses WallhavenResponseData for rendering by WallhavenView's delegates.
  */
 QtObject {
     id: root
 
-    property Component wallhavenResponseComponent: BooruResponseData {}
+    property Component wallhavenResponseComponent: WallhavenResponseData {}
 
     signal responseFinished()
 

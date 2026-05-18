@@ -4,6 +4,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.modules.sidebarLeft
+import qs.modules.sidebarLeft.wallhaven
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -15,15 +16,13 @@ Rectangle {
     property var responseData
     property var tagInputField
 
-    // Optional hook for the parent view (e.g., WallhavenView) to request auto-scroll
+    // Optional hook for the parent view (WallhavenView) to request auto-scroll
     // when the user clicks paging buttons.
     property var onNextPageRequested
 
     property string previewDownloadPath
     property string downloadPath
     property string nsfwPath
-
-    readonly property bool isWallhaven: root.responseData.provider === "wallhaven"
 
     property real availableWidth: parent.width
     property real rowTooShortThreshold: 190
@@ -68,7 +67,7 @@ Rectangle {
 
     ColumnLayout {
         id: columnLayout
-        
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -77,7 +76,7 @@ Rectangle {
 
         RowLayout { // Header
             visible: !cleanLayout
-            Rectangle { // Provider name
+            Rectangle { // Page label (Wallhaven always shows page; no provider name)
                 id: providerNameWrapper
                 color: Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer
                 radius: Appearance.rounding.small
@@ -90,27 +89,10 @@ Rectangle {
                     anchors.centerIn: parent
                     font.pixelSize: Appearance.font.pixelSize.large
                     color: Appearance.m3colors.m3onSecondaryContainer
-                    text: root.isWallhaven
-                        ? Translation.tr("Page %1").arg(root.responseData.page)
-                        : Booru.providers[root.responseData.provider].name
-                }
-            }
-            Item { Layout.fillWidth: true }
-            Item { // Page number
-                visible: !root.isWallhaven && root.responseData.page != "" && root.responseData.page > 0
-                implicitWidth: Math.max(pageNumber.implicitWidth + 10 * 2, 30)
-                implicitHeight: pageNumber.implicitHeight + 5 * 2
-                Layout.alignment: Qt.AlignVCenter
-
-                StyledText {
-                    id: pageNumber
-                    anchors.centerIn: parent
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: Appearance.colors.colOnLayer2
-                    // text: `Page ${root.responseData.page}`
                     text: Translation.tr("Page %1").arg(root.responseData.page)
                 }
             }
+            Item { Layout.fillWidth: true }
         }
 
         StyledFlickable { // Tag strip
@@ -152,7 +134,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
             }
         }
 
@@ -244,19 +226,15 @@ Rectangle {
 
                 Repeater {
                     model: modelData.images
-                    delegate: BooruImage {
+                    delegate: WallhavenImage {
                         required property var modelData
                         imageData: modelData
                         fallbackTags: root.responseData.tags
-                        aspectCrop: root.responseData.provider === "wallhaven"
                         rowHeight: imageRow.rowHeight
                         // Clean layout: no radius, no background. Normal: 50 for single image, normal rounding for multiple
                         imageRadius: root.cleanLayout ? Appearance.rounding.small : (imageRow.modelData.images.length == 1 ? 50 : Appearance.rounding.normal)
                         showBackground: !root.cleanLayout
-                        // Wallhaven search often lacks per-image tags; BooruImage will fall back to response tags.
                         enableTooltip: true
-                        // Download manually to reduce redundant requests or make sure downloading works
-                        manualDownload: ["danbooru", "waifu.im", "t.alcy.cc"].includes(root.responseData.provider)
                         previewDownloadPath: root.previewDownloadPath
                         downloadPath: root.downloadPath
                         nsfwPath: root.nsfwPath
@@ -289,7 +267,7 @@ Rectangle {
                     if (root.onNextPageRequested) {
                         root.onNextPageRequested(root.responseData)
                     }
-                    
+
                     tagInputField.text = `${responseData.tags.join(" ")} ${parseInt(root.responseData.page) + 1}`
                     tagInputField.accept()
                 }
@@ -303,7 +281,7 @@ Rectangle {
                 buttonRadius: Appearance.rounding.small
                 colBackground: Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colSurfaceContainerHighest
                 colBackgroundHover: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colSurfaceContainerHighestHover
-                colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSurfaceContainerHighestActive            
+                colRipple: Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSurfaceContainerHighestActive
 
                 contentItem: Item {
                     anchors.fill: parent
@@ -333,7 +311,7 @@ Rectangle {
             RippleButton { // Clear button
                 id: clearButton
                 property bool clickHandled: false
-                
+
                 implicitHeight: 30
                 leftPadding: 10
                 rightPadding: 10
@@ -343,15 +321,11 @@ Rectangle {
                     if (clickHandled) return
                     clickHandled = true
                     clearClickResetTimer.restart()
-                    
+
                     if (root.tagInputField) {
                         root.tagInputField.text = ""
                     }
-                    if (root.responseData.provider === "wallhaven") {
-                        Wallhaven.clearResponses()
-                    } else {
-                        Booru.clearResponses()
-                    }
+                    Wallhaven.clearResponses()
                 }
 
                 Timer {
