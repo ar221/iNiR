@@ -33,6 +33,12 @@ ColumnLayout {
     }
     readonly property int _count: _paths.length
 
+    // Live list of mounted PaletteSwatch items, populated by the chip
+    // Repeater's onItemAdded. Read by paletteRippleAnim. Null-safe targets
+    // (see §7 of the spec) cover the hot-reload race where the ripple
+    // fires before all six delegates have mounted.
+    property var _chipItems: []
+
     // ── ThumbCell ──────────────────────────────────────────────────────
     // Square-edged (3px) thumbnail with hover scale + click-to-apply.
     // Empty slots render as muted placeholder rects so the grid never collapses.
@@ -235,6 +241,60 @@ ColumnLayout {
             }
             // Note: with ComponentBehavior:Bound, the delegate root must
             // declare `required property int index` to receive the model role.
+            onItemAdded: (idx, item) => {
+                const copy = root._chipItems.slice()
+                copy[idx] = item
+                root._chipItems = copy
+            }
+        }
+    }
+
+    // ── Signature ripple — dispatch receipt on Wallpapers.changed() ────
+    // Six SequentialAnimation siblings inside ParallelAnimation, 35ms
+    // stagger. Each chip pulses _rippleScale 1.0 → 1.18 → 1.0 over 150ms
+    // (75ms OutQuad each leg). Total 325ms end-to-end, completes within
+    // matugen's 200–400ms regen window so the colour cross-fade overlaps
+    // the ripple tail and resolves into the new palette.
+    Connections {
+        target: Wallpapers
+        function onChanged() {
+            if (!Appearance.animationsEnabled) return
+            paletteRippleAnim.restart()
+        }
+    }
+
+    ParallelAnimation {
+        id: paletteRippleAnim
+
+        SequentialAnimation {
+            PauseAnimation { duration: 0 }
+            NumberAnimation { target: root._chipItems[0] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[0] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 35 }
+            NumberAnimation { target: root._chipItems[1] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[1] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 70 }
+            NumberAnimation { target: root._chipItems[2] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[2] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 105 }
+            NumberAnimation { target: root._chipItems[3] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[3] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 140 }
+            NumberAnimation { target: root._chipItems[4] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[4] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 175 }
+            NumberAnimation { target: root._chipItems[5] ?? null; property: "_rippleScale"; from: 1.0; to: 1.18; duration: 75; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root._chipItems[5] ?? null; property: "_rippleScale"; from: 1.18; to: 1.0; duration: 75; easing.type: Easing.OutQuad }
         }
     }
 }
