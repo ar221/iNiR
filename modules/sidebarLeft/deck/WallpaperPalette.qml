@@ -6,7 +6,7 @@ import Quickshell
 import qs.modules.common
 import qs.modules.common.widgets
 
-// PaletteExtractBar — 6 Material You swatches from current wallpaper palette.
+// WallpaperPalette — 6 Material You swatches from current wallpaper palette.
 // Hover scales the swatch up; click copies hex to clipboard.
 RowLayout {
     id: root

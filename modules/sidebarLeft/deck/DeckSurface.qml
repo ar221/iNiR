@@ -153,7 +153,7 @@ Item {
                     spacing: 4
                     z: 2
 
-                    PaletteExtractBar {}
+                    WallpaperPalette {}
                     SystemStrip {}
                 }
 
