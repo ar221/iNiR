@@ -1,7 +1,6 @@
 module qs.services
 singleton AwwwBackend 1.0 AwwwBackend.qml
 singleton Ai 1.0 Ai.qml
-singleton AnimeService 1.0 AnimeService.qml
 singleton AppCatalog 1.0 AppCatalog.qml
 singleton AppLauncher 1.0 AppLauncher.qml
 singleton AppSearch 1.0 AppSearch.qml
@@ -9,8 +8,6 @@ singleton Audio 1.0 Audio.qml
 singleton Autostart 1.0 Autostart.qml
 singleton Battery 1.0 Battery.qml
 singleton BluetoothStatus 1.0 BluetoothStatus.qml
-singleton Booru 1.0 Booru.qml
-BooruResponseData 1.0 BooruResponseData.qml
 singleton Brightness 1.0 Brightness.qml
 singleton ClaudeCodeProxy 1.0 ClaudeCodeProxy.qml
 singleton CalendarSync 1.0 CalendarSync.qml

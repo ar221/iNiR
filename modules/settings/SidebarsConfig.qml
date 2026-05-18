@@ -324,63 +324,6 @@ ContentPage {
                 }
             }
             ContentSubsection {
-                title: Translation.tr("Anime Schedule")
-                visible: Config.options.sidebar?.animeSchedule?.enable ?? false
-
-                SettingsSwitch {
-                    buttonIcon: "visibility_off"
-                    text: Translation.tr("Show NSFW")
-                    checked: Config.options.sidebar?.animeSchedule?.showNsfw ?? false
-                    onCheckedChanged: Config.setNestedValue("sidebar.animeSchedule.showNsfw", checked)
-                    StyledToolTip {
-                        text: Translation.tr("Include adult-rated anime in results")
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-
-                    MaterialSymbol {
-                        text: "play_circle"
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: Appearance.colors.colOnLayer1
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        StyledText {
-                            text: Translation.tr("Watch site")
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colOnLayer1
-                        }
-
-                        MaterialTextField {
-                            Layout.fillWidth: true
-                            placeholderText: "https://9animetv.to/search?keyword=%s"
-                            text: Config.options.sidebar?.animeSchedule?.watchSite ?? ""
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.m3colors.m3onSurface
-                            placeholderTextColor: Appearance.colors.colSubtext
-                            background: Rectangle {
-                                color: Appearance.colors.colLayer1
-                                radius: Appearance.rounding.small
-                                border.width: parent.activeFocus ? 2 : 1
-                                border.color: parent.activeFocus ? Appearance.colors.colPrimary : Appearance.colors.colLayer0Border
-                            }
-                            onTextEdited: Config.setNestedValue("sidebar.animeSchedule.watchSite", text)
-
-                            StyledToolTip {
-                                text: Translation.tr("Custom streaming site URL. Use %s for search query.")
-                            }
-                        }
-                    }
-                }
-            }
-
-            ContentSubsection {
                 title: Translation.tr("Wallhaven")
                 visible: Config.options.sidebar?.wallhaven?.enable ?? true
 

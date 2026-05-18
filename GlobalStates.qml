@@ -62,7 +62,6 @@ Singleton {
     property bool cheatsheetOpen: false
     property bool controlPanelOpen: false
     property bool workspaceShowNumbers: false
-    property var activeBooruImageMenu: null  // Track which BooruImage has its menu open
     property var activeTaskViewMenu: null  // Track which WindowThumbnail has its menu open
     // Waffle-specific states
     property bool searchOpen: false
