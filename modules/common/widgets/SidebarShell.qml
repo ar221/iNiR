@@ -358,13 +358,11 @@ Scope {
     }
 
     // ── IPC ──────────────────────────────────────────────────────
-    IpcHandler {
-        target: root.isRight ? "sidebarRight" : "sidebarLeft"
-
-        function toggle(): void { root._setSidebarOpen(!root.sidebarOpen) }
-        function close(): void  { root._setSidebarOpen(false) }
-        function open(): void   { root._setSidebarOpen(true) }
-    }
+    // NOTE: IpcHandler blocks live in modules/sidebarLeft/SidebarLeft.qml
+    // and modules/sidebarRight/SidebarRight.qml with literal target strings,
+    // so the ipc-registry.sh generator (regex-based) can discover them.
+    // A ternary target here resolves at runtime but is invisible to the
+    // scanner, which broke the `inir sidebarLeft|sidebarRight` launcher path.
 
     // ── Hyprland shortcuts ───────────────────────────────────────
     Loader {

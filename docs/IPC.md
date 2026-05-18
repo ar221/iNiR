@@ -254,6 +254,30 @@ Command Center dashboard. The full-screen flight-deck overlay (activities, conso
 
 ---
 
+### sidebarLeft
+
+Left sidebar (AI chat, apps). Handler lives in `modules/sidebarLeft/SidebarLeft.qml` — `SidebarShell` is shared with the right sidebar but the per-side IpcHandler must use a literal target string so the IPC registry generator can pick it up.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Open/close left sidebar |
+| `open` | Show left sidebar |
+| `close` | Hide left sidebar |
+
+---
+
+### sidebarRight
+
+Right sidebar (quick toggles, notepad, settings). Handler lives in `modules/sidebarRight/SidebarRight.qml` — see `sidebarLeft` note on literal-target requirement.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Open/close right sidebar |
+| `open` | Show right sidebar |
+| `close` | Hide right sidebar |
+
+---
+
 ### bar
 
 Top bar visibility.

@@ -3,6 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
+import Quickshell.Io
 
 SidebarShell {
     id: shell
@@ -57,6 +58,24 @@ SidebarShell {
                 shown: (Config?.options?.sidebar?.layout ?? "default") === "bridge"
                 sourceComponent: bridgeContentComponent
             }
+        }
+    }
+
+    // Literal IPC target so scripts/lib/generate-ipc-registry.py discovers it.
+    // SidebarShell intentionally omits the dynamic-target IpcHandler — see note there.
+    IpcHandler {
+        target: "sidebarRight"
+
+        function toggle(): void {
+            GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+        }
+
+        function close(): void {
+            GlobalStates.sidebarRightOpen = false;
+        }
+
+        function open(): void {
+            GlobalStates.sidebarRightOpen = true;
         }
     }
 }

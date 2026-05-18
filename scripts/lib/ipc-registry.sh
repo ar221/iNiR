@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: 7bec108eb5bfe957
-# Targets: 50
+# IPC.md hash: fd43e0993d5e93db
+# Targets: 52
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -45,6 +45,8 @@ declare -gA IPC_TARGET_DESC=(
   [session]="Power menu. Logout, suspend, reboot, shutdown. The \"I'm done for today\" buttons."
   [settings]="Open the settings panel. GUI config so you don't have to edit JSON like it's 2005."
   [shellUpdate]="Shell update checker. Monitors the git repo for new commits and shows an update overlay."
+  [sidebarLeft]="Left sidebar (AI chat, apps). Handler lives in \`modules/sidebarLeft/SidebarLeft.qml\` — \`SidebarShell\` is shared with the right sidebar but the per-side IpcHandler must use a literal target string so the IPC registry generator can pick it up."
+  [sidebarRight]="Right sidebar (quick toggles, notepad, settings). Handler lives in \`modules/sidebarRight/SidebarRight.qml\` — see \`sidebarLeft\` note on literal-target requirement."
   [taskview]="Waffle task view (Win+Tab style)."
   [tiling]="Tiling layout overlay. Pick or cycle through tiling presets for the current workspace."
   [voiceSearch]="Voice search using Gemini API. Records from microphone, transcribes with Gemini, opens Google search."
@@ -98,6 +100,8 @@ declare -gA IPC_TARGET_FAMILY=(
   [session]="shared"
   [settings]="shared"
   [shellUpdate]="shared"
+  [sidebarLeft]="shared"
+  [sidebarRight]="shared"
   [taskview]="waffle"
   [tiling]="shared"
   [voiceSearch]="shared"
@@ -151,6 +155,8 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [session]="toggle close open"
   [settings]="open toggle close page"
   [shellUpdate]="toggle open close check performUpdate dismiss undismiss diagnose"
+  [sidebarLeft]="toggle close open"
+  [sidebarRight]="toggle close open"
   [taskview]="toggle close open"
   [tiling]="toggle open hide cycle showOsd promote"
   [voiceSearch]="start stop toggle"
@@ -296,6 +302,12 @@ declare -gA IPC_FUNCTION_DESC=(
   ["shellUpdate:dismiss"]="Dismiss update notification"
   ["shellUpdate:undismiss"]="Un-dismiss update notification"
   ["shellUpdate:diagnose"]="Dump update state as JSON"
+  ["sidebarLeft:toggle"]="Open/close left sidebar"
+  ["sidebarLeft:close"]="Hide left sidebar"
+  ["sidebarLeft:open"]="Show left sidebar"
+  ["sidebarRight:toggle"]="Open/close right sidebar"
+  ["sidebarRight:close"]="Hide right sidebar"
+  ["sidebarRight:open"]="Show right sidebar"
   ["taskview:toggle"]="Open/close task view"
   ["taskview:close"]="Hide task view"
   ["taskview:open"]="Show task view"
@@ -377,8 +389,8 @@ bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate tiling voiceSearch wallpaperSelector ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(contracts courierRail dictation focus gptProxy osd plugins proxy search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 
@@ -397,6 +409,8 @@ declare -gA IPC_KEBAB_ALIASES=(
   [package-search]=packageSearch
   [panel-family]=panelFamily
   [shell-update]=shellUpdate
+  [sidebar-left]=sidebarLeft
+  [sidebar-right]=sidebarRight
   [voice-search]=voiceSearch
   [waction-center]=wactionCenter
   [waffle-alt-switcher]=waffleAltSwitcher
