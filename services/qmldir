@@ -58,7 +58,6 @@ PolkitServiceImpl 1.0 PolkitServiceImpl.qml
 singleton PowerProfilePersistence 1.0 PowerProfilePersistence.qml
 singleton Privacy 1.0 Privacy.qml
 singleton RecorderStatus 1.0 RecorderStatus.qml
-singleton RedditService 1.0 RedditService.qml
 singleton ResourceUsage 1.0 ResourceUsage.qml
 singleton SessionWarnings 1.0 SessionWarnings.qml
 singleton ShellUpdates 1.0 ShellUpdates.qml
