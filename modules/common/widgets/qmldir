@@ -4,6 +4,7 @@ AgentTile 1.0 AgentTile.qml
 AngelAccentBar 1.0 AngelAccentBar.qml
 AngelBackground 1.0 AngelBackground.qml
 AngelPartialBorder 1.0 AngelPartialBorder.qml
+AppIconImage 1.0 AppIconImage.qml
 BarcodeMeter 1.0 BarcodeMeter.qml
 ButtonGroup 1.0 ButtonGroup.qml
 CalendarView 1.0 CalendarView.qml

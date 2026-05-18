@@ -279,14 +279,18 @@ RippleButton {
             id: contentRoot
             anchors.fill: parent
 
-            // Icon
+            // Icon. Inner Loader retained — monochrome overlay anchors to iconLoader.
+            // Walker lives in AppIconImage (shared with dock). Bar-specific:
+            // spotify alias + "image-missing" fallback instead of "application-x-executable".
             Loader {
                 id: iconLoader
                 anchors.centerIn: parent
                 active: !root.isSeparator
-                sourceComponent: IconImage {
+                sourceComponent: AppIconImage {
                     id: taskbarIcon
-                    property string iconName: {
+                    implicitSize: root.iconSize
+                    systemFallbackIcon: "image-missing"
+                    iconName: {
                         const appId = root.appEntry?.originalAppId ?? root.appEntry?.appId ?? "";
                         let icon = "";
                         if (appId.toLowerCase() === "spotify" || appId === "spotify-launcher") {
@@ -295,54 +299,6 @@ RippleButton {
                             icon = root.desktopEntry?.icon || AppSearch.guessIcon(appId);
                         }
                         return IconThemeService.smartIconName(icon, appId);
-                    }
-                    property bool isAbsolutePath: iconName.startsWith("/") || iconName.startsWith("file://")
-                    property var candidates: isAbsolutePath ? [] : IconThemeService.dockIconCandidates(iconName)
-
-                    property int _candidateIdx: 0
-                    property bool _useSystemFallback: false
-                    property string _systemFallbackName: ""
-
-                    onIconNameChanged: {
-                        _candidateIdx = 0;
-                        _useSystemFallback = false;
-                        _systemFallbackName = "";
-                    }
-
-                    source: {
-                        if (_useSystemFallback && _systemFallbackName) {
-                            return Quickshell.iconPath(_systemFallbackName, "image-missing");
-                        }
-                        if (isAbsolutePath) {
-                            return iconName.startsWith("file://") ? iconName : `file://${iconName}`;
-                        }
-                        if (candidates.length > 0 && _candidateIdx < candidates.length) {
-                            return candidates[_candidateIdx];
-                        }
-                        return Quickshell.iconPath(iconName, "image-missing");
-                    }
-                    implicitSize: root.iconSize
-
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            Qt.callLater(() => {
-                                if (isAbsolutePath && !_useSystemFallback) {
-                                    const path = iconName.startsWith("file://") ? iconName.substring(7) : iconName;
-                                    const fileName = path.split("/").pop();
-                                    let baseName = fileName;
-                                    if (baseName.includes(".")) baseName = baseName.split(".").slice(0, -1).join(".");
-                                    _systemFallbackName = baseName;
-                                    _useSystemFallback = true;
-                                    return;
-                                }
-                                if (candidates.length > 0 && _candidateIdx < candidates.length - 1) {
-                                    _candidateIdx++;
-                                } else if (!_useSystemFallback) {
-                                    _systemFallbackName = iconName;
-                                    _useSystemFallback = true;
-                                }
-                            });
-                        }
                     }
                 }
             }

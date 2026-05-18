@@ -436,21 +436,13 @@ Scope {
                             opacity: 0.92
                         }
 
-                        // Dock-only icon resolver — waterfall:
-                        //   1. Absolute path (smartIconName / Papirus overrides) → use direct.
-                        //   2. IconThemeService.dockIconCandidates(name) → walk on Image.Error.
-                        //   3. Exhausted → Quickshell.iconPath(name, fallback) via system theme.
-                        // Mirrors modules/bar/BarTaskbarButton.qml taskbarIcon (lines 287-347).
-                        // Theme switches go through setDockTheme → shell restart; binding stays
-                        // reactive across hot-reload of the QML itself.
-                        IconImage {
+                        // Dock app icon. Walker lives in AppIconImage (shared with bar).
+                        // Per-app Papirus overrides stay here — dock-specific call-site policy.
+                        AppIconImage {
                             id: dockIcon
                             anchors.centerIn: parent
                             implicitSize: Math.max(18, root.iconSize - 6)
-                            mipmap: true
-                            smooth: true
-
-                            property string iconName: {
+                            iconName: {
                                 const appId = appItem.modelData?.originalAppId ?? appItem.modelData?.appId ?? ""
                                 const lower = appId.toLowerCase()
                                 // Hand-picked Papirus overrides for apps shipping no theme icon.
@@ -460,50 +452,6 @@ Scope {
                                     return "/usr/share/icons/Papirus-Dark/64x64/apps/org.wezfurlong.wezterm.svg"
                                 const icon = appItem.desktopEntry?.icon || AppSearch.guessIcon(appId)
                                 return IconThemeService.smartIconName(icon, appId)
-                            }
-                            property bool isAbsolutePath: iconName.startsWith("/") || iconName.startsWith("file://")
-                            property var candidates: isAbsolutePath ? [] : IconThemeService.dockIconCandidates(iconName)
-
-                            property int _candidateIdx: 0
-                            property bool _useSystemFallback: false
-                            property string _systemFallbackName: ""
-
-                            onIconNameChanged: {
-                                _candidateIdx = 0
-                                _useSystemFallback = false
-                                _systemFallbackName = ""
-                            }
-
-                            source: {
-                                if (_useSystemFallback && _systemFallbackName)
-                                    return Quickshell.iconPath(_systemFallbackName, "application-x-executable")
-                                if (isAbsolutePath)
-                                    return iconName.startsWith("file://") ? iconName : `file://${iconName}`
-                                if (candidates.length > 0 && _candidateIdx < candidates.length)
-                                    return candidates[_candidateIdx]
-                                return Quickshell.iconPath(iconName, "application-x-executable")
-                            }
-
-                            onStatusChanged: {
-                                if (status === Image.Error) {
-                                    Qt.callLater(() => {
-                                        if (isAbsolutePath && !_useSystemFallback) {
-                                            const path = iconName.startsWith("file://") ? iconName.substring(7) : iconName
-                                            const fileName = path.split("/").pop()
-                                            let baseName = fileName
-                                            if (baseName.includes(".")) baseName = baseName.split(".").slice(0, -1).join(".")
-                                            _systemFallbackName = baseName
-                                            _useSystemFallback = true
-                                            return
-                                        }
-                                        if (candidates.length > 0 && _candidateIdx < candidates.length - 1) {
-                                            _candidateIdx++
-                                        } else if (!_useSystemFallback) {
-                                            _systemFallbackName = iconName
-                                            _useSystemFallback = true
-                                        }
-                                    })
-                                }
                             }
                         }
 
