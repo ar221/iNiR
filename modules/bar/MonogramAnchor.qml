@@ -16,14 +16,23 @@ RippleButton {
     property string monogramText: Config.options?.bar?.identity?.monogram?.text ?? "AR"
     property string marketState: "closed" // "open" | "closed"
 
-    // Apollo palette literal — Courier wedge 2026-05-17.
-    // Per-component gating (Open Call B path A): no Appearance.apolloActive Singleton property,
-    // each token consumed directly. Acknowledged-brittle if palette switches away from apollo.
-    // Per Open Call A (apollo-amber both states), invader fill is fixed across market states;
-    // the equity-alarm distinct red register is intentionally flattened.
-    readonly property color monogramTextColor: marketState === "open" ? Appearance.apollo.colTextStrong : Appearance.apollo.colText
-    readonly property color invaderColor: Appearance.apollo.colAmberDim
-    readonly property color invaderEyeColor: Appearance.apollo.colCanvas
+    // Gated by Appearance.apolloActive (Call B Path B refactor).
+    // Under Apollo+Courier: warm-amber identity with flattened market register (Open Call A).
+    // Fallback restores pre-wedge market-aware register (5619af4f^): personal-accent on open,
+    // theme text on closed; invader uses personal-accent open / `#c66b4e` closed; eyes colLayer0.
+    readonly property color monogramTextColor: Appearance.apolloActive
+        ? (marketState === "open" ? Appearance.apollo.colTextStrong : Appearance.apollo.colText)
+        : (marketState === "open"
+            ? Appearance.colors.colPersonalAccent
+            : (Appearance.angelEverywhere ? Appearance.angel.colText
+                : Appearance.inirEverywhere ? Appearance.inir.colText
+                : Appearance.colors.colOnLayer1))
+    readonly property color invaderColor: Appearance.apolloActive
+        ? Appearance.apollo.colAmberDim
+        : (marketState === "open" ? Appearance.colors.colPersonalAccent : "#c66b4e")
+    readonly property color invaderEyeColor: Appearance.apolloActive
+        ? Appearance.apollo.colCanvas
+        : Appearance.colors.colLayer0
 
     property real buttonPadding: 5
     readonly property int _monogramSize: 28
@@ -84,10 +93,20 @@ RippleButton {
             id: monogramCircle
             width: root._monogramSize
             height: root._monogramSize
-            radius: Appearance.apollo.radiusMicro
-            color: Appearance.apollo.colSurface
-            border.width: Appearance.apollo.borderWidth
-            border.color: Appearance.apollo.colBorder
+            // Gated by Appearance.apolloActive (Call B Path B refactor).
+            // Pill chrome keeps solid-square structure across all themes (Option B
+            // approximate fallback); pre-wedge gradient-round structure NOT restored.
+            // Flagged for Elsa review — see implementation report.
+            radius: Appearance.apolloActive ? Appearance.apollo.radiusMicro : 2
+            color: Appearance.apolloActive ? Appearance.apollo.colSurface
+                : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                : Appearance.colors.colLayer1
+            border.width: Appearance.apolloActive ? Appearance.apollo.borderWidth : 1
+            border.color: Appearance.apolloActive ? Appearance.apollo.colBorder
+                : Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
+                : Appearance.inirEverywhere ? Appearance.inir.colBorder
+                : Appearance.colors.colOutlineVariant
             antialiasing: true
 
             StyledText {

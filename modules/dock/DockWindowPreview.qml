@@ -36,16 +36,21 @@ Button {
 
     background: Rectangle {
         id: background
-        // Apollo palette literal — Courier preview tile chrome wedge 2026-05-17.
-        // Per-component swap (Open Call B path A); warm hover surface matches
-        // CourierRail item hover, so tile inside popup reads as kelvin-aligned
-        // receipt slip rather than bluish-cool m3 card.
-        radius: Appearance.apollo.radiusMax
-        color: root.down
-            ? ColorUtils.transparentize(Appearance.apollo.colBorder, 0.70)
-            : (root.hovered
-                ? Appearance.apollo.colSurfaceHover
-                : "transparent")
+        // Gated by Appearance.apolloActive (Call B Path B refactor).
+        // Apollo: warm receipt-slip surface matches CourierRail. Fallback restores
+        // pre-wedge m3/inir branching (7e3d9ae6^).
+        radius: Appearance.apolloActive
+            ? Appearance.apollo.radiusMax
+            : (Appearance.inirEverywhere ? (Appearance.inir?.roundingSmall ?? 8) : Appearance.rounding.small)
+        color: Appearance.apolloActive
+            ? (root.down
+                ? ColorUtils.transparentize(Appearance.apollo.colBorder, 0.70)
+                : (root.hovered ? Appearance.apollo.colSurfaceHover : "transparent"))
+            : (root.down
+                ? ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir?.colPrimary ?? Appearance.colors.colPrimary : Appearance.colors.colPrimary, 0.7)
+                : (root.hovered
+                    ? ColorUtils.transparentize(Appearance.inirEverywhere ? Appearance.inir?.colLayer2Hover ?? Appearance.colors.colSurfaceContainerHigh : Appearance.colors.colSurfaceContainerHigh, 0.5)
+                    : "transparent"))
 
         Behavior on color {
             ColorAnimation { duration: 150 }
@@ -91,8 +96,12 @@ Button {
                     text: root.toplevel?.title ?? ""
                     elide: Text.ElideRight
                     font.pixelSize: Appearance.font.pixelSize.small
-                    // Apollo cream — Courier preview tile title 2026-05-17.
-                    color: Appearance.apollo.colText
+                    // Gated by Appearance.apolloActive (Call B Path B refactor).
+                    color: Appearance.apolloActive
+                        ? Appearance.apollo.colText
+                        : (Appearance.inirEverywhere
+                            ? (Appearance.inir?.colText ?? Appearance.colors.colOnLayer0)
+                            : Appearance.colors.colOnLayer0)
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -142,8 +151,12 @@ Button {
                 id: shimmerBg
                 anchors.fill: parent
                 radius: Appearance.rounding.small
-                // Apollo warm shimmer base — Courier preview tile loading state 2026-05-17.
-                color: Appearance.apollo.colSurfaceHover
+                // Gated by Appearance.apolloActive (Call B Path B refactor).
+                color: Appearance.apolloActive
+                    ? Appearance.apollo.colSurfaceHover
+                    : (Appearance.inirEverywhere
+                        ? (Appearance.inir?.colLayer1 ?? Appearance.colors.colSurfaceContainerLow)
+                        : Appearance.colors.colSurfaceContainerLow)
                 visible: windowPreview.status !== Image.Ready
 
                 Rectangle {

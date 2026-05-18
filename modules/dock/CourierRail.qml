@@ -275,18 +275,16 @@ Scope {
 
                 Rectangle {
                     anchors.fill: parent
-                    // Apollo palette literal — Courier dock wedge 2026-05-17.
-                    // Per-component gating (Open Call B path A); unconditional swap,
-                    // matches bar wedge 5619af4f pattern. Tonal continuity with AR
-                    // identity block: same warm-near-black canvas + amber primary frame.
-                    color: Appearance.apollo.colCanvas
+                    // Gated by Appearance.apolloActive (Call B Path B refactor).
+                    // Falls back to courier canvas/frame tokens when palette inactive.
+                    color: Appearance.apolloActive ? Appearance.apollo.colCanvas : Appearance.courier.colCanvas
 
                     Rectangle {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         anchors.right: parent.right
                         width: 1
-                        color: Appearance.apollo.colBorder
+                        color: Appearance.apolloActive ? Appearance.apollo.colBorder : Appearance.courier.colBorder
                     }
 
                     ColumnLayout {
@@ -310,7 +308,7 @@ Scope {
                             Layout.alignment: Qt.AlignHCenter
                             width: 20
                             height: 1
-                            color: Appearance.apollo.colBorderDim
+                            color: Appearance.apolloActive ? Appearance.apollo.colBorderDim : Appearance.courier.colBorderDim
                         }
 
                         Repeater {
@@ -333,29 +331,31 @@ Scope {
                                 height: emptyPill.implicitHeight + 4
                                 radius: 0
                                 border.width: 1
-                                border.color: Appearance.apollo.colBorder
+                                border.color: Appearance.apolloActive ? Appearance.apollo.colBorder : Appearance.courier.colBorder
                                 // Open Call C path B — 0.92 keeps pill ambient; amber-primary
-                                // reserved for active-slit hot signal.
-                                color: ColorUtils.transparentize(Appearance.apollo.colBorder, 0.92)
+                                // reserved for active-slit hot signal. Fallback uses 0.85 (pre-wedge).
+                                color: Appearance.apolloActive
+                                    ? ColorUtils.transparentize(Appearance.apollo.colBorder, 0.92)
+                                    : ColorUtils.transparentize(Appearance.courier.colBorder, 0.85)
                                 StyledText {
                                     id: emptyPill
                                     anchors.centerIn: parent
                                     text: "[EMPTY]"
-                                    color: Appearance.apollo.colBorder
+                                    color: Appearance.apolloActive ? Appearance.apollo.colBorder : Appearance.courier.colBorder
                                     font.family: Appearance.font.family.monospace
                                     font.pixelSize: Appearance.font.pixelSize.smallest
                                     font.letterSpacing: 1.2
                                 }
                             }
 
-                            StyledText { text: "DOCK"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "─────"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "pinned"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "none"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "DOCK"; color: Appearance.apolloActive ? Appearance.apollo.colTextDim : Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "─────"; color: Appearance.apolloActive ? Appearance.apollo.colTextDim : Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "pinned"; color: Appearance.apolloActive ? Appearance.apollo.colTextDim : Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "none"; color: Appearance.apolloActive ? Appearance.apollo.colText : Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                             Item { width: 1; height: 4 }
-                            StyledText { text: "route"; color: Appearance.apollo.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "+ from"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
-                            StyledText { text: "  launcher"; color: Appearance.apollo.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "route"; color: Appearance.apolloActive ? Appearance.apollo.colTextDim : Appearance.courier.colTextDim; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smallest; font.letterSpacing: 1.2; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "+ from"; color: Appearance.apolloActive ? Appearance.apollo.colText : Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
+                            StyledText { text: "  launcher"; color: Appearance.apolloActive ? Appearance.apollo.colText : Appearance.courier.colText; font.family: Appearance.font.family.monospace; font.pixelSize: Appearance.font.pixelSize.smaller; horizontalAlignment: Text.AlignHCenter }
                         }
                     }
                 }
@@ -376,15 +376,27 @@ Scope {
                         Rectangle {
                             id: manifestPlate
                             anchors.fill: parent
-                            radius: Appearance.apollo.radiusMicro
-                            color: mouseArea.pressed ? Appearance.apollo.colSurfaceActive
-                                : mouseArea.containsMouse ? Appearance.apollo.colSurfaceHover
-                                : appItem.isFocused ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24)
-                                : ColorUtils.transparentize(Appearance.apollo.colSurface, 0.22)
+                            // Gated by Appearance.apolloActive (Call B Path B refactor).
+                            // Manifest plate + focused-tint structure introduced in b9cd8b8b;
+                            // fallback uses courier tokens for the same per-state shape.
+                            radius: Appearance.apolloActive ? Appearance.apollo.radiusMicro : Appearance.courier.radiusMicro
+                            color: Appearance.apolloActive
+                                ? (mouseArea.pressed ? Appearance.apollo.colSurfaceActive
+                                    : mouseArea.containsMouse ? Appearance.apollo.colSurfaceHover
+                                    : appItem.isFocused ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24)
+                                    : ColorUtils.transparentize(Appearance.apollo.colSurface, 0.22))
+                                : (mouseArea.pressed ? Appearance.courier.colSurfaceActive
+                                    : mouseArea.containsMouse ? Appearance.courier.colSurfaceHover
+                                    : appItem.isFocused ? ColorUtils.transparentize(Appearance.courier.colSurfaceActive, 0.24)
+                                    : ColorUtils.transparentize(Appearance.courier.colSurface, 0.22))
                             border.width: 1
-                            border.color: appItem.isFocused ? Appearance.apollo.colBorder
-                                : mouseArea.containsMouse ? Appearance.apollo.colBorderDim
-                                : ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.38)
+                            border.color: Appearance.apolloActive
+                                ? (appItem.isFocused ? Appearance.apollo.colBorder
+                                    : mouseArea.containsMouse ? Appearance.apollo.colBorderDim
+                                    : ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.38))
+                                : (appItem.isFocused ? Appearance.courier.colBorder
+                                    : mouseArea.containsMouse ? Appearance.courier.colBorderDim
+                                    : ColorUtils.transparentize(Appearance.courier.colBorderDim, 0.38))
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
@@ -401,10 +413,15 @@ Scope {
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
-                            color: appItem.isFocused ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim
+                            color: Appearance.apolloActive
+                                ? (appItem.isFocused ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim)
+                                : (appItem.isFocused ? Appearance.courier.colBorder : Appearance.courier.colBorderDim)
                         }
 
                         Rectangle {
+                            // Urgent-workspace pip — semantic alarm tag introduced in b9cd8b8b.
+                            // No pre-Apollo equivalent; fallback uses m3 error register +
+                            // courier amber border for non-Apollo themes.
                             visible: appItem.hasUrgentWorkspace && !appItem.isFocused
                             width: 7
                             height: 7
@@ -413,9 +430,9 @@ Scope {
                             anchors.right: parent.right
                             anchors.topMargin: 2
                             anchors.rightMargin: 2
-                            color: Appearance.apollo.colSignalEmber
+                            color: Appearance.apolloActive ? Appearance.apollo.colSignalEmber : Appearance.colors.colError
                             border.width: 1
-                            border.color: Appearance.apollo.colAmberBright
+                            border.color: Appearance.apolloActive ? Appearance.apollo.colAmberBright : Appearance.courier.colBorder
                             opacity: 0.92
                         }
 
@@ -577,14 +594,12 @@ Scope {
 
                         Rectangle {
                             anchors.fill: parent
-                            // Apollo palette literal — Courier preview popup chrome wedge
-                            // 2026-05-17. Per-component swap (Open Call B path A); tonal
-                            // continuity with rail canvas + bar AR identity block so
-                            // hover-preview reads as rail-extension, not Material card.
-                            radius: Appearance.apollo.radiusMicro
-                            color: Appearance.apollo.colSurface
+                            // Gated by Appearance.apolloActive (Call B Path B refactor).
+                            // Hover-preview chrome — falls back to courier surface/border tokens.
+                            radius: Appearance.apolloActive ? Appearance.apollo.radiusMicro : Appearance.courier.radiusMicro
+                            color: Appearance.apolloActive ? Appearance.apollo.colSurface : Appearance.courier.colSurface
                             border.width: 1
-                            border.color: Appearance.apollo.colBorderDim
+                            border.color: Appearance.apolloActive ? Appearance.apollo.colBorderDim : Appearance.courier.colBorderDim
 
                             ColumnLayout {
                                 id: previewLayout
@@ -598,7 +613,7 @@ Scope {
 
                                     StyledText {
                                         text: StringUtils.toTitleCase(railWindow.previewEntry?.originalAppId ?? railWindow.previewEntry?.appId ?? "APP")
-                                        color: Appearance.apollo.colTextStrong
+                                        color: Appearance.apolloActive ? Appearance.apollo.colTextStrong : Appearance.courier.colTextStrong
                                         font.family: Appearance.font.family.monospace
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                         font.letterSpacing: 0.8
@@ -608,7 +623,8 @@ Scope {
 
                                     StyledText {
                                         text: `${railWindow.previewEntry?.toplevels?.length ?? 0} WIN`
-                                        color: Appearance.apollo.colSignalCyan
+                                        // Apollo signal-cyan; fallback uses courier divider (teal/sage analogue).
+                                        color: Appearance.apolloActive ? Appearance.apollo.colSignalCyan : Appearance.courier.colDivider
                                         font.family: Appearance.font.family.monospace
                                         font.pixelSize: Appearance.font.pixelSize.smallest
                                         font.letterSpacing: 1.0
@@ -618,7 +634,7 @@ Scope {
                                 Rectangle {
                                     Layout.fillWidth: true
                                     height: 1
-                                    color: Appearance.apollo.colBorderDim
+                                    color: Appearance.apolloActive ? Appearance.apollo.colBorderDim : Appearance.courier.colBorderDim
                                 }
 
                                 Repeater {
@@ -628,10 +644,18 @@ Scope {
                                         Layout.fillWidth: true
                                         implicitWidth: 260
                                         implicitHeight: 28
-                                        radius: Appearance.apollo.radiusMicro
-                                        color: modelData?.activated ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24) : "transparent"
+                                        radius: Appearance.apolloActive ? Appearance.apollo.radiusMicro : Appearance.courier.radiusMicro
+                                        color: modelData?.activated
+                                            ? (Appearance.apolloActive
+                                                ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24)
+                                                : ColorUtils.transparentize(Appearance.courier.colSurfaceActive, 0.24))
+                                            : "transparent"
                                         border.width: 1
-                                        border.color: modelData?.activated ? Appearance.apollo.colBorder : ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.45)
+                                        border.color: modelData?.activated
+                                            ? (Appearance.apolloActive ? Appearance.apollo.colBorder : Appearance.courier.colBorder)
+                                            : (Appearance.apolloActive
+                                                ? ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.45)
+                                                : ColorUtils.transparentize(Appearance.courier.colBorderDim, 0.45))
 
                                         RowLayout {
                                             anchors.fill: parent
@@ -643,12 +667,16 @@ Scope {
                                                 width: 4
                                                 height: 14
                                                 radius: 1
-                                                color: modelData?.activated ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim
+                                                color: modelData?.activated
+                                                    ? (Appearance.apolloActive ? Appearance.apollo.colBorder : Appearance.courier.colBorder)
+                                                    : (Appearance.apolloActive ? Appearance.apollo.colBorderDim : Appearance.courier.colBorderDim)
                                             }
 
                                             StyledText {
                                                 text: modelData?.title || Translation.tr("Untitled window")
-                                                color: modelData?.activated ? Appearance.apollo.colTextStrong : Appearance.apollo.colText
+                                                color: modelData?.activated
+                                                    ? (Appearance.apolloActive ? Appearance.apollo.colTextStrong : Appearance.courier.colTextStrong)
+                                                    : (Appearance.apolloActive ? Appearance.apollo.colText : Appearance.courier.colText)
                                                 font.family: Appearance.font.family.monospace
                                                 font.pixelSize: Appearance.font.pixelSize.smallest
                                                 Layout.fillWidth: true

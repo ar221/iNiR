@@ -122,7 +122,10 @@ DockButton {
         sourceComponent: Rectangle {
             width: root.vertical ? root.separatorSize : 1
             height: root.vertical ? 1 : root.separatorSize
-            color: root.isRailVertical ? Appearance.apollo.colBorderDim
+            // Rail-vertical Apollo gating (Call B Path B refactor).
+            // Fallback restores pre-wedge 822b1372^ literal.
+            color: root.isRailVertical
+                    ? (Appearance.apolloActive ? Appearance.apollo.colBorderDim : "#2b3338")
                  : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
                  : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.7)
                  : Appearance.colors.colOutlineVariant
@@ -382,9 +385,11 @@ DockButton {
                     width: root.appIsActive ? 4 : 2
                     height: parent.height
                     radius: 0
+                    // Rail active slit Apollo gating (Call B Path B refactor).
+                    // Fallback restores pre-wedge 822b1372^ literals (bronze/grey).
                     color: root.appIsActive
-                        ? Appearance.apollo.colBorder
-                        : Appearance.apollo.colBorderDim
+                        ? (Appearance.apolloActive ? Appearance.apollo.colBorder : "#d08a24")
+                        : (Appearance.apolloActive ? Appearance.apollo.colBorderDim : "#3b454b")
                     opacity: root.appIsActive ? 1 : 0.42
 
                     Behavior on width {

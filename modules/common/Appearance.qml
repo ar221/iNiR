@@ -76,6 +76,8 @@ Singleton {
     // angelEverywhere - flagship neo-brutalism glass style (superset of aurora)
     readonly property bool angelEverywhere: globalStyle === "angel"
     readonly property bool courierEverywhere: globalStyle === "courier"
+    // Apollo palette active iff Courier grammar + Apollo theme both engaged (orthogonal-axes rule).
+    readonly property bool apolloActive: courierEverywhere && (Config?.options?.appearance?.theme === "apollo")
     // auroraEverywhere controls blur/glass backgrounds — angel inherits aurora blur
     readonly property bool auroraEverywhere: globalStyle === "aurora" || globalStyle === "angel"
     

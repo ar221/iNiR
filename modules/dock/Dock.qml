@@ -251,16 +251,22 @@ Scope {
                                 // Hide shared background in pill mode — each pill is its own background
                                 // Hide in macOS mode — DockMacBackground is the unified shelf
                                 visible: (Config.options?.dock?.showBackground ?? true) && !gameModeMinimal && !root.isPillStyle && !root.isMacosStyle
-                                color: root.isRailVertical ? Appearance.apollo.colCanvas
+                                // Rail-vertical Apollo gating (Call B Path B refactor).
+                                // Dormant when dock.style="courier" (ShellIiPanels mutex);
+                                // fallback restores pre-wedge 822b1372^ hex literals.
+                                color: root.isRailVertical
+                                        ? (Appearance.apolloActive ? Appearance.apollo.colCanvas : "#080a0c")
                                     : auroraEverywhere ? ColorUtils.applyAlpha((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
                                     : inirEverywhere ? Appearance.inir.colLayer1
                                     : (cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
                                 border.width: root.isRailVertical ? 1 : (Appearance.angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
-                                border.color: root.isRailVertical ? Appearance.apollo.colBorderDim
+                                border.color: root.isRailVertical
+                                        ? (Appearance.apolloActive ? Appearance.apollo.colBorderDim : "#1a2025")
                                     : Appearance.angelEverywhere ? Appearance.angel.colPanelBorder
                                     : inirEverywhere ? Appearance.inir.colBorder
                                     : Appearance.colors.colLayer0Border
-                                radius: root.isRailVertical ? Appearance.apollo.radiusMicro
+                                radius: root.isRailVertical
+                                        ? (Appearance.apolloActive ? Appearance.apollo.radiusMicro : 2)
                                     : Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                     : inirEverywhere ? Appearance.inir.roundingNormal
                                     : cardStyle ? Appearance.rounding.normal : Appearance.rounding.normal
