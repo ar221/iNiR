@@ -21,6 +21,13 @@ ColumnLayout {
     spacing: 6
     Layout.fillWidth: true
 
+    // Prime the freedesktop thumbnail cache for the wallpapers folder on first
+    // mount. generateThumbnail() is debounced (300ms) and the underlying script
+    // skips files that already have a cached PNG, so re-mounts are cheap. Without
+    // this, cells stay invisible for 1–2s on cold cache because ThumbnailImage
+    // only fades in on Image.Ready. Matches QuickConfig.qml:479 precedent.
+    Component.onCompleted: Wallpapers.generateThumbnail("large")
+
     // ── Data ────────────────────────────────────────────────────────────
     // Newest-first slice of the cached wallpapers list. Wallpapers.wallpapers
     // is sorted oldest-first via FolderListModel.Time ascending, so reverse the
@@ -79,12 +86,16 @@ ColumnLayout {
             }
         }
 
-        // Empty placeholder — cache cold or folder has <8 files.
+        // Always-on base layer. Paints under the thumbnail so cells never go
+        // invisible while ThumbnailImage waits for Image.Ready (otherwise cold
+        // freedesktop cache → 1–2s of empty cells, see INI-14 followup). When
+        // the thumb fades in, the opaque image covers this rect exactly (same
+        // 3px radius via OpacityMask). Stays as the permanent fill for empty
+        // cells when the folder has <8 wallpapers.
         Rectangle {
             anchors.fill: parent
             radius: 3
             color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.4)
-            visible: !cell._filled
         }
 
         // Real thumbnail — Loader gates so empty cells skip ThumbnailImage entirely.
