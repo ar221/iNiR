@@ -5,10 +5,15 @@ QML is the ground truth for targets and functions.
 IPC.md enriches with descriptions, keybind examples, and family scope.
 
 Usage:
-    python3 scripts/lib/generate-ipc-registry.py           # generate
-    python3 scripts/lib/generate-ipc-registry.py --check    # check if output is stale
+    python3 scripts/lib/generate-ipc-registry.py           # regenerate ipc-registry.sh
+    python3 scripts/lib/generate-ipc-registry.py --check   # verify on-disk registry is fresh
+                                                            #   exit 0 if identical
+                                                            #   exit 1 with a human-readable
+                                                            #   drift report (missing/extra
+                                                            #   targets + unified diff)
 """
 
+import difflib
 import hashlib
 import os
 import re
@@ -493,6 +498,22 @@ def generate_bash(targets: list[IpcTarget], aliases: dict[str, str]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# On-disk registry parser (for --check drift reporting)
+# ---------------------------------------------------------------------------
+
+
+_RE_ALL_TARGETS = re.compile(r"^IPC_ALL_TARGETS=\(([^)]*)\)", re.MULTILINE)
+
+
+def _extract_all_targets(registry_text: str) -> set[str]:
+    """Pull the IPC_ALL_TARGETS=(...) names out of an on-disk registry."""
+    m = _RE_ALL_TARGETS.search(registry_text)
+    if not m:
+        return set()
+    return {tok for tok in m.group(1).split() if tok}
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -507,20 +528,85 @@ def main():
     content = generate_bash(targets, aliases)
 
     if check_mode:
+        rel_output = OUTPUT.relative_to(REPO_ROOT)
         if not OUTPUT.exists():
             print(
-                f"FAIL: {OUTPUT} does not exist. Run the generator first.",
+                f"FAIL: {rel_output} does not exist. Run the generator first.",
                 file=sys.stderr,
             )
             sys.exit(1)
         existing = OUTPUT.read_text()
         if existing == content:
-            print(f"OK: {OUTPUT} is up to date ({len(targets)} targets)")
+            print(f"OK: {rel_output} is up to date ({len(targets)} targets)")
             sys.exit(0)
-        else:
-            print(f"FAIL: {OUTPUT} is stale. Regenerate with:", file=sys.stderr)
-            print(f"  python3 scripts/lib/generate-ipc-registry.py", file=sys.stderr)
-            sys.exit(1)
+
+        # --- Drift report -------------------------------------------------
+        print(
+            f"FAIL: {rel_output} is stale (IPC registry drift detected)",
+            file=sys.stderr,
+        )
+        print("", file=sys.stderr)
+
+        # Target-set diff: parse IPC_ALL_TARGETS from disk vs in-memory.
+        disk_targets = _extract_all_targets(existing)
+        mem_targets = {t.name for t in targets}
+        missing = sorted(mem_targets - disk_targets)  # in QML, not in registry
+        extra = sorted(disk_targets - mem_targets)  # in registry, not in QML
+
+        qml_path_by_name = {t.name: t.qml_file for t in targets}
+
+        if missing:
+            print(
+                f"Targets in QML but missing from {rel_output} ({len(missing)}):",
+                file=sys.stderr,
+            )
+            for name in missing:
+                src = qml_path_by_name.get(name, "?")
+                print(f"  + {name}  (declared in {src})", file=sys.stderr)
+            print("", file=sys.stderr)
+
+        if extra:
+            print(
+                f"Targets in {rel_output} but no longer in QML ({len(extra)}):",
+                file=sys.stderr,
+            )
+            for name in extra:
+                print(f"  - {name}", file=sys.stderr)
+            print("", file=sys.stderr)
+
+        if not missing and not extra:
+            print(
+                "Target set matches; drift is in metadata "
+                "(descriptions / families / functions / keybind examples).",
+                file=sys.stderr,
+            )
+            print("", file=sys.stderr)
+
+        # Truncated unified diff for everything else (line-level drift).
+        diff = list(
+            difflib.unified_diff(
+                existing.splitlines(keepends=True),
+                content.splitlines(keepends=True),
+                fromfile=f"a/{rel_output}",
+                tofile=f"b/{rel_output} (regenerated)",
+                n=2,
+            )
+        )
+        if diff:
+            max_lines = 60
+            print("Unified diff (truncated):", file=sys.stderr)
+            for line in diff[:max_lines]:
+                sys.stderr.write(line)
+            if len(diff) > max_lines:
+                print(
+                    f"... ({len(diff) - max_lines} more diff lines suppressed)",
+                    file=sys.stderr,
+                )
+            print("", file=sys.stderr)
+
+        print("Remediation:", file=sys.stderr)
+        print("  python3 scripts/lib/generate-ipc-registry.py", file=sys.stderr)
+        sys.exit(1)
     else:
         OUTPUT.write_text(content)
         print(
