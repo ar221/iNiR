@@ -242,27 +242,15 @@ Quick settings panel. Toggles, sliders, and system controls without opening full
 
 ---
 
-### sidebarLeft
+### dashboard
 
-Left sidebar (AI chat, apps).
-
-| Function | Description |
-|----------|-------------|
-| `toggle` | Open/close left sidebar |
-| `open` | Show left sidebar |
-| `close` | Hide left sidebar |
-
----
-
-### sidebarRight
-
-Right sidebar (quick toggles, notepad, settings).
+Command Center dashboard. The full-screen flight-deck overlay (activities, console, ambient cards). Loaded lazily — the IPC bootstraps the module from cold.
 
 | Function | Description |
 |----------|-------------|
-| `toggle` | Open/close right sidebar |
-| `open` | Show right sidebar |
-| `close` | Hide right sidebar |
+| `toggle` | Open/close dashboard |
+| `open` | Open dashboard |
+| `close` | Close dashboard |
 
 ---
 
@@ -662,3 +650,94 @@ Waffle Alt+Tab window switcher. Separate from the ii `altSwitcher` — supports 
 | `toggle` | Toggle switcher |
 | `next` | Focus next window |
 | `previous` | Focus previous window |
+
+---
+
+### courierRail
+
+Apollo-aligned dock rail. Auto-hides on busy workspaces; the hotkey reveals it as a non-reflowing overlay. Reveal also captures the currently-focused window so preview/restore can route correctly.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Toggle rail visibility (hotkey path) |
+| `show` | Reveal rail and capture focused window id |
+| `hide` | Hide rail (hotkey path) |
+
+---
+
+### focus
+
+Focus Mode profile switcher. Toggles between `auto`, `focus`, `gaming`, and `zen` profiles — each can adjust notification silence, allowlists, power profile, idle inhibit, and game mode in lockstep.
+
+| Function | Description |
+|----------|-------------|
+| `status` | Print active mode + profile diagnostics as JSON |
+| `set <mode>` | Set specific mode (`auto`, `focus`, `gaming`, `zen`) |
+| `cycle` | Cycle to next mode |
+| `off` | Return to `auto` |
+
+```kdl
+bind "Super+Shift+F" { spawn "inir" "focus" "cycle"; }
+```
+
+---
+
+### dictation
+
+Dictation server control. Thin wrapper around `systemctl --user` for the dictation systemd unit.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Start if stopped, stop if running |
+| `start` | Start the dictation service |
+| `stop` | Stop the dictation service |
+| `status` | Log current active state |
+
+---
+
+### gptProxy
+
+GPT proxy service control. Thin wrapper around `systemctl --user` for the GPT proxy systemd unit.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Start if stopped, stop if running |
+| `start` | Start the proxy service |
+| `stop` | Stop the proxy service |
+| `status` | Log current active state |
+
+---
+
+### proxy
+
+Claude Code proxy service control. Thin wrapper around `systemctl --user` for the Claude Code proxy systemd unit.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Start if stopped, stop if running |
+| `start` | Start the proxy service |
+| `stop` | Stop the proxy service |
+| `status` | Log current active state |
+
+---
+
+### plugins
+
+Plugin registry. Bar/widget plugins loaded from `~/.config/quickshell/inir/plugins/`.
+
+| Function | Description |
+|----------|-------------|
+| `list` | Return loaded plugin metadata as JSON |
+| `reload` | Re-scan the plugin directory and bump the cache-bust counter |
+| `diagnose` | Return registry diagnostics as JSON |
+
+---
+
+### contracts
+
+Slot contracts — the override surface that lets dotfile/plugin authors swap or disable user-facing panels (bar, sidebars, dock, background, mediaControls, lock, controlPanel).
+
+| Function | Description |
+|----------|-------------|
+| `list` | Return current slot state (overridden / disabled / source) as JSON |
+| `reset` | Reset every slot to its default source |
