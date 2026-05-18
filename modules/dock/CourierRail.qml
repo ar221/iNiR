@@ -22,6 +22,9 @@ Scope {
     readonly property int iconSize: Config.options?.dock?.railIconSize ?? 32
     readonly property int buttonSize: iconSize + 4
     readonly property var emptyList: []
+    // Niri crashed in the screenshot-capture path when image previews ran.
+    // This preview path is metadata-only and must not call WindowPreviewService.
+    readonly property bool metadataPreviewSafe: true
 
     // Unity-style auto-hide state (shared across per-screen rails)
     // - Default visibility: only when current workspace has <= 1 window (auto-hide on crowd).
@@ -365,16 +368,29 @@ Scope {
                         property int lastFocused: -1
                         readonly property bool hasWindows: (modelData?.toplevels?.length ?? 0) > 0
                         readonly property bool isFocused: modelData?.toplevels?.find(t => t?.activated === true) !== undefined
+                        readonly property bool hasUrgentWorkspace: modelData?.toplevels?.find(t => NiriService.workspaces[t?.niriWorkspaceId]?.is_urgent === true) !== undefined
                         readonly property var desktopEntry: AppSearch.lookupDesktopEntry(modelData?.originalAppId ?? modelData?.appId)
                         width: root.buttonSize
                         height: root.buttonSize
 
                         Rectangle {
+                            id: manifestPlate
                             anchors.fill: parent
                             radius: Appearance.apollo.radiusMicro
                             color: mouseArea.pressed ? Appearance.apollo.colSurfaceActive
-                                : (mouseArea.containsMouse ? Appearance.apollo.colSurfaceHover : "transparent")
+                                : mouseArea.containsMouse ? Appearance.apollo.colSurfaceHover
+                                : appItem.isFocused ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24)
+                                : ColorUtils.transparentize(Appearance.apollo.colSurface, 0.22)
+                            border.width: 1
+                            border.color: appItem.isFocused ? Appearance.apollo.colBorder
+                                : mouseArea.containsMouse ? Appearance.apollo.colBorderDim
+                                : ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.38)
+
                             Behavior on color {
+                                enabled: Appearance.animationsEnabled
+                                ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                            }
+                            Behavior on border.color {
                                 enabled: Appearance.animationsEnabled
                                 ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
@@ -388,16 +404,90 @@ Scope {
                             color: appItem.isFocused ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim
                         }
 
+                        Rectangle {
+                            visible: appItem.hasUrgentWorkspace && !appItem.isFocused
+                            width: 7
+                            height: 7
+                            radius: 1
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.topMargin: 2
+                            anchors.rightMargin: 2
+                            color: Appearance.apollo.colSignalEmber
+                            border.width: 1
+                            border.color: Appearance.apollo.colAmberBright
+                            opacity: 0.92
+                        }
+
+                        // Dock-only icon resolver — waterfall:
+                        //   1. Absolute path (smartIconName / Papirus overrides) → use direct.
+                        //   2. IconThemeService.dockIconCandidates(name) → walk on Image.Error.
+                        //   3. Exhausted → Quickshell.iconPath(name, fallback) via system theme.
+                        // Mirrors modules/bar/BarTaskbarButton.qml taskbarIcon (lines 287-347).
+                        // Theme switches go through setDockTheme → shell restart; binding stays
+                        // reactive across hot-reload of the QML itself.
                         IconImage {
+                            id: dockIcon
                             anchors.centerIn: parent
-                            implicitSize: root.iconSize
-                            source: {
-                                const appId = appItem.modelData?.originalAppId ?? appItem.modelData?.appId ?? ""
-                                const icon = appItem.desktopEntry?.icon || AppSearch.guessIcon(appId)
-                                return Quickshell.iconPath(IconThemeService.smartIconName(icon, appId), "application-x-executable")
-                            }
+                            implicitSize: Math.max(18, root.iconSize - 6)
                             mipmap: true
                             smooth: true
+
+                            property string iconName: {
+                                const appId = appItem.modelData?.originalAppId ?? appItem.modelData?.appId ?? ""
+                                const lower = appId.toLowerCase()
+                                // Hand-picked Papirus overrides for apps shipping no theme icon.
+                                if (lower.includes("vesktop"))
+                                    return "/usr/share/icons/Papirus-Dark/64x64/apps/vesktop.svg"
+                                if (lower.includes("wezterm"))
+                                    return "/usr/share/icons/Papirus-Dark/64x64/apps/org.wezfurlong.wezterm.svg"
+                                const icon = appItem.desktopEntry?.icon || AppSearch.guessIcon(appId)
+                                return IconThemeService.smartIconName(icon, appId)
+                            }
+                            property bool isAbsolutePath: iconName.startsWith("/") || iconName.startsWith("file://")
+                            property var candidates: isAbsolutePath ? [] : IconThemeService.dockIconCandidates(iconName)
+
+                            property int _candidateIdx: 0
+                            property bool _useSystemFallback: false
+                            property string _systemFallbackName: ""
+
+                            onIconNameChanged: {
+                                _candidateIdx = 0
+                                _useSystemFallback = false
+                                _systemFallbackName = ""
+                            }
+
+                            source: {
+                                if (_useSystemFallback && _systemFallbackName)
+                                    return Quickshell.iconPath(_systemFallbackName, "application-x-executable")
+                                if (isAbsolutePath)
+                                    return iconName.startsWith("file://") ? iconName : `file://${iconName}`
+                                if (candidates.length > 0 && _candidateIdx < candidates.length)
+                                    return candidates[_candidateIdx]
+                                return Quickshell.iconPath(iconName, "application-x-executable")
+                            }
+
+                            onStatusChanged: {
+                                if (status === Image.Error) {
+                                    Qt.callLater(() => {
+                                        if (isAbsolutePath && !_useSystemFallback) {
+                                            const path = iconName.startsWith("file://") ? iconName.substring(7) : iconName
+                                            const fileName = path.split("/").pop()
+                                            let baseName = fileName
+                                            if (baseName.includes(".")) baseName = baseName.split(".").slice(0, -1).join(".")
+                                            _systemFallbackName = baseName
+                                            _useSystemFallback = true
+                                            return
+                                        }
+                                        if (candidates.length > 0 && _candidateIdx < candidates.length - 1) {
+                                            _candidateIdx++
+                                        } else if (!_useSystemFallback) {
+                                            _systemFallbackName = iconName
+                                            _useSystemFallback = true
+                                        }
+                                    })
+                                }
+                            }
                         }
 
                         Timer {
@@ -411,7 +501,7 @@ Scope {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             hoverEnabled: true
-                            onEntered: if (appItem.hasWindows && Config.options?.dock?.hoverPreview !== false) hoverPreviewTimer.restart()
+                            onEntered: if (root.metadataPreviewSafe && appItem.hasWindows && Config.options?.dock?.hoverPreview !== false) hoverPreviewTimer.restart()
                             onExited: { hoverPreviewTimer.stop(); if (!railWindow.previewHovered) railWindow.closePreview() }
 
                             onClicked: mouse => {
@@ -475,7 +565,7 @@ Scope {
                     anchor.item: railWindow.previewAnchorItem ?? previewAnchorFallback
                     anchor.adjustment: PopupAdjustment.Slide
                     anchor.gravity: Edges.Right
-                    anchor.edges: Edges.Left
+                    anchor.edges: Edges.Right
                     implicitWidth: previewLayout.implicitWidth + 16
                     implicitHeight: previewLayout.implicitHeight + 16
 
@@ -496,18 +586,84 @@ Scope {
                             border.width: 1
                             border.color: Appearance.apollo.colBorderDim
 
-                            RowLayout {
+                            ColumnLayout {
                                 id: previewLayout
                                 anchors.fill: parent
                                 anchors.margins: 8
-                                spacing: 8
+                                spacing: 6
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    StyledText {
+                                        text: StringUtils.toTitleCase(railWindow.previewEntry?.originalAppId ?? railWindow.previewEntry?.appId ?? "APP")
+                                        color: Appearance.apollo.colTextStrong
+                                        font.family: Appearance.font.family.monospace
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        font.letterSpacing: 0.8
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    StyledText {
+                                        text: `${railWindow.previewEntry?.toplevels?.length ?? 0} WIN`
+                                        color: Appearance.apollo.colSignalCyan
+                                        font.family: Appearance.font.family.monospace
+                                        font.pixelSize: Appearance.font.pixelSize.smallest
+                                        font.letterSpacing: 1.0
+                                    }
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 1
+                                    color: Appearance.apollo.colBorderDim
+                                }
+
                                 Repeater {
                                     model: ScriptModel { values: railWindow.previewEntry?.toplevels ?? root.emptyList; objectProp: "niriWindowId" }
-                                    delegate: DockWindowPreview {
+                                    delegate: Rectangle {
                                         required property var modelData
-                                        toplevel: modelData
-                                        onWindowActivated: railWindow.closePreview()
-                                        onWindowCloseClicked: railWindow.closePreview()
+                                        Layout.fillWidth: true
+                                        implicitWidth: 260
+                                        implicitHeight: 28
+                                        radius: Appearance.apollo.radiusMicro
+                                        color: modelData?.activated ? ColorUtils.transparentize(Appearance.apollo.colSurfaceActive, 0.24) : "transparent"
+                                        border.width: 1
+                                        border.color: modelData?.activated ? Appearance.apollo.colBorder : ColorUtils.transparentize(Appearance.apollo.colBorderDim, 0.45)
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 8
+                                            anchors.rightMargin: 8
+                                            spacing: 8
+
+                                            Rectangle {
+                                                width: 4
+                                                height: 14
+                                                radius: 1
+                                                color: modelData?.activated ? Appearance.apollo.colBorder : Appearance.apollo.colBorderDim
+                                            }
+
+                                            StyledText {
+                                                text: modelData?.title || Translation.tr("Untitled window")
+                                                color: modelData?.activated ? Appearance.apollo.colTextStrong : Appearance.apollo.colText
+                                                font.family: Appearance.font.family.monospace
+                                                font.pixelSize: Appearance.font.pixelSize.smallest
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                if (CompositorService.isNiri && modelData?.niriWindowId) NiriService.focusWindow(modelData.niriWindowId)
+                                                else modelData?.activate()
+                                                railWindow.closePreview()
+                                            }
+                                        }
                                     }
                                 }
                             }
