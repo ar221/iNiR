@@ -1361,6 +1361,7 @@ ContentPage {
                     case "aurora": return styles.aurora ?? 1
                     case "inir": return styles.inir ?? 1
                     case "angel": return styles.angel ?? 1
+                    case "courier": return styles.courier ?? 0
                     default: return 1
                 }
             }
@@ -1373,6 +1374,15 @@ ContentPage {
             function _applyGlobalStyle(styleId) {
                 console.log("[GlobalStyle] apply", styleId)
                 const cornerStyle = getCornerStyleForGlobalStyle(styleId)
+                const prevStyle = Config.options?.appearance?.globalStyle ?? ""
+
+                // OC-1: leaving Courier — reset coupled sidecars (dock.style mutex + bar.stylePreset).
+                // Courier's sidecars swap panel architecture, not just paint; leaving them stuck
+                // traps the user in CourierRail under a non-Courier grammar.
+                if (prevStyle === "courier" && styleId !== "courier") {
+                    Config.setNestedValue("dock.style", "panel")
+                    Config.setNestedValue("bar.stylePreset", "dusky")
+                }
 
                 if (styleId === "cards") {
                     Config.setNestedValue("dock.cardStyle", true)
@@ -1407,6 +1417,17 @@ ContentPage {
                     return;
                 }
 
+                if (styleId === "courier") {
+                    // Courier dispatch-board grammar — square hardware, opaque, bar flush to edge (OC-4)
+                    Config.setNestedValue("dock.style", "courier")
+                    Config.setNestedValue("bar.stylePreset", "courier")
+                    Config.setNestedValue("dock.cardStyle", false)
+                    Config.setNestedValue("sidebar.cardStyle", false)
+                    Config.setNestedValue("bar.cornerStyle", 0)
+                    Config.setNestedValue("appearance.transparency.enable", false)
+                    return;
+                }
+
                 // material
                 Config.setNestedValue("dock.cardStyle", false)
                 Config.setNestedValue("sidebar.cardStyle", false)
@@ -1429,14 +1450,15 @@ ContentPage {
                         { displayName: Translation.tr("Cards"), icon: "branding_watermark", value: "cards" },
                         { displayName: Translation.tr("Aurora"), icon: "blur_on", value: "aurora" },
                         { displayName: Translation.tr("Inir"), icon: "terminal", value: "inir" },
-                        { displayName: Translation.tr("Angel"), icon: "raven", value: "angel" }
+                        { displayName: Translation.tr("Angel"), icon: "raven", value: "angel" },
+                        { displayName: Translation.tr("Courier"), icon: "flight_takeoff", value: "courier" }
                     ]
                 }
             }
 
             StyledText {
                 Layout.fillWidth: true
-                text: Translation.tr("Material keeps the original surfaces. Cards enables rounded card containers everywhere. Aurora enables a wallpaper-tinted glass surface style across panels. Inir uses a TUI-inspired dark theme with accent-colored borders. Angel is the flagship glass style with refined blur, escalonado shadows, and partial accent borders.")
+                text: Translation.tr("Material keeps the original surfaces. Cards enables rounded card containers everywhere. Aurora enables a wallpaper-tinted glass surface style across panels. Inir uses a TUI-inspired dark theme with accent-colored borders. Angel is the flagship glass style with refined blur, escalonado shadows, and partial accent borders. Courier is the dispatch-board grammar — square hardware, opaque surfaces, monospace command chrome, flush bar.")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 wrapMode: Text.WordWrap
