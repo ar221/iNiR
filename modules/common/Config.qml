@@ -1329,14 +1329,6 @@ Singleton {
                 // Fade + slide each top-level sidebar card in 40ms apart when the
                 // sidebar opens. Disable for instant reveal.
                 property bool staggeredReveal: true
-                property JsonObject booru: JsonObject {
-                    property bool allowNsfw: false
-                    property string defaultProvider: "yandere"
-                    property int limit: 20
-                    property JsonObject zerochan: JsonObject {
-                        property string username: "[unset]"
-                    }
-                }
                 // Wallhaven-specific sidebar module options
                 property JsonObject wallhaven: JsonObject {
                     // Enable/disable the Wallhaven tab in the left sidebar
@@ -1345,14 +1337,6 @@ Singleton {
                     property int limit: 24
                     // Optional API key for NSFW & user-specific filters
                     property string apiKey: ""
-                }
-                // Anime Schedule tab - AniList API
-                property JsonObject animeSchedule: JsonObject {
-                    property bool enable: false
-                    property bool showNsfw: false
-                    // Custom streaming site URL (use %s for search query placeholder)
-                    // Examples: "https://9animetv.to/search?keyword=%s", "https://anitaku.pe/search.html?keyword=%s"
-                    property string watchSite: ""
                 }
                 // YT Music tab - Search and play YouTube music via yt-dlp
                 property JsonObject ytmusic: JsonObject {

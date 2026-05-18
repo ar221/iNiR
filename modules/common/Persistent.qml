@@ -78,9 +78,12 @@ Singleton {
                 }
             }
 
+            // Retained for the Wallhaven NSFW toggle. The `provider` field that
+            // lived here was removed alongside the Booru service (INI-2). The
+            // object name stays `booru` so existing user states.json files keep
+            // round-tripping cleanly without a migration.
             property JsonObject booru: JsonObject {
                 property bool allowNsfw: false
-                property string provider: "yandere"
             }
 
             property JsonObject idle: JsonObject {

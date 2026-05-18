@@ -481,14 +481,6 @@
         "ai": {
             "textFadeIn": true
         },
-        "booru": {
-            "allowNsfw": false,
-            "defaultProvider": "yandere",
-            "limit": 20,
-            "zerochan": {
-                "username": "[unset]"
-            }
-        },
         "cornerOpen": {
             "bottom": false,
             "clickless": false,
