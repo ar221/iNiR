@@ -1334,6 +1334,13 @@ run_service_command() {
             ;;
         logs)
             require_command journalctl
+            if [[ "${1:-}" == "--full" ]]; then
+                shift
+                local cfg_path
+                cfg_path="$(readlink -f "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/inir" 2>/dev/null)"
+                [[ -z "$cfg_path" ]] && cfg_path="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/inir"
+                exec qs -p "$cfg_path" log "$@"
+            fi
             exec journalctl --user-unit inir.service "$@"
             ;;
         -h|--help|"")
