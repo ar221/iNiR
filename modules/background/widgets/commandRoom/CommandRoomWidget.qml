@@ -23,7 +23,8 @@ AbstractBackgroundWidget {
     readonly property int maxTasks: commandRoomConfig?.maxTasks ?? 3
     readonly property int maxAnomalies: commandRoomConfig?.maxAnomalies ?? 2
     readonly property point screenPos: root.mapToItem(null, 0, 0)
-    readonly property var visibleTasks: CommandRoom.openTasks.slice(0, Math.max(0, maxTasks))
+    readonly property var visibleCards: CommandRoom.cards.slice(0, Math.max(0, maxTasks))
+    readonly property var visibleTasks: CommandRoom.cards.length > 0 ? [] : CommandRoom.openTasks.slice(0, Math.max(0, maxTasks))
     readonly property var visibleAnomalies: CommandRoom.anomalies.slice(0, Math.max(0, maxAnomalies))
     readonly property string statusLabel: CommandRoom.anomalyCount > 0 ? "ALERT" : CommandRoom.freshnessState.toUpperCase()
     readonly property color statusColor: {
@@ -43,6 +44,17 @@ AbstractBackgroundWidget {
         if (CommandRoom.ageMinutes === 0)
             return "now"
         return CommandRoom.ageMinutes + "m ago"
+    }
+
+    function _severityColor(severity) {
+        const value = String(severity || "UNKNOWN").toUpperCase()
+        if (value === "FAIL")
+            return Appearance.colors.colError
+        if (value === "WARN")
+            return Appearance.colors.colTertiary
+        if (value === "OK")
+            return Appearance.m3colors.m3primary
+        return Appearance.colors.colSubtext
     }
 
     implicitWidth: cardWidth
@@ -189,7 +201,7 @@ AbstractBackgroundWidget {
 
             StyledText {
                 Layout.fillWidth: true
-                text: CommandRoom.generatedAt.length > 0 ? "projection / " + CommandRoom.generatedAt : Directories.shortHomePath(CommandRoom.sourcePath)
+                text: CommandRoom.generatedAt.length > 0 ? (CommandRoom.usingFallback ? "legacy / " : "projection / ") + CommandRoom.generatedAt : Directories.shortHomePath(CommandRoom.sourcePath)
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1.1
@@ -276,12 +288,71 @@ AbstractBackgroundWidget {
 
             StyledText {
                 Layout.fillWidth: true
-                visible: CommandRoom.lastError.length === 0 && CommandRoom.openTaskCount === 0
+                visible: CommandRoom.lastError.length === 0 && CommandRoom.openTaskCount === 0 && CommandRoom.cards.length === 0
                 text: "No open command-room tasks. The board is clear."
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Medium
                 color: Appearance.colors.colSubtext
                 wrapMode: Text.WordWrap
+            }
+
+            Repeater {
+                model: root.visibleCards
+
+                delegate: Rectangle {
+                    id: cardRow
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    implicitHeight: cardRowContent.implicitHeight + 14
+                    radius: 4
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.34)
+                    border.width: 1
+                    border.color: ColorUtils.transparentize(root._severityColor(String(cardRow.modelData?.severity ?? "UNKNOWN")), 0.62)
+
+                    ColumnLayout {
+                        id: cardRowContent
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 3
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 7
+
+                            StyledText {
+                                text: String(cardRow.modelData?.severity ?? "UNKNOWN").toUpperCase()
+                                font.family: Appearance.font.family.monospace
+                                font.pixelSize: Appearance.font.pixelSize.smallest
+                                font.weight: Font.Bold
+                                color: root._severityColor(String(cardRow.modelData?.severity ?? "UNKNOWN"))
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: String(cardRow.modelData?.title ?? cardRow.modelData?.id ?? "Command-room card")
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.DemiBold
+                                color: Appearance.colors.colOnLayer0
+                                elide: Text.ElideRight
+                                maximumLineCount: 1
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: String(cardRow.modelData?.summary ?? "")
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colSubtext
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                        }
+                    }
+                }
             }
 
             Repeater {
