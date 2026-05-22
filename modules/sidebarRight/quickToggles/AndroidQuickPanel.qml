@@ -64,20 +64,15 @@ AbstractQuickPanel {
     // Card background — gives toggles their own visually distinct section
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-            : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-            : Appearance.rounding.normal
-        color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-             : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-             : Appearance.auroraEverywhere ? "transparent"
-             : Appearance.colors.colLayer1
-        border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
-        border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+        radius: Appearance.sidebar.radiusCard
+        color: Appearance.sidebar.colCard
+        border.width: Appearance.sidebar.borderWidth
+        border.color: Appearance.sidebar.colCardBorder
         z: -1
     }
 
     AngelPartialBorder {
-        targetRadius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal : Appearance.rounding.normal
+        targetRadius: Appearance.sidebar.radiusCard
         coverage: 0.5
     }
 
@@ -155,8 +150,7 @@ AbstractQuickPanel {
             }
             sourceComponent: Rectangle {
                 implicitHeight: 1
-                color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-                    : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colOutlineVariant
+                color: Appearance.sidebar.colCardBorder
             }
         }
 

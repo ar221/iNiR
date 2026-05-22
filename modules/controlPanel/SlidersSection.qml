@@ -21,15 +21,10 @@ Rectangle {
     property var screen: root.QsWindow.window?.screen ?? null
     property var brightnessMonitor: screen ? Brightness.getMonitorForScreen(screen) : null
 
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : inirEverywhere ? Appearance.inir.colLayer1
-         : auroraEverywhere ? Appearance.aurora.colSubSurface
-         : Appearance.colors.colLayer1
-    border.width: Appearance.angelEverywhere ? 0 : (inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.controlPanel.radiusCard
+    color: Appearance.controlPanel.colCard
+    border.width: Appearance.controlPanel.borderWidth
+    border.color: Appearance.controlPanel.colCardBorder
 
     AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
 
@@ -90,22 +85,15 @@ Rectangle {
         RippleButton {
             implicitWidth: root.compactMode ? 24 : 28
             implicitHeight: root.compactMode ? 24 : 28
-            buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+            buttonRadius: Appearance.controlPanel.radiusButton
             colBackground: "transparent"
-            colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                              : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                              : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                              : Appearance.colors.colLayer2Hover
+            colBackgroundHover: Appearance.controlPanel.colButtonHover
             onClicked: miniSlider.iconClicked()
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: miniSlider.icon
                 iconSize: root.compactMode ? 14 : 16
-                color: Appearance.angelEverywhere ? Appearance.angel.colText
-                     : root.inirEverywhere ? Appearance.inir.colText 
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                     : Appearance.colors.colOnLayer1
+                color: Appearance.controlPanel.colText
             }
         }
 

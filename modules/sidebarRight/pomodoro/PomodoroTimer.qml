@@ -16,21 +16,17 @@ Item {
     readonly property color _colLayer: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer2
         : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface
-        : Appearance.colors.colLayer2
+        : Appearance.sidebar.colSubCard
     readonly property color _colLayerHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
         : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
         : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover
-        : Appearance.colors.colLayer2Hover
+        : Appearance.sidebar.colSubCardHover
     readonly property color _colLayerActive: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
         : Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive
-        : Appearance.colors.colLayer2Active
-    readonly property color _colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText
-        : Appearance.colors.colOnLayer2
-    readonly property color _colTextSecondary: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary
-        : Appearance.colors.colSubtext
+        : Appearance.sidebar.colSubCardActive
+    readonly property color _colText: Appearance.sidebar.colTextOnSubCard
+    readonly property color _colTextSecondary: Appearance.sidebar.colTextSecondary
 
     property bool settingsOpen: false
 
@@ -64,7 +60,7 @@ Item {
         }
         RippleButton {
             implicitWidth: 28; implicitHeight: 28
-            buttonRadius: Appearance.rounding.full
+            buttonRadius: Appearance.sidebar.radiusButton
             colBackground: "transparent"
             colBackgroundHover: root._colLayerHover
             colRipple: root._colLayerActive
@@ -80,20 +76,18 @@ Item {
         Rectangle {
             implicitWidth: 56
             implicitHeight: 28
-            radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-                : Appearance.rounding.small
+            radius: Appearance.sidebar.radiusSmall
             color: adjustRow._editing
                 ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.8)
                  : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-                 : Appearance.colors.colPrimaryContainer)
+                 : Appearance.sidebar.colAccentSurface)
                 : Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                 : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-                : Appearance.colors.colLayer1
+                : Appearance.sidebar.colCard
             border.width: adjustRow._editing ? 1 : 0
             border.color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
                 : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-                : Appearance.colors.colPrimary
+                : Appearance.sidebar.colAccent
             TextInput {
                 anchors.centerIn: parent
                 width: parent.width - 8
@@ -128,7 +122,7 @@ Item {
         }
         RippleButton {
             implicitWidth: 28; implicitHeight: 28
-            buttonRadius: Appearance.rounding.full
+            buttonRadius: Appearance.sidebar.radiusButton
             colBackground: "transparent"
             colBackgroundHover: root._colLayerHover
             colRipple: root._colLayerActive
@@ -194,9 +188,7 @@ Item {
                             return `${minutes}:${seconds}`;
                         }
                         font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
-                        color: Appearance.angelEverywhere ? Appearance.angel.colText
-                            : Appearance.inirEverywhere ? Appearance.inir.colText
-                            : Appearance.m3colors.m3onSurface
+                        color: Appearance.sidebar.colText
                     }
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
@@ -207,7 +199,7 @@ Item {
                 }
 
                 Rectangle {
-                    radius: Appearance.rounding.full
+                    radius: Appearance.sidebar.radiusButton
                     color: root._colLayer
 
                     anchors {
@@ -238,8 +230,8 @@ Item {
                         text: TimerService.pomodoroRunning ? Translation.tr("Pause") : (TimerService.pomodoroSecondsLeft === TimerService.focusTime) ? Translation.tr("Start") : Translation.tr("Resume")
                         color: TimerService.pomodoroRunning
                             ? (Appearance.inirEverywhere ? Appearance.inir.colText
-                                : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.colors.colOnSecondaryContainer)
-                            : Appearance.colors.colOnPrimary
+                                : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.sidebar.colOnAccent)
+                            : Appearance.sidebar.colOnAccent
                     }
                     implicitHeight: 35
                     implicitWidth: 90
@@ -247,16 +239,16 @@ Item {
                     onClicked: TimerService.togglePomodoro()
                     colBackground: TimerService.pomodoroRunning
                         ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer)
-                        : Appearance.colors.colPrimary
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colAccentSurface)
+                        : Appearance.sidebar.colAccent
                     colBackgroundHover: TimerService.pomodoroRunning
                         ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover)
-                        : Appearance.colors.colPrimaryHover
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.sidebar.colAccentSurfaceHover)
+                        : Appearance.sidebar.colAccentHover
                     colRipple: TimerService.pomodoroRunning
                         ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
-                            : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive)
-                        : Appearance.colors.colPrimaryActive
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.sidebar.colAccentSurfaceActive)
+                        : Appearance.sidebar.colAccentActive
                 }
 
                 RippleButton {
@@ -301,7 +293,7 @@ Item {
 
                 RippleButton {
                     anchors.fill: parent
-                    buttonRadius: Appearance.rounding.full
+                    buttonRadius: Appearance.sidebar.radiusButton
                     colBackground: "transparent"
                     colBackgroundHover: root._colLayerHover
                     colRipple: root._colLayerActive
@@ -339,14 +331,12 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-                        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-                        : Appearance.rounding.normal
+                    radius: Appearance.sidebar.radiusCard
                     color: root._colLayer
                     border.width: 1
                     border.color: Appearance.angelEverywhere ? Appearance.angel.colBorder
                         : Appearance.inirEverywhere ? Appearance.inir.colBorder
-                        : Appearance.colors.colLayer0Border
+                        : Appearance.sidebar.colCardBorder
                 }
 
                 ColumnLayout {
@@ -431,4 +421,3 @@ Item {
         }
     }
 }
-

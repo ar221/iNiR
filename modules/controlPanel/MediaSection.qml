@@ -25,6 +25,7 @@ Item {
     readonly property bool hasPlayer: (player && player.trackTitle) || (isYtMusicActive && YtMusic.currentVideoId)
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
+    readonly property bool commandPreset: Appearance.controlPanel.commandPreset
 
     readonly property string effectiveArtUrl: isYtMusicActive && YtMusic.currentThumbnail ? YtMusic.currentThumbnail : (player?.trackArtUrl ?? "")
     readonly property string effectiveTitle: isYtMusicActive && YtMusic.currentTitle ? YtMusic.currentTitle : (player?.trackTitle ?? "")
@@ -170,14 +171,15 @@ Item {
         id: card
         anchors.fill: parent
         implicitHeight: root.cardHeight
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-             : root.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
+        radius: Appearance.controlPanel.radiusCard
         color: Appearance.angelEverywhere ? "transparent"
              : root.inirEverywhere ? Appearance.inir.colLayer1 
+             : root.commandPreset ? Appearance.controlPanel.colCard
              : root.auroraEverywhere ? ColorUtils.transparentize(root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0, 0.7)
              : (root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0)
-        border.width: Appearance.angelEverywhere ? 0 : (root.inirEverywhere ? 1 : 0)
+        border.width: Appearance.controlPanel.borderWidth
         border.color: Appearance.angelEverywhere ? "transparent"
+                    : root.commandPreset ? Appearance.controlPanel.colCardBorder
                     : root.inirEverywhere ? Appearance.inir.colBorder : "transparent"
         clip: true
 
@@ -213,7 +215,7 @@ Item {
         // Dark overlay for Material
         Rectangle {
             anchors.fill: parent
-            visible: !root.inirEverywhere && !root.auroraEverywhere
+            visible: !root.inirEverywhere && !root.auroraEverywhere && !root.commandPreset
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "transparent" }
@@ -234,6 +236,7 @@ Item {
             smoothing: 2
             color: ColorUtils.transparentize(
                 Appearance.angelEverywhere ? Appearance.angel.colPrimary
+                : root.commandPreset ? Appearance.controlPanel.colAccent
                 : root.inirEverywhere ? root.jiraColPrimary : (root.blendedColors?.colPrimary ?? Appearance.colors.colPrimary), 
                 0.6
             )
@@ -249,8 +252,7 @@ Item {
                 id: coverArtContainer
                 Layout.preferredWidth: root.coverArtSize
                 Layout.preferredHeight: root.coverArtSize
-                radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                    : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                radius: Appearance.controlPanel.radiusSmall
                 color: "transparent"
                 clip: true
 
@@ -259,8 +261,7 @@ Item {
                     maskSource: Rectangle { 
                         width: root.coverArtSize
                         height: root.coverArtSize
-                        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small 
+                        radius: Appearance.controlPanel.radiusSmall
                     }
                 }
 
@@ -280,6 +281,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                        : root.commandPreset ? Appearance.controlPanel.colTrack
                         : root.inirEverywhere ? root.jiraColLayer2 : (root.blendedColors?.colLayer1 ?? Appearance.colors.colLayer1)
                     visible: !root.downloaded
                     
@@ -288,6 +290,7 @@ Item {
                         text: "music_note"
                         iconSize: root.compactMode ? 36 : 48
                         color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
+                            : root.commandPreset ? Appearance.controlPanel.colTextSecondary
                             : root.inirEverywhere ? root.jiraColTextSecondary : (root.blendedColors?.colSubtext ?? Appearance.colors.colSubtext)
                     }
                 }
@@ -303,6 +306,7 @@ Item {
                     font.pixelSize: root.compactMode ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.normal
                     font.weight: Font.Medium
                     color: Appearance.angelEverywhere ? Appearance.angel.colText
+                        : root.commandPreset ? Appearance.controlPanel.colText
                         : root.inirEverywhere ? root.jiraColText : (root.blendedColors?.colOnLayer0 ?? Appearance.colors.colOnLayer0)
                     elide: Text.ElideRight
                 }
@@ -312,6 +316,7 @@ Item {
                     text: root.effectiveArtist || ""
                     font.pixelSize: root.compactMode ? Appearance.font.pixelSize.smallest : Appearance.font.pixelSize.smaller
                     color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
+                        : root.commandPreset ? Appearance.controlPanel.colTextSecondary
                         : root.inirEverywhere ? root.jiraColTextSecondary : (root.blendedColors?.colSubtext ?? Appearance.colors.colSubtext)
                     elide: Text.ElideRight
                     visible: text !== ""
@@ -333,10 +338,13 @@ Item {
                             wavy: root.player?.isPlaying ?? false
                             animateWave: root.player?.isPlaying ?? false
                             highlightColor: Appearance.angelEverywhere ? Appearance.angel.colPrimary
+                                : root.commandPreset ? Appearance.controlPanel.colAccent
                                 : root.inirEverywhere ? root.jiraColPrimary : (root.blendedColors?.colPrimary ?? Appearance.colors.colPrimary)
                             trackColor: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                                : root.commandPreset ? Appearance.controlPanel.colTrack
                                 : root.inirEverywhere ? Appearance.inir.colLayer2 : (root.blendedColors?.colSecondaryContainer ?? Appearance.colors.colSecondaryContainer)
                             handleColor: Appearance.angelEverywhere ? Appearance.angel.colPrimary
+                                : root.commandPreset ? Appearance.controlPanel.colAccent
                                 : root.inirEverywhere ? root.jiraColPrimary : (root.blendedColors?.colPrimary ?? Appearance.colors.colPrimary)
                             value: root.player?.length > 0 ? root.player.position / root.player.length : 0
                             onMoved: root.player.position = value * root.player.length
@@ -351,8 +359,10 @@ Item {
                             wavy: root.player?.isPlaying ?? false
                             animateWave: root.player?.isPlaying ?? false
                             highlightColor: Appearance.angelEverywhere ? Appearance.angel.colPrimary
+                                : root.commandPreset ? Appearance.controlPanel.colAccent
                                 : root.inirEverywhere ? root.jiraColPrimary : (root.blendedColors?.colPrimary ?? Appearance.colors.colPrimary)
                             trackColor: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                                : root.commandPreset ? Appearance.controlPanel.colTrack
                                 : root.inirEverywhere ? Appearance.inir.colLayer2 : (root.blendedColors?.colSecondaryContainer ?? Appearance.colors.colSecondaryContainer)
                             value: root.player?.length > 0 ? root.player.position / root.player.length : 0
                         }
@@ -369,6 +379,7 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.family: Appearance.font.family.numbers
                         color: Appearance.angelEverywhere ? Appearance.angel.colText
+                            : root.commandPreset ? Appearance.controlPanel.colText
                             : root.inirEverywhere ? root.jiraColText : (root.blendedColors?.colOnLayer0 ?? Appearance.colors.colOnLayer0)
                     }
 
@@ -378,12 +389,13 @@ Item {
                     RippleButton {
                         implicitWidth: root.controlButtonSize
                         implicitHeight: root.controlButtonSize
-                        buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                        buttonRadius: Appearance.controlPanel.radiusButton
                         colBackground: "transparent"
                         colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                            : root.commandPreset ? Appearance.controlPanel.colButtonHover
                             : root.inirEverywhere ? Appearance.inir.colLayer2Hover : ColorUtils.transparentize(root.blendedColors?.colLayer1 ?? Appearance.colors.colLayer1, 0.5)
                         colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
+                            : root.commandPreset ? Appearance.controlPanel.colButtonActive
                             : root.inirEverywhere ? Appearance.inir.colLayer2Active : (root.blendedColors?.colLayer1Active ?? Appearance.colors.colLayer1Active)
                         onClicked: MprisController.previous()
 
@@ -394,6 +406,7 @@ Item {
                                 iconSize: root.controlIconSize
                                 fill: 1
                                 color: Appearance.angelEverywhere ? Appearance.angel.colText
+                                    : root.commandPreset ? Appearance.controlPanel.colText
                                     : root.inirEverywhere ? root.jiraColText : (root.blendedColors?.colOnLayer0 ?? Appearance.colors.colOnLayer0)
                             }
                         }
@@ -405,11 +418,12 @@ Item {
                         id: playPauseButton
                         implicitWidth: root.primaryControlButtonSize
                         implicitHeight: root.primaryControlButtonSize
-                        buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                        buttonRadius: Appearance.controlPanel.radiusButton
                         colBackground: "transparent"
                         colBackgroundHover: Appearance.angelEverywhere
                             ? Appearance.angel.colGlassCardHover
+                            : root.commandPreset
+                            ? Appearance.controlPanel.colButtonHover
                             : root.inirEverywhere
                             ? Appearance.inir.colLayer2Hover
                             : root.auroraEverywhere
@@ -417,6 +431,8 @@ Item {
                                 : Appearance.colors.colLayer1Hover
                         colRipple: Appearance.angelEverywhere
                             ? Appearance.angel.colGlassCardActive
+                            : root.commandPreset
+                            ? Appearance.controlPanel.colButtonActive
                             : root.inirEverywhere
                             ? Appearance.inir.colLayer2Active
                             : root.auroraEverywhere
@@ -432,6 +448,8 @@ Item {
                                 fill: 1
                                 color: Appearance.angelEverywhere
                                     ? Appearance.angel.colPrimary
+                                    : root.commandPreset
+                                    ? Appearance.controlPanel.colAccent
                                     : root.inirEverywhere
                                     ? root.jiraColPrimary
                                     : root.auroraEverywhere
@@ -446,12 +464,13 @@ Item {
                     RippleButton {
                         implicitWidth: root.controlButtonSize
                         implicitHeight: root.controlButtonSize
-                        buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                        buttonRadius: Appearance.controlPanel.radiusButton
                         colBackground: "transparent"
                         colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                            : root.commandPreset ? Appearance.controlPanel.colButtonHover
                             : root.inirEverywhere ? Appearance.inir.colLayer2Hover : ColorUtils.transparentize(root.blendedColors?.colLayer1 ?? Appearance.colors.colLayer1, 0.5)
                         colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
+                            : root.commandPreset ? Appearance.controlPanel.colButtonActive
                             : root.inirEverywhere ? Appearance.inir.colLayer2Active : (root.blendedColors?.colLayer1Active ?? Appearance.colors.colLayer1Active)
                         onClicked: MprisController.next()
 
@@ -462,6 +481,7 @@ Item {
                                 iconSize: root.controlIconSize
                                 fill: 1
                                 color: Appearance.angelEverywhere ? Appearance.angel.colText
+                                    : root.commandPreset ? Appearance.controlPanel.colText
                                     : root.inirEverywhere ? root.jiraColText : (root.blendedColors?.colOnLayer0 ?? Appearance.colors.colOnLayer0)
                             }
                         }
@@ -476,6 +496,7 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.family: Appearance.font.family.numbers
                         color: Appearance.angelEverywhere ? Appearance.angel.colText
+                            : root.commandPreset ? Appearance.controlPanel.colText
                             : root.inirEverywhere ? root.jiraColText : (root.blendedColors?.colOnLayer0 ?? Appearance.colors.colOnLayer0)
                     }
                 }

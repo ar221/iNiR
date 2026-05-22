@@ -15,17 +15,11 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-        : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-         : Appearance.auroraEverywhere ? "transparent"
-         // M3 tier audit: widget cards use surfaceContainerHigh on material fallback
-         : Appearance.colors.colLayer3
-    border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.sidebar.radiusCard
+    // M3 tier audit: material fallback remains surfaceContainerHigh via sidebar.colCard.
+    color: Appearance.sidebar.colCard
+    border.width: Appearance.sidebar.borderWidth
+    border.color: Appearance.sidebar.colCardBorder
     clip: true
 
     AngelPartialBorder { targetRadius: root.radius; coverage: 0.5 }
@@ -171,7 +165,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "keyboard_arrow_up"
                     iconSize: Appearance.font.pixelSize.larger
-                    color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
+                    color: Appearance.sidebar.colText
                 }
             }
         }
@@ -183,7 +177,7 @@ Rectangle {
             // text: `${DateTime.collapsedCalendarFormat}   •   ${remainingTasks} task${remainingTasks > 1 ? "s" : ""}`
             text: Translation.tr("%1   •   %2 tasks").arg(DateTime.collapsedCalendarFormat).arg(remainingTasks)
             font.pixelSize: Appearance.font.pixelSize.large
-            color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
+            color: Appearance.sidebar.colText
         }
     }
 
@@ -229,7 +223,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: "keyboard_arrow_down"
                         iconSize: Appearance.font.pixelSize.larger
-                        color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
+                        color: Appearance.sidebar.colText
                     }
                 }
             }
@@ -266,6 +260,8 @@ Rectangle {
                         Layout.topMargin: 0
                         currentIndex: root.selectedTab
                         expanded: false
+                        indicatorColor: Appearance.sidebar.colAccentSurface
+                        indicatorRadius: Appearance.sidebar.radiusButton
                         Repeater {
                             model: root.tabs
                             NavigationRailButton {
@@ -273,6 +269,11 @@ Rectangle {
                                 toggled: root.selectedTab == index
                                 buttonText: modelData.name
                                 buttonIcon: modelData.icon
+                                activeColor: Appearance.sidebar.colAccent
+                                activeTextColor: Appearance.sidebar.colOnAccent
+                                inactiveColor: Appearance.sidebar.colTextSecondary
+                                labelColor: Appearance.sidebar.colText
+                                railButtonRadius: Appearance.sidebar.radiusButton
                                 onPressed: {
                                     Persistent.states.sidebar.bottomGroup.tab = index
                                 }
@@ -296,7 +297,7 @@ Rectangle {
                 height: 20
                 visible: railFlickable.contentY > 0 && !Appearance.auroraEverywhere
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer3 }
+                    GradientStop { position: 0.0; color: Appearance.sidebar.colCard }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
@@ -310,7 +311,7 @@ Rectangle {
                 visible: railFlickable.contentHeight > railFlickable.height && railFlickable.contentY < (railFlickable.contentHeight - railFlickable.height) && !Appearance.auroraEverywhere
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard : Appearance.inirEverywhere ? Appearance.inir.colLayer1 : Appearance.colors.colLayer3 }
+                    GradientStop { position: 1.0; color: Appearance.sidebar.colCard }
                 }
             }
         }

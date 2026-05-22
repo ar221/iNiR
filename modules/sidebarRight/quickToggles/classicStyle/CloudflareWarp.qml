@@ -33,7 +33,7 @@ QuickToggleButton {
             width: 16
             height: 16
             colorize: true
-            color: root.toggled ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer1
+            color: root.toggled ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colText
 
             Behavior on color {
                 animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }

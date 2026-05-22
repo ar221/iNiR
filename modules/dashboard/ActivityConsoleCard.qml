@@ -872,10 +872,10 @@ DashboardCard {
                 anchors.centerIn: parent
                 width: parent.width - 32
 
-                readonly property bool feedIsEmpty: root.entryModel.count === 0
+                readonly property bool feedIsEmpty: entryModel.count === 0
                 readonly property real feedSignalMs: feedIsEmpty
                     ? (typeof feedFile.lastModified === "number" ? feedFile.lastModified : 0)
-                    : root.entryModel.count > 0 ? root.entryModel.get(0).ts * 1000 : 0
+                    : entryModel.count > 0 ? entryModel.get(0).ts * 1000 : 0
 
                 state: feedIsEmpty ? "EMPTY" : "FILTERED"
                 source: "activity-feed.jsonl"

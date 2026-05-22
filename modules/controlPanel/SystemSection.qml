@@ -17,15 +17,10 @@ Rectangle {
     readonly property bool inirEverywhere: Appearance.inirEverywhere
     readonly property bool auroraEverywhere: Appearance.auroraEverywhere
 
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : inirEverywhere ? Appearance.inir.colLayer1
-         : auroraEverywhere ? Appearance.aurora.colSubSurface
-         : Appearance.colors.colLayer1
-    border.width: Appearance.angelEverywhere ? 0 : (inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.controlPanel.radiusSmall
+    color: Appearance.controlPanel.colCard
+    border.width: Appearance.controlPanel.borderWidth
+    border.color: Appearance.controlPanel.colCardBorder
 
     AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
 
@@ -40,9 +35,8 @@ Rectangle {
             Layout.fillWidth: true
             label: "CPU"
             value: (ResourceUsage.cpuUsage ?? 0) * 100
-            barColor: ((ResourceUsage.cpuUsage ?? 0) * 100) > 80 ? Appearance.colors.colError
-                    : (Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                    : root.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+            barColor: ((ResourceUsage.cpuUsage ?? 0) * 100) > 80 ? Appearance.controlPanel.colStatusCritical
+                    : Appearance.controlPanel.colAccent
         }
 
         // RAM
@@ -50,9 +44,8 @@ Rectangle {
             Layout.fillWidth: true
             label: "RAM"
             value: (ResourceUsage.memoryUsedPercentage ?? 0) * 100
-            barColor: (ResourceUsage.memoryUsedPercentage ?? 0) > 0.85 ? Appearance.colors.colError
-                    : (Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                    : root.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+            barColor: (ResourceUsage.memoryUsedPercentage ?? 0) > 0.85 ? Appearance.controlPanel.colStatusCritical
+                    : Appearance.controlPanel.colAccent
         }
 
         // Battery (if available)
@@ -62,10 +55,9 @@ Rectangle {
             sourceComponent: StatBar {
                 label: "BAT"
                 value: (Battery.percentage ?? 0) * 100
-                barColor: (Battery.percentage ?? 0) * 100 < 20 ? Appearance.colors.colError
-                        : Battery.charging ? Appearance.colors.colSuccess
-                        : (Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                        : root.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+                barColor: (Battery.percentage ?? 0) * 100 < 20 ? Appearance.controlPanel.colStatusCritical
+                        : Battery.charging ? Appearance.controlPanel.colStatusDone
+                        : Appearance.controlPanel.colAccent
             }
         }
     }
@@ -74,8 +66,7 @@ Rectangle {
         id: bar
         property string label
         property real value: 0
-        property color barColor: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-            : root.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+        property color barColor: Appearance.controlPanel.colAccent
 
         spacing: 2
 
@@ -84,36 +75,27 @@ Rectangle {
             StyledText {
                 text: bar.label
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                     : root.inirEverywhere ? Appearance.inir.colTextSecondary
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurfaceVariant
-                     : Appearance.colors.colSubtext
+                color: Appearance.controlPanel.colTextSecondary
             }
             Item { Layout.fillWidth: true }
             StyledText {
                 text: Math.round(bar.value) + "%"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.numbers
-                color: Appearance.angelEverywhere ? Appearance.angel.colText
-                     : root.inirEverywhere ? Appearance.inir.colText
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                     : Appearance.colors.colOnLayer1
+                color: Appearance.controlPanel.colText
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
             height: root.compactMode ? 3 : 4
-            radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 2
-            color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                 : root.inirEverywhere ? Appearance.inir.colLayer2
-                 : root.auroraEverywhere ? ColorUtils.transparentize(Appearance.aurora.colSubSurface, 0.5)
-                 : Appearance.colors.colLayer2
+            radius: Appearance.controlPanel.commandPreset ? Appearance.controlPanel.radiusSmall : 2
+            color: Appearance.controlPanel.colTrack
 
             Rectangle {
                 width: parent.width * Math.min(1, Math.max(0, bar.value / 100))
                 height: parent.height
-                radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 2
+                radius: Appearance.controlPanel.commandPreset ? Appearance.controlPanel.radiusSmall : 2
                 color: bar.barColor
 
                 Behavior on width {

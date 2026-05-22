@@ -18,15 +18,10 @@ Rectangle {
     property int _tick: 0
     readonly property date _currentDate: { _tick; return new Date() }
 
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : inirEverywhere ? Appearance.inir.colLayer1
-         : auroraEverywhere ? Appearance.aurora.colSubSurface
-         : Appearance.colors.colLayer1
-    border.width: Appearance.angelEverywhere ? 0 : (inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.controlPanel.radiusCard
+    color: Appearance.controlPanel.colCard
+    border.width: Appearance.controlPanel.borderWidth
+    border.color: Appearance.controlPanel.colCardBorder
 
     AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
 
@@ -44,29 +39,20 @@ Rectangle {
                 text: Qt.formatDateTime(root._currentDate, "dddd")
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Medium
-                color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                     : root.inirEverywhere ? Appearance.inir.colPrimary
-                     : root.auroraEverywhere ? Appearance.m3colors.m3primary
-                     : Appearance.colors.colPrimary
+                color: Appearance.controlPanel.colAccent
             }
 
             StyledText {
                 text: Qt.formatDateTime(root._currentDate, "MMMM d, yyyy")
                 font.pixelSize: Appearance.font.pixelSize.larger
                 font.weight: Font.Medium
-                color: Appearance.angelEverywhere ? Appearance.angel.colText
-                     : root.inirEverywhere ? Appearance.inir.colText
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                     : Appearance.colors.colOnLayer1
+                color: Appearance.controlPanel.colText
             }
 
             StyledText {
                 text: Translation.tr("Uptime") + ": " + DateTime.uptime
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                     : root.inirEverywhere ? Appearance.inir.colTextSecondary
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurfaceVariant
-                     : Appearance.colors.colSubtext
+                color: Appearance.controlPanel.colTextSecondary
             }
         }
 
@@ -75,10 +61,7 @@ Rectangle {
             font.pixelSize: Appearance.font.pixelSize.huge * 1.5
             font.weight: Font.Light
             font.family: Appearance.font.family.numbers
-            color: Appearance.angelEverywhere ? Appearance.angel.colText
-                 : root.inirEverywhere ? Appearance.inir.colText
-                 : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                 : Appearance.colors.colOnLayer1
+            color: Appearance.controlPanel.colText
         }
     }
 

@@ -17,6 +17,8 @@ Singleton {
     property QtObject courier
     property QtObject apollo
     property QtObject mission
+    property QtObject controlPanel
+    property QtObject sidebar
     property QtObject inir
     property QtObject angel
     property QtObject colors
@@ -76,6 +78,7 @@ Singleton {
     // angelEverywhere - flagship neo-brutalism glass style (superset of aurora)
     readonly property bool angelEverywhere: globalStyle === "angel"
     readonly property bool courierEverywhere: globalStyle === "courier"
+    readonly property bool commandPreset: String(Config?.options?.dashboard?.stylePreset ?? "default").toLowerCase() === "command" || courierEverywhere
     // Apollo palette active iff Courier grammar + Apollo theme both engaged (orthogonal-axes rule).
     readonly property bool apolloActive: courierEverywhere && (Config?.options?.appearance?.theme === "apollo")
     // auroraEverywhere controls blur/glass backgrounds — angel inherits aurora blur
@@ -861,7 +864,7 @@ Singleton {
         readonly property color colCritical: root.m3colors.m3error
         readonly property color colDone: root.m3colors.m3success
 
-        readonly property bool commandPreset: String(Config.options?.dashboard?.stylePreset ?? "default").toLowerCase() === "command" || root.courierEverywhere
+        readonly property bool commandPreset: root.commandPreset
 
         readonly property int radiusSmall: 7
         readonly property int radiusNormal: 12
@@ -869,6 +872,276 @@ Singleton {
         readonly property int cardPadding: commandPreset ? 16 : 18
         readonly property int cardSpacing: 10
         readonly property real borderWidth: 1
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // CONTROL PANEL — quick command surface tokens
+    // Mirrors mission's Apollo/Courier predicate shape while preserving
+    // current Angel, iNiR, and Aurora branches for existing styles.
+    // Status tokens intentionally remain m3-semantic under Apollo.
+    // ═══════════════════════════════════════════════════════════════════
+    controlPanel: QtObject {
+        readonly property bool commandPreset: root.commandPreset
+
+        readonly property color colPanel: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer1
+            : root.auroraEverywhere ? root.aurora.colSubSurface
+            : root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.colors.colLayer0
+        readonly property color colPanelBorder: root.angelEverywhere ? root.angel.colBorder
+            : root.inirEverywhere ? root.inir.colBorder
+            : root.auroraEverywhere ? root.aurora.colTooltipBorder
+            : root.apolloActive ? root.apollo.colBorderDim
+            : commandPreset ? root.courier.colBorderDim
+            : root.colors.colLayer0Border
+
+        readonly property color colCard: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer1
+            : root.auroraEverywhere ? root.aurora.colSubSurface
+            : root.apolloActive ? root.apollo.colSurface
+            : commandPreset ? root.courier.colSurface
+            : root.colors.colLayer1
+        readonly property color colCardHover: root.angelEverywhere ? root.angel.colGlassCardHover
+            : root.inirEverywhere ? root.inir.colLayer2Hover
+            : root.auroraEverywhere ? root.aurora.colSubSurfaceHover
+            : root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : root.colors.colLayer2Hover
+        readonly property color colCardActive: root.angelEverywhere ? root.angel.colGlassCardActive
+            : root.inirEverywhere ? root.inir.colLayer2Active
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colLayer1Active
+        readonly property color colCardBorder: root.angelEverywhere ? root.angel.colCardBorder
+            : root.inirEverywhere ? root.inir.colBorder
+            : root.apolloActive ? root.apollo.colBorderDim
+            : commandPreset ? root.courier.colBorderDim
+            : "transparent"
+
+        readonly property color colAccent: root.angelEverywhere ? root.angel.colPrimary
+            : root.inirEverywhere ? root.inir.colPrimary
+            : root.auroraEverywhere ? root.m3colors.m3primary
+            : root.apolloActive ? root.apollo.colAmberBright
+            : commandPreset ? root.courier.colBorder
+            : root.colors.colPrimary
+        readonly property color colAccentHover: root.angelEverywhere ? root.angel.colPrimaryHover
+            : root.inirEverywhere ? root.inir.colPrimaryHover
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimaryHover
+        readonly property color colOnAccent: root.angelEverywhere ? root.angel.colOnPrimary
+            : root.inirEverywhere ? root.inir.colOnPrimary
+            : root.auroraEverywhere ? root.m3colors.m3onPrimary
+            : root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.colors.colOnPrimary
+
+        readonly property color colText: root.angelEverywhere ? root.angel.colText
+            : root.inirEverywhere ? root.inir.colText
+            : root.auroraEverywhere ? root.m3colors.m3onSurface
+            : root.apolloActive ? root.apollo.colText
+            : commandPreset ? root.courier.colText
+            : root.colors.colOnLayer1
+        readonly property color colTextSecondary: root.angelEverywhere ? root.angel.colTextSecondary
+            : root.inirEverywhere ? root.inir.colTextSecondary
+            : root.auroraEverywhere ? root.m3colors.m3onSurfaceVariant
+            : root.apolloActive ? root.apollo.colTextDim
+            : commandPreset ? root.courier.colTextDim
+            : root.colors.colSubtext
+        readonly property color colTextMuted: root.angelEverywhere ? root.angel.colTextSecondary
+            : root.inirEverywhere ? root.inir.colTextSecondary
+            : root.auroraEverywhere ? root.m3colors.m3outline
+            : root.apolloActive ? root.apollo.colTextMuted
+            : commandPreset ? root.courier.colTextMuted
+            : root.colors.colSubtext
+
+        readonly property color colButton: "transparent"
+        readonly property color colButtonHover: colCardHover
+        readonly property color colButtonActive: colCardActive
+        readonly property color colTrack: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer2
+            : root.auroraEverywhere ? ColorUtils.transparentize(root.aurora.colSubSurface, 0.5)
+            : root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : root.colors.colLayer2
+
+        readonly property color colStatusIdle: ColorUtils.transparentize(root.m3colors.m3outline, 0.18)
+        readonly property color colStatusActive: root.m3colors.m3primary
+        readonly property color colStatusWaiting: root.m3colors.m3tertiary
+        readonly property color colStatusCritical: root.colors.colError
+        readonly property color colStatusDone: root.m3colors.m3success
+
+        readonly property int radiusPanel: root.angelEverywhere ? root.angel.roundingLarge
+            : root.inirEverywhere ? root.inir.roundingLarge
+            : commandPreset ? root.courier.radiusMax
+            : root.rounding.large
+        readonly property int radiusCard: root.angelEverywhere ? root.angel.roundingNormal
+            : root.inirEverywhere ? root.inir.roundingNormal
+            : commandPreset ? root.courier.radiusMax
+            : root.rounding.normal
+        readonly property int radiusButton: root.angelEverywhere ? root.angel.roundingSmall
+            : root.inirEverywhere ? root.inir.roundingSmall
+            : commandPreset ? root.courier.radiusMicro
+            : root.rounding.full
+        readonly property int radiusSmall: root.angelEverywhere ? root.angel.roundingSmall
+            : root.inirEverywhere ? root.inir.roundingSmall
+            : commandPreset ? root.courier.radiusMicro
+            : root.rounding.small
+        readonly property real borderWidth: root.angelEverywhere ? 0
+            : root.inirEverywhere ? 1
+            : commandPreset ? 1
+            : 0
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SIDEBAR — right/left utility panel chrome
+    // Centralizes high-fanout sidebar card/toggle tokens before routing
+    // the larger widget family through Courier/Apollo grammar.
+    // ═══════════════════════════════════════════════════════════════════
+    sidebar: QtObject {
+        readonly property bool commandPreset: root.commandPreset
+
+        readonly property color colPanel: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer0
+            : root.auroraEverywhere ? root.colors.colLayer0
+            : root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.colors.colLayer0
+        readonly property color colPanelCard: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer1
+            : root.auroraEverywhere ? root.colors.colLayer1
+            : root.apolloActive ? root.apollo.colSurface
+            : commandPreset ? root.courier.colSurface
+            : root.colors.colLayer1
+        readonly property color colPanelBorder: root.angelEverywhere ? root.angel.colPanelBorder
+            : root.inirEverywhere ? root.inir.colBorder
+            : root.apolloActive ? root.apollo.colBorderDim
+            : commandPreset ? root.courier.colBorderDim
+            : root.colors.colLayer0Border
+
+        readonly property color colCard: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer1
+            : root.auroraEverywhere ? "transparent"
+            : root.apolloActive ? root.apollo.colSurface
+            : commandPreset ? root.courier.colSurface
+            : root.colors.colLayer3
+        readonly property color colCardHover: root.angelEverywhere ? root.angel.colGlassCardHover
+            : root.inirEverywhere ? root.inir.colLayer2Hover
+            : root.auroraEverywhere ? root.aurora.colSubSurfaceHover
+            : root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : root.colors.colLayer3Hover
+        readonly property color colCardActive: root.angelEverywhere ? root.angel.colGlassCardActive
+            : root.inirEverywhere ? root.inir.colLayer2Active
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colLayer3Active
+        readonly property color colCardBorder: root.angelEverywhere ? root.angel.colCardBorder
+            : root.inirEverywhere ? root.inir.colBorder
+            : root.apolloActive ? root.apollo.colBorderDim
+            : commandPreset ? root.courier.colBorderDim
+            : "transparent"
+
+        readonly property color colSubCard: root.angelEverywhere ? root.angel.colGlassCard
+            : root.inirEverywhere ? root.inir.colLayer2
+            : root.auroraEverywhere ? "transparent"
+            : root.apolloActive ? root.apollo.colSurface
+            : commandPreset ? root.courier.colSurface
+            : root.colors.colLayer2
+        readonly property color colSubCardHover: root.angelEverywhere ? root.angel.colGlassCardHover
+            : root.inirEverywhere ? root.inir.colLayer2Hover
+            : root.auroraEverywhere ? root.aurora.colSubSurface
+            : root.apolloActive ? root.apollo.colSurfaceHover
+            : commandPreset ? root.courier.colSurfaceHover
+            : root.colors.colLayer2Hover
+        readonly property color colSubCardActive: root.angelEverywhere ? root.angel.colGlassCardActive
+            : root.inirEverywhere ? root.inir.colLayer2Active
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colLayer2Active
+
+        readonly property color colAccent: root.angelEverywhere ? root.angel.colPrimary
+            : root.inirEverywhere ? root.inir.colPrimary
+            : root.auroraEverywhere ? root.m3colors.m3primary
+            : root.apolloActive ? root.apollo.colAmberBright
+            : commandPreset ? root.courier.colBorder
+            : root.colors.colPrimary
+        readonly property color colAccentHover: root.angelEverywhere ? root.angel.colPrimaryHover
+            : root.inirEverywhere ? root.inir.colPrimaryHover
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimaryHover
+        readonly property color colAccentActive: root.angelEverywhere ? root.angel.colPrimaryActive
+            : root.inirEverywhere ? root.inir.colPrimaryActive
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimaryActive
+        readonly property color colAccentSurface: root.angelEverywhere ? ColorUtils.transparentize(root.angel.colPrimary, 0.45)
+            : root.inirEverywhere ? root.inir.colPrimaryContainer
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimary
+        readonly property color colAccentSurfaceHover: root.angelEverywhere ? ColorUtils.transparentize(root.angel.colPrimaryHover, 0.35)
+            : root.inirEverywhere ? root.inir.colPrimaryContainerHover
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimaryHover
+        readonly property color colAccentSurfaceActive: root.angelEverywhere ? ColorUtils.transparentize(root.angel.colPrimaryActive, 0.30)
+            : root.inirEverywhere ? root.inir.colPrimaryContainerActive
+            : root.apolloActive ? root.apollo.colSurfaceActive
+            : commandPreset ? root.courier.colSurfaceActive
+            : root.colors.colPrimaryActive
+        readonly property color colOnAccent: root.angelEverywhere ? root.angel.colOnPrimary
+            : root.inirEverywhere ? root.inir.colOnPrimaryContainer
+            : root.auroraEverywhere ? root.m3colors.m3onPrimary
+            : root.apolloActive ? root.apollo.colCanvas
+            : commandPreset ? root.courier.colCanvas
+            : root.colors.colOnPrimary
+
+        readonly property color colText: root.angelEverywhere ? root.angel.colText
+            : root.inirEverywhere ? root.inir.colText
+            : root.auroraEverywhere ? root.m3colors.m3onSurface
+            : root.apolloActive ? root.apollo.colText
+            : commandPreset ? root.courier.colText
+            : root.colors.colOnLayer1
+        readonly property color colTextSecondary: root.angelEverywhere ? root.angel.colTextSecondary
+            : root.inirEverywhere ? root.inir.colTextSecondary
+            : root.auroraEverywhere ? root.m3colors.m3onSurfaceVariant
+            : root.apolloActive ? root.apollo.colTextDim
+            : commandPreset ? root.courier.colTextDim
+            : root.colors.colSubtext
+        readonly property color colTextOnSubCard: root.angelEverywhere ? root.angel.colText
+            : root.inirEverywhere ? root.inir.colText
+            : root.auroraEverywhere ? root.m3colors.m3onSurface
+            : root.apolloActive ? root.apollo.colText
+            : commandPreset ? root.courier.colText
+            : root.colors.colOnLayer2
+
+        readonly property int radiusPanel: root.angelEverywhere ? root.angel.roundingNormal
+            : root.inirEverywhere ? root.inir.roundingNormal
+            : commandPreset ? root.courier.radiusMax
+            : root.rounding.normal
+        readonly property int radiusCard: root.angelEverywhere ? root.angel.roundingNormal
+            : root.inirEverywhere ? root.inir.roundingNormal
+            : commandPreset ? root.courier.radiusMax
+            : root.rounding.normal
+        readonly property int radiusButton: root.angelEverywhere ? root.angel.roundingSmall
+            : root.inirEverywhere ? root.inir.roundingSmall
+            : commandPreset ? root.courier.radiusMicro
+            : root.rounding.full
+        readonly property int radiusButtonPressed: root.angelEverywhere ? root.angel.roundingSmall
+            : root.inirEverywhere ? root.inir.roundingSmall
+            : commandPreset ? root.courier.radiusMicro
+            : root.rounding.small
+        readonly property int radiusSmall: root.angelEverywhere ? root.angel.roundingSmall
+            : root.inirEverywhere ? root.inir.roundingSmall
+            : commandPreset ? root.courier.radiusMicro
+            : root.rounding.small
+        readonly property real borderWidth: root.angelEverywhere ? 0
+            : root.inirEverywhere ? 1
+            : commandPreset ? 1
+            : 0
     }
 
     // ═══════════════════════════════════════════════════════════════════

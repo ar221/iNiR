@@ -81,15 +81,15 @@ Item {
         color: root.gameModeMinimal ? "transparent"
              : root.inirEverywhere ? (root.cardStyle ? Appearance.inir.colLayer1 : Appearance.inir.colLayer0)
              : root.auroraEverywhere ? ColorUtils.applyAlpha((_bg.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
-             : (root.cardStyle ? Appearance.colors.colLayer1 : Appearance.colors.colLayer0)
+             : root.cardStyle ? Appearance.sidebar.colPanelCard
+             : Appearance.sidebar.colPanel
 
         border.width: root.gameModeMinimal ? 0 : (root.angelEverywhere ? Appearance.angel.panelBorderWidth : 1)
-        border.color: root.angelEverywhere ? Appearance.angel.colPanelBorder
-                    : root.inirEverywhere ? Appearance.inir.colBorder
-                    : Appearance.colors.colLayer0Border
+        border.color: Appearance.sidebar.colPanelBorder
 
         radius: root.angelEverywhere ? Appearance.angel.roundingNormal
               : root.inirEverywhere ? (root.cardStyle ? Appearance.inir.roundingLarge : Appearance.inir.roundingNormal)
+              : Appearance.sidebar.commandPreset ? Appearance.sidebar.radiusPanel
               : root.cardStyle ? Appearance.rounding.normal
               : (Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1)
 
@@ -200,12 +200,12 @@ Item {
                     // Bright head — accent at ~70% opacity
                     GradientStop {
                         position: 0.0
-                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.3)
+                        color: ColorUtils.transparentize(Appearance.sidebar.colAccent, 0.3)
                     }
                     // Fade out over ~20% of circumference (72°)
                     GradientStop {
                         position: 0.12
-                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.72)
+                        color: ColorUtils.transparentize(Appearance.sidebar.colAccent, 0.72)
                     }
                     GradientStop {
                         position: 0.22

@@ -961,6 +961,13 @@ Singleton {
                     property bool sessionReview: false
                     property bool agentTrust: false
                     property bool agentCompanion: false
+                    property bool agentStatus: false
+                    property bool serviceGrid: false
+                    property bool diskGauges: false
+                    property bool vaultPulse: false
+                    property bool recentRuns: false
+                    property bool integrationStatus: false
+                    property bool heroZone: true
                 }
                 property JsonObject profile: JsonObject {
                     property string displayName: ""

@@ -37,39 +37,27 @@ Item {
     readonly property bool angelStyle: Appearance.angelEverywhere
     readonly property bool inirStyle: Appearance.inirEverywhere
     readonly property bool auroraStyle: Appearance.auroraEverywhere
+    readonly property bool commandMediaStyle: Appearance.sidebar.commandPreset || Appearance.apolloActive
 
-    readonly property color colText: angelStyle ? Appearance.angel.colText
-        : inirStyle ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colTextSecondary: angelStyle ? Appearance.angel.colTextSecondary
-        : inirStyle ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
-    readonly property color colCard: angelStyle ? Appearance.angel.colGlassCard
-        : inirStyle ? Appearance.inir.colLayer1
-        : auroraStyle ? ColorUtils.transparentize(
-            blendedColors?.colLayer0 ?? Appearance.aurora.colSubSurface, 0.7)
-        : Appearance.colors.colLayer1
-    readonly property color colBorder: angelStyle ? Appearance.angel.colCardBorder
-        : inirStyle ? Appearance.inir.colBorder : Appearance.colors.colLayer0Border
-    readonly property real cardRadius: angelStyle ? Appearance.angel.roundingNormal
-        : inirStyle ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-    readonly property color colPrimary: angelStyle ? Appearance.angel.colPrimary
-        : inirStyle ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
-    readonly property color colOnPrimary: angelStyle ? Appearance.angel.colOnPrimary
-        : inirStyle ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary
-    readonly property color colAuxHover: angelStyle ? Appearance.angel.colGlassCardHover
-        : inirStyle ? Appearance.inir.colLayer2Hover
-        : ColorUtils.transparentize(root.colText, 0.82)
-    readonly property color colAuxActive: angelStyle ? Appearance.angel.colGlassCardActive
-        : inirStyle ? Appearance.inir.colLayer2Active
-        : ColorUtils.transparentize(root.colText, 0.72)
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colTextSecondary: Appearance.sidebar.colTextSecondary
+    readonly property color colCard: Appearance.sidebar.colCard
+    readonly property color colBorder: Appearance.sidebar.colCardBorder
+    readonly property real cardRadius: Appearance.sidebar.radiusCard
+    readonly property color colPrimary: Appearance.sidebar.colAccent
+    readonly property color colOnPrimary: Appearance.sidebar.colOnAccent
+    readonly property color colAuxHover: Appearance.sidebar.colSubCardHover
+    readonly property color colAuxActive: Appearance.sidebar.colSubCardActive
 
     // Dynamic accent from album art
-    readonly property color accentColor: playerBase.downloaded && !inirStyle && !angelStyle
+    readonly property color accentColor: playerBase.downloaded && !commandMediaStyle && !inirStyle && !angelStyle
         ? (blendedColors?.colPrimary ?? colPrimary) : colPrimary
-    readonly property color onAccentColor: playerBase.downloaded && !inirStyle && !angelStyle
+    readonly property color onAccentColor: playerBase.downloaded && !commandMediaStyle && !inirStyle && !angelStyle
         ? (blendedColors?.colOnPrimary ?? colOnPrimary) : colOnPrimary
 
     // Art background opacity per style
-    readonly property real artBgOpacity: inirStyle ? 0.16
+    readonly property real artBgOpacity: commandMediaStyle ? 0.08
+        : inirStyle ? 0.16
         : angelStyle ? 0.24 : auroraStyle ? 0.28 : 0.38
 
     // ── Player card ───────────────────────────────────────────────
@@ -80,12 +68,10 @@ Item {
         radius: root.cardRadius
         color: root.colCard
 
-        border.width: root.angelStyle ? Appearance.angel.cardBorderWidth
-            : root.inirStyle ? 1
-            : (playerBase.downloaded ? 1 : 0)
-        border.color: root.angelStyle ? ColorUtils.transparentize(root.colBorder, 0.22)
-            : root.inirStyle ? root.colBorder
-            : (playerBase.downloaded
+        border.width: Appearance.sidebar.borderWidth > 0 ? Appearance.sidebar.borderWidth
+            : (playerBase.downloaded && !root.commandMediaStyle ? 1 : 0)
+        border.color: Appearance.sidebar.borderWidth > 0 ? root.colBorder
+            : (playerBase.downloaded && !root.commandMediaStyle
                 ? ColorUtils.transparentize(root.accentColor, 0.72)
                 : "transparent")
         clip: true
@@ -176,9 +162,7 @@ Item {
                             anchors.fill: parent
                             artSource: playerBase.displayedArtFilePath
                             downloaded: playerBase.downloaded
-                            artRadius: root.angelStyle ? Appearance.angel.roundingSmall
-                                : root.inirStyle ? Appearance.inir.roundingSmall
-                                : Appearance.rounding.small
+                            artRadius: Appearance.sidebar.radiusSmall
                             iconSize: 22
                             enableBlurTransition: true
                         }
@@ -347,11 +331,10 @@ Item {
                 canSeek: playerBase.effectiveCanSeek
                 isPlaying: playerBase.effectiveIsPlaying
                 highlightColor: root.accentColor
-                trackColor: root.angelStyle ? Appearance.angel.colBorderSubtle
-                    : root.inirStyle ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.5)
+                trackColor: root.commandMediaStyle ? Appearance.sidebar.colSubCardActive
                     : root.auroraStyle ? ColorUtils.transparentize(
-                        root.blendedColors?.colLayer1 ?? Appearance.colors.colLayer2, 0.6)
-                    : Appearance.colors.colLayer2
+                        root.blendedColors?.colLayer1 ?? Appearance.sidebar.colSubCard, 0.6)
+                    : Appearance.sidebar.colSubCard
                 enableWavy: true
                 onSeekRequested: (seconds) => MprisController.setPosition(seconds)
             }
@@ -390,15 +373,12 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: root.angelStyle ? Appearance.angel.roundingSmall
-                            : root.inirStyle ? Appearance.inir.roundingSmall
-                            : height / 2
+                        radius: Appearance.sidebar.radiusButton
 
                         color: {
-                            if (playMA.containsPress) return root.accentColor
-                            if (playMA.containsMouse)
-                                return ColorUtils.transparentize(root.accentColor, 0.08)
-                            return ColorUtils.transparentize(root.accentColor, 0.18)
+                            if (playMA.containsPress) return Appearance.sidebar.colAccentSurfaceActive
+                            if (playMA.containsMouse) return Appearance.sidebar.colAccentSurfaceHover
+                            return Appearance.sidebar.colAccentSurface
                         }
 
                         Behavior on color {
@@ -528,18 +508,13 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: root.angelStyle ? Appearance.angel.roundingSmall
-                : root.inirStyle ? Appearance.inir.roundingSmall
-                : Appearance.rounding.full
+            radius: Appearance.sidebar.radiusButton
 
             color: {
                 if (tBtnMA.containsPress) return root.colAuxActive
                 if (tBtnMA.containsMouse) return root.colAuxHover
                 if (tBtn.toggled)
-                    return root.angelStyle
-                        ? ColorUtils.transparentize(root.accentColor, 0.64)
-                        : root.inirStyle ? Appearance.inir.colSecondaryContainer
-                        : ColorUtils.transparentize(root.accentColor, 0.78)
+                    return Appearance.sidebar.colAccentSurface
                 return "transparent"
             }
 
@@ -554,8 +529,7 @@ Item {
                 iconSize: tBtn.small ? 18 : 22
                 fill: tBtn.iconFill || tBtn.toggled ? 1 : 0
                 color: tBtn.toggled
-                    ? (root.inirStyle ? Appearance.inir.colOnSecondaryContainer
-                        : root.accentColor)
+                    ? Appearance.sidebar.colOnAccent
                     : root.colText
 
                 Behavior on color {

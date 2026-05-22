@@ -211,7 +211,10 @@ Scope {
 
         WlSessionLockSurface {
             id: lockSurface
-            color: root._cachedUseWaffleLock ? Looks.colors.bg0 : Appearance.colors.colLayer0
+            color: root._cachedUseWaffleLock ? Looks.colors.bg0
+                : Appearance.apolloActive ? Appearance.apollo.colCanvas
+                : Appearance.commandPreset ? Appearance.courier.colCanvas
+                : Appearance.colors.colLayer0
             
             // Fallback timer - if lock surface doesn't load properly, use swaylock
             Timer {

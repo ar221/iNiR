@@ -11,17 +11,11 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-        : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-         : Appearance.auroraEverywhere ? "transparent"
-         // M3 tier audit: widget cards use surfaceContainerHigh on material fallback
-         : Appearance.colors.colLayer3
-    border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.sidebar.radiusCard
+    // M3 tier audit: material fallback remains surfaceContainerHigh via sidebar.colCard.
+    color: Appearance.sidebar.colCard
+    border.width: Appearance.sidebar.borderWidth
+    border.color: Appearance.sidebar.colCardBorder
 
     AngelPartialBorder { targetRadius: root.radius; coverage: 0.5 }
 

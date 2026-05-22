@@ -20,8 +20,8 @@ QuickToggleButton {
         anchors.margins: 4
         width: 8
         height: 8
-        radius: Appearance.rounding.unsharpen
-        color: Appearance.colors.colPrimary
+        radius: Appearance.sidebar.radiusSmall
+        color: Appearance.sidebar.colAccent
     }
 
     StyledToolTip {

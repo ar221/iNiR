@@ -81,15 +81,8 @@ Item {
         sidebarWidth: root.sidebarWidth
         sidebarPadding: root.sidebarPadding
 
-        readonly property color cardColor: angelEverywhere
-            ? ColorUtils.transparentize(Appearance.angel.colGlassCard, 0.76)
-            : inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colLayer1, 0.18)
-            : auroraEverywhere ? ColorUtils.transparentize((blendedColors?.colLayer0 ?? Appearance.colors.colLayer0Base), 0.60)
-            : ColorUtils.transparentize(Appearance.colors.colLayer3, 0.16)
-        readonly property color borderColor: angelEverywhere
-            ? ColorUtils.transparentize(Appearance.angel.colCardBorder, 0.44)
-            : inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.28)
-            : ColorUtils.transparentize(Appearance.colors.colOutlineVariant, 0.64)
+        readonly property color cardColor: Appearance.sidebar.colCard
+        readonly property color borderColor: Appearance.sidebar.colCardBorder
 
         RowLayout {
             anchors.fill: parent
@@ -127,21 +120,15 @@ Item {
                             required property var modelData
                             Layout.fillWidth: true
                             implicitHeight: 42
-                            radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                                : Appearance.rounding.small
+                            radius: Appearance.sidebar.radiusSmall
                             color: root.activeSection === index
-                                ? (bg.inirEverywhere ? Appearance.inir.colSecondaryContainer
-                                    : bg.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, navMouse.pressed ? 0.50 : 0.58)
-                                    : ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, navMouse.pressed ? 0.08 : 0.14))
+                                ? (navMouse.pressed ? Appearance.sidebar.colAccentSurfaceActive : Appearance.sidebar.colAccentSurface)
                                 : navMouse.pressed
-                                    ? ColorUtils.transparentize(bg.cardColor, 0.20)
-                                    : (navMouse.containsMouse ? bg.cardColor : "transparent")
+                                    ? Appearance.sidebar.colSubCardActive
+                                    : (navMouse.containsMouse ? Appearance.sidebar.colSubCardHover : "transparent")
                             border.width: (root.activeSection === index || navMouse.containsMouse) ? 1 : 0
                             border.color: root.activeSection === index
-                                ? (bg.inirEverywhere ? Appearance.inir.colPrimary
-                                    : bg.angelEverywhere ? Appearance.angel.colPrimary
-                                    : Appearance.colors.colPrimary)
+                                ? Appearance.sidebar.colAccent
                                 : bg.borderColor
 
                             Behavior on color {
@@ -159,9 +146,7 @@ Item {
                                 width: 2.5
                                 height: 18
                                 radius: 1.25
-                                color: bg.inirEverywhere ? Appearance.inir.colPrimary
-                                    : bg.angelEverywhere ? Appearance.angel.colPrimary
-                                    : Appearance.colors.colPrimary
+                                color: Appearance.sidebar.colAccent
                                 visible: root.activeSection === index
                                 opacity: visible ? 1.0 : 0.0
 
@@ -177,16 +162,10 @@ Item {
                                 iconSize: 22
                                 fill: root.activeSection === index ? 1 : 0
                                 color: root.activeSection === index
-                                    ? (bg.inirEverywhere ? Appearance.inir.colOnSecondaryContainer
-                                        : bg.angelEverywhere ? Appearance.angel.colOnPrimary
-                                        : Appearance.m3colors.m3onSecondaryContainer)
+                                    ? Appearance.sidebar.colOnAccent
                                     : navMouse.containsMouse
-                                        ? (bg.inirEverywhere ? Appearance.inir.colText
-                                            : bg.angelEverywhere ? Appearance.angel.colText
-                                            : Appearance.colors.colOnLayer1)
-                                        : (bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                                            : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                                            : Appearance.colors.colOnLayer1)
+                                        ? Appearance.sidebar.colText
+                                        : Appearance.sidebar.colTextSecondary
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
                                     ColorAnimation { duration: 120 }
@@ -210,17 +189,13 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: 38
-                        radius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                            : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                            : Appearance.rounding.small
+                        radius: Appearance.sidebar.radiusSmall
                         color: layoutMouse.pressed
-                            ? ColorUtils.transparentize(bg.cardColor, 0.20)
-                            : layoutMouse.containsMouse ? bg.cardColor : "transparent"
+                            ? Appearance.sidebar.colSubCardActive
+                            : layoutMouse.containsMouse ? Appearance.sidebar.colSubCardHover : "transparent"
                         border.width: (layoutMouse.containsMouse || layoutMouse.pressed) ? 1 : 0
                         border.color: layoutMouse.containsMouse
-                            ? (bg.inirEverywhere ? Appearance.inir.colPrimary
-                                : bg.angelEverywhere ? Appearance.angel.colPrimary
-                                : Appearance.colors.colPrimary)
+                            ? Appearance.sidebar.colAccent
                             : bg.borderColor
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
@@ -236,12 +211,8 @@ Item {
                             text: "view_agenda"
                             iconSize: 18
                             color: layoutMouse.containsMouse
-                                ? (bg.inirEverywhere ? Appearance.inir.colPrimary
-                                    : bg.angelEverywhere ? Appearance.angel.colPrimary
-                                    : Appearance.colors.colPrimary)
-                                : (bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                                    : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                                    : Appearance.colors.colOnLayer1)
+                                ? Appearance.sidebar.colAccent
+                                : Appearance.sidebar.colTextSecondary
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
                                 ColorAnimation { duration: 120 }
@@ -293,11 +264,9 @@ Item {
         id: card
         default property alias content: inner.data
         Layout.fillWidth: true
-        radius: bg.angelEverywhere ? Appearance.angel.roundingNormal
-            : bg.inirEverywhere ? Appearance.inir.roundingNormal
-            : Appearance.rounding.normal
+        radius: Appearance.sidebar.radiusCard
         color: bg.cardColor
-        border.width: 1
+        border.width: Appearance.sidebar.borderWidth
         border.color: bg.borderColor
         implicitHeight: inner.implicitHeight + 22
 
@@ -319,16 +288,12 @@ Item {
             width: 2
             height: 12
             radius: 1
-            color: bg.inirEverywhere ? Appearance.inir.colPrimary
-                : bg.angelEverywhere ? Appearance.angel.colPrimary
-                : Appearance.colors.colPrimary
+            color: Appearance.sidebar.colAccent
         }
         MaterialSymbol {
             text: parent.icon
             iconSize: 16
-            color: bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                : Appearance.colors.colSubtext
+            color: Appearance.sidebar.colTextSecondary
         }
         StyledText {
             text: String(parent.text).toUpperCase()
@@ -336,14 +301,12 @@ Item {
             font.weight: Font.DemiBold
             font.family: root.monoFamily
             font.letterSpacing: root.sectionLetterSpacing
-            color: bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                : Appearance.colors.colSubtext
+            color: Appearance.sidebar.colTextSecondary
         }
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.84)
+            color: ColorUtils.transparentize(Appearance.sidebar.colAccent, 0.84)
         }
     }
 
@@ -363,22 +326,18 @@ Item {
             MaterialSymbol {
                 text: btn.iconName
                 iconSize: 16
-                color: bg.inirEverywhere ? Appearance.inir.colPrimary
-                    : bg.angelEverywhere ? Appearance.angel.colPrimary
-                    : Appearance.colors.colPrimary
+                color: Appearance.sidebar.colAccent
             }
             StyledText {
                 Layout.fillWidth: true
                 text: btn.label
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: bg.inirEverywhere ? Appearance.inir.colText
-                    : bg.angelEverywhere ? Appearance.angel.colText
-                    : Appearance.colors.colOnLayer1
+                color: Appearance.sidebar.colText
             }
             MaterialSymbol {
                 text: "chevron_right"
                 iconSize: 16
-                color: ColorUtils.transparentize(Appearance.colors.colOnSurfaceVariant, 0.25)
+                color: ColorUtils.transparentize(Appearance.sidebar.colTextSecondary, 0.25)
             }
         }
     }
@@ -438,9 +397,7 @@ Item {
 
                                     toggled: isActive
                                     buttonText: modeProfile.label ?? modelData
-                                    buttonRadius: bg.angelEverywhere ? Appearance.angel.roundingSmall
-                                        : bg.inirEverywhere ? Appearance.inir.roundingSmall
-                                        : Appearance.rounding.small
+                                    buttonRadius: Appearance.sidebar.radiusSmall
 
                                     implicitHeight: 32
                                     horizontalPadding: 12
@@ -452,18 +409,12 @@ Item {
                                             case "focus": return Appearance.m3colors.m3primary
                                             case "gaming": return Appearance.m3colors.m3tertiary
                                             case "zen": return Appearance.m3colors.m3secondary
-                                            default: return bg.angelEverywhere ? Appearance.angel.colGlassCard
-                                                : bg.inirEverywhere ? Appearance.inir.colLayer2
-                                                : bg.auroraEverywhere ? Appearance.aurora.colSubSurface
-                                                : Appearance.colors.colLayer2
+                                            default: return Appearance.sidebar.colAccentSurface
                                         }
                                     }
                                     colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.15)
                                     colBackground: "transparent"
-                                    colBackgroundHover: bg.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                        : bg.inirEverywhere ? Appearance.inir.colLayer2Hover
-                                        : bg.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                        : Appearance.colors.colLayer2Hover
+                                    colBackgroundHover: Appearance.sidebar.colSubCardHover
 
                                     Layout.fillWidth: true
 
@@ -479,9 +430,7 @@ Item {
                         text: Translation.tr("Quick Toggles")
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
-                        color: bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                            : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                            : Appearance.colors.colSubtext
+                        color: Appearance.sidebar.colTextSecondary
                     }
 
                     Loader {
@@ -576,9 +525,7 @@ Item {
                         text: Translation.tr("Actions")
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
-                        color: bg.inirEverywhere ? Appearance.inir.colTextSecondary
-                            : bg.angelEverywhere ? Appearance.angel.colTextSecondary
-                            : Appearance.colors.colSubtext
+                        color: Appearance.sidebar.colTextSecondary
                     }
                     ActionRow {
                         label: Translation.tr("Switch to compact layout")

@@ -7,6 +7,11 @@ Item {
     id: root
     property int currentIndex: 0
     property bool expanded: false
+    property color indicatorColor: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+         : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
+         : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface
+         : Appearance.colors.colSecondaryContainer
+    property int indicatorRadius: Appearance.rounding.full
     default property alias contentData: tabBarColumn.data
     implicitHeight: tabBarColumn.implicitHeight
     implicitWidth: tabBarColumn.implicitWidth
@@ -21,11 +26,8 @@ Item {
             left: tabBarColumn.left
             topMargin: itemHeight * root.currentIndex + (root.expanded ? 0 : ((itemHeight - baseHighlightHeight) / 2))
         }
-        radius: Appearance.rounding.full
-        color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-             : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-             : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface 
-             : Appearance.colors.colSecondaryContainer
+        radius: root.indicatorRadius
+        color: root.indicatorColor
         implicitHeight: root.expanded ? itemHeight : baseHighlightHeight
         implicitWidth: visible ? (tabBarColumn.children[root.currentIndex]?.visualWidth ?? 56) : 0
 

@@ -10,18 +10,10 @@ Rectangle {
     property bool compactMode: false
     readonly property bool cardStyle: Config.options?.sidebar?.cardStyle ?? false
 
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-        : Appearance.rounding.normal
-    color: Appearance.angelEverywhere
-        ? (cardStyle ? Appearance.angel.colGlassCard : "transparent")
-        : cardStyle 
-            ? (Appearance.inirEverywhere ? Appearance.inir.colLayer1
-                : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-                : Appearance.colors.colLayer1)
-            : "transparent"
-    border.width: 0
-    border.color: "transparent"
+    radius: Appearance.sidebar.radiusCard
+    color: cardStyle ? Appearance.sidebar.colCard : "transparent"
+    border.width: cardStyle ? Appearance.sidebar.borderWidth : 0
+    border.color: cardStyle ? Appearance.sidebar.colCardBorder : "transparent"
 
     AngelPartialBorder { targetRadius: root.radius; coverage: 0.5; visible: Appearance.angelEverywhere && root.cardStyle }
 

@@ -71,44 +71,15 @@ GroupButton {
     horizontalPadding: padding
     verticalPadding: padding
 
-    colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-        : Appearance.inirEverywhere ? Appearance.inir.colLayer2 
-        : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
-    colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover 
-        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
-    colBackgroundToggled: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.45)
-        : Appearance.inirEverywhere 
-        ? Appearance.inir.colPrimaryContainer
-        : Appearance.colors.colPrimary
-    colBackgroundToggledHover: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimaryHover, 0.35)
-        : Appearance.inirEverywhere 
-        ? Appearance.inir.colPrimaryContainerHover
-        : Appearance.colors.colPrimaryHover
-    colBackgroundToggledActive: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimaryActive, 0.30)
-        : Appearance.inirEverywhere 
-        ? Appearance.inir.colPrimaryContainerActive
-        : Appearance.colors.colPrimaryActive
-    buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere 
-        ? Appearance.inir.roundingSmall 
-        : (toggled ? Appearance.rounding.large : baseHeight / 2)
-    buttonRadiusPressed: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.normal
-    property color colText: Appearance.angelEverywhere
-        ? (toggled ? Appearance.angel.colOnPrimary : Appearance.angel.colText)
-        : Appearance.inirEverywhere
-        ? (toggled ? Appearance.inir.colOnPrimaryContainer : Appearance.inir.colText)
-        : Appearance.auroraEverywhere
-        ? (toggled ? Appearance.m3colors.m3onPrimary : Appearance.m3colors.m3onSurface)
-        : toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
-    property color colIcon: Appearance.angelEverywhere
-        ? (toggled ? Appearance.angel.colOnPrimary : Appearance.angel.colText)
-        : Appearance.inirEverywhere
-        ? (toggled ? Appearance.inir.colOnPrimaryContainer : Appearance.inir.colText)
-        : Appearance.auroraEverywhere
-        ? (toggled ? Appearance.m3colors.m3onPrimary : Appearance.m3colors.m3onSurface)
-        : toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
+    colBackground: Appearance.sidebar.colSubCard
+    colBackgroundHover: Appearance.sidebar.colSubCardHover
+    colBackgroundToggled: Appearance.sidebar.colAccentSurface
+    colBackgroundToggledHover: Appearance.sidebar.colAccentSurfaceHover
+    colBackgroundToggledActive: Appearance.sidebar.colAccentSurfaceActive
+    buttonRadius: Appearance.sidebar.radiusButton
+    buttonRadiusPressed: Appearance.sidebar.radiusButtonPressed
+    property color colText: toggled ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colTextOnSubCard
+    property color colIcon: toggled ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colTextOnSubCard
 
     onClicked: {
         root.mainAction();

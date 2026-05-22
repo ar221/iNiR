@@ -28,6 +28,44 @@ MouseArea {
     readonly property real blurRadius: Config.options?.lock?.blur?.radius ?? 64
     readonly property real blurZoom: Config.options?.lock?.blur?.extraZoom ?? 1.1
     readonly property bool enableAnimation: Config.options?.lock?.enableAnimation ?? false
+
+    readonly property bool commandLock: Appearance.commandPreset
+    readonly property color lockBackground: Appearance.apolloActive ? Appearance.apollo.colCanvas
+        : commandLock ? Appearance.courier.colCanvas
+        : (Appearance.m3colors?.m3background ?? "#1a1a2e")
+    readonly property color lockSurface: Appearance.apolloActive ? Appearance.apollo.colSurface
+        : commandLock ? Appearance.courier.colSurface
+        : Appearance.colors.colLayer1
+    readonly property color lockSurfaceHover: Appearance.apolloActive ? Appearance.apollo.colSurfaceHover
+        : commandLock ? Appearance.courier.colSurfaceHover
+        : ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.85)
+    readonly property color lockSurfaceActive: Appearance.apolloActive ? Appearance.apollo.colSurfaceActive
+        : commandLock ? Appearance.courier.colSurfaceActive
+        : Appearance.colors.colPrimaryActive
+    readonly property color lockAccent: Appearance.apolloActive ? Appearance.apollo.colAmberBright
+        : commandLock ? Appearance.courier.colBorder
+        : Appearance.colors.colPrimary
+    readonly property color lockAccentHover: Appearance.apolloActive ? Appearance.apollo.colSurfaceActive
+        : commandLock ? Appearance.courier.colSurfaceActive
+        : Appearance.colors.colPrimaryHover
+    readonly property color lockAccentActive: Appearance.apolloActive ? Appearance.apollo.colSurfaceActive
+        : commandLock ? Appearance.courier.colSurfaceActive
+        : Appearance.colors.colPrimaryActive
+    readonly property color lockOnAccent: Appearance.apolloActive ? Appearance.apollo.colCanvas
+        : commandLock ? Appearance.courier.colCanvas
+        : Appearance.colors.colOnPrimary
+    readonly property color lockText: Appearance.apolloActive ? Appearance.apollo.colText
+        : commandLock ? Appearance.courier.colText
+        : Appearance.colors.colOnSurface
+    readonly property color lockTextSecondary: Appearance.apolloActive ? Appearance.apollo.colTextDim
+        : commandLock ? Appearance.courier.colTextDim
+        : Appearance.colors.colOnSurfaceVariant
+    readonly property color lockTextMuted: Appearance.apolloActive ? Appearance.apollo.colTextMuted
+        : commandLock ? Appearance.courier.colTextMuted
+        : ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.7)
+    readonly property color lockError: Appearance.colors.colError
+    readonly property int lockRadius: commandLock ? Appearance.courier.radiusMax : Appearance.rounding.normal
+    readonly property int lockRadiusSmall: commandLock ? Appearance.courier.radiusMicro : Appearance.rounding.small
     
     // Wallpaper path resolution
     readonly property string _wallpaperSource: Config.options?.background?.wallpaperPath ?? ""
@@ -47,7 +85,7 @@ MouseArea {
     // Safe fallback background color (prevents red screen on errors)
     Rectangle {
         anchors.fill: parent
-        color: Appearance.m3colors?.m3background ?? "#1a1a2e"
+        color: root.lockBackground
         z: -1
     }
     
@@ -185,7 +223,7 @@ MouseArea {
     Rectangle {
         id: unlockOverlay
         anchors.fill: parent
-        color: Appearance.m3colors?.m3background ?? "#1a1a2e"
+        color: root.lockBackground
         opacity: 0
         z: 100
         
@@ -242,7 +280,7 @@ MouseArea {
                 font.pixelSize: Math.round(108 * Appearance.fontSizeScale)
                 font.weight: Font.DemiBold
                 font.family: Appearance.font.family.appearance
-                color: Appearance.colors.colOnSurface
+                color: root.lockText
                 
                 layer.enabled: Appearance.effectsEnabled
                 layer.effect: DropShadow {
@@ -269,7 +307,7 @@ MouseArea {
                 font.pixelSize: Math.round(22 * Appearance.fontSizeScale)
                 font.weight: Font.Normal
                 font.family: Appearance.font.family.main
-                color: Appearance.colors.colOnSurface
+                color: root.lockText
                 
                 layer.enabled: Appearance.effectsEnabled
                 layer.effect: DropShadow {
@@ -356,7 +394,7 @@ MouseArea {
                     text: parent.getWeatherIconWithTime(Weather.data?.wCode ?? "113")
                     iconSize: 44
                     fill: 0
-                    color: Appearance.colors.colOnSurface
+                    color: root.lockText
                     
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: DropShadow {
@@ -377,7 +415,7 @@ MouseArea {
                         font.pixelSize: Math.round(26 * Appearance.fontSizeScale)
                         font.weight: Font.Light
                         font.family: Appearance.font.family.main
-                        color: Appearance.colors.colOnSurface
+                        color: root.lockText
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -394,7 +432,7 @@ MouseArea {
                         visible: Weather.showVisibleCity
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.family: Appearance.font.family.main
-                        color: Appearance.colors.colOnSurfaceVariant
+                        color: root.lockTextSecondary
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -418,7 +456,7 @@ MouseArea {
             text: Translation.tr("Press any key or click to unlock")
             font.pixelSize: Appearance.font.pixelSize.normal
             font.family: Appearance.font.family.main
-            color: Appearance.colors.colOnSurfaceVariant
+            color: root.lockTextSecondary
             opacity: hintOpacity
             
             property real hintOpacity: 0.7
@@ -511,7 +549,7 @@ MouseArea {
                     height: parent.height + 8
                     radius: width / 2
                     color: "transparent"
-                    border.color: Appearance.colors.colPrimary
+                    border.color: root.lockAccent
                     border.width: 3
                     opacity: 0.8
                     
@@ -530,7 +568,7 @@ MouseArea {
                     id: avatarCircle
                     anchors.fill: parent
                     radius: width / 2
-                    color: Appearance.colors.colPrimary
+                    color: root.lockAccent
                     clip: true
                     
                     Image {
@@ -578,7 +616,7 @@ MouseArea {
                         text: (SystemInfo.displayName || SystemInfo.username || "?").charAt(0).toUpperCase()
                         font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
                         font.weight: Font.Medium
-                        color: Appearance.colors.colOnPrimary
+                        color: root.lockOnAccent
                         visible: avatarImage.status !== Image.Ready
                     }
                 }
@@ -592,7 +630,7 @@ MouseArea {
                 font.pixelSize: Math.round(22 * Appearance.fontSizeScale)
                 font.weight: Font.Medium
                 font.family: Appearance.font.family.main
-                color: Appearance.colors.colOnSurface
+                color: root.lockText
                 
                 // Stagger animation (delayed)
                 opacity: Math.min(1, Math.max(0, loginContent.animProgress * 3 - 0.3))
@@ -616,10 +654,10 @@ MouseArea {
                 width: 300
                 height: 52
                 radius: height / 2
-                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.2)
+                color: ColorUtils.transparentize(root.lockSurface, 0.2)
                 border.color: loginPasswordField.activeFocus 
-                    ? Appearance.colors.colPrimary 
-                    : ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.7)
+                    ? root.lockAccent
+                    : root.lockTextMuted
                 border.width: loginPasswordField.activeFocus ? 2 : 1
                 
                 // Stagger animation (more delayed)
@@ -659,7 +697,7 @@ MouseArea {
                             text: "fingerprint"
                             iconSize: 22
                             fill: 1
-                            color: Appearance.colors.colOnSurfaceVariant
+                            color: root.lockTextSecondary
                         }
                     }
                     
@@ -673,9 +711,9 @@ MouseArea {
                         inputMethodHints: Qt.ImhSensitiveData
                         font.pixelSize: Appearance.font.pixelSize.large
                         font.family: Appearance.font.family.main
-                        color: materialShapeChars ? "transparent" : Appearance.colors.colOnSurface
-                        selectionColor: Appearance.colors.colPrimary
-                        selectedTextColor: Appearance.colors.colOnPrimary
+                        color: materialShapeChars ? "transparent" : root.lockText
+                        selectionColor: root.lockAccent
+                        selectedTextColor: root.lockOnAccent
                         
                         enabled: !root.context.unlockInProgress
                         
@@ -690,8 +728,8 @@ MouseArea {
                             text: loginPasswordField.placeholder
                             font: loginPasswordField.font
                             color: GlobalStates.screenUnlockFailed 
-                                ? Appearance.colors.colError 
-                                : Appearance.colors.colOnSurfaceVariant
+                                ? root.lockError
+                                : root.lockTextSecondary
                             visible: loginPasswordField.text.length === 0
                         }
                         
@@ -734,10 +772,10 @@ MouseArea {
                         Layout.alignment: Qt.AlignVCenter
                         radius: width / 2
                         color: submitMouseArea.pressed 
-                            ? Appearance.colors.colPrimaryActive 
+                            ? root.lockAccentActive
                             : submitMouseArea.containsMouse 
-                                ? Appearance.colors.colPrimaryHover 
-                                : Appearance.colors.colPrimary
+                                ? root.lockAccentHover
+                                : root.lockAccent
                         
                         Behavior on color {
                             animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -755,7 +793,7 @@ MouseArea {
                                 }
                             }
                             iconSize: 20
-                            color: Appearance.colors.colOnPrimary
+                            color: root.lockOnAccent
                         }
                         
                         MouseArea {
@@ -815,7 +853,7 @@ MouseArea {
                     text: Translation.tr("Touch sensor to unlock")
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.main
-                    color: Appearance.colors.colOnSurfaceVariant
+                    color: root.lockTextSecondary
                     
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: DropShadow {
@@ -903,8 +941,8 @@ MouseArea {
                         iconSize: 20
                         fill: 1
                         color: (Battery.isLow && !Battery.isCharging) 
-                            ? Appearance.colors.colError 
-                            : Appearance.colors.colOnSurfaceVariant
+                            ? root.lockError
+                            : root.lockTextSecondary
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -922,8 +960,8 @@ MouseArea {
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.family: Appearance.font.family.main
                         color: (Battery.isLow && !Battery.isCharging) 
-                            ? Appearance.colors.colError 
-                            : Appearance.colors.colOnSurfaceVariant
+                            ? root.lockError
+                            : root.lockTextSecondary
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -951,7 +989,7 @@ MouseArea {
                         text: "keyboard"
                         iconSize: 18
                         fill: 1
-                        color: Appearance.colors.colOnSurfaceVariant
+                        color: root.lockTextSecondary
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -968,7 +1006,7 @@ MouseArea {
                         text: HyprlandXkb.currentLayoutCode.toUpperCase()
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.family: Appearance.font.family.main
-                        color: Appearance.colors.colOnSurfaceVariant
+                        color: root.lockTextSecondary
                         
                         layer.enabled: Appearance.effectsEnabled
                         layer.effect: DropShadow {
@@ -1139,12 +1177,12 @@ MouseArea {
         
         width: 44
         height: 44
-        radius: Appearance.rounding.normal
+        radius: root.lockRadius
         color: {
-            if (toggled) return Appearance.colors.colPrimary
-            if (lockBtnMouse.pressed) return ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.7)
-            if (lockBtnMouse.containsMouse) return ColorUtils.transparentize(Appearance.colors.colOnSurface, 0.85)
-            return ColorUtils.transparentize(Appearance.colors.colLayer1, 0.3)
+            if (toggled) return root.lockAccent
+            if (lockBtnMouse.pressed) return root.lockSurfaceActive
+            if (lockBtnMouse.containsMouse) return root.lockSurfaceHover
+            return ColorUtils.transparentize(root.lockSurface, 0.3)
         }
         
         Behavior on color {
@@ -1164,7 +1202,7 @@ MouseArea {
             anchors.centerIn: parent
             text: lockBtn.icon
             iconSize: 22
-            color: lockBtn.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurface
+            color: lockBtn.toggled ? root.lockOnAccent : root.lockText
         }
         
         MouseArea {

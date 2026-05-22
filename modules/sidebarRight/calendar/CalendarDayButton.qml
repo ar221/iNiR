@@ -17,8 +17,7 @@ RippleButton {
     implicitHeight: 38;
 
     toggled: (isToday == 1) && !isHeader  // Headers don't get toggled background
-    buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+    buttonRadius: Appearance.sidebar.radiusSmall
     
     contentItem: Item {
         anchors.fill: parent
@@ -29,18 +28,12 @@ RippleButton {
             horizontalAlignment: Text.AlignHCenter
             font.weight: button.bold ? Font.DemiBold : Font.Normal
             color: button.isHeader && (button.isToday == 1) 
-                ? (Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                    : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+                ? Appearance.sidebar.colAccent
                 : (button.isToday == 1) 
-                    ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                        : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary)
+                    ? Appearance.sidebar.colOnAccent
                     : (button.isToday == 0) 
-                        ? (Appearance.angelEverywhere ? Appearance.angel.colText
-                            : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1)
-                        : (Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                            : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary 
-                            : Appearance.auroraEverywhere ? Appearance.colors.colSubtext
-                            : Appearance.colors.colOutlineVariant)
+                        ? Appearance.sidebar.colText
+                        : Appearance.sidebar.colTextSecondary
 
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -58,10 +51,8 @@ RippleButton {
             height: 3
             radius: 1.5
             color: button.isToday == 1
-                ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                    : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary)
-                : (Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                    : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary)
+                ? Appearance.sidebar.colOnAccent
+                : Appearance.sidebar.colAccent
         }
 
         // Count badge — top-right corner, only when >1 event
@@ -74,20 +65,15 @@ RippleButton {
             width: 13
             height: 13
             radius: 6.5
-            color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-                : Appearance.colors.colPrimary
+            color: Appearance.sidebar.colAccent
 
             StyledText {
                 anchors.centerIn: parent
                 text: button.eventCount > 9 ? "9+" : button.eventCount
                 font.pixelSize: 9
                 font.weight: Font.Bold
-                color: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                    : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                    : Appearance.colors.colOnPrimary
+                color: Appearance.sidebar.colOnAccent
             }
         }
     }
 }
-

@@ -565,8 +565,11 @@ MouseArea { // Notification group area
                     }
 
                     model: ScriptModel {
-                        values: root.expanded ? root.notifications.slice().reverse() :
-                            root.notifications.slice().reverse().slice(0, 2)
+                        values: {
+                            const liveNotifications = root.notifications.filter(notif => notif !== null && notif !== undefined)
+                            return root.expanded ? liveNotifications.slice().reverse() :
+                                liveNotifications.slice().reverse().slice(0, 2)
+                        }
                     }
                     delegate: NotificationItem {
                         required property int index

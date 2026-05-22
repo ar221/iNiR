@@ -29,7 +29,7 @@ Item {
                 Layout.fillWidth: true
                 text: Translation.tr("Notepad")
                 font.pixelSize: Appearance.inirEverywhere ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.larger
-                color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
+                color: Appearance.sidebar.colText
             }
 
             StyledText {
@@ -37,7 +37,7 @@ Item {
                       ? Translation.tr("%1 chars").arg(textArea.text.length)
                       : Translation.tr("Empty")
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colOnLayer1
+                color: Appearance.sidebar.colTextSecondary
                 opacity: Appearance.inirEverywhere ? 1 : 0.7
             }
         }
@@ -45,15 +45,15 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal : Appearance.rounding.normal
+            radius: Appearance.sidebar.radiusCard
             color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                 : Appearance.inirEverywhere ? Appearance.inir.colLayer0
                 : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-                : Appearance.colors.colLayer0
+                : Appearance.sidebar.colCard
             border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
-                : Appearance.inirEverywhere ? 1 : (Appearance.auroraEverywhere ? 0 : 1)
+                : Appearance.auroraEverywhere ? 0 : 1
             border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-                : Appearance.inirEverywhere ? Appearance.inir.colBorder : Appearance.colors.colLayer0Border
+                : Appearance.sidebar.colCardBorder
             clip: true
 
             ScrollView {
@@ -68,9 +68,9 @@ Item {
                     width: scrollView.availableWidth
                     wrapMode: TextArea.Wrap
                     font.pixelSize: Appearance.inirEverywhere ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.small
-                    color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer0
+                    color: Appearance.sidebar.colText
                     placeholderText: Translation.tr("Write your notes here...")
-                    placeholderTextColor: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.m3colors.m3outline
+                    placeholderTextColor: Appearance.sidebar.colTextSecondary
                     text: Notepad.text
                     selectByMouse: true
                     activeFocusOnTab: true

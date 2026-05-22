@@ -16,22 +16,19 @@ Item {
     property int fabMargins: 14
 
     // Style tokens
-    readonly property color colPrimary: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
-    readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colSubtext: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
+    readonly property color colPrimary: Appearance.sidebar.colAccent
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colSubtext: Appearance.sidebar.colTextSecondary
     readonly property color colBadgeBg: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.70)
         : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-        : Appearance.colors.colSecondaryContainer
+        : Appearance.sidebar.colAccentSurface
     readonly property color colBadgeText: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
         : Appearance.inirEverywhere ? Appearance.inir.colOnSecondaryContainer
-        : Appearance.colors.colOnSecondaryContainer
+        : Appearance.sidebar.colOnAccent
     readonly property color colEmptyBg: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.85)
         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
         : Appearance.auroraEverywhere ? (Appearance.aurora?.colSubSurface ?? Appearance.colors.colSecondaryContainer)
-        : Appearance.colors.colSecondaryContainer
+        : Appearance.sidebar.colAccentSurface
     
     // Trigger to force recomputation when events change
     property int _eventsTrigger: 0

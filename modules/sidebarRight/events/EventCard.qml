@@ -18,19 +18,16 @@ Item {
     implicitHeight: cardContent.implicitHeight + 16
     
     // Style tokens
-    readonly property color colPrimary: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
-    readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colSubtext: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
+    readonly property color colPrimary: Appearance.sidebar.colAccent
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colSubtext: Appearance.sidebar.colTextSecondary
     readonly property color colError: Appearance.angelEverywhere ? Appearance.angel.colError
         : Appearance.inirEverywhere ? (Appearance.inir?.colError ?? Appearance.m3colors.m3error)
         : Appearance.m3colors.m3error
     readonly property color colBadge: Appearance.angelEverywhere ? Appearance.angel.colBorderSubtle
         : Appearance.inirEverywhere ? ColorUtils.transparentize(Appearance.inir.colBorder, 0.5)
         : Appearance.auroraEverywhere ? (Appearance.aurora?.colSubSurface ?? Appearance.colors.colLayer2)
-        : Appearance.colors.colLayer2
+        : Appearance.sidebar.colSubCard
 
     readonly property color priorityColor: {
         switch (root.event?.priority ?? "normal") {
@@ -55,24 +52,23 @@ Item {
     Rectangle {
         id: cardBg
         anchors.fill: parent
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-            : Appearance.rounding.small
+        radius: Appearance.sidebar.radiusSmall
         color: {
             if (editMA.containsMouse) {
                 if (Appearance.angelEverywhere) return Appearance.angel.colGlassCardHover
                 if (Appearance.inirEverywhere) return Appearance.inir.colLayer1Hover
                 if (Appearance.auroraEverywhere) return Appearance.aurora?.colSubSurface ?? Appearance.colors.colLayer1Hover
-                return Appearance.colors.colLayer1Hover
+                return Appearance.sidebar.colCardHover
             }
             if (Appearance.angelEverywhere) return Appearance.angel.colGlassCard
             if (Appearance.inirEverywhere) return Appearance.inir.colLayer1
             if (Appearance.auroraEverywhere) return Appearance.aurora?.colSubSurface ?? Appearance.colors.colLayer1
-            return Appearance.colors.colLayer1
+            return Appearance.sidebar.colCard
         }
-        border.width: (Appearance.inirEverywhere || Appearance.angelEverywhere) ? 1 : 0
+        border.width: Appearance.sidebar.borderWidth
         border.color: Appearance.angelEverywhere ? Appearance.angel.colBorder
-            : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+            : Appearance.inirEverywhere ? Appearance.inir.colBorder
+            : Appearance.sidebar.commandPreset ? Appearance.sidebar.colCardBorder : "transparent"
         Behavior on color {
             enabled: Appearance.animationsEnabled
             animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -120,9 +116,7 @@ Item {
                     text: root.event.title
                     font.pixelSize: Appearance.font.pixelSize.normal
                     font.weight: Font.Medium
-                    color: Appearance.inirEverywhere ? Appearance.inir.colText
-                        : Appearance.angelEverywhere ? Appearance.angel.colText
-                        : Appearance.colors.colOnLayer1
+                    color: root.colText
                     elide: Text.ElideRight
                 }
                 
@@ -131,9 +125,7 @@ Item {
                     visible: root.event.description && root.event.description !== ""
                     text: root.event.description
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary
-                        : Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                        : Appearance.colors.colSubtext
+                    color: root.colSubtext
                     elide: Text.ElideRight
                     maximumLineCount: 2
                     wrapMode: Text.WordWrap
@@ -212,9 +204,7 @@ Item {
                 Layout.preferredHeight: 32
                 buttonRadius: 16
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                    : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                    : Appearance.colors.colLayer1Hover
+                colBackgroundHover: Appearance.sidebar.colSubCardHover
                 onClicked: root.removeClicked()
                 
                 contentItem: MaterialSymbol {

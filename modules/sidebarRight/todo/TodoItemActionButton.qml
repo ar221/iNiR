@@ -16,13 +16,16 @@ RippleButton {
         }
     }
 
-    buttonRadius: Appearance.rounding.small
+    buttonRadius: Appearance.sidebar.radiusSmall
+    colBackground: "transparent"
+    colBackgroundHover: Appearance.sidebar.colSubCardHover
+    colRipple: Appearance.sidebar.colSubCardActive
 
     contentItem: StyledText {
         text: buttonText
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Appearance.font.pixelSize.larger
-        color: Appearance.colors.colOnLayer1
+        color: Appearance.sidebar.colTextOnSubCard
     }
 
     StyledToolTip {

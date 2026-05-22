@@ -22,15 +22,10 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: actionsGrid.implicitHeight + (root.compactMode ? 12 : 16)
 
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-            : root.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-        color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-             : root.inirEverywhere ? Appearance.inir.colLayer1
-             : root.auroraEverywhere ? Appearance.aurora.colSubSurface
-             : Appearance.colors.colLayer1
-        border.width: Appearance.angelEverywhere ? 0 : (root.inirEverywhere ? 1 : 0)
-        border.color: Appearance.angelEverywhere ? "transparent"
-            : root.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+        radius: Appearance.controlPanel.radiusCard
+        color: Appearance.controlPanel.colCard
+        border.width: Appearance.controlPanel.borderWidth
+        border.color: Appearance.controlPanel.colCardBorder
 
         AngelPartialBorder { targetRadius: parent.radius; coverage: 0.45 }
 
@@ -120,10 +115,7 @@ ColumnLayout {
 
         ActionTile {
             icon: "power_settings_new"
-            iconColor: Appearance.angelEverywhere ? Appearance.m3colors.m3error
-                     : root.inirEverywhere ? Appearance.inir.colError
-                     : root.auroraEverywhere ? Appearance.m3colors.m3error
-                     : Appearance.colors.colError
+            iconColor: Appearance.controlPanel.colStatusCritical
             onClicked: {
                 GlobalStates.controlPanelOpen = false
                 GlobalStates.sessionOpen = true
@@ -151,8 +143,7 @@ ColumnLayout {
 
                 toggled: isActive
                 buttonText: modeProfile.label ?? modelData
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                    : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+                buttonRadius: Appearance.controlPanel.radiusSmall
 
                 implicitHeight: root.compactMode ? 28 : 32
                 horizontalPadding: root.compactMode ? 8 : 12
@@ -164,18 +155,12 @@ ColumnLayout {
                         case "focus": return Appearance.m3colors.m3primary
                         case "gaming": return Appearance.m3colors.m3tertiary
                         case "zen": return Appearance.m3colors.m3secondary
-                        default: return Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                            : root.inirEverywhere ? Appearance.inir.colLayer2
-                            : root.auroraEverywhere ? Appearance.aurora.colSubSurface
-                            : Appearance.colors.colLayer2
+                        default: return Appearance.controlPanel.colTrack
                     }
                 }
                 colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.15)
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                    : root.inirEverywhere ? Appearance.inir.colLayer2Hover
-                    : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                    : Appearance.colors.colLayer2Hover
+                colBackgroundHover: Appearance.controlPanel.colButtonHover
 
                 Layout.fillWidth: true
 
@@ -189,12 +174,8 @@ ColumnLayout {
                         text: modeProfile.icon ?? ""
                         iconSize: root.compactMode ? 14 : 16
                         color: isActive
-                            ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                                : root.inirEverywhere ? Appearance.inir.colOnPrimary
-                                : Appearance.m3colors.m3onPrimary)
-                            : (Appearance.angelEverywhere ? Appearance.angel.colText
-                                : root.inirEverywhere ? Appearance.inir.colText
-                                : Appearance.colors.colOnLayer1)
+                            ? Appearance.controlPanel.colOnAccent
+                            : Appearance.controlPanel.colText
 
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
@@ -207,12 +188,8 @@ ColumnLayout {
                         font.pixelSize: root.compactMode ? Appearance.font.pixelSize.smallest : Appearance.font.pixelSize.small
                         font.weight: Font.Medium
                         color: isActive
-                            ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                                : root.inirEverywhere ? Appearance.inir.colOnPrimary
-                                : Appearance.m3colors.m3onPrimary)
-                            : (Appearance.angelEverywhere ? Appearance.angel.colText
-                                : root.inirEverywhere ? Appearance.inir.colText
-                                : Appearance.colors.colOnLayer1)
+                            ? Appearance.controlPanel.colOnAccent
+                            : Appearance.controlPanel.colText
 
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
@@ -229,44 +206,27 @@ ColumnLayout {
         property string icon
         property bool active: false
         property color iconColor: active 
-            ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-             : root.inirEverywhere ? Appearance.inir.colOnPrimary 
-             : root.auroraEverywhere ? Appearance.m3colors.m3onPrimary
-             : Appearance.colors.colOnPrimary)
-            : (Appearance.angelEverywhere ? Appearance.angel.colText
-             : root.inirEverywhere ? Appearance.inir.colText 
-             : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-             : Appearance.colors.colOnLayer1)
+            ? Appearance.controlPanel.colOnAccent
+            : Appearance.controlPanel.colText
         signal clicked()
 
         Layout.fillWidth: true
         implicitHeight: root.compactMode ? 30 : 36
-        radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+        radius: Appearance.controlPanel.radiusSmall
         
         color: tileMouseArea.containsMouse 
             ? (active 
-                ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimaryHover, 0.35)
-                 : root.inirEverywhere ? Appearance.inir.colPrimaryHover 
-                 : root.auroraEverywhere ? Appearance.colors.colPrimaryHover
-                 : Appearance.colors.colPrimaryHover)
-                : (Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                 : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                 : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                 : Appearance.colors.colLayer2Hover))
+                ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.controlPanel.colAccentHover, 0.35)
+                 : Appearance.controlPanel.colAccentHover)
+                : Appearance.controlPanel.colButtonHover)
             : (active 
-                ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.45)
-                 : root.inirEverywhere ? Appearance.inir.colPrimary 
-                 : root.auroraEverywhere ? Appearance.m3colors.m3primary
-                 : Appearance.colors.colPrimary)
-                : (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                 : root.inirEverywhere ? Appearance.inir.colLayer2 
-                 : root.auroraEverywhere ? Appearance.aurora.colSubSurface
-                 : Appearance.colors.colLayer2))
+                ? (Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.controlPanel.colAccent, 0.45)
+                 : Appearance.controlPanel.colAccent)
+                : Appearance.controlPanel.colTrack)
 
-        border.width: Appearance.angelEverywhere ? 0 : (root.inirEverywhere ? 1 : 0)
+        border.width: Appearance.controlPanel.borderWidth
         border.color: Appearance.angelEverywhere ? "transparent"
-            : root.inirEverywhere ? (active ? Appearance.inir.colPrimary : Appearance.inir.colBorderSubtle) : "transparent"
+            : active ? Appearance.controlPanel.colAccent : Appearance.controlPanel.colCardBorder
 
         AngelPartialBorder { targetRadius: parent.radius; coverage: 0.4; borderColor: active ? Appearance.angel.colPrimary : Appearance.angel.colBorderSubtle }
 

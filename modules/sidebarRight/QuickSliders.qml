@@ -18,16 +18,10 @@ Rectangle {
 
     implicitWidth: contentItem.implicitWidth + root.horizontalPadding * 2
     implicitHeight: contentItem.implicitHeight + root.verticalPadding * 2
-    radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
-        : Appearance.rounding.normal
-    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-         : Appearance.auroraEverywhere ? "transparent" 
-         : Appearance.colors.colLayer1
-    border.width: Appearance.angelEverywhere ? 0 : (Appearance.inirEverywhere ? 1 : 0)
-    border.color: Appearance.angelEverywhere ? "transparent"
-        : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+    radius: Appearance.sidebar.radiusCard
+    color: Appearance.sidebar.colCard
+    border.width: Appearance.sidebar.borderWidth
+    border.color: Appearance.sidebar.colCardBorder
     property real verticalPadding: 10
     property real horizontalPadding: 14
 
@@ -114,14 +108,8 @@ Rectangle {
             }
             iconSize: 22
             color: nearFull
-                ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                 : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                 : Appearance.auroraEverywhere ? Appearance.m3colors.m3onPrimary
-                 : Appearance.colors.colOnPrimary)
-                : (Appearance.angelEverywhere ? Appearance.angel.colText
-                 : Appearance.inirEverywhere ? Appearance.inir.colOnSecondaryContainer
-                 : Appearance.auroraEverywhere ? Appearance.m3colors.m3onSecondaryContainer
-                 : Appearance.colors.colOnSecondaryContainer)
+                ? Appearance.sidebar.colOnAccent
+                : Appearance.sidebar.colTextOnSubCard
             text: quickSlider.materialSymbol
 
             Behavior on color {

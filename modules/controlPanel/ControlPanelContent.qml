@@ -100,19 +100,14 @@ Item {
         anchors.top: parent.top
         implicitHeight: flickable.contentHeight + 24
         
-        color: root.inirEverywhere ? Appearance.inir.colLayer0
-             : root.auroraEverywhere ? ColorUtils.applyAlpha((root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
-             : Appearance.colors.colLayer0
+        color: root.auroraEverywhere && !root.inirEverywhere
+             ? ColorUtils.applyAlpha((root.blendedColors?.colLayer0 ?? Appearance.colors.colLayer0), 1)
+             : Appearance.controlPanel.colPanel
         
-        radius: root.angelEverywhere ? Appearance.angel.roundingLarge
-            : root.inirEverywhere ? Appearance.inir.roundingLarge
-            : Appearance.rounding.large
+        radius: Appearance.controlPanel.radiusPanel
         
-        border.width: root.inirEverywhere ? 1 : (root.auroraEverywhere ? 1 : 1)
-        border.color: root.angelEverywhere ? Appearance.angel.colBorder
-                    : root.inirEverywhere ? Appearance.inir.colBorder 
-                    : root.auroraEverywhere ? Appearance.aurora.colTooltipBorder 
-                    : Appearance.colors.colLayer0Border
+        border.width: root.auroraEverywhere ? 1 : Appearance.controlPanel.borderWidth
+        border.color: Appearance.controlPanel.colPanelBorder
         
         clip: true
 

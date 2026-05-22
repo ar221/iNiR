@@ -16,6 +16,10 @@ TabButton {
     property bool expanded: false
     property bool showToggledHighlight: true
     property color activeColor: Appearance.colors.colPrimary
+    property color activeTextColor: Appearance.colors.colOnPrimary
+    property color inactiveColor: Appearance.colors.colOnLayer1
+    property color labelColor: Appearance.colors.colOnLayer1
+    property int railButtonRadius: Appearance.rounding.full
     readonly property real visualWidth: root.expanded ? root.baseSize + 20 + itemText.implicitWidth : root.baseSize
 
     property real baseSize: 56
@@ -68,7 +72,7 @@ TabButton {
             Rectangle {
                 id: bubbleBackground
                 color: root.activeColor
-                radius: Appearance.rounding.full
+                radius: root.railButtonRadius
                 implicitWidth: bubbleText.implicitWidth + 24
                 implicitHeight: root.baseHighlightHeight
 
@@ -78,7 +82,7 @@ TabButton {
                     text: root.buttonText
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.Medium
-                    color: Appearance.colors.colOnPrimary
+                    color: root.activeTextColor
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -108,7 +112,7 @@ TabButton {
             // When collapsed, only show icon area; when expanded, show full width with text
             implicitWidth: root.expanded ? root.visualWidth : root.baseSize
             radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : root.railButtonRadius
             color: Appearance.angelEverywhere
                 ? (toggled
                     ? (root.showToggledHighlight
@@ -182,7 +186,7 @@ TabButton {
                 text: buttonIcon
                 color: toggled
                     ? (root.showToggledHighlight ? Appearance.m3colors.m3onSecondaryContainer : root.activeColor)
-                    : Appearance.colors.colOnLayer1
+                    : root.inactiveColor
 
                 Behavior on color {
                     animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -201,7 +205,7 @@ TabButton {
             }
             text: buttonText
             font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.colors.colOnLayer1
+            color: root.labelColor
 
             Behavior on opacity {
                 NumberAnimation {

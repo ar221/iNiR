@@ -22,7 +22,7 @@ Item {
         anchors.verticalCenter: labelText.verticalCenter
         width: 2
         height: labelText.implicitHeight
-        color: "#ff1100"
+        color: Appearance.sidebar.colAccent
         opacity: 0.6
     }
 
@@ -35,9 +35,7 @@ Item {
         font.pixelSize: root.fontSize
         font.weight: root.fontWeight
         font.letterSpacing: 0.5
-        color: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary
-            : Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-            : Appearance.colors.colSubtext
+        color: Appearance.sidebar.colTextSecondary
         opacity: 0.8
     }
 }

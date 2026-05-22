@@ -8,13 +8,10 @@ RippleButton {
     id: button
     required property bool input
 
-    buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : Appearance.rounding.small
-    colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-        : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
-    colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
-    colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active
+    buttonRadius: Appearance.sidebar.radiusSmall
+    colBackground: Appearance.sidebar.colSubCard
+    colBackgroundHover: Appearance.sidebar.colSubCardHover
+    colRipple: Appearance.sidebar.colSubCardActive
 
     implicitHeight: contentItem.implicitHeight + 6 * 2
     implicitWidth: contentItem.implicitWidth + 6 * 2
@@ -28,7 +25,7 @@ RippleButton {
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: false
             Layout.leftMargin: 5
-            color: Appearance.colors.colOnLayer2
+            color: Appearance.sidebar.colTextOnSubCard
             iconSize: Appearance.font.pixelSize.hugeass
             text: input ? "mic_external_on" : "media_output"
         }
@@ -42,14 +39,14 @@ RippleButton {
                 elide: Text.ElideRight
                 font.pixelSize: Appearance.font.pixelSize.normal
                 text: input ? Translation.tr("Input") : Translation.tr("Output")
-                color: Appearance.colors.colOnLayer2
+                color: Appearance.sidebar.colTextOnSubCard
             }
             StyledText {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 text: (input ? Audio.source?.description : Audio.defaultSink?.description) ?? Translation.tr("Unknown")
-                color: Appearance.m3colors.m3outline
+                color: Appearance.sidebar.colTextSecondary
                 animateChange: true
             }
         }

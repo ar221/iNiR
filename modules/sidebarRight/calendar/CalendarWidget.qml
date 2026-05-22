@@ -31,18 +31,14 @@ Item {
     }
 
     // Style tokens (5-style support)
-    readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colTextSecondary: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
-    readonly property color colPrimary: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colPrimary : Appearance.colors.colPrimary
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colTextSecondary: Appearance.sidebar.colTextSecondary
+    readonly property color colPrimary: Appearance.sidebar.colAccent
     readonly property color colCard: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-        : Appearance.colors.colLayer1
-    readonly property real radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+        : Appearance.sidebar.colSubCard
+    readonly property real radius: Appearance.sidebar.radiusSmall
 
     property var locale: {
         const envLocale = Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "";
@@ -148,9 +144,7 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Bold
                         font.family: Appearance.font.family.numbers
-                        color: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                            : Appearance.colors.colOnPrimary
+                        color: Appearance.sidebar.colOnAccent
                     }
 
                     StyledText {
@@ -158,9 +152,7 @@ Item {
                         text: locale.toString(DateTime.clock.date, "ddd")
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Medium
-                        color: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                            : Appearance.colors.colOnPrimary
+                        color: Appearance.sidebar.colOnAccent
                         opacity: 0.9
                     }
                 }
@@ -344,7 +336,7 @@ Item {
                 radius: root.radius
                 color: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.85)
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-                    : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                    : ColorUtils.transparentize(Appearance.sidebar.colSubCard, 0.4)
 
                 RowLayout {
                     id: caldavEventRow
@@ -415,7 +407,7 @@ Item {
                 radius: root.radius
                 color: Appearance.angelEverywhere ? ColorUtils.transparentize(Appearance.angel.colPrimary, 0.85)
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
-                    : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                    : ColorUtils.transparentize(Appearance.sidebar.colSubCard, 0.4)
 
                 RowLayout {
                     id: localEventRow
@@ -478,11 +470,11 @@ Item {
                 if (navBtnMA.containsPress)
                     return Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
                         : Appearance.inirEverywhere ? Appearance.inir.colLayer1Active
-                        : Appearance.colors.colLayer1Active
+                        : Appearance.sidebar.colSubCardActive
                 if (navBtnMA.containsMouse)
                     return Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
                         : Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover
-                        : Appearance.colors.colLayer1Hover
+                        : Appearance.sidebar.colSubCardHover
                 return "transparent"
             }
             Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }

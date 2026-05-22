@@ -23,13 +23,10 @@ ColumnLayout {
         Layout.topMargin: 8
         implicitHeight: 48
         
-        colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-            : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
-        colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-            : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
-        colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-            : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active
-        buttonRadius: Appearance.rounding.normal
+        colBackground: Appearance.sidebar.colSubCard
+        colBackgroundHover: Appearance.sidebar.colSubCardHover
+        colRipple: Appearance.sidebar.colSubCardActive
+        buttonRadius: Appearance.sidebar.radiusCard
 
         contentItem: RowLayout {
             anchors {
@@ -42,7 +39,7 @@ ColumnLayout {
             MaterialSymbol {
                 text: root.isSink ? "speaker" : "mic"
                 iconSize: 24
-                color: Appearance.colors.colPrimary
+                color: Appearance.sidebar.colAccent
             }
 
             StyledText {
@@ -50,12 +47,13 @@ ColumnLayout {
                 text: Audio.friendlyDeviceName(root.currentDevice) || (root.isSink ? Translation.tr("Select output...") : Translation.tr("Select input..."))
                 font.pixelSize: Appearance.font.pixelSize.normal
                 elide: Text.ElideRight
+                color: Appearance.sidebar.colText
             }
 
             MaterialSymbol {
                 text: devicePopup.visible ? "expand_less" : "expand_more"
                 iconSize: Appearance.font.pixelSize.normal
-                color: Appearance.colors.colSubtext
+                color: Appearance.sidebar.colTextSecondary
             }
         }
 
@@ -72,11 +70,11 @@ ColumnLayout {
 
         background: Rectangle {
             color: Appearance.angelEverywhere ? Appearance.angel.colGlassPopup
-                : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface : Appearance.colors.colLayer2
-            radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal : Appearance.rounding.normal
+                : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface : Appearance.sidebar.colCard
+            radius: Appearance.sidebar.radiusCard
             border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1
             border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-                : Appearance.auroraEverywhere ? Appearance.aurora.colTooltipBorder : Appearance.colors.colOutlineVariant
+                : Appearance.auroraEverywhere ? Appearance.aurora.colTooltipBorder : Appearance.sidebar.colCardBorder
         }
 
         ListView {
@@ -94,10 +92,10 @@ ColumnLayout {
 
                 property bool isSelected: modelData.id === root.currentDevice?.id
 
-                colBackground: isSelected ? Appearance.colors.colPrimaryContainer : "transparent"
-                colBackgroundHover: Appearance.colors.colLayer2Hover
-                colRipple: Appearance.colors.colLayer2Active
-                buttonRadius: Appearance.rounding.small
+                colBackground: isSelected ? Appearance.sidebar.colAccentSurface : "transparent"
+                colBackgroundHover: Appearance.sidebar.colSubCardHover
+                colRipple: Appearance.sidebar.colSubCardActive
+                buttonRadius: Appearance.sidebar.radiusSmall
 
                 contentItem: RowLayout {
                     anchors {
@@ -110,7 +108,7 @@ ColumnLayout {
                     MaterialSymbol {
                         text: isSelected ? "check" : (root.isSink ? "speaker" : "mic")
                         iconSize: Appearance.font.pixelSize.normal
-                        color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                        color: isSelected ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colTextSecondary
                     }
 
                     StyledText {
@@ -118,7 +116,7 @@ ColumnLayout {
                         text: Audio.friendlyDeviceName(modelData)
                         font.pixelSize: Appearance.font.pixelSize.normal
                         elide: Text.ElideRight
-                        color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.m3colors.m3onSurface
+                        color: isSelected ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colText
                     }
                 }
 
@@ -164,8 +162,8 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: -22
         Layout.bottomMargin: -16
-        Layout.leftMargin: -Appearance.rounding.large
-        Layout.rightMargin: -Appearance.rounding.large
+        Layout.leftMargin: -Appearance.sidebar.radiusCard
+        Layout.rightMargin: -Appearance.sidebar.radiusCard
         topMargin: 12
         bottomMargin: 12
         leftMargin: 20

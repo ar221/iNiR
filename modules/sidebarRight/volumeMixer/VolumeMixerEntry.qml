@@ -43,7 +43,7 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: Appearance.colors.colSubtext
+                color: Appearance.sidebar.colTextSecondary
                 elide: Text.ElideRight
                 text: {
                     // application.name -> description -> name

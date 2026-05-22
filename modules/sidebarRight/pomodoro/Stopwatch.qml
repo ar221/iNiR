@@ -53,7 +53,7 @@ Item {
             StyledText {
                 // Layout.preferredWidth: elapsedIndicator.width * 0.6 // Prevent shakiness
                 font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
-                color: Appearance.m3colors.m3onSurface
+                color: Appearance.sidebar.colText
                 text: {
                     let totalSeconds = Math.floor(TimerService.stopwatchTime) / 100
                     let minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
@@ -64,7 +64,7 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
-                color: Appearance.colors.colSubtext
+                color: Appearance.sidebar.colTextSecondary
                 text: {
                     return `:<sub>${(Math.floor(TimerService.stopwatchTime) % 100).toString().padStart(2, '0')}</sub>`
                 }
@@ -101,8 +101,8 @@ Item {
                 implicitWidth: lapRow.implicitWidth + horizontalPadding * 2
                 color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                    : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colLayer2
-                radius: Appearance.rounding.small
+                    : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colSubCard
+                radius: Appearance.sidebar.radiusSmall
 
                 RowLayout {
                     id: lapRow
@@ -116,7 +116,7 @@ Item {
 
                     StyledText {
                         font.pixelSize: Appearance.font.pixelSize.small
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.sidebar.colTextSecondary
                         text: `${TimerService.stopwatchLaps.length - lapItem.index}.`
                     }
 
@@ -130,13 +130,14 @@ Item {
                             const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0')
                             return `${minutes}:${seconds}.${_10ms}`
                         }
+                        color: Appearance.sidebar.colText
                     }
 
                     Item { Layout.fillWidth: true }
 
                     StyledText {
                         font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: Appearance.colors.colPrimary
+                        color: Appearance.sidebar.colAccent
                         text: {
                             const originalIndex = TimerService.stopwatchLaps.length - lapItem.index - 1
                             const lastTime = originalIndex > 0 ? TimerService.stopwatchLaps[originalIndex - 1] : 0
@@ -172,23 +173,23 @@ Item {
 
                 colBackground: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer)
-                    : Appearance.colors.colPrimary
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colAccentSurface)
+                    : Appearance.sidebar.colAccent
                 colBackgroundHover: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover)
-                    : Appearance.colors.colPrimaryHover
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.sidebar.colAccentSurfaceHover)
+                    : Appearance.sidebar.colAccentHover
                 colRipple: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive)
-                    : Appearance.colors.colPrimaryActive 
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.sidebar.colAccentSurfaceActive)
+                    : Appearance.sidebar.colAccentActive
 
                 contentItem: StyledText {
                     horizontalAlignment: Text.AlignHCenter
                     color: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                         ? (Appearance.inirEverywhere ? Appearance.inir.colText
-                            : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.colors.colOnSecondaryContainer)
-                        : Appearance.colors.colOnPrimary
+                            : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.sidebar.colOnAccent)
+                        : Appearance.sidebar.colOnAccent
                     text: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused) ? Translation.tr("Pause")
                         : TimerService.stopwatchTime === 0 ? Translation.tr("Start") : Translation.tr("Resume")
                 }
@@ -209,24 +210,24 @@ Item {
 
                 colBackground: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colLayer2)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colSubCard)
                     : (Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colLayer2)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colSubCard)
                 colBackgroundHover: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colLayer2Hover)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.sidebar.colSubCardHover)
                     : (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colLayer2Hover)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.sidebar.colSubCardHover)
                 colRipple: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused)
                     ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.sidebar.colSubCardActive)
                     : (Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active)
+                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.sidebar.colSubCardActive)
 
                 contentItem: StyledText {
                     horizontalAlignment: Text.AlignHCenter
                     text: (TimerService.stopwatchRunning && !TimerService.stopwatchPaused) ? Translation.tr("Lap") : Translation.tr("Reset")
-                    color: Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer2
+                    color: Appearance.sidebar.colTextOnSubCard
                 }
             }
         }

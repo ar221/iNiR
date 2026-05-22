@@ -10,6 +10,12 @@ import Quickshell
 StyledFlickable {
     id: root
     required property int length
+    readonly property color charAccent: Appearance.apolloActive ? Appearance.apollo.colAmberBright
+        : Appearance.commandPreset ? Appearance.courier.colBorder
+        : Appearance.colors.colPrimary
+    readonly property color charText: Appearance.apolloActive ? Appearance.apollo.colText
+        : Appearance.commandPreset ? Appearance.courier.colText
+        : Appearance.colors.colOnLayer1
     contentWidth: dotsRow.implicitWidth
     contentX: (Math.max(contentWidth - width, 0))
     Behavior on contentX {
@@ -46,7 +52,7 @@ StyledFlickable {
                     ]
                     shape: charShapes[charItem.index % charShapes.length]
                     // Animate on appearance
-                    color: Appearance.colors.colPrimary
+                    color: root.charAccent
                     implicitSize: 0
                     opacity: 0
                     scale: 0.5
@@ -81,8 +87,8 @@ StyledFlickable {
                         ColorAnimation {
                             target: materialShape
                             properties: "color"
-                            from: Appearance.colors.colPrimary
-                            to: Appearance.colors.colOnLayer1
+                            from: root.charAccent
+                            to: root.charText
                             duration: 1000
                             easing.type: Appearance.animation.elementMoveFast.type
                             easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve

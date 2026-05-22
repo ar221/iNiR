@@ -156,9 +156,7 @@ Item {
 
                             toggled: isActive
                             buttonText: modeProfile.label ?? modelData
-                            buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                                : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
-                                : Appearance.rounding.small
+                            buttonRadius: Appearance.sidebar.radiusSmall
 
                             implicitHeight: 32
                             horizontalPadding: 12
@@ -170,18 +168,12 @@ Item {
                                     case "focus": return Appearance.m3colors.m3primary
                                     case "gaming": return Appearance.m3colors.m3tertiary
                                     case "zen": return Appearance.m3colors.m3secondary
-                                    default: return Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-                                        : Appearance.colors.colLayer2
+                                    default: return Appearance.sidebar.colAccentSurface
                                 }
                             }
                             colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.15)
                             colBackground: "transparent"
-                            colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                                : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                : Appearance.colors.colLayer2Hover
+                            colBackgroundHover: Appearance.sidebar.colSubCardHover
 
                             Layout.fillWidth: true
 
@@ -195,12 +187,8 @@ Item {
                                     text: modeProfile.icon ?? ""
                                     iconSize: 16
                                     color: isActive
-                                        ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                                            : Appearance.m3colors.m3onPrimary)
-                                        : (Appearance.angelEverywhere ? Appearance.angel.colText
-                                            : Appearance.inirEverywhere ? Appearance.inir.colText
-                                            : Appearance.colors.colOnLayer1)
+                                        ? Appearance.m3colors.m3onPrimary
+                                        : Appearance.sidebar.colText
 
                                     Behavior on color {
                                         enabled: Appearance.animationsEnabled
@@ -213,12 +201,8 @@ Item {
                                     font.pixelSize: Appearance.font.pixelSize.small
                                     font.weight: Font.Medium
                                     color: isActive
-                                        ? (Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-                                            : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-                                            : Appearance.m3colors.m3onPrimary)
-                                        : (Appearance.angelEverywhere ? Appearance.angel.colText
-                                            : Appearance.inirEverywhere ? Appearance.inir.colText
-                                            : Appearance.colors.colOnLayer1)
+                                        ? Appearance.m3colors.m3onPrimary
+                                        : Appearance.sidebar.colText
 
                                     Behavior on color {
                                         enabled: Appearance.animationsEnabled

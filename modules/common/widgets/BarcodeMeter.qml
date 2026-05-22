@@ -23,6 +23,14 @@ Item {
     readonly property bool _warning: (_val * 100) >= warningThreshold
     readonly property color _fillColor: _warning ? Appearance.mission.colCritical
         : _caution ? Appearance.colors.colError : root.color
+    readonly property color _trackColor: Qt.rgba(0, 0, 0, 0.34)
+    readonly property color _ghostColor: Qt.rgba(0, 0, 0, 0.72)
+    readonly property color _ghostEdgeColor: Qt.rgba(Appearance.mission.colText.r,
+                                                    Appearance.mission.colText.g,
+                                                    Appearance.mission.colText.b, 0.13)
+    readonly property color _edgeColor: Qt.rgba(Appearance.mission.colText.r,
+                                               Appearance.mission.colText.g,
+                                               Appearance.mission.colText.b, 0.72)
 
     readonly property bool _isBlock: variant === "block"
     readonly property int _barWidth: _isBlock ? 2 : 2
@@ -73,8 +81,34 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: root._trackHeight
             radius: root._trackRadius
-            color: Appearance.mission.colPanel
+            color: root._trackColor
+            border.width: 1
+            border.color: Qt.rgba(root._fillColor.r, root._fillColor.g, root._fillColor.b, 0.26)
             clip: true
+
+            Repeater {
+                model: blockTrack.width > 0 ? Math.ceil(blockTrack.width / root._pitch) : 0
+
+                Rectangle {
+                    required property int index
+                    x: index * root._pitch
+                    y: 2
+                    width: root._barWidth
+                    height: Math.max(1, blockTrack.height - 4)
+                    color: root._ghostColor
+                    opacity: 1.0
+
+                    Rectangle {
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                        }
+                        height: 1
+                        color: root._ghostEdgeColor
+                    }
+                }
+            }
 
             Item {
                 id: blockFill
@@ -98,12 +132,27 @@ Item {
                         width: root._barWidth
                         height: blockTrack.height
                         color: root._fillColor
+                        opacity: 0.95
 
                         Behavior on color {
                             enabled: Appearance.animationsEnabled
                             ColorAnimation { duration: 250 }
                         }
                     }
+                }
+            }
+
+            Rectangle {
+                width: 2
+                height: blockTrack.height
+                radius: 1
+                x: Math.max(0, Math.min(blockTrack.width - width, blockFill.width - width))
+                color: root._edgeColor
+                opacity: root._val > 0.02 ? 0.90 : 0
+
+                Behavior on x {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -132,12 +181,37 @@ Item {
             Layout.preferredWidth: root.inlineTrackWidth
             Layout.preferredHeight: root._trackHeight
             radius: root._trackRadius
-            color: Qt.rgba(Appearance.mission.colText.r,
-                           Appearance.mission.colText.g,
-                           Appearance.mission.colText.b, 0.04)
+            color: root._trackColor
+            border.width: 1
+            border.color: Qt.rgba(root._fillColor.r, root._fillColor.g, root._fillColor.b, 0.26)
             clip: true
 
+            Repeater {
+                model: inlineTrack.width > 0 ? Math.ceil(inlineTrack.width / root._pitch) : 0
+
+                Rectangle {
+                    required property int index
+                    x: index * root._pitch
+                    y: 2
+                    width: root._barWidth
+                    height: Math.max(1, inlineTrack.height - 4)
+                    color: root._ghostColor
+                    opacity: 1.0
+
+                    Rectangle {
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                        }
+                        height: 1
+                        color: root._ghostEdgeColor
+                    }
+                }
+            }
+
             Item {
+                id: inlineFill
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
@@ -158,7 +232,22 @@ Item {
                         width: root._barWidth
                         height: inlineTrack.height
                         color: root._fillColor
+                        opacity: 0.95
                     }
+                }
+            }
+
+            Rectangle {
+                width: 2
+                height: inlineTrack.height
+                radius: 1
+                x: Math.max(0, Math.min(inlineTrack.width - width, inlineFill.width - width))
+                color: root._edgeColor
+                opacity: root._val > 0.02 ? 0.90 : 0
+
+                Behavior on x {
+                    enabled: Appearance.animationsEnabled
+                    NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
                 }
             }
         }

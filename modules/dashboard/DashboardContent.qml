@@ -26,29 +26,35 @@ Item {
     readonly property bool sectionWeather: Config.options?.dashboard?.sections?.weather ?? true
     readonly property bool sectionNotifications: Config.options?.dashboard?.sections?.notifications ?? true
     readonly property bool sectionActivityConsole: Config.options?.dashboard?.activityConsole?.enable ?? true
-    readonly property bool sectionAgentContext: Config.options?.dashboard?.sections?.agentContext ?? false
-    readonly property bool sectionAgentLoop: Config.options?.dashboard?.sections?.agentLoop ?? false
-    readonly property bool sectionSessionReview: Config.options?.dashboard?.sections?.sessionReview ?? false
-    readonly property bool sectionAgentTrust: (Config.options?.dashboard?.sections?.agentTrust ?? false)
+    readonly property bool cockpitEnabled: Config.options?.dashboard?.agentCockpit?.enable ?? false
+    readonly property bool sectionAgentContext: root.cockpitEnabled
+        && (Config.options?.dashboard?.sections?.agentContext ?? false)
+    readonly property bool sectionAgentLoop: root.cockpitEnabled
+        && (Config.options?.dashboard?.sections?.agentLoop ?? false)
+    readonly property bool sectionSessionReview: root.cockpitEnabled
+        && (Config.options?.dashboard?.sections?.sessionReview ?? false)
+    readonly property bool sectionAgentTrust: root.cockpitEnabled
+        && (Config.options?.dashboard?.sections?.agentTrust ?? false)
         && (Config.options?.dashboard?.agentCockpit?.trustPanel ?? true)
-    readonly property bool sectionAgentCompanion: (Config.options?.dashboard?.sections?.agentCompanion ?? false)
+    readonly property bool sectionAgentCompanion: root.cockpitEnabled
+        && (Config.options?.dashboard?.sections?.agentCompanion ?? false)
         && (Config.options?.dashboard?.agentCockpit?.mobileCompanion ?? false)
     readonly property bool commandPreset: Appearance.mission.commandPreset
     // Hero band is preset-agnostic — it is the focal landing zone for every layout.
     readonly property bool sectionHeroZone: Config.options?.dashboard?.sections?.heroZone ?? true
     // Network sparklines are opt-in detail — kept off the default render to reduce mass.
     readonly property bool sectionNetwork: Config.options?.dashboard?.sections?.network ?? false
-    readonly property bool sectionAgentStatus: commandPreset
+    readonly property bool sectionAgentStatus: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.agentStatus ?? false)
-    readonly property bool sectionServiceGrid: commandPreset
+    readonly property bool sectionServiceGrid: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.serviceGrid ?? false)
-    readonly property bool sectionDiskGauges: commandPreset
+    readonly property bool sectionDiskGauges: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.diskGauges ?? false)
-    readonly property bool sectionVaultPulse: commandPreset
+    readonly property bool sectionVaultPulse: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.vaultPulse ?? false)
-    readonly property bool sectionRecentRuns: commandPreset
+    readonly property bool sectionRecentRuns: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.recentRuns ?? false)
-    readonly property bool sectionIntegrationStatus: commandPreset
+    readonly property bool sectionIntegrationStatus: root.cockpitEnabled && commandPreset
         && (Config.options?.dashboard?.sections?.integrationStatus ?? false)
     readonly property bool _anyWidgetStackVisible: sectionServiceGrid
         || sectionDiskGauges || sectionVaultPulse || sectionRecentRuns

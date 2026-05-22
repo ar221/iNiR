@@ -57,11 +57,11 @@ Item {
                         width: 54
                         height: 54
                         color: minutesInput.activeFocus 
-                            ? Appearance.colors.colPrimaryContainer 
+                            ? Appearance.sidebar.colAccentSurface
                             : "transparent"
-                        radius: Appearance.rounding.small
+                        radius: Appearance.sidebar.radiusSmall
                         border.width: minutesInput.activeFocus ? 2 : 0
-                        border.color: Appearance.colors.colPrimary
+                        border.color: Appearance.sidebar.colAccent
 
                         TextInput {
                             id: minutesInput
@@ -70,7 +70,7 @@ Item {
                             text: Math.floor(TimerService.countdownDuration / 60).toString().padStart(2, '0')
                             font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
                             font.family: Appearance.font.family.main
-                            color: Appearance.m3colors.m3onSurface
+                            color: Appearance.sidebar.colText
                             horizontalAlignment: Text.AlignHCenter
                             validator: IntValidator { bottom: 0; top: 99 }
                             selectByMouse: true
@@ -100,7 +100,7 @@ Item {
                     StyledText {
                         text: ":"
                         font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
-                        color: Appearance.m3colors.m3onSurface
+                        color: Appearance.sidebar.colText
                     }
 
                     // Seconds input
@@ -109,11 +109,11 @@ Item {
                         width: 54
                         height: 54
                         color: secondsInput.activeFocus 
-                            ? Appearance.colors.colPrimaryContainer 
+                            ? Appearance.sidebar.colAccentSurface
                             : "transparent"
-                        radius: Appearance.rounding.small
+                        radius: Appearance.sidebar.radiusSmall
                         border.width: secondsInput.activeFocus ? 2 : 0
-                        border.color: Appearance.colors.colPrimary
+                        border.color: Appearance.sidebar.colAccent
 
                         TextInput {
                             id: secondsInput
@@ -122,7 +122,7 @@ Item {
                             text: Math.floor(TimerService.countdownDuration % 60).toString().padStart(2, '0')
                             font.pixelSize: Math.round(38 * Appearance.fontSizeScale)
                             font.family: Appearance.font.family.main
-                            color: Appearance.m3colors.m3onSurface
+                            color: Appearance.sidebar.colText
                             horizontalAlignment: Text.AlignHCenter
                             validator: IntValidator { bottom: 0; top: 59 }
                             selectByMouse: true
@@ -161,14 +161,14 @@ Item {
                         return `${minutes}:${seconds}`;
                     }
                     font.pixelSize: Math.round(40 * Appearance.fontSizeScale)
-                    color: Appearance.m3colors.m3onSurface
+                    color: Appearance.sidebar.colText
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.editMode ? Translation.tr("Tap to edit") : TimerService.countdownRunning ? Translation.tr("Running") : Translation.tr("Paused")
                     font.pixelSize: Appearance.font.pixelSize.normal
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.sidebar.colTextSecondary
                 }
             }
         }
@@ -192,13 +192,10 @@ Item {
                     required property var modelData
                     implicitHeight: 30
                     implicitWidth: 45
-                    buttonRadius: Appearance.rounding.small
-                    colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                        : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
-                    colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
-                    colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active
+                    buttonRadius: Appearance.sidebar.radiusSmall
+                    colBackground: Appearance.sidebar.colSubCard
+                    colBackgroundHover: Appearance.sidebar.colSubCardHover
+                    colRipple: Appearance.sidebar.colSubCardActive
                     onClicked: TimerService.setCountdownDuration(modelData.seconds)
 
                     contentItem: StyledText {
@@ -206,7 +203,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData.label
                         font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: Appearance.colors.colOnLayer2
+                        color: Appearance.sidebar.colTextOnSubCard
                     }
                 }
             }
@@ -222,29 +219,29 @@ Item {
                 Layout.preferredWidth: 90
                 onClicked: TimerService.toggleCountdown()
                 enabled: TimerService.countdownDuration > 0
-                colBackground: TimerService.countdownRunning 
-                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colSecondaryContainer)
-                    : Appearance.colors.colPrimary
-                colBackgroundHover: TimerService.countdownRunning 
-                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.colors.colSecondaryContainerHover)
-                    : Appearance.colors.colPrimaryHover
-                colRipple: TimerService.countdownRunning 
-                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-                        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
-                        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colSecondaryContainerActive)
-                    : Appearance.colors.colPrimaryActive
+                    colBackground: TimerService.countdownRunning
+                        ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                            : Appearance.inirEverywhere ? Appearance.inir.colLayer2
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colAccentSurface)
+                    : Appearance.sidebar.colAccent
+                    colBackgroundHover: TimerService.countdownRunning
+                        ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                            : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurfaceHover : Appearance.sidebar.colAccentSurfaceHover)
+                    : Appearance.sidebar.colAccentHover
+                    colRipple: TimerService.countdownRunning
+                        ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
+                            : Appearance.inirEverywhere ? Appearance.inir.colLayer2Active
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.sidebar.colAccentSurfaceActive)
+                    : Appearance.sidebar.colAccentActive
 
                 contentItem: StyledText {
                     horizontalAlignment: Text.AlignHCenter
                     color: TimerService.countdownRunning 
                         ? (Appearance.angelEverywhere ? Appearance.angel.colText
                             : Appearance.inirEverywhere ? Appearance.inir.colText
-                            : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.colors.colOnSecondaryContainer)
-                        : Appearance.colors.colOnPrimary
+                            : Appearance.auroraEverywhere ? Appearance.colors.colOnLayer2 : Appearance.sidebar.colOnAccent)
+                        : Appearance.sidebar.colOnAccent
                     text: TimerService.countdownRunning ? Translation.tr("Pause") : TimerService.countdownSecondsLeft === TimerService.countdownDuration ? Translation.tr("Start") : Translation.tr("Resume")
                 }
             }

@@ -12,6 +12,9 @@ import Quickshell.Services.Notifications
 Item { // Notification item area
     id: root
     property var notificationObject
+    readonly property bool hasNotification: notificationObject !== null && notificationObject !== undefined
+    readonly property var notification: hasNotification ? notificationObject : ({})
+    readonly property var notificationActions: notification.actions ?? []
     property bool expanded: false
     property bool popup: false
     property bool onlyNotification: false
@@ -33,7 +36,8 @@ Item { // Notification item area
     property var dragIndexDiff: Math.abs(parentDragIndex - index)
     property real xOffset: dragIndexDiff == 0 ? parentDragDistance : 0
 
-    implicitHeight: background.implicitHeight
+    implicitHeight: root.hasNotification ? background.implicitHeight : 0
+    visible: root.hasNotification
 
     function destroyWithAnimation(left = false) {
         background.anchors.leftMargin = root.xOffset; // Break binding, capture current position
@@ -47,7 +51,7 @@ Item { // Notification item area
     TextMetrics {
         id: summaryTextMetrics
         font.pixelSize: root.fontSize
-        text: root.notificationObject.summary || ""
+        text: root.notification.summary || ""
     }
 
     SequentialAnimation { // Drag finish animation
@@ -64,7 +68,8 @@ Item { // Notification item area
             easing.bezierCurve: root._dismissAnim.bezierCurve
         }
         onFinished: () => {
-            Notifications.discardNotification(notificationObject.notificationId);
+            if (root.hasNotification)
+                Notifications.discardNotification(root.notification.notificationId);
         }
     }
 
@@ -120,7 +125,7 @@ Item { // Notification item area
         }
 
         color: (expanded && !onlyNotification) ?
-            (notificationObject.urgency == NotificationUrgency.Critical) ?
+            (root.notification.urgency == NotificationUrgency.Critical) ?
                 ColorUtils.mix(Appearance.colors.colSecondaryContainer, Appearance.colors.colLayer2, 0.35) :
                 (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer2
@@ -129,14 +134,14 @@ Item { // Notification item area
             "transparent"
         border.width: 0
 
-        // Signature accent bar — 2px, #ff1100, anchored to the left edge
+        // Signature accent bar anchored to the left edge.
         Rectangle {
             id: accentBar
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 2
-            color: "#ff1100"
+            color: Appearance.colors.colError
             visible: (expanded && !onlyNotification)
         }
 
@@ -175,10 +180,10 @@ Item { // Notification item area
                     font.pixelSize: root.fontSize
                     color: Appearance.colors.colOnLayer3
                     elide: Text.ElideRight
-                    text: root.notificationObject.summary || ""
+                    text: root.notification.summary || ""
                 }
                 MaterialSymbol {
-                    visible: (notificationObject.hasInlineReply ?? false) && !root.expanded
+                    visible: (root.notification.hasInlineReply ?? false) && !root.expanded
                     text: "reply"
                     iconSize: Appearance.font.pixelSize.small
                     color: Appearance.m3colors.m3primary
@@ -199,14 +204,14 @@ Item { // Notification item area
                     maximumLineCount: 1
                     textFormat: Text.StyledText
                     text: {
-                        return NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")
+                        return NotificationUtils.processNotificationBody(root.notification.body, root.notification.appName || root.notification.summary).replace(/\n/g, "<br/>")
                     }
                 }
             }
 
             // First action chip (collapsed state only)
             RippleButton {
-                visible: !root.expanded && (notificationObject.actions?.length ?? 0) > 0
+                visible: !root.expanded && root.notificationActions.length > 0
                 implicitHeight: 24
                 implicitWidth: firstActionLabel.implicitWidth + 16
                 buttonRadius: Appearance.rounding.small
@@ -215,14 +220,14 @@ Item { // Notification item area
                 colRipple: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.6)
                 Layout.alignment: Qt.AlignRight
                 onClicked: {
-                    const action = notificationObject.actions[0]
-                    if (action) Notifications.attemptInvokeAction(notificationObject.notificationId, action.identifier)
+                    const action = root.notificationActions[0]
+                    if (root.hasNotification && action) Notifications.attemptInvokeAction(root.notification.notificationId, action.identifier)
                 }
 
                 contentItem: StyledText {
                     id: firstActionLabel
                     anchors.centerIn: parent
-                    text: notificationObject.actions?.[0]?.text ?? ""
+                    text: root.notificationActions[0]?.text ?? ""
                     font.pixelSize: Appearance.font.pixelSize.smallest
                     font.weight: Font.Medium
                     color: Appearance.m3colors.m3primary
@@ -248,7 +253,7 @@ Item { // Notification item area
                     textFormat: Text.RichText
                     text: {
                         return `<style>img{max-width:${expandedContentColumn.width}px;}</style>` +
-                            `${NotificationUtils.processNotificationBody(notificationObject.body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`
+                            `${NotificationUtils.processNotificationBody(root.notification.body, root.notification.appName || root.notification.summary).replace(/\n/g, "<br/>")}`
                     }
 
                     onLinkActivated: (link) => {
@@ -302,8 +307,8 @@ Item { // Notification item area
                             NotificationActionButton {
                                 Layout.fillWidth: true
                                 buttonText: Translation.tr("Close")
-                                urgency: notificationObject.urgency
-                                implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 3) :
+                                urgency: root.notification.urgency
+                                implicitWidth: (root.notificationActions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 3) :
                                     (contentItem.implicitWidth + leftPadding + rightPadding)
 
                                 onClicked: {
@@ -313,7 +318,7 @@ Item { // Notification item area
                                 contentItem: MaterialSymbol {
                                     iconSize: Appearance.font.pixelSize.larger
                                     horizontalAlignment: Text.AlignHCenter
-                                    color: (notificationObject.urgency == NotificationUrgency.Critical) ?
+                                    color: (root.notification.urgency == NotificationUrgency.Critical) ?
                                         Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "close"
                                 }
@@ -321,40 +326,41 @@ Item { // Notification item area
 
                             Repeater {
                                 id: actionRepeater
-                                model: notificationObject.actions
+                                model: root.notificationActions
                                 NotificationActionButton {
                                     required property var modelData
                                     Layout.fillWidth: true
                                     buttonText: modelData.text
-                                    urgency: notificationObject.urgency
+                                    urgency: root.notification.urgency
                                     onClicked: {
-                                        Notifications.attemptInvokeAction(notificationObject.notificationId, modelData.identifier);
+                                        if (root.hasNotification)
+                                            Notifications.attemptInvokeAction(root.notification.notificationId, modelData.identifier);
                                     }
                                 }
                             }
 
                             // "Open app" button — shown for history items with no live actions
                             NotificationActionButton {
-                                visible: notificationObject.actions.length === 0 && !root.popup
+                                visible: root.notificationActions.length === 0 && !root.popup
                                 Layout.fillWidth: true
                                 buttonText: Translation.tr("Open")
-                                urgency: notificationObject.urgency
+                                urgency: root.notification.urgency
                                 onClicked: {
                                     Notifications.focusOrLaunchApp(
-                                        notificationObject.appIcon,
-                                        notificationObject.appName
+                                        root.notification.appIcon,
+                                        root.notification.appName
                                     )
                                 }
                             }
 
                             NotificationActionButton {
                                 Layout.fillWidth: true
-                                urgency: notificationObject.urgency
-                                implicitWidth: (notificationObject.actions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 3) :
+                                urgency: root.notification.urgency
+                                implicitWidth: (root.notificationActions.length == 0) ? ((actionsFlickable.width - actionRowLayout.spacing) / 3) :
                                     (contentItem.implicitWidth + leftPadding + rightPadding)
 
                                 onClicked: {
-                                    Quickshell.clipboardText = notificationObject.body
+                                    Quickshell.clipboardText = root.notification.body ?? ""
                                     copyIcon.text = "inventory"
                                     copyIconTimer.restart()
                                 }
@@ -372,7 +378,7 @@ Item { // Notification item area
                                     id: copyIcon
                                     iconSize: Appearance.font.pixelSize.larger
                                     horizontalAlignment: Text.AlignHCenter
-                                    color: (notificationObject.urgency == NotificationUrgency.Critical) ?
+                                    color: (root.notification.urgency == NotificationUrgency.Critical) ?
                                         Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                                     text: "content_copy"
                                 }
@@ -385,14 +391,14 @@ Item { // Notification item area
                 // Inline reply field — shown for messaging apps that support it
                 RowLayout {
                     id: replyRow
-                    visible: root.expanded && (notificationObject.hasInlineReply ?? false)
+                    visible: root.expanded && (root.notification.hasInlineReply ?? false)
                     Layout.fillWidth: true
                     spacing: 4
 
                     TextField {
                         id: replyField
                         Layout.fillWidth: true
-                        placeholderText: notificationObject.inlineReplyPlaceholder || Translation.tr("Reply...")
+                        placeholderText: root.notification.inlineReplyPlaceholder || Translation.tr("Reply...")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.m3colors.m3onSurface
                         placeholderTextColor: Appearance.colors.colSubtext
@@ -414,7 +420,7 @@ Item { // Notification item area
                         Keys.onReturnPressed: {
                             if (replyField.text.trim().length > 0) {
                                 Notifications.sendInlineReply(
-                                    notificationObject.notificationId,
+                                    root.notification.notificationId,
                                     replyField.text.trim()
                                 )
                                 replyField.text = ""
@@ -427,14 +433,14 @@ Item { // Notification item area
                     }
 
                     NotificationActionButton {
-                        urgency: notificationObject.urgency
+                        urgency: root.notification.urgency
                         implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
                         enabled: replyField.text.trim().length > 0
 
                         onClicked: {
                             if (replyField.text.trim().length > 0) {
                                 Notifications.sendInlineReply(
-                                    notificationObject.notificationId,
+                                    root.notification.notificationId,
                                     replyField.text.trim()
                                 )
                                 replyField.text = ""

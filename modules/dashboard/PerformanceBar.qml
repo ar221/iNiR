@@ -13,6 +13,8 @@ Item {
     property string label: ""
     property color lowColor: Appearance.mission.colActive
     property color highColor: Appearance.mission.colCritical
+    readonly property color _fillColor: ColorUtils.mix(root.highColor, root.lowColor, root.value)
+    readonly property color _emptyTrackColor: Qt.rgba(0, 0, 0, 0.42)
 
     // Tracks previous value for spike-pulse detection
     property real _previousValue: 0
@@ -52,7 +54,7 @@ Item {
                 }
                 radius: barBg.radius + 8
                 // Same hue as the fill, 25% opacity when fully visible
-                color: ColorUtils.mix(root.highColor, root.lowColor, root.value)
+                color: root._fillColor
                 opacity: 0
 
                 SequentialAnimation {
@@ -78,10 +80,36 @@ Item {
             Rectangle {
                 id: barBg
                 anchors.fill: parent
-                color: Appearance.mission.colPanel
+                color: root._emptyTrackColor
                 border.width: 1
-                border.color: Appearance.mission.colBorderSubtle
+                border.color: ColorUtils.mix(root._fillColor, Appearance.mission.colBorderSubtle, 0.45)
                 radius: 4
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 3
+                    radius: Math.max(1, barBg.radius - 2)
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Qt.rgba(Appearance.mission.colText.r,
+                                          Appearance.mission.colText.g,
+                                          Appearance.mission.colText.b, 0.11)
+                }
+
+                Repeater {
+                    model: 8
+
+                    Rectangle {
+                        required property int index
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 1
+                        y: Math.round((index + 1) * barBg.height / 9)
+                        color: Qt.rgba(Appearance.mission.colText.r,
+                                       Appearance.mission.colText.g,
+                                       Appearance.mission.colText.b, 0.085)
+                    }
+                }
 
                 // Fill bar, anchored to bottom
                 Rectangle {
@@ -94,7 +122,20 @@ Item {
                     height: root.value * barBg.height
                     radius: barBg.radius
                     // value=0 → lowColor (cool), value=1 → highColor (hot)
-                    color: ColorUtils.mix(root.highColor, root.lowColor, root.value)
+                    color: root._fillColor
+                    opacity: 0.82
+
+                    Rectangle {
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                        }
+                        height: 3
+                        radius: 1
+                        color: Appearance.mission.colText
+                        opacity: parent.height > 5 ? 0.70 : 0
+                    }
 
                     Behavior on height {
                         enabled: Appearance.animationsEnabled

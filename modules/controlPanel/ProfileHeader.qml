@@ -52,10 +52,7 @@ Item {
                 radius: width / 2
                 color: "transparent"
                 border.width: 2
-                border.color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                            : root.inirEverywhere ? Appearance.inir.colPrimary 
-                            : root.auroraEverywhere ? Appearance.m3colors.m3primary
-                            : Appearance.colors.colPrimary
+                border.color: Appearance.controlPanel.colAccent
             }
 
             // Avatar with OpacityMask for proper circular clipping
@@ -126,20 +123,14 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                         : root.inirEverywhere ? Appearance.inir.colLayer2 
-                         : root.auroraEverywhere ? Appearance.aurora.colSubSurface
-                         : Appearance.colors.colLayer2
+                    color: Appearance.controlPanel.colTrack
                     visible: avatarImg.status !== Image.Ready
 
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "person"
                         iconSize: 22
-                        color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                             : root.inirEverywhere ? Appearance.inir.colPrimary 
-                             : root.auroraEverywhere ? Appearance.m3colors.m3primary
-                             : Appearance.colors.colPrimary
+                        color: Appearance.controlPanel.colAccent
                     }
                 }
             }
@@ -151,20 +142,14 @@ Item {
             StyledText {
                 text: root.getGreeting()
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                     : root.inirEverywhere ? Appearance.inir.colTextSecondary 
-                     : root.auroraEverywhere ? Appearance.m3colors.m3outline
-                     : Appearance.colors.colSubtext
+                color: Appearance.controlPanel.colTextMuted
             }
             StyledText {
                 text: SystemInfo.displayName || SystemInfo.username
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.Medium
                 font.capitalization: Font.Capitalize
-                color: Appearance.angelEverywhere ? Appearance.angel.colText
-                     : root.inirEverywhere ? Appearance.inir.colText 
-                     : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                     : Appearance.colors.colOnLayer0
+                color: Appearance.controlPanel.colText
             }
         }
 
@@ -177,22 +162,15 @@ Item {
             RippleButton {
                 implicitWidth: 32
                 implicitHeight: 32
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                buttonRadius: Appearance.controlPanel.radiusButton
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                  : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                                  : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                  : Appearance.colors.colLayer2Hover
+                colBackgroundHover: Appearance.controlPanel.colButtonHover
                 onClicked: root.lockScreen()
                 contentItem: MaterialSymbol { 
                     anchors.centerIn: parent
                     text: "lock"
                     iconSize: 18
-                    color: Appearance.angelEverywhere ? Appearance.angel.colText
-                         : root.inirEverywhere ? Appearance.inir.colText 
-                         : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                         : Appearance.colors.colOnLayer0
+                    color: Appearance.controlPanel.colText
                 }
                 StyledToolTip { text: Translation.tr("Lock") }
             }
@@ -200,22 +178,15 @@ Item {
             RippleButton {
                 implicitWidth: 32
                 implicitHeight: 32
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                buttonRadius: Appearance.controlPanel.radiusButton
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                  : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                                  : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                  : Appearance.colors.colLayer2Hover
+                colBackgroundHover: Appearance.controlPanel.colButtonHover
                 onClicked: root.openAccountSettings()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "manage_accounts"
                     iconSize: 18
-                    color: Appearance.angelEverywhere ? Appearance.angel.colText
-                         : root.inirEverywhere ? Appearance.inir.colText
-                         : root.auroraEverywhere ? Appearance.m3colors.m3onSurface
-                         : Appearance.colors.colOnLayer0
+                    color: Appearance.controlPanel.colText
                 }
                 StyledToolTip { text: Translation.tr("Manage my account") }
             }
@@ -223,13 +194,9 @@ Item {
             RippleButton {
                 implicitWidth: 32
                 implicitHeight: 32
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                buttonRadius: Appearance.controlPanel.radiusButton
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                  : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                                  : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                  : Appearance.colors.colLayer2Hover
+                colBackgroundHover: Appearance.controlPanel.colButtonHover
                 onClicked: {
                     GlobalStates.controlPanelOpen = false
                     GlobalStates.sessionOpen = true
@@ -238,9 +205,7 @@ Item {
                     anchors.centerIn: parent
                     text: "power_settings_new"
                     iconSize: 18
-                    color: root.inirEverywhere ? Appearance.inir.colError ?? Appearance.colors.colError
-                         : root.auroraEverywhere ? Appearance.m3colors.m3error
-                         : Appearance.colors.colError 
+                    color: Appearance.controlPanel.colStatusCritical
                 }
                 StyledToolTip { text: Translation.tr("Power") }
             }
@@ -248,22 +213,15 @@ Item {
             RippleButton {
                 implicitWidth: 32
                 implicitHeight: 32
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-                            : root.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
+                buttonRadius: Appearance.controlPanel.radiusButton
                 colBackground: "transparent"
-                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-                                  : root.inirEverywhere ? Appearance.inir.colLayer2Hover 
-                                  : root.auroraEverywhere ? Appearance.aurora.colSubSurfaceHover
-                                  : Appearance.colors.colLayer2Hover
+                colBackgroundHover: Appearance.controlPanel.colButtonHover
                 onClicked: GlobalStates.controlPanelOpen = false
                 contentItem: MaterialSymbol { 
                     anchors.centerIn: parent
                     text: "close"
                     iconSize: 18
-                    color: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-                         : root.inirEverywhere ? Appearance.inir.colTextSecondary 
-                         : root.auroraEverywhere ? Appearance.m3colors.m3outline
-                         : Appearance.colors.colSubtext
+                    color: Appearance.controlPanel.colTextMuted
                 }
                 StyledToolTip { text: Translation.tr("Close") }
             }

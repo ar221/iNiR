@@ -55,7 +55,7 @@ Scope {
         }
     }
 
-    function _setSidebarOpen(val) {
+    function _setSidebarOpen(val): void {
         if (isRight) GlobalStates.sidebarRightOpen = val
         else GlobalStates.sidebarLeftOpen = val
     }
@@ -64,7 +64,6 @@ Scope {
         id: sidebarRoot
 
         Component.onCompleted: {
-            visible = root.sidebarOpen
             root._sidebarShown = root.sidebarOpen
         }
 
@@ -77,18 +76,21 @@ Scope {
         Timer {
             id: _closeTimer
             interval: 120 // Reduced from 300ms — matches exit animation duration
-            onTriggered: sidebarRoot.visible = false
         }
 
-        function hide() {
+        function hide(): void {
             root._setSidebarOpen(false)
         }
 
         exclusiveZone: 0
         implicitWidth: screen?.width ?? 1920
+        visible: true
         WlrLayershell.namespace: root.isRight ? "quickshell:sidebarRight" : "quickshell:sidebarLeft"
         WlrLayershell.keyboardFocus: root.sidebarOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
+
+        Item { id: emptyMask; width: 0; height: 0 }
+        mask: Region { item: root.sidebarOpen ? backdropClickArea : emptyMask }
 
         anchors {
             top: true
@@ -100,7 +102,7 @@ Scope {
         CompositorFocusGrab {
             id: grab
             windows: [ sidebarRoot ]
-            active: CompositorService.isHyprland && sidebarRoot.visible
+            active: CompositorService.isHyprland && root.sidebarOpen
             onCleared: () => {
                 if (!active) sidebarRoot.hide()
             }
@@ -342,15 +344,17 @@ Scope {
         }
     }
 
-    function _handleOpenChanged() {
+    function _handleOpenChanged(): void {
         if (root.sidebarOpen) {
             _closeTimer.stop()
-            sidebarRoot.visible = true
-            Qt.callLater(() => { root._sidebarShown = true })
+            Qt.callLater(() => {
+                if (!root.sidebarOpen)
+                    return
+                root._sidebarShown = true
+            })
         } else if (root.instantOpen || !Appearance.animationsEnabled) {
             root._sidebarShown = false
             _closeTimer.stop()
-            sidebarRoot.visible = false
         } else {
             root._sidebarShown = false
             _closeTimer.restart()

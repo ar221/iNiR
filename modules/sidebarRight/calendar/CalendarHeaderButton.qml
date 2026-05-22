@@ -17,23 +17,16 @@ RippleButton {
     }
 
     background.anchors.fill: button
-    buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.full
-    colBackground: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-        : Appearance.inirEverywhere ? Appearance.inir.colLayer2 
-        : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colLayer2
-    colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
-        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover 
-        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface : Appearance.colors.colLayer2Hover
-    colRipple: Appearance.angelEverywhere ? Appearance.angel.colGlassCardActive
-        : Appearance.inirEverywhere ? Appearance.inir.colLayer2Active 
-        : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurfaceActive : Appearance.colors.colLayer2Active
+    buttonRadius: forceCircle ? Appearance.sidebar.radiusButton : Appearance.sidebar.radiusSmall
+    colBackground: Appearance.sidebar.colSubCard
+    colBackgroundHover: Appearance.sidebar.colSubCardHover
+    colRipple: Appearance.sidebar.colSubCardActive
 
     contentItem: StyledText {
         text: buttonText
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Appearance.font.pixelSize.larger
-        color: Appearance.colors.colOnLayer1
+        color: Appearance.sidebar.colTextOnSubCard
     }
 
     StyledToolTip {

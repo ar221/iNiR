@@ -56,19 +56,16 @@ Item {
     }
 
     // Style tokens
-    readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colTextSecondary: Appearance.angelEverywhere ? Appearance.angel.colTextSecondary
-        : Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colTextSecondary: Appearance.sidebar.colTextSecondary
     readonly property color colBg: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer0
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-        : Appearance.colors.colLayer0
+        : Appearance.sidebar.colCard
     readonly property color colBorder: Appearance.angelEverywhere ? Appearance.angel.colBorder
-        : Appearance.inirEverywhere ? Appearance.inir.colBorder : Appearance.colors.colLayer0Border
-    readonly property int borderWidth: (Appearance.angelEverywhere || Appearance.inirEverywhere) ? 1 : (Appearance.auroraEverywhere ? 0 : 1)
-    readonly property real radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
+        : Appearance.inirEverywhere ? Appearance.inir.colBorder : Appearance.sidebar.colCardBorder
+    readonly property int borderWidth: Appearance.auroraEverywhere ? 0 : 1
+    readonly property real radius: Appearance.sidebar.radiusCard
 
     ColumnLayout {
         anchors.fill: parent
@@ -88,12 +85,12 @@ Item {
             
             RippleButton {
                 implicitWidth: 28; implicitHeight: 28
-                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 14
+                buttonRadius: Appearance.sidebar.radiusButton
                 colBackground: "transparent"
                 colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover
                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-                    : Appearance.colors.colLayer1Hover
+                    : Appearance.sidebar.colCardHover
                 onClicked: ResourceUsage.ensureRunning()
                 contentItem: MaterialSymbol { anchors.centerIn: parent; text: "refresh"; iconSize: 16; color: root.colTextSecondary }
                 StyledToolTip { text: Translation.tr("Refresh") }
@@ -132,7 +129,7 @@ Item {
                         valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
                         subText: ResourceUsage.maxAvailableCpuString
                         graphValues: ResourceUsage.cpuUsageHistory
-                        graphColor: Appearance.colors.colPrimary
+                        graphColor: Appearance.sidebar.colAccent
                         showGraph: true
                     }
 
@@ -166,7 +163,7 @@ Item {
                         valueText: Math.round(ResourceUsage.diskUsedPercentage * 100) + "%"
                         subText: formatBytes(ResourceUsage.diskUsed) + " / " + formatBytes(ResourceUsage.diskTotal)
                         progressValue: ResourceUsage.diskUsedPercentage
-                        progressColor: ResourceUsage.diskUsedPercentage > 0.9 ? Appearance.colors.colError : Appearance.colors.colPrimary
+                        progressColor: ResourceUsage.diskUsedPercentage > 0.9 ? Appearance.colors.colError : Appearance.sidebar.colAccent
                         showGraph: false
                     }
 
@@ -187,7 +184,7 @@ Item {
                             ? Appearance.colors.colError 
                             : ResourceUsage.maxTemp >= 60 
                                 ? Appearance.colors.colWarning ?? "#FFA500"
-                                : Appearance.colors.colPrimary
+                                : Appearance.sidebar.colAccent
                         showGraph: false
                     }
 
@@ -261,11 +258,11 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 4
+                radius: Appearance.sidebar.radiusSmall
                 color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
                     : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
-                    : Appearance.colors.colLayer1
+                    : Appearance.sidebar.colSubCard
             }
 
             Graph {
@@ -303,7 +300,7 @@ Item {
             trackColor: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                 : Appearance.inirEverywhere ? Appearance.inir.colLayer2
                 : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-                : Appearance.colors.colSecondaryContainer
+                : Appearance.sidebar.colAccentSurface
         }
 
         // Subtext
@@ -333,7 +330,7 @@ Item {
             MaterialSymbol {
                 text: "swap_vert"
                 iconSize: 18
-                color: Appearance.colors.colTertiary
+                color: Appearance.m3colors.m3tertiary
             }
 
             StyledText {
@@ -353,7 +350,7 @@ Item {
 
             RowLayout {
                 spacing: 4
-                MaterialSymbol { text: "arrow_downward"; iconSize: 14; color: Appearance.colors.colPrimary }
+                MaterialSymbol { text: "arrow_downward"; iconSize: 14; color: Appearance.sidebar.colAccent }
                 StyledText {
                     text: NetworkUsage.downloadSpeedStr || "0 B/s"
                     font.pixelSize: Appearance.font.pixelSize.small
@@ -364,7 +361,7 @@ Item {
 
             RowLayout {
                 spacing: 4
-                MaterialSymbol { text: "arrow_upward"; iconSize: 14; color: Appearance.colors.colSecondary }
+                MaterialSymbol { text: "arrow_upward"; iconSize: 14; color: Appearance.m3colors.m3secondary }
                 StyledText {
                     text: NetworkUsage.uploadSpeedStr || "0 B/s"
                     font.pixelSize: Appearance.font.pixelSize.small
@@ -384,18 +381,18 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall : 4
+                radius: Appearance.sidebar.radiusSmall
                 color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
                     : Appearance.auroraEverywhere ? ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
-                    : Appearance.colors.colLayer1
+                    : Appearance.sidebar.colSubCard
             }
 
             Graph {
                 anchors.fill: parent
                 anchors.margins: 2
                 values: NetworkUsage.downloadHistory
-                color: Appearance.colors.colPrimary
+                color: Appearance.sidebar.colAccent
                 fillOpacity: 0.25
                 alignment: Graph.Alignment.Right
             }

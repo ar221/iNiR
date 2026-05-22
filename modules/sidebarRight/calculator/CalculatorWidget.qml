@@ -77,38 +77,32 @@ FocusScope {
     property bool scientificMode: false
 
     // Style tokens
-    readonly property color colText: Appearance.angelEverywhere ? Appearance.angel.colText
-        : Appearance.inirEverywhere ? Appearance.inir.colText : Appearance.colors.colOnLayer1
-    readonly property color colTextSecondary: Appearance.inirEverywhere ? Appearance.inir.colTextSecondary : Appearance.colors.colSubtext
+    readonly property color colText: Appearance.sidebar.colText
+    readonly property color colTextSecondary: Appearance.sidebar.colTextSecondary
     readonly property color colBg: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer0
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-        : Appearance.colors.colLayer0
+        : Appearance.sidebar.colCard
     readonly property color colLayer1: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
         : Appearance.inirEverywhere ? Appearance.inir.colLayer1
         : Appearance.auroraEverywhere ? "transparent"
-        : Appearance.colors.colLayer1
+        : Appearance.sidebar.colSubCard
     readonly property color colLayer2: Appearance.angelEverywhere ? Appearance.angel.colGlassElevated
         : Appearance.inirEverywhere ? Appearance.inir.colLayer2
         : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
-        : Appearance.colors.colLayer2
-    readonly property color colOperator: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colPrimary
-        : Appearance.colors.colPrimary
+        : Appearance.sidebar.colSubCardHover
+    readonly property color colOperator: Appearance.sidebar.colAccent
     readonly property color colOperatorContainer: Appearance.angelEverywhere ? Appearance.colors.colPrimaryContainer
         : Appearance.inirEverywhere ? Appearance.inir.colSecondaryContainer
-        : Appearance.colors.colPrimaryContainer
-    readonly property color colOnOperator: Appearance.angelEverywhere ? Appearance.angel.colOnPrimary
-        : Appearance.inirEverywhere ? Appearance.inir.colOnPrimary
-        : Appearance.colors.colOnPrimary
+        : Appearance.sidebar.colAccentSurface
+    readonly property color colOnOperator: Appearance.sidebar.colOnAccent
     readonly property color colBorder: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-        : Appearance.inirEverywhere ? Appearance.inir.colBorder : "transparent"
+        : Appearance.inirEverywhere ? Appearance.inir.colBorder
+        : Appearance.sidebar.commandPreset ? Appearance.sidebar.colCardBorder : "transparent"
     readonly property int borderWidth: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
-        : Appearance.inirEverywhere ? 1 : 0
-    readonly property real radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
-        : Appearance.inirEverywhere ? Appearance.inir.roundingNormal : Appearance.rounding.normal
-    readonly property real radiusSmall: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
-        : Appearance.inirEverywhere ? Appearance.inir.roundingSmall : Appearance.rounding.small
+        : Appearance.sidebar.borderWidth
+    readonly property real radius: Appearance.sidebar.radiusCard
+    readonly property real radiusSmall: Appearance.sidebar.radiusSmall
 
     // Keyboard handling
     Keys.onPressed: (event) => {
@@ -319,7 +313,7 @@ FocusScope {
                         implicitWidth: memLabel.implicitWidth + 8
                         implicitHeight: 20
                         radius: 4
-                        color: Appearance.colors.colSecondaryContainer
+                        color: Appearance.sidebar.colAccentSurface
 
                         StyledText {
                             id: memLabel
@@ -327,7 +321,7 @@ FocusScope {
                             text: "M"
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.weight: Font.Bold
-                            color: Appearance.colors.colOnSecondaryContainer
+                            color: Appearance.sidebar.colOnAccent
                         }
                     }
                 }
@@ -546,10 +540,8 @@ FocusScope {
             : secondary ? root.colLayer2 : root.colLayer1
 
         colBackgroundHover: accent
-            ? (accentSecondary ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colPrimaryHover)
-            : secondary
-                ? (Appearance.inirEverywhere ? Appearance.inir.colLayer2Hover : Appearance.colors.colLayer2Hover)
-                : (Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover : Appearance.colors.colLayer1Hover)
+            ? (accentSecondary ? Appearance.sidebar.colAccentSurfaceHover : Appearance.sidebar.colAccentHover)
+            : secondary ? Appearance.sidebar.colSubCardHover : Appearance.sidebar.colCardHover
 
         contentItem: StyledText {
             text: parent.buttonText
@@ -558,7 +550,7 @@ FocusScope {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: parent.accent
-                ? (parent.accentSecondary ? Appearance.colors.colOnPrimaryContainer : root.colOnOperator)
+                ? (parent.accentSecondary ? Appearance.sidebar.colOnAccent : root.colOnOperator)
                 : root.colText
         }
     }

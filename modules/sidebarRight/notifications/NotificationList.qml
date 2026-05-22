@@ -69,9 +69,7 @@ Item {
             anchors.leftMargin: 12
             anchors.rightMargin: 12
             height: 1
-            color: Appearance.inirEverywhere ? Appearance.inir.colBorder
-                : Appearance.angelEverywhere ? Appearance.angel.colBorder
-                : ColorUtils.transparentize(Appearance.colors.colOutline, 0.8)
+            color: Appearance.sidebar.colCardBorder
         }
 
         RowLayout {
@@ -99,9 +97,9 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: countRow.implicitWidth + 16
                 implicitHeight: 26
-                radius: 13
+                radius: Appearance.sidebar.radiusButton
                 color: Notifications.list.length > 0
-                    ? ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.85)
+                    ? Appearance.sidebar.colAccentSurface
                     : "transparent"
 
                 RowLayout {
@@ -111,13 +109,13 @@ Item {
                     MaterialSymbol {
                         text: "notifications"
                         iconSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colSubtext
+                        color: Notifications.list.length > 0 ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colTextSecondary
                     }
                     StyledText {
                         text: Notifications.list.length
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
-                        color: Appearance.colors.colOnLayer2
+                        color: Notifications.list.length > 0 ? Appearance.sidebar.colOnAccent : Appearance.sidebar.colTextSecondary
                     }
                 }
             }

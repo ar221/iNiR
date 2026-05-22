@@ -27,7 +27,7 @@ Item {
             maskSource: Rectangle {
                 width: flickable.width
                 height: flickable.height
-                radius: Appearance.rounding.small
+                radius: Appearance.sidebar.radiusSmall
             }
         }
 
@@ -87,8 +87,8 @@ Item {
                         implicitHeight: todoContentRowLayout.implicitHeight
                         color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
                             : Appearance.inirEverywhere ? Appearance.inir.colLayer2
-                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.colors.colLayer2
-                        radius: Appearance.rounding.small
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface : Appearance.sidebar.colSubCard
+                        radius: Appearance.sidebar.radiusSmall
                         ColumnLayout {
                             id: todoContentRowLayout
                             anchors.left: parent.left
@@ -102,6 +102,7 @@ Item {
                                 id: todoContentText
                                 text: modelData.content
                                 wrapMode: Text.Wrap
+                                color: Appearance.sidebar.colText
                             }
                             RowLayout {
                                 Layout.leftMargin: 10
@@ -121,7 +122,7 @@ Item {
                                         horizontalAlignment: Text.AlignHCenter
                                         text: modelData.done ? "remove_done" : "check"
                                         iconSize: Appearance.font.pixelSize.larger
-                                        color: Appearance.colors.colOnLayer1
+                                        color: Appearance.sidebar.colTextOnSubCard
                                     }
                                 }
                                 TodoItemActionButton {
@@ -135,7 +136,7 @@ Item {
                                         horizontalAlignment: Text.AlignHCenter
                                         text: "delete_forever"
                                         iconSize: Appearance.font.pixelSize.larger
-                                        color: Appearance.colors.colOnLayer1
+                                        color: Appearance.sidebar.colTextOnSubCard
                                     }
                                 }
                             }

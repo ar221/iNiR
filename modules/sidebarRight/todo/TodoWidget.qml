@@ -94,8 +94,8 @@ Item {
 
                 x: tabBar.currentIndex * fullTabSize + (fullTabSize - targetWidth) / 2
 
-                color: Appearance.colors.colPrimary
-                radius: Appearance.rounding.full
+                color: Appearance.sidebar.colAccent
+                radius: Appearance.sidebar.radiusButton
 
                 Behavior on x {
                     enabled: Appearance.animationsEnabled && tabIndicator.enableIndicatorAnimation
@@ -114,7 +114,7 @@ Item {
             Layout.fillWidth: true
             height: 1
             color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
-                : Appearance.auroraEverywhere ? "transparent" : Appearance.colors.colOutlineVariant
+                : Appearance.auroraEverywhere ? "transparent" : Appearance.sidebar.colCardBorder
         }
 
         SwipeView {
@@ -208,7 +208,7 @@ Item {
 
         Rectangle { // Scrim
             anchors.fill: parent
-            radius: Appearance.rounding.small
+            radius: Appearance.sidebar.radiusSmall
             color: Appearance.colors.colScrim
             MouseArea {
                 hoverEnabled: true
@@ -226,8 +226,8 @@ Item {
             anchors.margins: root.dialogMargins
             implicitHeight: dialogColumnLayout.implicitHeight
 
-            color: Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface : Appearance.colors.colSurfaceContainerHigh
-            radius: Appearance.rounding.normal
+            color: Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface : Appearance.sidebar.colCard
+            radius: Appearance.sidebar.radiusCard
 
             function addTask() {
                 if (todoInput.text.length > 0) {
@@ -248,7 +248,7 @@ Item {
                     Layout.leftMargin: 16
                     Layout.rightMargin: 16
                     Layout.alignment: Qt.AlignLeft
-                    color: Appearance.m3colors.m3onSurface
+                    color: Appearance.sidebar.colText
                     font.pixelSize: Appearance.font.pixelSize.larger
                     text: Translation.tr("Add task")
                 }
@@ -259,26 +259,26 @@ Item {
                     Layout.leftMargin: 16
                     Layout.rightMargin: 16
                     padding: 10
-                    color: activeFocus ? Appearance.m3colors.m3onSurface : Appearance.m3colors.m3onSurfaceVariant
+                    color: activeFocus ? Appearance.sidebar.colText : Appearance.sidebar.colTextSecondary
                     renderType: Text.NativeRendering
-                    selectedTextColor: Appearance.m3colors.m3onSecondaryContainer
-                    selectionColor: Appearance.colors.colSecondaryContainer
+                    selectedTextColor: Appearance.sidebar.colOnAccent
+                    selectionColor: Appearance.sidebar.colAccentSurface
                     placeholderText: Translation.tr("Task description")
-                    placeholderTextColor: Appearance.m3colors.m3outline
+                    placeholderTextColor: Appearance.sidebar.colTextSecondary
                     focus: root.showAddDialog
                     onAccepted: dialog.addTask()
 
                     background: Rectangle {
                         anchors.fill: parent
-                        radius: Appearance.rounding.verysmall
+                        radius: Appearance.sidebar.radiusSmall
                         border.width: 2
-                        border.color: todoInput.activeFocus ? Appearance.colors.colPrimary : Appearance.m3colors.m3outline
+                        border.color: todoInput.activeFocus ? Appearance.sidebar.colAccent : Appearance.sidebar.colCardBorder
                         color: "transparent"
                     }
 
                     cursorDelegate: Rectangle {
                         width: 1
-                        color: todoInput.activeFocus ? Appearance.colors.colPrimary : "transparent"
+                        color: todoInput.activeFocus ? Appearance.sidebar.colAccent : "transparent"
                         radius: 1
                     }
                 }
