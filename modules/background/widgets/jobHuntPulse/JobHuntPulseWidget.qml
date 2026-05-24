@@ -594,7 +594,7 @@ AbstractBackgroundWidget {
                         color: Appearance.colors.colSubtext
                         TapHandler {
                             onTapped: {
-                                cancelProc.running = false
+                                // in-flight cancel allowed to complete — cancelPending resets UI only
                                 appCard.cancelPending = false
                             }
                         }
@@ -627,15 +627,17 @@ AbstractBackgroundWidget {
                     color: Appearance.colors.colOnLayer0
                     placeholderText: "add note…"
                     placeholderTextColor: Appearance.colors.colSubtext
+                    maximumLength: 280
                     clip: true
                     onTextChanged: appCard.noteText = text
                     Keys.onReturnPressed: {
                         if (addNoteProc.running || appCard.noteText.length === 0)
                             return
+                        var safeNote = appCard.noteText.replace(/["\\n\r]/g, "")
                         addNoteProc.command = [
                             "inir-widget-action", "jobhunt", "add-note",
                             "--id", appCard.entryId,
-                            "--data", JSON.stringify({note: appCard.noteText})
+                            "--data", JSON.stringify({note: safeNote})
                         ]
                         addNoteProc.running = true
                     }
