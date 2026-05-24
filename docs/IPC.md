@@ -202,6 +202,20 @@ By default, confirmation is disabled (closes immediately). Enable it in settings
 
 ---
 
+### commandroom
+
+Command Room service. Triggers a manual data refresh from the projection file.
+
+| Function | Description |
+|----------|-------------|
+| `triggerRefresh` | Reload the command-room projection from disk |
+
+```bash
+qs msg -c inir commandroom triggerRefresh
+```
+
+---
+
 ### commandRoomPanel
 
 Apollo Command Room cockpit panel. Read-only overlay showing open tasks, running/paused counts, recent events, and anomalies from the command-room projection.

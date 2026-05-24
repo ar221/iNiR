@@ -50,6 +50,11 @@ Singleton {
         return ageMinutes >= 0 && ageMinutes < 30 ? "fresh" : "stale"
     }
 
+    IpcHandler {
+        target: "commandroom"
+        function triggerRefresh(): void { root.refresh() }
+    }
+
     function refresh() {
         primaryProjectionFile.reload()
         if (usingFallback)

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs
 import qs.modules.common
 import qs.modules.common.functions
@@ -11,7 +12,7 @@ import qs.modules.common.widgets.widgetCanvas
 import qs.modules.background.widgets
 import qs.services
 
-// Command Room - read-only cockpit projection consumer for the desktop.
+// Command Room — pipeline-layer cockpit widget with action rail (Courier Console design language)
 AbstractBackgroundWidget {
     id: root
 
@@ -23,9 +24,27 @@ AbstractBackgroundWidget {
     readonly property int maxTasks: commandRoomConfig?.maxTasks ?? 3
     readonly property int maxAnomalies: commandRoomConfig?.maxAnomalies ?? 2
     readonly property point screenPos: root.mapToItem(null, 0, 0)
-    readonly property var visibleCards: CommandRoom.cards.slice(0, Math.max(0, maxTasks))
-    readonly property var visibleTasks: CommandRoom.cards.length > 0 ? [] : CommandRoom.openTasks.slice(0, Math.max(0, maxTasks))
-    readonly property var visibleAnomalies: CommandRoom.anomalies.slice(0, Math.max(0, maxAnomalies))
+
+    // Local tasksByStage — computed in the widget (not relying on Singleton new-property hot-reload)
+    readonly property var tasksByStage: {
+        const result = { in_progress: [], pending: [], stale: [], anomaly: [] }
+        const src = CommandRoom.cards.length > 0 ? CommandRoom.cards : CommandRoom.openTasks
+        for (let i = 0; i < src.length; i++) {
+            const item = src[i]
+            let stage = String(item?.stage ?? item?.status ?? "pending").toLowerCase().replace(/-/g, "_")
+            if (stage === "running" || stage === "active" || stage === "in_progress")
+                stage = "in_progress"
+            else if (stage === "queued" || stage === "todo" || stage === "backlog" || stage === "open" || stage === "new")
+                stage = "pending"
+            else if (!(stage in result))
+                stage = "pending"
+            result[stage].push(item)
+        }
+        for (let j = 0; j < CommandRoom.anomalies.length; j++)
+            result.anomaly.push(CommandRoom.anomalies[j])
+        return result
+    }
+
     readonly property string statusLabel: CommandRoom.anomalyCount > 0 ? "ALERT" : CommandRoom.freshnessState.toUpperCase()
     readonly property color statusColor: {
         if (CommandRoom.anomalyCount > 0)
@@ -44,6 +63,19 @@ AbstractBackgroundWidget {
         if (CommandRoom.ageMinutes === 0)
             return "now"
         return CommandRoom.ageMinutes + "m ago"
+    }
+
+    function _stageColor(stage) {
+        switch (String(stage)) {
+        case "in_progress":
+            return Appearance.colors.colPrimary
+        case "stale":
+            return Appearance.colors.colTertiary
+        case "anomaly":
+            return Appearance.colors.colError
+        default:
+            return Appearance.colors.colOnLayer0
+        }
     }
 
     function _severityColor(severity) {
@@ -115,6 +147,7 @@ AbstractBackgroundWidget {
         anchors.margins: 16
         spacing: 12
 
+        // ── Header ─────────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -168,6 +201,7 @@ AbstractBackgroundWidget {
             color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
         }
 
+        // ── Stats row ──────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -211,7 +245,7 @@ AbstractBackgroundWidget {
             }
         }
 
-
+        // ── Metric pills ───────────────────────────────────────────────────
         GridLayout {
             Layout.fillWidth: true
             columns: 3
@@ -223,198 +257,348 @@ AbstractBackgroundWidget {
             MetricPill { label: "QUEUE"; value: String(CommandRoom.queuedDeliveryCount + CommandRoom.pendingMemoryWriteCount); hot: (CommandRoom.queuedDeliveryCount + CommandRoom.pendingMemoryWriteCount) > 0 }
         }
 
+        // ── Error state ────────────────────────────────────────────────────
+        StyledText {
+            Layout.fillWidth: true
+            visible: CommandRoom.lastError.length > 0
+            text: CommandRoom.lastError === "Projection missing" ? "No cockpit projection yet." : CommandRoom.lastError
+            font.pixelSize: Appearance.font.pixelSize.small
+            font.weight: Font.Medium
+            color: CommandRoom.lastError === "Projection missing" ? Appearance.colors.colSubtext : Appearance.colors.colError
+            wrapMode: Text.WordWrap
+        }
+
+        // ── Pipeline sections ──────────────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true
-            visible: CommandRoom.anomalyCount > 0
-            spacing: 6
+            spacing: 8
+            visible: CommandRoom.lastError.length === 0
 
-            StyledText {
+            // IN PROGRESS — always visible
+            ColumnLayout {
                 Layout.fillWidth: true
-                text: "OBSERVABILITY FLAGS"
-                font.family: Appearance.font.family.monospace
-                font.pixelSize: Appearance.font.pixelSize.smallest
-                font.weight: Font.Bold
-                font.letterSpacing: 1.4
-                color: Appearance.colors.colError
-            }
+                spacing: 6
 
-            Repeater {
-                model: root.visibleAnomalies
-
-                delegate: Rectangle {
-                    required property var modelData
-                    required property int index
-
+                Rectangle {
                     Layout.fillWidth: true
-                    implicitHeight: anomalyText.implicitHeight + 12
-                    radius: 4
-                    color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
-                    border.width: 1
-                    border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.55)
+                    implicitHeight: 1
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
 
                     StyledText {
-                        id: anomalyText
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        text: String(parent.modelData?.type ?? "anomaly").replace(/_/g, " ").toUpperCase()
+                        text: root.width >= 280 ? "IN PROGRESS" : "RUNNING"
                         font.family: Appearance.font.family.monospace
                         font.pixelSize: Appearance.font.pixelSize.smallest
-                        font.weight: Font.DemiBold
-                        font.letterSpacing: 1.1
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1.4
+                        color: Appearance.colors.colPrimary
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        implicitWidth: ipBadge.implicitWidth + 10
+                        implicitHeight: ipBadge.implicitHeight + 6
+                        radius: 2
+                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.86)
+                        border.width: 1
+                        border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.45)
+
+                        StyledText {
+                            id: ipBadge
+                            anchors.centerIn: parent
+                            text: String(root.tasksByStage.in_progress.length)
+                            font.family: Appearance.font.family.monospace
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colPrimary
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: root.tasksByStage.in_progress
+                    delegate: CardRow {
+                        required property var modelData
+                        required property int index
+                        stage: "in_progress"
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.tasksByStage.in_progress.length === 0
+                    text: "—"
+                    font.family: Appearance.font.family.monospace
+                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    color: Appearance.colors.colSubtext
+                }
+            }
+
+            // PENDING — always visible
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        text: root.width >= 280 ? "PENDING" : "QUEUE"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1.4
                         color: Appearance.colors.colOnLayer0
-                        elide: Text.ElideRight
-                        maximumLineCount: 1
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        implicitWidth: pendingBadge.implicitWidth + 10
+                        implicitHeight: pendingBadge.implicitHeight + 6
+                        radius: 2
+                        color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
+                        border.width: 1
+                        border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.65)
+
+                        StyledText {
+                            id: pendingBadge
+                            anchors.centerIn: parent
+                            text: String(root.tasksByStage.pending.length)
+                            font.family: Appearance.font.family.monospace
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colOnLayer0
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: root.tasksByStage.pending
+                    delegate: CardRow {
+                        required property var modelData
+                        required property int index
+                        stage: "pending"
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.tasksByStage.pending.length === 0
+                    text: "—"
+                    font.family: Appearance.font.family.monospace
+                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    color: Appearance.colors.colSubtext
+                }
+
+                AddTaskControl {
+                    Layout.fillWidth: true
+                    visible: root.width >= 320
+                }
+            }
+
+            // STALE — hidden when count = 0
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                visible: root.tasksByStage.stale.length > 0
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        text: "STALE"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1.4
+                        color: Appearance.colors.colTertiary
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        implicitWidth: staleBadge.implicitWidth + 10
+                        implicitHeight: staleBadge.implicitHeight + 6
+                        radius: 2
+                        color: ColorUtils.transparentize(Appearance.colors.colTertiary, 0.86)
+                        border.width: 1
+                        border.color: ColorUtils.transparentize(Appearance.colors.colTertiary, 0.45)
+
+                        StyledText {
+                            id: staleBadge
+                            anchors.centerIn: parent
+                            text: String(root.tasksByStage.stale.length)
+                            font.family: Appearance.font.family.monospace
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colTertiary
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: root.tasksByStage.stale
+                    delegate: CardRow {
+                        required property var modelData
+                        required property int index
+                        stage: "stale"
+                    }
+                }
+            }
+
+            // ANOMALY — hidden when count = 0
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                visible: root.tasksByStage.anomaly.length > 0
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        text: root.width >= 280 ? "ANOMALY" : "ALERT"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1.4
+                        color: Appearance.colors.colError
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        implicitWidth: anomalyBadge.implicitWidth + 10
+                        implicitHeight: anomalyBadge.implicitHeight + 6
+                        radius: 2
+                        color: ColorUtils.transparentize(Appearance.colors.colError, 0.86)
+                        border.width: 1
+                        border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+
+                        StyledText {
+                            id: anomalyBadge
+                            anchors.centerIn: parent
+                            text: String(root.tasksByStage.anomaly.length)
+                            font.family: Appearance.font.family.monospace
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colError
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: root.tasksByStage.anomaly
+                    delegate: CardRow {
+                        required property var modelData
+                        required property int index
+                        stage: "anomaly"
                     }
                 }
             }
         }
+    }
+
+    // ── CardRow ─────────────────────────────────────────────────────────────
+    component CardRow: Rectangle {
+        id: cardRow
+        required property var modelData
+        required property int index
+        property string stage: "pending"
+        property bool cancelPending: false
+        property bool logExpanded: false
+        property bool flashing: false
+
+        Layout.fillWidth: true
+        radius: 4
+        color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.34)
+        border.width: 1
+        border.color: cardRow.flashing
+            ? Appearance.colors.colPrimary
+            : ColorUtils.transparentize(root._stageColor(cardRow.stage), 0.62)
+        implicitHeight: cardInnerColumn.implicitHeight
+        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+        HoverHandler { id: cardHover }
+
+        Process {
+            id: promoteProc
+            command: ["inir-widget-action", "commandroom", "promote", "--id", String(cardRow.modelData?.id ?? "")]
+            onExited: (code, status) => {
+                cardRow.flashing = false
+                CommandRoom.refresh()
+            }
+        }
+
+        Process {
+            id: cancelProc
+            command: ["inir-widget-action", "commandroom", "cancel", "--id", String(cardRow.modelData?.id ?? "")]
+            onExited: (code, status) => {
+                cardRow.cancelPending = false
+                CommandRoom.refresh()
+            }
+        }
+
+        Timer {
+            id: flashTimer
+            interval: 300
+            repeat: false
+            onTriggered: cardRow.flashing = false
+        }
 
         ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 7
+            id: cardInnerColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            spacing: 0
 
-            StyledText {
+            // Card body with action rail overlay
+            Item {
                 Layout.fillWidth: true
-                visible: CommandRoom.lastError.length > 0
-                text: CommandRoom.lastError === "Projection missing" ? "No cockpit projection yet." : CommandRoom.lastError
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: CommandRoom.lastError === "Projection missing" ? Appearance.colors.colSubtext : Appearance.colors.colError
-                wrapMode: Text.WordWrap
-            }
+                implicitHeight: cardBodyContent.implicitHeight + 14
 
-            StyledText {
-                Layout.fillWidth: true
-                visible: CommandRoom.lastError.length === 0 && CommandRoom.openTaskCount === 0 && CommandRoom.cards.length === 0
-                text: "No open command-room tasks. The board is clear."
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
-                color: Appearance.colors.colSubtext
-                wrapMode: Text.WordWrap
-            }
+                ColumnLayout {
+                    id: cardBodyContent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 3
 
-            Repeater {
-                model: root.visibleCards
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 7
 
-                delegate: Rectangle {
-                    id: cardRow
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-                    implicitHeight: cardRowContent.implicitHeight + 14
-                    radius: 4
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.34)
-                    border.width: 1
-                    border.color: ColorUtils.transparentize(root._severityColor(String(cardRow.modelData?.severity ?? "UNKNOWN")), 0.62)
-
-                    ColumnLayout {
-                        id: cardRowContent
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        spacing: 3
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 7
-
-                            StyledText {
-                                text: String(cardRow.modelData?.severity ?? "UNKNOWN").toUpperCase()
-                                font.family: Appearance.font.family.monospace
-                                font.pixelSize: Appearance.font.pixelSize.smallest
-                                font.weight: Font.Bold
-                                color: root._severityColor(String(cardRow.modelData?.severity ?? "UNKNOWN"))
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: String(cardRow.modelData?.title ?? cardRow.modelData?.id ?? "Command-room card")
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                font.weight: Font.DemiBold
-                                color: Appearance.colors.colOnLayer0
-                                elide: Text.ElideRight
-                                maximumLineCount: 1
-                            }
+                        Rectangle {
+                            implicitWidth: 6
+                            implicitHeight: 6
+                            radius: 3
+                            color: root._stageColor(cardRow.stage)
                         }
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: String(cardRow.modelData?.summary ?? "")
-                            font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colSubtext
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                        }
-                    }
-                }
-            }
-
-            Repeater {
-                model: root.visibleTasks
-
-                delegate: Rectangle {
-                    id: taskRow
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-                    implicitHeight: taskContent.implicitHeight + 14
-                    radius: 4
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.34)
-                    border.width: 1
-                    border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
-
-                    ColumnLayout {
-                        id: taskContent
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        spacing: 3
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 7
-
-                            StyledText {
-                                text: "#" + String(taskRow.modelData?.id ?? taskRow.index + 1)
-                                font.family: Appearance.font.family.monospace
-                                font.pixelSize: Appearance.font.pixelSize.smallest
-                                font.weight: Font.Bold
-                                color: Appearance.colors.colPrimary
-                            }
-
-                            StyledText {
-                                text: String(taskRow.modelData?.priority ?? "normal").toUpperCase()
-                                font.family: Appearance.font.family.monospace
-                                font.pixelSize: Appearance.font.pixelSize.smallest
-                                font.weight: Font.DemiBold
-                                font.letterSpacing: 1.1
-                                color: Appearance.colors.colTertiary
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: String(taskRow.modelData?.owner ?? "unassigned")
-                                font.family: Appearance.font.family.monospace
-                                font.pixelSize: Appearance.font.pixelSize.smallest
-                                font.letterSpacing: 1.1
-                                color: Appearance.colors.colSubtext
-                                elide: Text.ElideRight
-                                maximumLineCount: 1
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: String(taskRow.modelData?.title ?? "Untitled command-room task")
+                            text: String(cardRow.modelData?.title ?? cardRow.modelData?.id ?? "Command-room card")
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.DemiBold
                             color: Appearance.colors.colOnLayer0
@@ -422,11 +606,293 @@ AbstractBackgroundWidget {
                             maximumLineCount: 1
                         }
                     }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: String(cardRow.modelData?.summary ?? cardRow.modelData?.owner ?? "")
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        color: Appearance.colors.colSubtext
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+                }
+
+                // Action rail — hover reveal, bottom-right, 150ms fade
+                RowLayout {
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.rightMargin: 6
+                    anchors.bottomMargin: 4
+                    spacing: 2
+                    visible: root.width >= 240
+                    opacity: cardHover.hovered ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                    // Promote — pending and stale only
+                    Rectangle {
+                        visible: cardRow.stage !== "in_progress" && cardRow.stage !== "anomaly"
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: promoteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: promoteHitHover }
+                        TapHandler {
+                            onTapped: {
+                                if (promoteProc.running)
+                                    return
+                                cardRow.flashing = true
+                                flashTimer.start()
+                                promoteProc.running = true
+                            }
+                        }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "play_arrow"
+                            iconSize: 16
+                            color: Appearance.colors.colPrimary
+                        }
+                    }
+
+                    // Log toggle — in_progress + width >= 380
+                    Rectangle {
+                        visible: cardRow.stage === "in_progress" && root.width >= 380
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: logToggleHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: logToggleHover }
+                        TapHandler { onTapped: cardRow.logExpanded = !cardRow.logExpanded }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: cardRow.logExpanded ? "expand_less" : "terminal"
+                            iconSize: 16
+                            color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    // Cancel
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: cancelHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: cancelHitHover }
+                        TapHandler { onTapped: cardRow.cancelPending = !cardRow.cancelPending }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "cancel"
+                            iconSize: 16
+                            color: Appearance.colors.colError
+                        }
+                    }
+                }
+            }
+
+            // Cancel confirmation strip — inline expand, no modal
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: cardRow.cancelPending ? 36 : 0
+                clip: true
+                color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                border.width: cardRow.cancelPending ? 1 : 0
+                border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+                Behavior on implicitHeight { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 20
+
+                    StyledText {
+                        text: "CONFIRM CANCEL"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1
+                        color: Appearance.colors.colError
+                        TapHandler {
+                            onTapped: {
+                                if (cancelProc.running)
+                                    return
+                                cancelProc.running = true
+                            }
+                        }
+                    }
+
+                    StyledText {
+                        text: "KEEP"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.letterSpacing: 1
+                        color: Appearance.colors.colSubtext
+                        TapHandler {
+                            onTapped: {
+                                cancelProc.running = false
+                                cardRow.cancelPending = false
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Session log panel — in_progress only, 5-line scrollable
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: (cardRow.logExpanded && cardRow.stage === "in_progress" && root.width >= 380) ? (5 * 18 + 16) : 0
+                clip: true
+                color: Appearance.colors.colLayer0
+                Behavior on implicitHeight { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+                // Left rail — 2px colPrimary signal
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 2
+                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.3)
+                }
+
+                Flickable {
+                    id: logFlickable
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 4
+                    anchors.topMargin: 8
+                    anchors.bottomMargin: 8
+                    contentHeight: logEntries.implicitHeight
+                    clip: true
+
+                    ColumnLayout {
+                        id: logEntries
+                        width: logFlickable.width
+                        spacing: 2
+
+                        Repeater {
+                            model: {
+                                const log = cardRow.modelData?.log
+                                return Array.isArray(log) ? log.slice(-20) : []
+                            }
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                StyledText {
+                                    text: String(modelData?.ts ?? modelData?.timestamp ?? "")
+                                    font.family: Appearance.font.family.monospace
+                                    font.pixelSize: Appearance.font.pixelSize.smallest
+                                    color: Appearance.colors.colSubtext
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: {
+                                        const raw = modelData
+                                        return typeof raw === "string" ? raw : String(raw?.msg ?? raw?.message ?? "")
+                                    }
+                                    font.family: Appearance.font.family.monospace
+                                    font.pixelSize: Appearance.font.pixelSize.smallest
+                                    color: {
+                                        const m = typeof modelData === "string" ? modelData : String(modelData?.msg ?? modelData?.message ?? "")
+                                        if (/^(ERROR|FAIL|✗)/.test(m))
+                                            return Appearance.colors.colError
+                                        if (/^(WARN|⚠)/.test(m))
+                                            return Appearance.colors.colTertiary
+                                        if (/^(OK|DONE|✓)/.test(m))
+                                            return Appearance.colors.colPrimary
+                                        return Appearance.colors.colOnLayer0
+                                    }
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
+    // ── AddTaskControl ───────────────────────────────────────────────────────
+    component AddTaskControl: Item {
+        id: addTaskCtrl
+        property bool active: false
+        implicitHeight: 32
+
+        Process {
+            id: addProc
+            property string taskTitle: ""
+            command: ["inir-widget-action", "commandroom", "add", "--title", addProc.taskTitle]
+            onExited: (code, status) => {
+                addTaskCtrl.active = false
+                addInput.text = ""
+                CommandRoom.refresh()
+            }
+        }
+
+        // Inactive: dashed affordance
+        Rectangle {
+            anchors.fill: parent
+            visible: !addTaskCtrl.active
+            radius: 2
+            color: "transparent"
+            border.width: 1
+            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.7)
+
+            StyledText {
+                anchors.centerIn: parent
+                text: root.width >= 320 ? "+ ADD TASK" : "+"
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.smallest
+                font.letterSpacing: 1
+                color: Appearance.colors.colSubtext
+            }
+
+            TapHandler {
+                onTapped: {
+                    addTaskCtrl.active = true
+                    addInput.forceActiveFocus()
+                }
+            }
+        }
+
+        // Active: single-line text input
+        Rectangle {
+            anchors.fill: parent
+            visible: addTaskCtrl.active
+            radius: 2
+            color: Appearance.colors.colLayer1
+            border.width: 1
+            border.color: Appearance.colors.colPrimary
+
+            TextInput {
+                id: addInput
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                font.family: Appearance.font.family.monospace
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.colors.colOnLayer0
+                clip: true
+
+                Keys.onReturnPressed: {
+                    if (addInput.text.trim().length > 0 && !addProc.running) {
+                        addProc.taskTitle = addInput.text.trim()
+                        addProc.running = true
+                    }
+                }
+                Keys.onEscapePressed: {
+                    addTaskCtrl.active = false
+                    addInput.text = ""
+                }
+            }
+        }
+    }
+
+    // ── MetricPill (unchanged) ───────────────────────────────────────────────
     component MetricPill: Rectangle {
         required property string label
         required property string value
