@@ -1,5 +1,5 @@
 import qs.modules.cheatsheet
-import "modules/commandRoom" as CommandRoomModule
+import qs.modules.commandRoom
 import qs.modules.lock
 import qs.modules.onScreenKeyboard
 import qs.modules.overview
@@ -51,7 +51,7 @@ Item {
 
     // Shared modules that work with waffle
     PanelLoader { identifier: "iiCheatsheet"; component: Cheatsheet {} }
-    PanelLoader { identifier: "iiCommandRoom"; component: CommandRoomModule.CommandRoomPanel {} }
+    PanelLoader { identifier: "iiCommandRoom"; component: CommandRoomPanel {} }
     PanelLoader { identifier: "iiOnScreenKeyboard"; component: OnScreenKeyboard {} }
     PanelLoader { identifier: "iiOverlay"; component: Overlay {} }
     PanelLoader { identifier: "iiOverview"; component: Overview {} }

@@ -18,9 +18,11 @@ import Quickshell.Hyprland
 Scope {
     id: root
 
-    function open()   { GlobalStates.commandRoomPanelOpen = true }
-    function close()  { GlobalStates.commandRoomPanelOpen = false }
-    function toggle() { GlobalStates.commandRoomPanelOpen = !GlobalStates.commandRoomPanelOpen }
+    property bool panelOpen: false
+
+    function open()   { root.panelOpen = true }
+    function close()  { root.panelOpen = false }
+    function toggle() { root.panelOpen = !root.panelOpen }
 
     IpcHandler {
         target: "commandRoomPanel"
@@ -43,12 +45,12 @@ Scope {
 
     PanelWindow {
         id: window
-        visible: GlobalStates.commandRoomPanelOpen
+        visible: root.panelOpen
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         WlrLayershell.namespace: "quickshell:commandRoomPanel"
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: GlobalStates.commandRoomPanelOpen
+        WlrLayershell.keyboardFocus: root.panelOpen
             ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors { top: true; bottom: true; left: true; right: true }
@@ -58,15 +60,15 @@ Scope {
             anchors.fill: parent
             z: -1
             color: ColorUtils.transparentize(Appearance.m3colors.m3background, 1 - 0.80)
-            opacity: GlobalStates.commandRoomPanelOpen ? 1 : 0
+            opacity: root.panelOpen ? 1 : 0
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
                 NumberAnimation {
-                    duration: GlobalStates.commandRoomPanelOpen
+                    duration: root.panelOpen
                         ? (Appearance.animation.elementMoveEnter.duration)
                         : (Appearance.animation.elementMoveExit.duration)
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: GlobalStates.commandRoomPanelOpen
+                    easing.bezierCurve: root.panelOpen
                         ? Appearance.animationCurves.emphasizedDecel
                         : Appearance.animationCurves.emphasizedAccel
                 }
@@ -102,17 +104,17 @@ Scope {
             border.color: Appearance.colors.colLayer0Border
             radius: Appearance.rounding.windowRounding
 
-            scale: GlobalStates.commandRoomPanelOpen ? 1.0 : 0.95
-            opacity: GlobalStates.commandRoomPanelOpen ? 1 : 0
+            scale: root.panelOpen ? 1.0 : 0.95
+            opacity: root.panelOpen ? 1 : 0
 
             Behavior on scale {
                 enabled: Appearance.animationsEnabled
                 NumberAnimation {
-                    duration: GlobalStates.commandRoomPanelOpen
+                    duration: root.panelOpen
                         ? (Appearance.animation.elementMoveEnter.duration ?? 400)
                         : (Appearance.animation.elementMoveExit.duration ?? 200)
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: GlobalStates.commandRoomPanelOpen
+                    easing.bezierCurve: root.panelOpen
                         ? (Appearance.animationCurves.emphasizedDecel ?? [0.05, 0.7, 0.1, 1, 1, 1])
                         : (Appearance.animationCurves.emphasizedAccel ?? [0.3, 0, 0.8, 0.15, 1, 1])
                 }
@@ -120,18 +122,18 @@ Scope {
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
                 NumberAnimation {
-                    duration: GlobalStates.commandRoomPanelOpen
+                    duration: root.panelOpen
                         ? (Appearance.animation.elementMoveEnter.duration ?? 400)
                         : (Appearance.animation.elementMoveExit.duration ?? 200)
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: GlobalStates.commandRoomPanelOpen
+                    easing.bezierCurve: root.panelOpen
                         ? (Appearance.animationCurves.emphasizedDecel ?? [0.05, 0.7, 0.1, 1, 1, 1])
                         : (Appearance.animationCurves.emphasizedAccel ?? [0.3, 0, 0.8, 0.15, 1, 1])
                 }
             }
 
             Keys.onPressed: event => {
-                if (!GlobalStates.commandRoomPanelOpen) return
+                if (!root.panelOpen) return
                 if (event.key === Qt.Key_Escape) {
                     root.close()
                     event.accepted = true

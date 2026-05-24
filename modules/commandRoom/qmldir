@@ -1,0 +1,2 @@
+module qs.modules.commandRoom
+CommandRoomPanel 1.0 CommandRoomPanel.qml
