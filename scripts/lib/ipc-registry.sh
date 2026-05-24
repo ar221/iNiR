@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: fd43e0993d5e93db
-# Targets: 52
+# IPC.md hash: 6b3c72eaaf07cc3f
+# Targets: 53
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -16,6 +16,7 @@ declare -gA IPC_TARGET_DESC=(
   [clipboard]="Clipboard history panel. Because Ctrl+V only remembers one thing, and that's not enough for power users."
   [cliphistService]="Clipboard history service. The backend that makes clipboard panel work. You probably don't need to call this directly."
   [closeConfirm]="Close window confirmation dialog. Shows a prompt before closing the focused window. Useful if you're the type who accidentally closes things and then regrets it."
+  [commandRoomPanel]="Apollo Command Room cockpit panel. Read-only overlay showing open tasks, running/paused counts, recent events, and anomalies from the command-room projection."
   [contracts]="Slot contracts — the override surface that lets dotfile/plugin authors swap or disable user-facing panels (bar, sidebars, dock, background, mediaControls, lock, controlPanel)."
   [controlPanel]="Quick settings panel. Toggles, sliders, and system controls without opening full settings."
   [courierRail]="Apollo-aligned dock rail. Auto-hides on busy workspaces; the hotkey reveals it as a non-reflowing overlay. Reveal also captures the currently-focused window so preview/restore can route correctly."
@@ -71,6 +72,7 @@ declare -gA IPC_TARGET_FAMILY=(
   [clipboard]="shared"
   [cliphistService]="shared"
   [closeConfirm]="shared"
+  [commandRoomPanel]="shared"
   [contracts]="waffle"
   [controlPanel]="shared"
   [courierRail]="waffle"
@@ -126,6 +128,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [clipboard]="open close toggle"
   [cliphistService]="update"
   [closeConfirm]="trigger close"
+  [commandRoomPanel]="toggle open close"
   [contracts]="list reset"
   [controlPanel]="toggle close open"
   [courierRail]="toggle show hide"
@@ -203,6 +206,9 @@ declare -gA IPC_FUNCTION_DESC=(
   ["cliphistService:update"]="Refresh clipboard history"
   ["closeConfirm:trigger"]="Show close confirmation for focused window"
   ["closeConfirm:close"]="Dismiss the dialog without closing"
+  ["commandRoomPanel:toggle"]="Show or hide the cockpit panel"
+  ["commandRoomPanel:open"]="Open the cockpit panel"
+  ["commandRoomPanel:close"]="Close the cockpit panel"
   ["contracts:list"]="Return current slot state (overridden / disabled / source) as JSON"
   ["contracts:reset"]="Reset every slot to its default source"
   ["controlPanel:toggle"]="Open/close control panel"
@@ -389,8 +395,8 @@ bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(contracts courierRail dictation focus gptProxy osd plugins proxy search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 
@@ -399,6 +405,7 @@ declare -gA IPC_KEBAB_ALIASES=(
   [app-catalog]=appCatalog
   [cliphist-service]=cliphistService
   [close-confirm]=closeConfirm
+  [command-room-panel]=commandRoomPanel
   [control-panel]=controlPanel
   [courier-rail]=courierRail
   [coverflow-selector]=coverflowSelector

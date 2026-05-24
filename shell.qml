@@ -241,7 +241,7 @@ ShellRoot {
     property list<string> families: ["ii", "waffle"]
     property var panelFamilies: ({
         "ii": [
-            "iiBar", "iiBackground", "iiBackdrop", "iiCheatsheet", "iiControlPanel", "iiDock", "iiLock",
+            "iiBar", "iiBackground", "iiBackdrop", "iiCheatsheet", "iiCommandRoom", "iiControlPanel", "iiDock", "iiLock",
             "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard",
             "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners",
             "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar",
@@ -251,7 +251,7 @@ ShellRoot {
             "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wTaskView", "wLock", "wPolkit", "wSessionScreen",
             // Shared modules that work with waffle
             // Note: wAltSwitcher is always loaded when waffle is active (not in this list)
-            "iiCheatsheet", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
+            "iiCheatsheet", "iiCommandRoom", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
             "iiRegionSelector", "iiScreenCorners", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ]
     })

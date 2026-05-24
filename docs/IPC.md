@@ -202,6 +202,23 @@ By default, confirmation is disabled (closes immediately). Enable it in settings
 
 ---
 
+### commandRoomPanel
+
+Apollo Command Room cockpit panel. Read-only overlay showing open tasks, running/paused counts, recent events, and anomalies from the command-room projection.
+
+| Function | Description |
+|----------|-------------|
+| `toggle` | Show or hide the cockpit panel |
+| `open` | Open the cockpit panel |
+| `close` | Close the cockpit panel |
+
+```bash
+qs msg -c inir commandRoomPanel toggle
+qs msg -c inir command-room-panel toggle
+```
+
+---
+
 ### settings
 
 Open the settings panel. GUI config so you don't have to edit JSON like it's 2005.

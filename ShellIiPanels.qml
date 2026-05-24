@@ -1,6 +1,7 @@
 import qs.modules.background
 import qs.modules.bar
 import qs.modules.cheatsheet
+import "modules/commandRoom" as CommandRoomModule
 import qs.modules.controlPanel
 import qs.modules.dock
 import qs.modules.lock
@@ -94,6 +95,7 @@ Item {
     // ── Standard panels (no contract slots) ──
     PanelLoader { identifier: "iiBackdrop"; extraCondition: Config.options?.background?.backdrop?.enable ?? false; component: Backdrop {} }
     PanelLoader { identifier: "iiCheatsheet"; component: Cheatsheet {} }
+    PanelLoader { identifier: "iiCommandRoom"; component: CommandRoomModule.CommandRoomPanel {} }
     PanelLoader { identifier: "iiNotificationPopup"; component: NotificationPopup {} }
     PanelLoader { identifier: "iiOnScreenDisplay"; component: OnScreenDisplay {} }
     PanelLoader { identifier: "iiOnScreenKeyboard"; component: OnScreenKeyboard {} }

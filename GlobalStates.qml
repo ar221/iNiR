@@ -60,6 +60,7 @@ Singleton {
         }
     }
     property bool cheatsheetOpen: false
+    property bool commandRoomPanelOpen: false
     property bool controlPanelOpen: false
     property bool workspaceShowNumbers: false
     property var activeTaskViewMenu: null  // Track which WindowThumbnail has its menu open

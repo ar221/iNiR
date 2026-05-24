@@ -21,8 +21,10 @@ Singleton {
     property var openTasks: []
     property var observability: ({})
     property var anomalies: []
+    property var events: []
     property int openTaskCount: Number(inirCounts?.open_tasks ?? openTasks.length)
     property int runningRunCount: Number(inirCounts?.running_runs ?? observability?.running_runs ?? 0)
+    property int pausedRunCount: Number(inirCounts?.paused_runs ?? observability?.paused_runs ?? 0)
     property int staleRunCount: Number(inirCounts?.stale_runs ?? observability?.stale_runs ?? 0)
     property int pendingApprovalCount: Number(inirCounts?.pending_approvals ?? observability?.pending_approvals ?? 0)
     property int queuedDeliveryCount: Number(inirCounts?.queued_deliveries ?? observability?.queued_deliveries ?? 0)
@@ -63,6 +65,7 @@ Singleton {
         openTasks = []
         observability = ({})
         anomalies = []
+        events = []
     }
 
     function _readArray(value) {
@@ -83,6 +86,7 @@ Singleton {
         openTasks = []
         observability = ({
             running_runs: Number(counts?.running_runs ?? 0),
+            paused_runs: Number(counts?.paused_runs ?? 0),
             stale_runs: Number(counts?.stale_runs ?? 0),
             pending_approvals: Number(counts?.pending_approvals ?? 0),
             queued_deliveries: Number(counts?.queued_deliveries ?? 0),
@@ -90,6 +94,7 @@ Singleton {
             anomaly_count: Number(counts?.anomalies ?? 0)
         })
         anomalies = []
+        events = []
         lastError = ""
         available = true
         retryTimer.stop()
@@ -106,6 +111,7 @@ Singleton {
         openTasks = _readArray(data.open_tasks ?? data.openTasks)
         observability = obs
         anomalies = _readArray(obs.anomalies)
+        events = _readArray(data.recent_events ?? data.events)
         lastError = ""
         available = true
         retryTimer.stop()
