@@ -20,6 +20,7 @@ session-*.md
 
 # AI tool directories
 .agents/
+.codegraph/
 .vera/
 .claude/
 .cursor/
