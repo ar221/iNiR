@@ -12,6 +12,7 @@ Singleton {
     property string primaryPath: Directories.homePath + "/Documents/Ayaz OS/06 System/projections/inir-cards.json"
     property string legacyPath: Directories.homePath + "/.local/state/command-room/cockpit.json"
     property string sourcePath: primaryPath
+    property string runsDir: Directories.homePath + "/.local/state/command-room/runs"
     property bool usingFallback: false
     property bool available: false
     property string lastError: ""
@@ -79,6 +80,19 @@ Singleton {
 
     function _readObject(value) {
         return value && typeof value === "object" && !Array.isArray(value) ? value : ({})
+    }
+
+    function resolveLogPath(taskId) {
+        const id = String(taskId)
+        for (let i = 0; i < cards.length; i++) {
+            if (String(cards[i]?.id) === id && cards[i]?.log_path)
+                return String(cards[i].log_path)
+        }
+        for (let i = 0; i < openTasks.length; i++) {
+            if (String(openTasks[i]?.id) === id && openTasks[i]?.log_path)
+                return String(openTasks[i].log_path)
+        }
+        return ""
     }
 
     function _parseInirCards(envelope) {

@@ -89,6 +89,14 @@ AbstractBackgroundWidget {
         return Appearance.colors.colSubtext
     }
 
+    function _isValidLogPath(p) {
+        const home = Directories.homePath
+        return p.length > 0
+            && (p.startsWith(home + "/.local/state/command-room/")
+                || p.startsWith(home + "/.claude/projects/")
+                || p.startsWith(home + "/Github/inir/.agents/"))
+    }
+
     implicitWidth: cardWidth
     implicitHeight: cardContent.implicitHeight + cardContent.anchors.margins * 2
 
@@ -526,6 +534,8 @@ AbstractBackgroundWidget {
         property bool cancelPending: false
         property bool logExpanded: false
         property bool flashing: false
+        property string resolvedLogPath: ""
+        property var logLines: []
 
         Layout.fillWidth: true
         radius: 4
@@ -562,6 +572,73 @@ AbstractBackgroundWidget {
             interval: 300
             repeat: false
             onTriggered: cardRow.flashing = false
+        }
+
+        // Resolve active run log path via command-room CLI
+        Process {
+            id: resolveProc
+            command: ["command-room", "run", "list",
+                      "--task-id", String(cardRow.modelData?.id ?? ""),
+                      "--status", "running", "--json"]
+            stdout: SplitParser {
+                splitMarker: ""
+                onRead: data => {
+                    try {
+                        const resp = JSON.parse(data)
+                        const runs = resp?.runs ?? []
+                        if (runs.length > 0) {
+                            const lp = runs[0]?.metadata?.dispatch?.log_path
+                            const candidate = (lp && lp.length > 0)
+                                ? lp
+                                : (CommandRoom.runsDir + "/" + runs[0].id + ".log")
+                            cardRow.resolvedLogPath = root._isValidLogPath(candidate) ? candidate : ""
+                        } else {
+                            const fallback = CommandRoom.resolveLogPath(String(cardRow.modelData?.id ?? ""))
+                            cardRow.resolvedLogPath = root._isValidLogPath(fallback) ? fallback : ""
+                        }
+                    } catch (_) {
+                        const fallback = CommandRoom.resolveLogPath(String(cardRow.modelData?.id ?? ""))
+                        cardRow.resolvedLogPath = root._isValidLogPath(fallback) ? fallback : ""
+                    }
+                }
+            }
+        }
+
+        // Poll last 30 lines from the run log
+        Process {
+            id: tailProc
+            stdout: SplitParser {
+                splitMarker: ""
+                onRead: data => {
+                    const raw = data.trimEnd().split("\n")
+                    cardRow.logLines = raw.filter(l => l.length > 0)
+                }
+            }
+        }
+
+        // Drive tailProc while log is expanded and path is resolved
+        Timer {
+            id: logPollTimer
+            interval: 5000
+            repeat: true
+            triggeredOnStart: true
+            running: cardRow.logExpanded && cardRow.resolvedLogPath.length > 0
+                     && cardRow.stage === "in_progress"
+            onTriggered: {
+                if (cardRow.resolvedLogPath.length > 0 && !tailProc.running) {
+                    tailProc.command = ["tail", "-n", "30", cardRow.resolvedLogPath]
+                    tailProc.running = true
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            if (cardRow.stage === "in_progress") {
+                if (cardRow.resolvedLogPath.length > 0 || cardRow.resolvedLogPath === "resolving")
+                    return
+                cardRow.resolvedLogPath = "resolving"
+                resolveProc.running = true
+            }
         }
 
         ColumnLayout {
@@ -654,9 +731,11 @@ AbstractBackgroundWidget {
                         }
                     }
 
-                    // Log toggle — in_progress + width >= 380
+                    // Log toggle — in_progress + width >= 380 + log available or resolving
                     Rectangle {
                         visible: cardRow.stage === "in_progress" && root.width >= 380
+                                 && (resolveProc.running || cardRow.resolvedLogPath.length > 0
+                                     || Array.isArray(cardRow.modelData?.log))
                         width: 32
                         height: 32
                         radius: 2
@@ -769,6 +848,8 @@ AbstractBackgroundWidget {
 
                         Repeater {
                             model: {
+                                if (cardRow.logLines.length > 0)
+                                    return cardRow.logLines
                                 const log = cardRow.modelData?.log
                                 return Array.isArray(log) ? log.slice(-20) : []
                             }
