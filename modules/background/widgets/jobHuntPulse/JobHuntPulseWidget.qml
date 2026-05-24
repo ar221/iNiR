@@ -24,7 +24,7 @@ AbstractBackgroundWidget {
     readonly property bool showApplied: jhpConfig?.showApplied ?? true
     readonly property bool showPackageReady: jhpConfig?.showPackageReady ?? true
     readonly property bool showShortlist: jhpConfig?.showShortlist ?? true
-    readonly property int  refreshIntervalMs: jhpConfig?.refreshIntervalMs ?? 300000
+    readonly property int  refreshIntervalMs: jhpConfig?.refreshIntervalMs ?? 120000
     readonly property string vaultName: jhpConfig?.vaultName ?? "Ayaz OS"
     readonly property point screenPos: root.mapToItem(null, 0, 0)
 
@@ -293,18 +293,8 @@ AbstractBackgroundWidget {
 
                         Repeater {
                             model: _appliedGroup.modelData.items
-                            delegate: PulseRow {
+                            delegate: AppCard {
                                 required property var modelData
-                                Layout.fillWidth: true
-                                variant: "applied"
-                                company: modelData.company ?? ""
-                                role: modelData.role ?? ""
-                                status: modelData.status ?? ""
-                                notes: modelData.notes ?? ""
-                                dateStr: modelData.date ?? ""
-                                passive: modelData.is_passive === true
-                                obsidianPath: root.pathSprint
-                                vaultName: root.vaultName
                             }
                         }
                     }
@@ -400,6 +390,258 @@ AbstractBackgroundWidget {
                         priorityTag: modelData.priority ?? ""
                         obsidianPath: root.pathShortlist
                         vaultName: root.vaultName
+                    }
+                }
+            }
+        }
+    }
+
+    // — Applied entry card with action rail (promote / cancel / add-note) —
+    // Mirror: CommandRoomWidget.qml:529-815 (CardRow pattern)
+    component AppCard: Item {
+        id: appCard
+        required property var modelData
+
+        // Derived ID — job-pulse uses `num` field (sequential row); fallback to company-role slug.
+        readonly property string entryId: {
+            const n = String(modelData?.num ?? "")
+            if (n.length > 0)
+                return n
+            return String(modelData?.company ?? "") + "-" + String(modelData?.role ?? "")
+        }
+
+        property bool cancelPending: false
+        property bool noteMode: false
+        property string noteText: ""
+
+        Layout.fillWidth: true
+        implicitHeight: _appCardCol.implicitHeight
+
+        HoverHandler { id: appHover }
+
+        // Promote: advance application stage (fire-and-forget)
+        Process {
+            id: promoteProc
+            command: ["inir-widget-action", "jobhunt", "promote-app", "--id", appCard.entryId]
+            onExited: (code, status) => {
+                root.fetchPulse()
+            }
+        }
+
+        // Cancel: mark cancelled (requires confirmation strip)
+        Process {
+            id: cancelProc
+            command: ["inir-widget-action", "jobhunt", "cancel-app", "--id", appCard.entryId]
+            onExited: (code, status) => {
+                appCard.cancelPending = false
+                root.fetchPulse()
+            }
+        }
+
+        // Add note: command set imperatively in Enter handler to include payload
+        Process {
+            id: addNoteProc
+            onExited: (code, status) => {
+                appCard.noteMode = false
+                appCard.noteText = ""
+                root.fetchPulse()
+            }
+        }
+
+        ColumnLayout {
+            id: _appCardCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            spacing: 0
+
+            // PulseRow display + action rail overlay
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: _pulseRow.implicitHeight
+
+                PulseRow {
+                    id: _pulseRow
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    variant: "applied"
+                    company: appCard.modelData?.company ?? ""
+                    role: appCard.modelData?.role ?? ""
+                    status: appCard.modelData?.status ?? ""
+                    notes: appCard.modelData?.notes ?? ""
+                    dateStr: appCard.modelData?.date ?? ""
+                    passive: appCard.modelData?.is_passive === true
+                    obsidianPath: root.pathSprint
+                    vaultName: root.vaultName
+                }
+
+                // Action rail — hover reveal, right edge, 150ms fade
+                RowLayout {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: 6
+                    spacing: 2
+                    visible: root.width >= 240
+                    opacity: appHover.hovered ? 1 : 0
+                    Behavior on opacity {
+                        NumberAnimation { duration: 150 }
+                    }
+
+                    // Promote
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: promoteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: promoteHitHover }
+                        TapHandler {
+                            onTapped: {
+                                if (promoteProc.running)
+                                    return
+                                promoteProc.running = true
+                            }
+                        }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "play_arrow"
+                            iconSize: 16
+                            color: Appearance.colors.colPrimary
+                        }
+                    }
+
+                    // Add note
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: noteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: noteHitHover }
+                        TapHandler {
+                            onTapped: {
+                                appCard.cancelPending = false
+                                appCard.noteMode = !appCard.noteMode
+                            }
+                        }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "add_comment"
+                            iconSize: 16
+                            color: Appearance.colors.colSubtext
+                        }
+                    }
+
+                    // Cancel
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 2
+                        color: cancelHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        HoverHandler { id: cancelHitHover }
+                        TapHandler {
+                            onTapped: {
+                                appCard.noteMode = false
+                                appCard.cancelPending = !appCard.cancelPending
+                            }
+                        }
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "cancel"
+                            iconSize: 16
+                            color: Appearance.colors.colError
+                        }
+                    }
+                }
+            }
+
+            // Cancel confirmation strip — inline expand, no modal
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: appCard.cancelPending ? 36 : 0
+                clip: true
+                color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                border.width: appCard.cancelPending ? 1 : 0
+                border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+                Behavior on implicitHeight {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 20
+
+                    StyledText {
+                        text: "CONFIRM CANCEL"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1
+                        color: Appearance.colors.colError
+                        TapHandler {
+                            onTapped: {
+                                if (cancelProc.running)
+                                    return
+                                cancelProc.running = true
+                            }
+                        }
+                    }
+
+                    StyledText {
+                        text: "KEEP"
+                        font.family: Appearance.font.family.monospace
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.letterSpacing: 1
+                        color: Appearance.colors.colSubtext
+                        TapHandler {
+                            onTapped: {
+                                cancelProc.running = false
+                                appCard.cancelPending = false
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Note input strip — inline TextInput, Enter submits, Escape cancels
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: appCard.noteMode ? 36 : 0
+                clip: true
+                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.6)
+                border.width: appCard.noteMode ? 1 : 0
+                border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.55)
+                Behavior on implicitHeight {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
+
+                TextInput {
+                    id: _noteInput
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    text: appCard.noteText
+                    font.family: Appearance.font.family.monospace
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: Appearance.colors.colOnLayer0
+                    placeholderText: "add note…"
+                    placeholderTextColor: Appearance.colors.colSubtext
+                    clip: true
+                    onTextChanged: appCard.noteText = text
+                    Keys.onReturnPressed: {
+                        if (addNoteProc.running || appCard.noteText.length === 0)
+                            return
+                        addNoteProc.command = [
+                            "inir-widget-action", "jobhunt", "add-note",
+                            "--id", appCard.entryId,
+                            "--data", JSON.stringify({note: appCard.noteText})
+                        ]
+                        addNoteProc.running = true
+                    }
+                    Keys.onEscapePressed: {
+                        appCard.noteText = ""
+                        appCard.noteMode = false
                     }
                 }
             }
