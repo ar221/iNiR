@@ -216,6 +216,28 @@ qs msg -c inir commandroom triggerRefresh
 
 ---
 
+### widget
+
+Widget-level refresh dispatcher. Routes a refresh request to the named widget's backing service or data source.
+
+| Function | Description |
+|----------|-------------|
+| `refresh <name>` | Trigger an immediate data refresh for the named widget |
+
+Accepted `name` values:
+
+| Name | Effect |
+|------|--------|
+| `commandroom` | Calls `CommandRoom.refresh()` — reloads the projection file |
+| `jobhunt` | Re-runs `job-pulse --no-mail --json` in `JobHuntPulseWidget` |
+
+```bash
+inir widget refresh commandroom
+inir widget refresh jobhunt
+```
+
+---
+
 ### commandRoomPanel
 
 Apollo Command Room cockpit panel. Read-only overlay showing open tasks, running/paused counts, recent events, and anomalies from the command-room projection.

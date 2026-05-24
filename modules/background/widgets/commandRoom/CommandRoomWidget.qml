@@ -525,6 +525,15 @@ AbstractBackgroundWidget {
         }
     }
 
+    // 60s fallback refresh — belt-and-suspenders poll since the widget itself
+    // has no polling timer (relies on FileView inotify + service retryTimer).
+    Timer {
+        running: root.visible
+        interval: 60000
+        repeat: true
+        onTriggered: CommandRoom.refresh()
+    }
+
     // ── CardRow ─────────────────────────────────────────────────────────────
     component CardRow: Rectangle {
         id: cardRow

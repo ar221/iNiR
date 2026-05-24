@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: b6afe84ba7231030
-# Targets: 54
+# IPC.md hash: 8fe95ef325dac7d9
+# Targets: 55
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -56,6 +56,7 @@ declare -gA IPC_TARGET_DESC=(
   [waffleAltSwitcher]="Waffle Alt+Tab window switcher. Separate from the ii \`altSwitcher\` — supports quick-switch (first tab switches instantly, second opens UI) and no-visual-UI mode."
   [wallpaperSelector]="Wallpaper picker grid."
   [wbar]="Waffle taskbar visibility."
+  [widget]="Widget-level refresh dispatcher. Routes a refresh request to the named widget's backing service or data source."
   [wnotificationCenter]="Waffle notification center."
   [wwidgets]="Waffle widgets panel."
   [ytmusic]="Direct YtMusic player control. Use these if you want to control YtMusic specifically, regardless of what other players are active."
@@ -113,6 +114,7 @@ declare -gA IPC_TARGET_FAMILY=(
   [waffleAltSwitcher]="waffle"
   [wallpaperSelector]="shared"
   [wbar]="waffle"
+  [widget]="shared"
   [wnotificationCenter]="waffle"
   [wwidgets]="waffle"
   [ytmusic]="shared"
@@ -170,6 +172,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [waffleAltSwitcher]="open close toggle next previous"
   [wallpaperSelector]="toggle open close toggleOnMonitor random"
   [wbar]="toggle close open"
+  [widget]="refresh"
   [wnotificationCenter]="toggle"
   [wwidgets]="toggle close open"
   [ytmusic]="playPause next previous stop"
@@ -344,6 +347,7 @@ declare -gA IPC_FUNCTION_DESC=(
   ["wbar:toggle"]="Show/hide taskbar"
   ["wbar:close"]="Hide taskbar"
   ["wbar:open"]="Show taskbar"
+  ["widget:refresh"]="Trigger an immediate data refresh for the named widget"
   ["wnotificationCenter:toggle"]="Open/close notification center"
   ["wwidgets:toggle"]="Open/close widgets"
   ["wwidgets:close"]="Close widgets"
@@ -370,6 +374,7 @@ declare -gA IPC_FUNCTION_ARGS=(
   ["panelFamily:set"]="<family>"
   ["settings:page"]="<name>"
   ["wallpaperSelector:toggleOnMonitor"]="<monitorName>"
+  ["widget:refresh"]="<name>"
 )
 
 declare -gA IPC_TARGET_EXAMPLE=(
@@ -399,8 +404,8 @@ bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar widget wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector widget ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(contracts courierRail dictation focus gptProxy osd plugins proxy search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 

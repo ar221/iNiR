@@ -45,6 +45,15 @@ AbstractBackgroundWidget {
         }
     }
 
+    // 60s fallback — re-asserts the lease if it was somehow dropped; no-op
+    // when already acquired (Weather service owns the 10min fetch cadence).
+    Timer {
+        running: root.visible
+        interval: 60000
+        repeat: true
+        onTriggered: root._syncWeatherLease()
+    }
+
     StyledDropShadow {
         target: backgroundShape
     }

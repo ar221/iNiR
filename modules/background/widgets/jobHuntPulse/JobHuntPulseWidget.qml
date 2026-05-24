@@ -10,6 +10,7 @@ import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
 import qs.modules.common.functions
 import qs.modules.background.widgets
+import qs.services
 
 // Job Hunt Pulse — vertical pipeline card on the desktop background.
 // Sourced from `job-pulse --no-mail --json` (Process subprocess).
@@ -721,5 +722,13 @@ AbstractBackgroundWidget {
         interval: 60000
         repeat: true
         onTriggered: root._freshnessTick++
+    }
+
+    // IPC bridge — `inir widget refresh jobhunt` triggers a re-poll
+    Connections {
+        target: WidgetIpc
+        function onJobHuntRefreshRequested() {
+            root.fetchPulse()
+        }
     }
 }
