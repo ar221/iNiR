@@ -187,7 +187,7 @@ Variants {
                 asynchronous: true
                 cache: false
                 smooth: true
-                mipmap: true
+                mipmap: false
                 visible: !backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif
                 playing: visible && backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive
 
@@ -271,7 +271,7 @@ Variants {
                 asynchronous: true
                 cache: false
                 smooth: true
-                mipmap: true
+                mipmap: false
                 visible: backdropWindow.useAuroraStyle && status === Image.Ready && !backdropWindow.wallpaperIsGif && !backdropWindow.wallpaperIsVideo
                 // Constrain decoded size — aurora is heavily blurred, screen res is enough.
                 sourceSize.width: backdropWindow.screen?.width ?? 1920
@@ -300,7 +300,7 @@ Variants {
                 asynchronous: true
                 cache: false
                 smooth: true
-                mipmap: true
+                mipmap: false
                 visible: backdropWindow.useAuroraStyle && backdropWindow.wallpaperIsGif
                 playing: visible && backdropWindow.enableAnimation && !GlobalStates.screenLocked && !Appearance._gameModeActive
 

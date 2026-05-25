@@ -785,8 +785,12 @@ Variants {
                             : bgRoot.fillMode === "center" ? Image.Pad
                             : Image.PreserveAspectCrop
                     sourceSize {
-                        width: Math.round((bgRoot.externalMainWallpaperActive ? bgRoot.screen.width : bgRoot.scaledWallpaperWidth) * (bgRoot.monitor?.scale ?? 1))
-                        height: Math.round((bgRoot.externalMainWallpaperActive ? bgRoot.screen.height : bgRoot.scaledWallpaperHeight) * (bgRoot.monitor?.scale ?? 1))
+                        // Decode at screen resolution × monitor DPI scale. Do NOT multiply by
+                        // the parallax effectiveWallpaperScale (via scaledWallpaperWidth) — that
+                        // causes CPU upscaling which produces pixelation. GPU scaling handles the
+                        // parallax zoom cleanly.
+                        width: Math.max(1, Math.round(bgRoot.screen.width * (bgRoot.monitor?.scale ?? 1)))
+                        height: Math.max(1, Math.round(bgRoot.screen.height * (bgRoot.monitor?.scale ?? 1)))
                     }
 
                     onTransitionStarted: {
