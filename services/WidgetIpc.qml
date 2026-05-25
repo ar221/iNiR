@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.services
 
 // WidgetIpc - IPC surface for widget-level refresh operations.

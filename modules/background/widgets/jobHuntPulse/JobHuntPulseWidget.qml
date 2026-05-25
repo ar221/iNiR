@@ -626,8 +626,6 @@ AbstractBackgroundWidget {
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: Appearance.colors.colOnLayer0
-                    placeholderText: "add note…"
-                    placeholderTextColor: Appearance.colors.colSubtext
                     maximumLength: 280
                     clip: true
                     onTextChanged: appCard.noteText = text
