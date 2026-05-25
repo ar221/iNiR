@@ -1035,39 +1035,42 @@ Variants {
                 z: 20
                 enabled: !GlobalStates.screenLocked  // Disable all widget input during lock
                 readonly property bool useParallax: wallpaperContainer.useParallax && !bgRoot.backdropActive
+                // Disable parallax transform when locked/safe/backdrop. This single gate
+                // replaces the old "centered" State that zeroed the anchor margins.
+                readonly property bool _parallaxActive: useParallax
+                    && !GlobalStates.screenLocked && !bgRoot.wallpaperSafetyTriggered && !bgRoot.backdropActive
+                // Parallax offset exposed as named props so it is a single source of truth for
+                // BOTH the Translate (visual) and the canvasOffsetX/Y fed to widgets (clamp).
+                // Previously this lived in anchor leftMargin/topMargin and widgets read
+                // widgetCanvas.x — but with a Translate, x stays 0, so widgets must read these.
+                readonly property real parallaxOffsetX: _parallaxActive ? (bgRoot.parallaxTotalX * wallpaperContainer.activeValueX * (1 - bgRoot.parallaxWidgetDepth)) : 0
+                readonly property real parallaxOffsetY: _parallaxActive ? (bgRoot.parallaxTotalY * wallpaperContainer.activeValueY * (1 - bgRoot.parallaxWidgetDepth)) : 0
                 anchors {
-                    left: useParallax ? wallpaperContainer.left : parent.left
-                    right: useParallax ? wallpaperContainer.right : parent.right
-                    top: useParallax ? wallpaperContainer.top : parent.top
-                    bottom: useParallax ? wallpaperContainer.bottom : parent.bottom
-                    readonly property real parallaxFactor: bgRoot.parallaxWidgetDepth
-                    leftMargin: useParallax ? (bgRoot.parallaxTotalX * wallpaperContainer.activeValueX * (1 - parallaxFactor)) : 0
-                    topMargin: useParallax ? (bgRoot.parallaxTotalY * wallpaperContainer.activeValueY * (1 - parallaxFactor)) : 0
-                    Behavior on leftMargin {
+                    left: parent.left
+                    right: parent.right
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                // Parallax widget depth: translate the canvas as a whole to create layered
+                // movement relative to the wallpaper. GPU transform — no CPU resize/reanchor.
+                transform: Translate {
+                    x: widgetCanvas.parallaxOffsetX
+                    y: widgetCanvas.parallaxOffsetY
+                    Behavior on x {
                         enabled: Appearance.animationsEnabled
                             && ((!bgRoot.parallaxTransitionActive && bgRoot.parallaxResumeProgress >= 1)
                                 || bgRoot._parallaxWaitingCrossfader)
                         animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                     }
-                    Behavior on topMargin {
+                    Behavior on y {
                         enabled: Appearance.animationsEnabled
                             && ((!bgRoot.parallaxTransitionActive && bgRoot.parallaxResumeProgress >= 1)
                                 || bgRoot._parallaxWaitingCrossfader)
                         animation: NumberAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
                     }
                 }
-                width: useParallax ? wallpaperContainer.width : parent.width
-                height: useParallax ? wallpaperContainer.height : parent.height
-                states: State {
-                    name: "centered"
-                    when: GlobalStates.screenLocked || bgRoot.wallpaperSafetyTriggered || bgRoot.backdropActive
-                    PropertyChanges { target: widgetCanvas; width: parent.width; height: parent.height }
-                    AnchorChanges { target: widgetCanvas; anchors { left: undefined; right: undefined; top: undefined; bottom: undefined } }
-                }
-                transitions: Transition {
-                    PropertyAnimation { properties: "width,height"; duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
-                    AnchorAnimation { duration: Appearance.animation.elementMove.duration; easing.type: Appearance.animation.elementMove.type; easing.bezierCurve: Appearance.animation.elementMove.bezierCurve }
-                }
+                width: parent.width
+                height: parent.height
 
                 FadeLoader {
                     shown: bgRoot.backgroundWidgetsOptions.weather?.enable ?? true
@@ -1077,8 +1080,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1091,8 +1094,8 @@ Variants {
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
                         wallpaperSafetyTriggered: bgRoot.wallpaperSafetyTriggered
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1104,8 +1107,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1121,8 +1124,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1134,8 +1137,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1147,8 +1150,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1160,8 +1163,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1173,8 +1176,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1186,8 +1189,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1199,8 +1202,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1212,8 +1215,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1225,8 +1228,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1238,8 +1241,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1251,8 +1254,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1264,8 +1267,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
 
@@ -1277,8 +1280,8 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        canvasOffsetX: widgetCanvas.x
-                        canvasOffsetY: widgetCanvas.y
+                        canvasOffsetX: widgetCanvas.parallaxOffsetX
+                        canvasOffsetY: widgetCanvas.parallaxOffsetY
                     }
                 }
             }
