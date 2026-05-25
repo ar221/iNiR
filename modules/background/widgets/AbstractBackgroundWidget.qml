@@ -26,6 +26,36 @@ AbstractWidget {
     property real canvasOffsetY: 0
     property bool visibleWhenLocked: false
     property var configEntry: Config.options?.background?.widgets?.[configEntryName] ?? {}
+
+    // ── Per-widget customization affordances (inherited by all widgets) ──
+    // Read via OUR configEntry JsonAdapter accessor — no customWidgetData / nested-path machinery.
+    // Additive only: widgets may opt into scaleFactor etc. later; existing behavior unchanged.
+    readonly property bool locked: Boolean(configEntry?.locked ?? false)
+    // _baseScale: widgetScale (percent) clamped to 0.5–2.0.
+    readonly property real _baseScale: {
+        const v = Number(configEntry?.widgetScale ?? 100);
+        return Math.max(0.5, Math.min(2.0, Number.isFinite(v) ? v / 100 : 1.0));
+    }
+    // scaleFactor: final multiplier for layout dimensions and font sizes, including the
+    // press bump while dragging. Widgets should multiply sizes by this rather than relying
+    // on Item.scale (which causes bitmap blur).
+    readonly property real scaleFactor: ((draggable && containsPress) ? 1.05 : 1.0) * _baseScale
+    readonly property real widgetOpacity: {
+        const v = Number(configEntry?.widgetOpacity ?? 100);
+        return Math.max(0, Math.min(1, Number.isFinite(v) ? v / 100 : 1.0));
+    }
+    readonly property bool showBackground: configEntry?.showBackground ?? true
+    readonly property bool useBlur: configEntry?.useBlur ?? false
+    readonly property bool showBorder: configEntry?.showBorder ?? true
+    readonly property real backgroundOpacity: {
+        const v = configEntry?.backgroundOpacity;
+        return (v !== undefined && v !== null) ? Math.max(0, Math.min(1, Number(v))) : (showBackground ? 0.06 : 0);
+    }
+    readonly property real borderWidth: {
+        const v = configEntry?.borderWidth;
+        return (v !== undefined && v !== null) ? Math.max(0, Math.min(8, Number(v))) : (showBorder ? 1 : 0);
+    }
+
     property string placementStrategy: configEntry.placementStrategy
     function _snapToPixel(value: real): real {
         const numeric = Number(value)
