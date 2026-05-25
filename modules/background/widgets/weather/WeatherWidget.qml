@@ -16,6 +16,8 @@ AbstractBackgroundWidget {
     implicitWidth: backgroundShape.implicitWidth
 
     property bool _weatherLeased: false
+    // single-instance widget — one timer per desktop surface
+    readonly property bool _isTimerOwner: Qt.application !== null
 
     function _syncWeatherLease() {
         const active = root.visible && Weather.enabled
@@ -47,8 +49,10 @@ AbstractBackgroundWidget {
 
     // 60s fallback — re-asserts the lease if it was somehow dropped; no-op
     // when already acquired (Weather service owns the 10min fetch cadence).
+    // _isTimerOwner guard documents the single-instance assumption: two monitor
+    // setups would double the poll rate; acceptable given background widget usage.
     Timer {
-        running: root.visible
+        running: root._isTimerOwner && root.visible
         interval: 60000
         repeat: true
         onTriggered: root._syncWeatherLease()

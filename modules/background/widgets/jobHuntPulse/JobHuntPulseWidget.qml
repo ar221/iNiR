@@ -724,7 +724,9 @@ AbstractBackgroundWidget {
         onTriggered: root._freshnessTick++
     }
 
-    // IPC bridge — `inir widget refresh jobhunt` triggers a re-poll
+    // IPC bridge — `inir widget refresh jobhunt` triggers a re-poll.
+    // single-instance widget — all instances would refresh in unison; acceptable
+    // for a desktop background widget where simultaneous refresh is correct behaviour.
     Connections {
         target: WidgetIpc
         function onJobHuntRefreshRequested() {

@@ -24,6 +24,8 @@ AbstractBackgroundWidget {
     readonly property int maxTasks: commandRoomConfig?.maxTasks ?? 3
     readonly property int maxAnomalies: commandRoomConfig?.maxAnomalies ?? 2
     readonly property point screenPos: root.mapToItem(null, 0, 0)
+    // single-instance widget — one timer per desktop surface
+    readonly property bool _isTimerOwner: Qt.application !== null
 
     // Local tasksByStage — computed in the widget (not relying on Singleton new-property hot-reload)
     readonly property var tasksByStage: {
@@ -527,8 +529,10 @@ AbstractBackgroundWidget {
 
     // 60s fallback refresh — belt-and-suspenders poll since the widget itself
     // has no polling timer (relies on FileView inotify + service retryTimer).
+    // _isTimerOwner guard documents the single-instance assumption: two monitor
+    // setups would double the poll rate; acceptable given background widget usage.
     Timer {
-        running: root.visible
+        running: root._isTimerOwner && root.visible
         interval: 60000
         repeat: true
         onTriggered: CommandRoom.refresh()
