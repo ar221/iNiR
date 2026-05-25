@@ -9,6 +9,7 @@ singleton Autostart 1.0 Autostart.qml
 singleton Battery 1.0 Battery.qml
 singleton BluetoothStatus 1.0 BluetoothStatus.qml
 singleton Brightness 1.0 Brightness.qml
+singleton CavaService 1.0 CavaService.qml
 singleton ClaudeCodeProxy 1.0 ClaudeCodeProxy.qml
 singleton CalendarSync 1.0 CalendarSync.qml
 singleton Cliphist 1.0 Cliphist.qml
