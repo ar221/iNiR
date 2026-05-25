@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Stuff, Findable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F1E6;
+    --panel: #FBF8F0;
+    --ink: #2B2922;
+    --ink-soft: #565246;
+    --sage: #6E7A5A;
+    --sage-deep: #565F44;
+    --clay: #B07A52;
+    --clay-deep: #95603C;
+    --muted: #837C6B;
+    --line: #DCD4C2;
+    --line-soft: #E6DECE;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .sheet {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: clamp(40px, 6vw, 76px) clamp(28px, 5vw, 72px) clamp(48px, 6vw, 80px);
+    background:
+      radial-gradient(140% 60% at 80% -10%, #FCF9F1 0%, transparent 55%),
+      var(--bg);
+  }
+
+  /* ---- shared label / meta ---- */
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sage-deep);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kicker::before {
+    content: "";
+    width: 18px; height: 1px;
+    background: var(--sage);
+    display: inline-block;
+  }
+  .rec-chip {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clay-deep);
+    background: #F0E4D6;
+    border: 1px solid #E2CDB8;
+    border-radius: 999px;
+    padding: 3px 9px 2px;
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .supply-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.01em;
+    color: var(--clay-deep);
+    background: repeating-linear-gradient(45deg, #F4EADF, #F4EADF 6px, #EFE2D2 6px, #EFE2D2 12px);
+    border: 1.5px dashed #C9A87F;
+    border-radius: 7px;
+    padding: 4px 10px;
+    display: inline-block;
+  }
+  .supply-chip b { font-weight: 500; color: var(--clay-deep); }
+
+  /* ============ HERO ============ */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-12);
+    align-items: start;
+    padding-bottom: var(--space-12);
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-name {
+    margin-bottom: var(--space-6);
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .hero-name .wordmark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 19px;
+    color: var(--sage-deep);
+    letter-spacing: 0.01em;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(44px, 6.4vw, 78px);
+    line-height: 0.99;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+    max-width: 13ch;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--sage-deep);
+    font-weight: 500;
+  }
+  .subhead {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(17px, 2vw, 21px);
+    line-height: 1.42;
+    color: var(--muted);
+    margin-top: var(--space-6);
+    max-width: 48ch;
+  }
+  .hero-art {
+    width: clamp(150px, 17vw, 220px);
+    flex-shrink: 0;
+  }
+  .hero-art svg { width: 100%; height: auto; display: block; }
+
+  /* ============ HORMOZI LEVER BAND ============ */
+  .levers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: var(--space-12) 0;
+  }
+  .lever {
+    background: var(--panel);
+    padding: var(--space-6) var(--space-4) var(--space-6);
+    display: flex;
+    flex-direction: column;
+  }
+  .lever p { margin-top: auto; padding-top: 2px; }
+  .lever .ic { color: var(--sage); margin-bottom: 12px; }
+  .lever .ic svg { width: 26px; height: 26px; display: block; }
+  .lever .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clay-deep);
+    margin-bottom: 7px;
+  }
+  .lever h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.12;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .lever p { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+
+  /* ============ SECTION SCAFFOLD ============ */
+  .section { margin: var(--space-12) 0; }
+  .section-head { margin-bottom: var(--space-8); max-width: 60ch; }
+  .section-head h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(28px, 3.4vw, 38px);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin-top: 10px;
+  }
+  .section-head h2 em { font-style: italic; color: var(--sage-deep); }
+
+  /* ============ VALUE STACK (centerpiece) ============ */
+  .value-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: clamp(28px, 4vw, 48px);
+    box-shadow: 0 1px 0 #FFFDF8 inset, 0 24px 48px -36px rgba(86,76,52,0.4);
+  }
+  .value-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1);
+  }
+  .vitem {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-6) var(--space-6) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .vitem:nth-child(odd) { padding-right: var(--space-8); border-right: 1px solid var(--line-soft); padding-left: 0;}
+  .vitem:nth-child(even) { padding-left: var(--space-8); }
+  .value-grid .vitem:nth-last-child(1),
+  .value-grid .vitem:nth-last-child(2) { border-bottom: none; }
+  .vnum {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--clay);
+    padding-top: 5px;
+    font-weight: 500;
+  }
+  .vitem h4 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .vitem p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .vitem .ground {
+    color: var(--sage-deep);
+    font-style: italic;
+    font-family: var(--serif);
+  }
+
+  /* ============ PILOT + GUARANTEE ============ */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: var(--space-8);
+    align-items: stretch;
+  }
+  .card {
+    border-radius: 16px;
+    padding: clamp(24px, 3vw, 36px);
+  }
+  .card-pilot {
+    background: var(--sage-deep);
+    color: #F3F0E5;
+  }
+  .card-pilot .kicker { color: #C9D2B4; }
+  .card-pilot .kicker::before { background: #A9B58C; }
+  .card-pilot h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(24px, 2.8vw, 30px);
+    line-height: 1.08;
+    margin: 14px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .pilot-list { list-style: none; display: grid; gap: 11px; }
+  .pilot-list li {
+    display: grid; grid-template-columns: auto 1fr; gap: 12px;
+    font-size: 14.5px; line-height: 1.4; color: #E5E2D4;
+  }
+  .pilot-list li::before {
+    content: ""; width: 7px; height: 7px; border-radius: 2px;
+    background: var(--clay); margin-top: 7px;
+  }
+  .card-guarantee {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    display: flex; flex-direction: column;
+  }
+  .card-guarantee .kicker { color: var(--clay-deep); }
+  .card-guarantee .kicker::before { background: var(--clay); }
+  .guar-quote {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(20px, 2.4vw, 25px);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin: 14px 0 14px;
+  }
+  .guar-quote em { font-style: italic; color: var(--sage-deep); }
+  .card-guarantee p { font-size: 14px; line-height: 1.55; color: var(--muted); }
+  .meta-row { margin-top: auto; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  /* ============ PRICE ============ */
+  .price-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: var(--space-8); }
+  .ladder {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+  }
+  .tier {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: var(--space-6);
+    display: flex; flex-direction: column;
+  }
+  .tier.feature { border-color: var(--sage); box-shadow: 0 0 0 1px var(--sage); position: relative; }
+  .tier.feature::after {
+    content: "where the value lands";
+    position: absolute; top: -10px; left: 20px;
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--sage); color: #F3F0E5; padding: 3px 9px; border-radius: 999px;
+  }
+  .tier .tname {
+    font-family: var(--serif); font-weight: 600; font-size: 18px; letter-spacing: -0.01em;
+  }
+  .tier .tdesc { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 8px 0 16px; flex-grow: 1; }
+  .tier .tprice {
+    font-family: var(--serif); font-weight: 500; font-size: 27px; color: var(--sage-deep); letter-spacing: -0.01em;
+  }
+  .tier .tprice span { font-size: 14px; color: var(--muted); }
+  .price-note { margin-top: var(--space-6); font-size: 13px; line-height: 1.55; color: var(--muted); max-width: 70ch; }
+  .price-note .supply-chip { margin-top: 6px; }
+
+  /* ============ CTA ============ */
+  .cta {
+    margin: var(--space-12) 0 var(--space-8);
+    background: var(--ink);
+    border-radius: 18px;
+    padding: clamp(32px, 4.5vw, 56px);
+    color: #F4F0E5;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(80% 120% at 50% -20%, rgba(110,122,90,0.45), transparent 60%);
+  }
+  .cta-inner { position: relative; }
+  .cta h2 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(26px, 3.6vw, 38px); line-height: 1.12; letter-spacing: -0.015em;
+    max-width: 22ch; margin: 12px auto 22px;
+  }
+  .cta h2 em { font-style: italic; color: #C9D2B4; }
+  .cta-btn {
+    display: inline-block;
+    background: var(--clay); color: #FBF7EE;
+    font-family: var(--sans); font-weight: 600; font-size: 16px;
+    padding: 16px 34px; border-radius: 999px; text-decoration: none;
+    letter-spacing: 0.005em;
+  }
+  .cta .booking { margin-top: 16px; }
+  .cta .kicker { color: #C9D2B4; justify-content: center; display: flex; }
+  .cta .kicker::before { background: #A9B58C; }
+
+  /* ============ CLOSER ============ */
+  .closer {
+    border: 1.5px solid var(--sage);
+    border-radius: 16px;
+    padding: clamp(26px, 3.5vw, 40px);
+    display: grid; grid-template-columns: auto 1fr; gap: var(--space-6);
+    align-items: center;
+    background: linear-gradient(180deg, #FCF9F1, var(--panel));
+  }
+  .closer .ic { color: var(--sage); }
+  .closer .ic svg { width: 42px; height: 42px; display: block; }
+  .closer p {
+    font-family: var(--serif); font-size: clamp(20px, 2.6vw, 27px); line-height: 1.22; letter-spacing: -0.01em;
+  }
+  .closer p .lead { font-weight: 500; color: var(--ink); }
+  .closer p em { font-style: italic; color: var(--sage-deep); }
+
+  /* ============ FOOTER BADGES ============ */
+  .badges {
+    margin-top: var(--space-12);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: center;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--sage-deep);
+  }
+  .badge svg { width: 16px; height: 16px; color: var(--clay); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; gap: var(--space-8); }
+    .hero-art { width: 130px; order: -1; }
+    h1 { font-size: clamp(38px, 11vw, 52px); }
+    .levers { grid-template-columns: 1fr 1fr; }
+    .value-grid { grid-template-columns: 1fr; }
+    .vitem, .vitem:nth-child(odd), .vitem:nth-child(even) {
+      padding: var(--space-4) 0; border-right: none; border-bottom: 1px solid var(--line-soft);
+    }
+    .value-grid .vitem:last-child { border-bottom: none; }
+    .two-col { grid-template-columns: 1fr; }
+    .ladder { grid-template-columns: 1fr; }
+    .closer { grid-template-columns: 1fr; text-align: left; }
+    .closer .ic svg { width: 34px; height: 34px; }
+    .sheet { padding: 40px 22px 48px; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div>
+      <div class="hero-name">
+        <span class="wordmark">Your Stuff, Findable</span>
+        <span class="rec-chip">Name · recommendation — confirm</span>
+      </div>
+      <h1>You saved it.<br>You just <em>can't find it.</em></h1>
+      <p class="subhead">I set up a private knowledge vault on your machine, then make every note, file, PDF, and screenshot you've ever saved answerable in plain language — from your own material, not the web.</p>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <!-- vault / safe line icon -->
+      <svg viewBox="0 0 200 220" fill="none" stroke="#6E7A5A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="22" y="28" width="156" height="164" rx="14"/>
+        <rect x="40" y="46" width="120" height="128" rx="9" stroke="#B07A52"/>
+        <circle cx="100" cy="110" r="30" stroke="#B07A52"/>
+        <circle cx="100" cy="110" r="9"/>
+        <line x1="100" y1="80" x2="100" y2="92"/>
+        <line x1="100" y1="128" x2="100" y2="140"/>
+        <line x1="70" y1="110" x2="82" y2="110"/>
+        <line x1="118" y1="110" x2="130" y2="110"/>
+        <line x1="33" y1="192" x2="33" y2="206"/>
+        <line x1="167" y1="192" x2="167" y2="206"/>
+        <path d="M52 20 q-10 -2 -14 8" stroke="#B07A52" stroke-width="2.6"/>
+        <circle cx="56" cy="16" r="2.4" fill="#6E7A5A" stroke="none"/>
+        <circle cx="172" cy="60" r="2.4" fill="#B07A52" stroke="none"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- ===== HORMOZI LEVER BAND ===== -->
+  <section class="levers" aria-label="What makes this worth it">
+    <div class="lever">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg></div>
+      <div class="lbl">Dream outcome</div>
+      <h3>It's right there</h3>
+      <p>Ask "what did I save about X?" and get an answer built from your own files — no more twelve open apps.</p>
+    </div>
+    <div class="lever">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/><path d="M3 17.5l2 2 4.5-4.5" opacity="0.5"/></svg></div>
+      <div class="lbl">Likelihood</div>
+      <h3>Grounded, not guessing</h3>
+      <p>Every answer traces back to your source document. If it isn't in your stuff, it won't make it up. I run this exact system daily.</p>
+    </div>
+    <div class="lever">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg></div>
+      <div class="lbl">Time delay</div>
+      <h3>First win in one sitting</h3>
+      <p>A single 1–2 hour session. You leave with a working structure and one real output — not a roadmap.</p>
+    </div>
+    <div class="lever">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5a8.5 8.5 0 1 1-8-8"/><path d="M21 4l-9 9-3-3"/></svg></div>
+      <div class="lbl">Effort</div>
+      <h3>You do almost nothing</h3>
+      <p>No migration homework, no new app to learn. The mess is the starting material. You show up; I do the wiring.</p>
+    </div>
+  </section>
+
+  <!-- ===== VALUE STACK CENTERPIECE ===== -->
+  <section class="section" id="value">
+    <div class="section-head">
+      <span class="kicker">What you get</span>
+      <h2>Everything you've saved becomes <em>one place you can ask.</em></h2>
+    </div>
+    <div class="value-wrap">
+      <div class="value-grid">
+        <div class="vitem">
+          <span class="vnum">01</span>
+          <div>
+            <h4>A home for everything</h4>
+            <p>A clean vault structure organized by project and topic — so "where did I put it" stops being a question.</p>
+          </div>
+        </div>
+        <div class="vitem">
+          <span class="vnum">02</span>
+          <div>
+            <h4>The pile stops rebuilding</h4>
+            <p>A capture inbox gives new material a place to land the moment you save it.</p>
+          </div>
+        </div>
+        <div class="vitem">
+          <span class="vnum">03</span>
+          <div>
+            <h4>Trust what you're looking at</h4>
+            <p>Source tracking on everything — each item knows where it came from, so you can trace it back.</p>
+          </div>
+        </div>
+        <div class="vitem">
+          <span class="vnum">04</span>
+          <div>
+            <h4>Ask in plain language</h4>
+            <p>AI-assisted search and Q&A <span class="ground">grounded in your own files</span> — not a generic web guess.</p>
+          </div>
+        </div>
+        <div class="vitem">
+          <span class="vnum">05</span>
+          <div>
+            <h4>Saved chaos becomes a draft</h4>
+            <p>Brief- and summary-generation turns what you've saved into a usable draft or next-action list — each point traceable.</p>
+          </div>
+        </div>
+        <div class="vitem">
+          <span class="vnum">06</span>
+          <div>
+            <h4>Suggestions with receipts</h4>
+            <p>Writeback proposes additions and connections and shows the evidence — you stay in control of what gets added.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PILOT + GUARANTEE ===== -->
+  <section class="section two-col" id="pilot">
+    <div class="card card-pilot">
+      <span class="kicker">The pilot offer</span>
+      <h3>One 1–2 hour sitting. You walk out with something working.</h3>
+      <ul class="pilot-list">
+        <li>We go through your current notes, files, and research mess</li>
+        <li>Design a simple structure that fits how you actually think</li>
+        <li>Set up capture and source tracking</li>
+        <li>Produce one real output from your own material before we're done</li>
+      </ul>
+    </div>
+    <div class="card card-guarantee">
+      <span class="kicker">Risk reversal <span class="rec-chip">Recommendation — confirm</span></span>
+      <p class="guar-quote">You keep everything we build — <em>no matter what.</em></p>
+      <p>The vault, structure, capture inbox and source tracking all live on your machine and stay yours, working, whether or not you ever hire me again. No platform to get locked out of, no subscription holding your data hostage. And if the first session doesn't produce a working structure and one useful output from your material, you don't move to the full setup — you owe nothing more.</p>
+      <div class="meta-row">
+        <span class="supply-chip"><b>[Ayaz to supply:</b> is the pilot fee refundable if the gate isn't met, or is "keep what we built + no upsell" the full reversal?]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICE ===== -->
+  <section class="section" id="price">
+    <div class="price-head">
+      <span class="kicker">Price — a three-rung ladder</span>
+      <span class="rec-chip">Recommendation — confirm before use</span>
+    </div>
+    <div class="ladder">
+      <div class="tier">
+        <div class="tname">Audit-only</div>
+        <p class="tdesc">The 1–2 hour pilot: review your mess, design the structure, set up capture + source tracking, produce one output.</p>
+        <div class="tprice">$150–250</div>
+      </div>
+      <div class="tier feature">
+        <div class="tname">Full setup</div>
+        <p class="tdesc">Everything in the audit, plus full vault build-out across your real material, Q&A wired and tested, multiple generated outputs.</p>
+        <div class="tprice">$600–1,200</div>
+      </div>
+      <div class="tier">
+        <div class="tname">Setup + retainer</div>
+        <p class="tdesc">Full setup plus ongoing upkeep — monthly maintenance, new-material ingestion, structure tuning.</p>
+        <div class="tprice">+$75–150<span> /mo</span></div>
+      </div>
+    </div>
+    <p class="price-note">Priced as expert done-for-you time, not software. The audit tier sits near impulse-buy territory so the pilot funnels into the full setup.<br>
+      <span class="supply-chip"><b>[Ayaz to supply:</b> your hourly floor and how long a real setup actually takes — this tightens the numbers fast.]</span>
+    </p>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta" id="cta">
+    <div class="cta-inner">
+      <span class="kicker">Send me your mess</span>
+      <h2>Book the 1–2 hour pilot and walk away with a working vault and <em>one real answer pulled from your own files.</em></h2>
+      <a class="cta-btn" href="#">Book the pilot</a>
+      <div class="booking"><span class="supply-chip"><b>[Ayaz to supply:</b> booking method — DM link / Calendly / email / Telegram]</span></div>
+    </div>
+  </section>
+
+  <!-- ===== CLOSER ===== -->
+  <section class="closer" id="closer">
+    <div class="ic" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.5 21h5"/><path d="M9 18c0-1.5-.7-2.3-1.6-3.3A6 6 0 1 1 16.6 14.7C15.7 15.7 15 16.5 15 18"/>
+        <path d="M9 18h6"/>
+      </svg>
+    </div>
+    <p><span class="lead">The goal is not another app.</span> <em>It's making the stuff you already save actually searchable, connected, and useful.</em></p>
+  </section>
+
+  <!-- ===== FOOTER BADGES ===== -->
+  <div class="badges">
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> local-first</span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><circle cx="12" cy="14" r="3"/></svg> source-grounded</span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M17 11l2 2 3-3.5"/></svg> human-guided</span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> first win in one session</span>
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Stuff, Findable — Dispatch Manifest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Courier Console — warm-terminal dispatch board */
+    --void: #14100b;          /* deepest warm black */
+    --coal: #1b150e;          /* base panel */
+    --ash: #241c12;           /* elevated/inset module */
+    --steel: #2f2517;         /* active/hover fill */
+    --line: #3d2f1c;          /* warm hairline */
+    --line-bright: #5a4628;
+
+    --cream: #f1e7d2;         /* primary readable text */
+    --bone: #d8caac;
+    --bronze: #a78a5c;        /* secondary/label */
+    --bronze-dim: #7d6643;
+
+    --amber: #e8a13a;         /* brand / active route / primary action */
+    --amber-deep: #c47e22;
+    --sage: #8fa15f;          /* connected / success / completed */
+    --cyan: #6fb3c4;          /* info / source / provenance */
+    --ember: #d96a3a;         /* alarm / attention */
+
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--void); }
+  body {
+    background: var(--void);
+    color: var(--cream);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(20px,4vw,40px) clamp(14px,3vw,36px) clamp(32px,4vw,56px);
+  }
+
+  /* ===== shared ===== */
+  .mono { font-family: var(--mono); }
+  .lbl {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--bronze);
+  }
+  .panel {
+    background: var(--coal); border: 1px solid var(--line); border-radius: 2px;
+  }
+  /* chips */
+  .rec-chip, .supply-chip {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    border-radius: 2px; padding: 3px 8px; display: inline-block; white-space: nowrap;
+  }
+  .rec-chip { color: var(--ember); background: rgba(217,106,58,0.12); border: 1px solid rgba(217,106,58,0.45); }
+  .supply-chip {
+    font-size: 10.5px; letter-spacing: 0.02em; text-transform: none;
+    color: var(--cyan); background: rgba(111,179,196,0.08);
+    border: 1px dashed rgba(111,179,196,0.5); padding: 4px 9px;
+  }
+  .supply-chip b { color: var(--cyan); font-weight: 600; }
+  .dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+  /* ===== manifest header bar ===== */
+  .manifest-bar {
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+    border:1px solid var(--line-bright); border-bottom:none; border-radius:2px 2px 0 0;
+    background: var(--ash); padding: 10px 16px;
+  }
+  .manifest-bar .seg { display:flex; align-items:center; gap:8px; }
+  .manifest-bar .seg .k { color: var(--bronze-dim); }
+  .manifest-bar .seg .v { font-family: var(--mono); font-size:11px; color: var(--bone); letter-spacing:0.04em; }
+  .manifest-bar .spacer { flex:1; }
+  .stamp {
+    margin-left:auto; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.12em;
+    color: var(--amber); border:1px solid var(--amber-deep); border-radius:2px; padding:3px 9px;
+    text-transform:uppercase;
+  }
+
+  /* ===== hero ===== */
+  .hero {
+    border:1px solid var(--line-bright); border-radius:0 0 2px 2px;
+    background:
+      repeating-linear-gradient(to bottom, rgba(232,161,58,0.025) 0 1px, transparent 1px 4px),
+      var(--coal);
+    padding: clamp(24px,4vw,44px);
+    display:grid; grid-template-columns: 1fr auto; gap: var(--s8); align-items:start;
+  }
+  .hero .docket { font-family:var(--mono); font-size:11px; color:var(--bronze); letter-spacing:0.1em; margin-bottom:14px; }
+  .hero .docket b { color: var(--amber); font-weight:600; }
+  h1 {
+    font-family: var(--mono); font-weight:700;
+    font-size: clamp(30px,4.6vw,52px); line-height:1.04; letter-spacing:-0.01em;
+    color: var(--cream); text-transform:uppercase; max-width: 14ch;
+  }
+  h1 em { font-style:normal; color: var(--amber); }
+  .subhead { margin-top: var(--s6); font-size: clamp(14px,1.5vw,16px); line-height:1.5; color: var(--bone); max-width:52ch; }
+  .subhead b { color: var(--cream); font-weight:600; }
+  .hero-stamp {
+    border:1px solid var(--line); border-radius:2px; background:var(--ash);
+    padding:14px; min-width:158px; align-self:start;
+  }
+  .hero-stamp .lbl { display:block; margin-bottom:8px; }
+  .hero-stamp .row { display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:11px; }
+  .hero-stamp .row:last-child{ border-bottom:none; }
+  .hero-stamp .row .rk { color: var(--bronze); }
+  .hero-stamp .row .rv { color: var(--bone); }
+  .hero-stamp .row .rv.ok { color: var(--sage); }
+
+  /* ===== section scaffold ===== */
+  .section { margin-top: var(--s12); }
+  .sec-head { display:flex; align-items:center; gap:12px; margin-bottom: var(--s4); padding-bottom:8px; border-bottom:1px solid var(--line); }
+  .sec-head .num { font-family:var(--mono); font-size:11px; color:var(--amber); font-weight:700; }
+  .sec-head h2 { font-family:var(--mono); font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream); }
+  .sec-head .tail { flex:1; height:1px; background:var(--line); }
+  .sec-head .meta { font-family:var(--mono); font-size:10px; color:var(--bronze-dim); letter-spacing:0.08em; }
+
+  /* ===== lever route cards ===== */
+  .levers { display:grid; grid-template-columns: repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:2px; }
+  .lever { background:var(--coal); padding: var(--s4) var(--s4) var(--s6); display:flex; flex-direction:column; }
+  .lever .route { display:flex; align-items:center; gap:7px; margin-bottom:12px; }
+  .lever .route .lbl { font-size:9.5px; letter-spacing:0.12em; }
+  .lever h3 { font-family:var(--mono); font-weight:600; font-size:15px; line-height:1.15; color:var(--cream); margin-bottom:8px; }
+  .lever p { font-size:12.5px; line-height:1.5; color:var(--bronze); margin-top:auto; }
+  .lever p b { color: var(--bone); font-weight:600; }
+
+  /* ===== value stack = line items / manifest ===== */
+  .manifest {
+    border:1px solid var(--line-bright); border-radius:2px; background:var(--coal); overflow:hidden;
+  }
+  .manifest .mhead {
+    display:grid; grid-template-columns: 46px 1fr 184px; gap:12px;
+    background:var(--ash); padding:9px 16px; border-bottom:1px solid var(--line-bright);
+    font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--bronze);
+  }
+  .mrow {
+    display:grid; grid-template-columns: 46px 1fr 184px; gap:12px; align-items:start;
+    padding:14px 16px; border-bottom:1px solid var(--line);
+  }
+  .mrow:last-child { border-bottom:none; }
+  .mrow:nth-child(even){ background: rgba(255,255,255,0.012); }
+  .mrow .ln { font-family:var(--mono); font-size:12px; color:var(--amber); font-weight:600; padding-top:2px; }
+  .mrow .item h4 { font-family:var(--mono); font-weight:600; font-size:14.5px; color:var(--cream); margin-bottom:4px; }
+  .mrow .item p { font-size:13px; line-height:1.5; color:var(--bronze); }
+  .mrow .item p .grnd { color:var(--cyan); }
+  .mrow .receipt {
+    font-family:var(--mono); font-size:10.5px; color:var(--sage); line-height:1.5; word-break:break-word;
+    border-left:2px solid var(--line-bright); padding-left:10px; padding-top:1px;
+  }
+  .mrow .receipt .rt { color: var(--bronze-dim); display:block; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:2px; }
+
+  /* ===== two col: pilot + guarantee ===== */
+  .two-col { display:grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .card { border:1px solid var(--line); border-radius:2px; background:var(--coal); padding: var(--s6); }
+  .card.pilot { border-color: var(--amber-deep); box-shadow: inset 0 0 0 1px rgba(232,161,58,0.12); }
+  .card .ctop { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .card.pilot h3, .card.guar h3 { font-family:var(--mono); font-weight:600; font-size:17px; line-height:1.18; color:var(--cream); margin-bottom:14px; }
+  .pilot-list { list-style:none; display:grid; gap:9px; }
+  .pilot-list li { display:grid; grid-template-columns:auto 1fr; gap:10px; font-size:13px; line-height:1.4; color:var(--bone); font-family:var(--mono); }
+  .pilot-list li .step { color:var(--amber); font-weight:700; }
+  .guar .gquote { font-family:var(--mono); font-weight:600; font-size:16px; line-height:1.25; color:var(--cream); margin-bottom:12px; }
+  .guar .gquote em { font-style:normal; color:var(--sage); }
+  .guar p { font-size:13px; line-height:1.55; color:var(--bronze); margin-bottom:12px; }
+  .guar .supply-chip { margin-top:auto; }
+
+  /* ===== price ladder = route tiers ===== */
+  .ladder { display:grid; grid-template-columns: repeat(3,1fr); gap: var(--s4); }
+  .tier { border:1px solid var(--line); border-radius:2px; background:var(--coal); padding: var(--s6); display:flex; flex-direction:column; position:relative; }
+  .tier.feature { border-color: var(--amber); box-shadow: inset 0 0 0 1px rgba(232,161,58,0.25); }
+  .tier .troute { display:flex; align-items:center; gap:7px; margin-bottom:10px; }
+  .tier .tname { font-family:var(--mono); font-weight:700; font-size:15px; color:var(--cream); text-transform:uppercase; letter-spacing:0.04em; }
+  .tier .tdesc { font-size:12.5px; line-height:1.45; color:var(--bronze); margin:10px 0 16px; flex-grow:1; }
+  .tier .tprice { font-family:var(--mono); font-weight:700; font-size:23px; color:var(--amber); letter-spacing:-0.01em; }
+  .tier .tprice span { font-size:13px; color:var(--bronze); font-weight:500; }
+  .tier .feat-tag { position:absolute; top:-9px; right:14px; font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:var(--amber); color:var(--void); padding:3px 8px; border-radius:2px; }
+  .price-note { margin-top: var(--s6); font-size:12.5px; line-height:1.55; color:var(--bronze); }
+  .price-note .supply-chip { margin-top:8px; }
+
+  /* ===== CTA dispatch ===== */
+  .cta {
+    margin-top: var(--s12); border:1px solid var(--amber-deep); border-radius:2px;
+    background:
+      repeating-linear-gradient(to bottom, rgba(232,161,58,0.03) 0 1px, transparent 1px 5px),
+      var(--ash);
+    padding: clamp(24px,4vw,40px); text-align:center;
+  }
+  .cta .lbl { color:var(--amber); display:inline-flex; align-items:center; gap:8px; }
+  .cta h2 { font-family:var(--mono); font-weight:700; font-size:clamp(19px,2.6vw,26px); line-height:1.2; color:var(--cream); max-width:30ch; margin:14px auto 20px; text-transform:uppercase; letter-spacing:-0.005em; }
+  .cta h2 em { font-style:normal; color:var(--amber); }
+  .cta-btn { display:inline-block; background:var(--amber); color:var(--void); font-family:var(--mono); font-weight:700; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; padding:14px 30px; border-radius:2px; text-decoration:none; }
+  .cta .booking { margin-top:14px; }
+
+  /* ===== closer ===== */
+  .closer { margin-top:var(--s8); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:2px; background:var(--coal); padding: var(--s6); display:flex; gap:16px; align-items:center; }
+  .closer .glyph { font-family:var(--mono); font-size:24px; color:var(--amber); font-weight:700; flex-shrink:0; }
+  .closer p { font-family:var(--mono); font-size:clamp(14px,1.8vw,17px); line-height:1.35; color:var(--bone); }
+  .closer p .lead { color:var(--cream); font-weight:600; }
+  .closer p em { font-style:normal; color:var(--sage); }
+
+  /* ===== footer ledger ===== */
+  .ftr { margin-top: var(--s8); border-top:1px solid var(--line); padding-top: var(--s4); display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; }
+  .ftr .badge { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px; letter-spacing:0.04em; color:var(--bone); }
+  .ftr .badge .dot { width:6px; height:6px; }
+
+  /* ===== responsive: dispatch packet ===== */
+  @media (max-width: 720px) {
+    .hero { grid-template-columns:1fr; gap:var(--s6); }
+    .hero-stamp { width:100%; }
+    .levers { grid-template-columns:1fr; }
+    .lever { padding:14px 16px; }
+    .lever p { margin-top:8px; }
+    .manifest .mhead { display:none; }
+    .mrow { grid-template-columns: 32px 1fr; gap:10px; padding:14px; }
+    .mrow .receipt { grid-column: 1 / -1; border-left:none; border-top:1px solid var(--line); padding-left:0; padding-top:8px; margin-top:8px; }
+    .two-col { grid-template-columns:1fr; }
+    .ladder { grid-template-columns:1fr; }
+    .closer { flex-direction:column; align-items:flex-start; }
+    .manifest-bar { gap:8px 14px; padding:10px 14px; }
+    .manifest-bar .stamp { margin-left:0; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <!-- manifest header bar -->
+  <div class="manifest-bar">
+    <span class="seg"><span class="lbl">DOCKET</span><span class="v">YSF-001</span></span>
+    <span class="seg"><span class="k lbl">SERVICE</span><span class="v">Your Stuff, Findable</span></span>
+    <span class="rec-chip">Name · recommendation — confirm</span>
+    <span class="stamp">● Manifest</span>
+  </div>
+
+  <!-- hero -->
+  <header class="hero">
+    <div>
+      <div class="docket">DISPATCH &middot; <b>private knowledge-vault setup</b> &middot; local-first</div>
+      <h1>You saved it.<br>You just <em>can't find it.</em></h1>
+      <p class="subhead">I set up a <b>private knowledge vault on your machine</b>, then make every note, file, PDF, and screenshot you've ever saved answerable in plain language — from your own material, not the web.</p>
+    </div>
+    <div class="hero-stamp">
+      <span class="lbl">CONSIGNMENT</span>
+      <div class="row"><span class="rk">ORIGIN</span><span class="rv">your mess</span></div>
+      <div class="row"><span class="rk">DEST</span><span class="rv">one vault</span></div>
+      <div class="row"><span class="rk">CUSTODY</span><span class="rv ok">on your machine</span></div>
+      <div class="row"><span class="rk">FIRST WIN</span><span class="rv ok">1 session</span></div>
+    </div>
+  </header>
+
+  <!-- LEVERS -->
+  <section class="section">
+    <div class="sec-head"><span class="num">01</span><h2>Why it's worth it</h2><span class="tail"></span><span class="meta">VALUE EQUATION</span></div>
+    <div class="levers">
+      <div class="lever">
+        <div class="route"><span class="dot" style="background:var(--amber)"></span><span class="lbl">DREAM OUTCOME</span></div>
+        <h3>It's right there</h3>
+        <p>Ask <b>"what did I save about X?"</b> and get an answer built from your own files — no more twelve open apps.</p>
+      </div>
+      <div class="lever">
+        <div class="route"><span class="dot" style="background:var(--cyan)"></span><span class="lbl">LIKELIHOOD</span></div>
+        <h3>Grounded, not guessing</h3>
+        <p>Every answer traces to your source document. If it isn't in your stuff, it won't make it up. <b>I run this exact system daily.</b></p>
+      </div>
+      <div class="lever">
+        <div class="route"><span class="dot" style="background:var(--sage)"></span><span class="lbl">TIME DELAY</span></div>
+        <h3>First win, one sitting</h3>
+        <p>A single <b>1–2 hour session.</b> You leave with a working structure and one real output — not a roadmap.</p>
+      </div>
+      <div class="lever">
+        <div class="route"><span class="dot" style="background:var(--bronze)"></span><span class="lbl">EFFORT</span></div>
+        <h3>You do almost nothing</h3>
+        <p>No migration homework, no new app. <b>The mess is the starting material.</b> You show up; I do the wiring.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUE STACK = MANIFEST -->
+  <section class="section">
+    <div class="sec-head"><span class="num">02</span><h2>What ships — line items</h2><span class="tail"></span><span class="meta">6 ITEMS &middot; ALL RECEIPTED</span></div>
+    <div class="manifest">
+      <div class="mhead"><span>LN</span><span>DELIVERABLE</span><span>RECEIPT</span></div>
+      <div class="mrow">
+        <span class="ln">01</span>
+        <div class="item"><h4>A home for everything</h4><p>Clean vault structure organized by project and topic — so "where did I put it" stops being a question.</p></div>
+        <div class="receipt"><span class="rt">artifact</span>/vault/&lt;project&gt;/&lt;topic&gt;/</div>
+      </div>
+      <div class="mrow">
+        <span class="ln">02</span>
+        <div class="item"><h4>The pile stops rebuilding</h4><p>A capture inbox gives new material a place to land the moment you save it.</p></div>
+        <div class="receipt"><span class="rt">route</span>save → /inbox/ auto-land</div>
+      </div>
+      <div class="mrow">
+        <span class="ln">03</span>
+        <div class="item"><h4>Trust what you're looking at</h4><p>Source tracking on everything — each item knows where it came from, traceable back.</p></div>
+        <div class="receipt"><span class="rt">provenance</span>source:&lt;origin&gt; on every item</div>
+      </div>
+      <div class="mrow">
+        <span class="ln">04</span>
+        <div class="item"><h4>Ask in plain language</h4><p>AI-assisted search and Q&amp;A <span class="grnd">grounded in your own files</span> — not a generic web guess.</p></div>
+        <div class="receipt"><span class="rt">query</span>answer ⊃ your-material only</div>
+      </div>
+      <div class="mrow">
+        <span class="ln">05</span>
+        <div class="item"><h4>Saved chaos becomes a draft</h4><p>Brief- and summary-generation turns what you've saved into a usable draft or next-action list — each point traceable.</p></div>
+        <div class="receipt"><span class="rt">output</span>draft + cited sources</div>
+      </div>
+      <div class="mrow">
+        <span class="ln">06</span>
+        <div class="item"><h4>Suggestions with receipts</h4><p>Writeback proposes additions and connections and shows the evidence — you stay in control of what gets added.</p></div>
+        <div class="receipt"><span class="rt">writeback</span>proposed + evidence shown</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILOT + GUARANTEE -->
+  <section class="section">
+    <div class="sec-head"><span class="num">03</span><h2>The pilot &amp; the reversal</h2><span class="tail"></span><span class="meta">SCOPED RUN</span></div>
+    <div class="two-col">
+      <div class="card pilot">
+        <div class="ctop"><span class="dot" style="background:var(--amber)"></span><span class="lbl">PILOT RUN — 1–2 HR SITTING</span></div>
+        <h3>One sitting. You walk out with something working.</h3>
+        <ul class="pilot-list">
+          <li><span class="step">→</span>Go through your current notes, files, research mess</li>
+          <li><span class="step">→</span>Design a simple structure that fits how you think</li>
+          <li><span class="step">→</span>Set up capture and source tracking</li>
+          <li><span class="step">→</span>Produce one real output from your material before we're done</li>
+        </ul>
+      </div>
+      <div class="card guar">
+        <div class="ctop"><span class="dot" style="background:var(--sage)"></span><span class="lbl">RISK REVERSAL</span><span class="rec-chip">Confirm</span></div>
+        <p class="gquote">You keep everything we build — <em>no matter what.</em></p>
+        <p>Vault, structure, capture inbox, source tracking — all live on your machine and stay yours, working, whether or not you hire me again. No platform to get locked out of, no subscription holding your data hostage. And if the first session doesn't produce a working structure and one useful output from your material, you don't move to the full setup — you owe nothing more.</p>
+        <span class="supply-chip"><b>[Ayaz to supply:</b> is the pilot fee refundable if the gate isn't met, or is "keep what we built + no upsell" the full reversal?]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICE LADDER -->
+  <section class="section">
+    <div class="sec-head"><span class="num">04</span><h2>Route tiers — price ladder</h2><span class="tail"></span><span class="meta"><span class="rec-chip">Recommendation — confirm</span></span></div>
+    <div class="ladder">
+      <div class="tier">
+        <div class="troute"><span class="dot" style="background:var(--bronze)"></span><span class="tname">Audit-only</span></div>
+        <p class="tdesc">The 1–2 hr pilot: review your mess, design the structure, set up capture + source tracking, produce one output.</p>
+        <div class="tprice">$150–250</div>
+      </div>
+      <div class="tier feature">
+        <span class="feat-tag">where value lands</span>
+        <div class="troute"><span class="dot" style="background:var(--amber)"></span><span class="tname">Full setup</span></div>
+        <p class="tdesc">Everything in the audit, plus full vault build-out across your real material, Q&amp;A wired and tested, multiple generated outputs.</p>
+        <div class="tprice">$600–1,200</div>
+      </div>
+      <div class="tier">
+        <div class="troute"><span class="dot" style="background:var(--cyan)"></span><span class="tname">Setup + retainer</span></div>
+        <p class="tdesc">Full setup plus ongoing upkeep — monthly maintenance, new-material ingestion, structure tuning.</p>
+        <div class="tprice">+$75–150<span> /mo</span></div>
+      </div>
+    </div>
+    <p class="price-note">Priced as expert done-for-you time, not software. The audit tier sits near impulse-buy territory so the pilot funnels into the full setup.<br>
+      <span class="supply-chip"><b>[Ayaz to supply:</b> your hourly floor and how long a real setup actually takes — this tightens the numbers fast.]</span>
+    </p>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <span class="lbl">● SEND ME YOUR MESS</span>
+    <h2>Book the 1–2 hour pilot and walk away with a working vault and <em>one real answer from your own files.</em></h2>
+    <a class="cta-btn" href="#">▸ Book the pilot</a>
+    <div class="booking"><span class="supply-chip"><b>[Ayaz to supply:</b> booking method — DM link / Calendly / email / Telegram]</span></div>
+  </section>
+
+  <!-- CLOSER -->
+  <div class="closer">
+    <span class="glyph">⌘</span>
+    <p><span class="lead">The goal is not another app.</span> <em>It's making the stuff you already save actually searchable, connected, and useful.</em></p>
+  </div>
+
+  <!-- FOOTER LEDGER -->
+  <div class="ftr">
+    <span class="badge"><span class="dot" style="background:var(--sage)"></span>LOCAL-FIRST</span>
+    <span class="badge"><span class="dot" style="background:var(--cyan)"></span>SOURCE-GROUNDED</span>
+    <span class="badge"><span class="dot" style="background:var(--amber)"></span>HUMAN-GUIDED</span>
+    <span class="badge"><span class="dot" style="background:var(--bone)"></span>FIRST WIN IN ONE SESSION</span>
+  </div>
+
+</main>
+</body>
+</html>

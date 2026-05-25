@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Stuff, Findable — Field Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Ayaz OS Visual Artifact Standard — cool industrial / CRT field-console */
+    --void:#07080a; --coal:#0c0e12; --ash:#151820; --steel:#222834; --line:#3b4351;
+    --line-soft:#2a313c;
+    --snow:#e8edf2; --fog:#aeb8c4; --muted:#7f8997;
+    --red:#ff3045; --red-deep:#861a25;
+    --cyan:#6bd7ff; --sodium:#d78a32; --amber:#ffb347; --toxic:#b8d96b;
+    --font-ui:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono:"JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { background:var(--void); }
+  body {
+    background:
+      radial-gradient(120% 50% at 50% -5%, rgba(215,138,50,0.06), transparent 60%),
+      var(--void);
+    color:var(--snow); font-family:var(--font-ui); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet { max-width:1100px; margin:0 auto; padding: clamp(18px,3vw,32px) clamp(14px,3vw,36px) clamp(32px,4vw,56px); }
+  .mono { font-family:var(--font-mono); }
+  .lbl { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+  .dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+  .rec-chip, .supply-chip {
+    font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+    border-radius:3px; padding:3px 8px; display:inline-block; white-space:nowrap;
+  }
+  .rec-chip { color:var(--sodium); background:rgba(215,138,50,0.1); border:1px solid rgba(215,138,50,0.4); }
+  .supply-chip { font-size:10.5px; letter-spacing:0.02em; text-transform:none; color:var(--cyan); background:rgba(107,215,255,0.07); border:1px dashed rgba(107,215,255,0.45); padding:4px 9px; }
+  .supply-chip b { color:var(--cyan); font-weight:600; }
+
+  /* ===== status rail ===== */
+  .statusbar {
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px;
+    border:1px solid var(--line); border-radius:4px; background:var(--ash); padding:9px 16px; margin-bottom:var(--s4);
+  }
+  .statusbar .seg { display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:11px; }
+  .statusbar .seg .k { color:var(--muted); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; }
+  .statusbar .seg .v { color:var(--fog); letter-spacing:0.03em; }
+  .statusbar .seg .v.live { color:var(--toxic); }
+  .statusbar .right { margin-left:auto; }
+
+  /* ===== hero ===== */
+  .hero {
+    border:1px solid var(--line); border-radius:4px; background:
+      repeating-linear-gradient(to right, rgba(107,215,255,0.018) 0 3px, transparent 3px 7px),
+      var(--coal);
+    padding:clamp(24px,4vw,44px); display:grid; grid-template-columns:1fr auto; gap:var(--s8); align-items:center;
+  }
+  .hero .eyebrow { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; color:var(--sodium); text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:9px; }
+  h1 { font-family:var(--font-ui); font-weight:700; font-size:clamp(32px,5vw,58px); line-height:1.0; letter-spacing:-0.025em; color:var(--snow); text-transform:uppercase; max-width:13ch; }
+  h1 em { font-style:normal; color:var(--sodium); }
+  .subhead { margin-top:var(--s6); font-size:clamp(14px,1.5vw,16px); line-height:1.5; color:var(--fog); max-width:50ch; }
+  .subhead b { color:var(--snow); font-weight:600; }
+
+  /* CRT mascot tile */
+  .crt { width:clamp(120px,15vw,168px); flex-shrink:0; align-self:center; }
+  .crt svg { width:100%; height:auto; display:block; }
+
+  /* ===== section scaffold ===== */
+  .section { margin-top:var(--s12); }
+  .sec-head { display:flex; align-items:center; gap:12px; margin-bottom:var(--s4); }
+  .sec-head .num { font-family:var(--font-mono); font-size:11px; color:var(--sodium); font-weight:700; }
+  .sec-head h2 { font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--snow); }
+  .sec-head .tail { flex:1; height:1px; background:var(--line-soft); }
+  .sec-head .meta { font-family:var(--font-mono); font-size:10px; color:var(--muted); letter-spacing:0.08em; }
+
+  /* ===== levers = stat tiles ===== */
+  .levers { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s2); }
+  .lever { border:1px solid var(--line-soft); border-top:2px solid var(--accent,var(--sodium)); border-radius:4px; background:var(--coal); padding:var(--s4); display:flex; flex-direction:column; }
+  .lever .top { display:flex; align-items:center; gap:7px; margin-bottom:12px; }
+  .lever .top .lbl { font-size:9.5px; }
+  .lever h3 { font-family:var(--font-ui); font-weight:700; font-size:16px; line-height:1.15; color:var(--snow); margin-bottom:8px; }
+  .lever p { font-size:12.5px; line-height:1.5; color:var(--muted); margin-top:auto; }
+  .lever p b { color:var(--fog); font-weight:600; }
+
+  /* ===== value stack = source ledger ===== */
+  .ledger { border:1px solid var(--line); border-radius:4px; background:var(--coal); overflow:hidden; }
+  .ledger .lhead { display:grid; grid-template-columns:44px 1fr 168px; gap:12px; background:var(--ash); padding:9px 16px; border-bottom:1px solid var(--line); font-family:var(--font-mono); font-size:9.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--fog); }
+  .lrow { display:grid; grid-template-columns:44px 1fr 168px; gap:12px; align-items:start; padding:14px 16px; border-bottom:1px solid var(--line-soft); }
+  .lrow:last-child { border-bottom:none; }
+  .lrow .idx { font-family:var(--font-mono); font-size:12px; color:var(--sodium); font-weight:600; padding-top:2px; }
+  .lrow .body h4 { font-family:var(--font-ui); font-weight:600; font-size:14.5px; color:var(--snow); margin-bottom:4px; }
+  .lrow .body p { font-size:13px; line-height:1.5; color:var(--muted); }
+  .lrow .body p .grnd { color:var(--cyan); }
+  .lrow .src { font-family:var(--font-mono); font-size:10.5px; color:var(--toxic); line-height:1.5; word-break:break-word; border-left:2px solid var(--line); padding-left:10px; padding-top:1px; }
+  .lrow .src .st { color:var(--muted); display:block; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:2px; }
+
+  /* ===== pilot + guarantee ===== */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); }
+  .card { border:1px solid var(--line-soft); border-radius:4px; background:var(--coal); padding:var(--s6); }
+  .card.pilot { border-color:rgba(215,138,50,0.45); border-left:3px solid var(--sodium); }
+  .card .ctop { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .card h3 { font-family:var(--font-ui); font-weight:700; font-size:17px; line-height:1.18; color:var(--snow); margin-bottom:14px; }
+  .pilot-list { list-style:none; display:grid; gap:9px; }
+  .pilot-list li { display:grid; grid-template-columns:auto 1fr; gap:10px; font-size:13px; line-height:1.4; color:var(--fog); font-family:var(--font-mono); }
+  .pilot-list li .step { color:var(--sodium); font-weight:700; }
+  .card.guar { border-left:3px solid var(--toxic); }
+  .guar .gquote { font-family:var(--font-ui); font-weight:700; font-size:18px; line-height:1.25; color:var(--snow); margin-bottom:12px; }
+  .guar .gquote em { font-style:normal; color:var(--toxic); }
+  .guar p { font-size:13px; line-height:1.55; color:var(--muted); margin-bottom:12px; }
+
+  /* ===== price ladder ===== */
+  .ladder3 { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4); }
+  .tier { border:1px solid var(--line-soft); border-radius:4px; background:var(--coal); padding:var(--s6); display:flex; flex-direction:column; position:relative; }
+  .tier.feature { border-color:var(--sodium); box-shadow:inset 0 0 0 1px rgba(215,138,50,0.3); }
+  .tier .troute { display:flex; align-items:center; gap:7px; margin-bottom:10px; }
+  .tier .tname { font-family:var(--font-mono); font-weight:700; font-size:14px; color:var(--snow); text-transform:uppercase; letter-spacing:0.05em; }
+  .tier .tdesc { font-size:12.5px; line-height:1.45; color:var(--muted); margin:10px 0 16px; flex-grow:1; }
+  .tier .tprice { font-family:var(--font-mono); font-weight:700; font-size:23px; color:var(--sodium); letter-spacing:-0.01em; }
+  .tier .tprice span { font-size:13px; color:var(--muted); font-weight:500; }
+  .tier .feat-tag { position:absolute; top:-9px; right:14px; font-family:var(--font-mono); font-size:8.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:var(--sodium); color:var(--void); padding:3px 8px; border-radius:3px; }
+  .price-note { margin-top:var(--s6); font-size:12.5px; line-height:1.55; color:var(--muted); }
+  .price-note .supply-chip { margin-top:8px; }
+
+  /* ===== CTA ===== */
+  .cta { margin-top:var(--s12); border:1px solid var(--sodium); border-radius:4px; background:
+      radial-gradient(90% 130% at 50% -10%, rgba(215,138,50,0.12), transparent 60%), var(--ash);
+    padding:clamp(24px,4vw,40px); text-align:center; }
+  .cta .lbl { color:var(--sodium); display:inline-flex; align-items:center; gap:8px; }
+  .cta h2 { font-family:var(--font-ui); font-weight:700; font-size:clamp(20px,2.8vw,28px); line-height:1.18; color:var(--snow); max-width:28ch; margin:14px auto 20px; text-transform:uppercase; letter-spacing:-0.015em; }
+  .cta h2 em { font-style:normal; color:var(--sodium); }
+  .cta-btn { display:inline-block; background:var(--sodium); color:var(--void); font-family:var(--font-mono); font-weight:700; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; padding:14px 30px; border-radius:3px; text-decoration:none; }
+  .cta .booking { margin-top:14px; }
+
+  /* ===== closer ===== */
+  .closer { margin-top:var(--s8); border:1px solid var(--line-soft); border-left:3px solid var(--cyan); border-radius:4px; background:var(--coal); padding:var(--s6); display:flex; gap:16px; align-items:center; }
+  .closer .glyph { font-family:var(--font-mono); font-size:22px; color:var(--cyan); font-weight:700; flex-shrink:0; }
+  .closer p { font-size:clamp(15px,1.9vw,18px); line-height:1.35; color:var(--fog); }
+  .closer p .lead { color:var(--snow); font-weight:700; }
+  .closer p em { font-style:normal; color:var(--cyan); }
+
+  /* ===== footer ===== */
+  .ftr { margin-top:var(--s8); border-top:1px solid var(--line-soft); padding-top:var(--s4); display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; }
+  .ftr .badge { display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:11px; letter-spacing:0.04em; color:var(--fog); }
+  .ftr .badge .dot { width:6px; height:6px; }
+
+  @media (max-width:720px) {
+    .hero { grid-template-columns:1fr; gap:var(--s6); }
+    .crt { width:96px; }
+    .levers { grid-template-columns:1fr; }
+    .lever p { margin-top:8px; }
+    .ledger .lhead { display:none; }
+    .lrow { grid-template-columns:30px 1fr; gap:10px; padding:14px; }
+    .lrow .src { grid-column:1/-1; border-left:none; border-top:1px solid var(--line-soft); padding-left:0; padding-top:8px; margin-top:8px; }
+    .two-col { grid-template-columns:1fr; }
+    .ladder3 { grid-template-columns:1fr; }
+    .closer { flex-direction:column; align-items:flex-start; }
+    .statusbar { gap:6px 14px; padding:9px 14px; }
+    .statusbar .right { margin-left:0; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <!-- status rail -->
+  <div class="statusbar">
+    <span class="seg"><span class="k">SVC</span><span class="v">your-stuff-findable</span></span>
+    <span class="seg"><span class="k">MODE</span><span class="v">local-first</span></span>
+    <span class="seg"><span class="k">STATE</span><span class="v live">● operational</span></span>
+    <span class="right rec-chip">Name · recommendation — confirm</span>
+  </div>
+
+  <!-- hero -->
+  <header class="hero">
+    <div>
+      <div class="eyebrow"><span class="dot" style="background:var(--sodium)"></span>PRIVATE KNOWLEDGE-VAULT SETUP</div>
+      <h1>You saved it.<br>You just <em>can't find it.</em></h1>
+      <p class="subhead">I set up a <b>private knowledge vault on your machine</b>, then make every note, file, PDF, and screenshot you've ever saved answerable in plain language — from your own material, not the web.</p>
+    </div>
+    <div class="crt" aria-hidden="true">
+      <!-- CRT field-console mascot: eye glyph (inspection / findability), cyan screen -->
+      <svg viewBox="0 0 120 130" fill="none">
+        <rect x="14" y="22" width="92" height="74" rx="5" fill="#0c0e12" stroke="#3b4351" stroke-width="2.4"/>
+        <rect x="22" y="30" width="76" height="58" rx="3" fill="#0a1418" stroke="#222834" stroke-width="1.6"/>
+        <!-- scanlines -->
+        <g stroke="rgba(107,215,255,0.16)" stroke-width="1">
+          <line x1="22" y1="38" x2="98" y2="38"/><line x1="22" y1="46" x2="98" y2="46"/>
+          <line x1="22" y1="54" x2="98" y2="54"/><line x1="22" y1="62" x2="98" y2="62"/>
+          <line x1="22" y1="70" x2="98" y2="70"/><line x1="22" y1="78" x2="98" y2="78"/>
+        </g>
+        <!-- eye glyph -->
+        <path d="M40 59 q20 -18 40 0 q-20 18 -40 0 Z" fill="none" stroke="#6bd7ff" stroke-width="2.6" stroke-linejoin="round"/>
+        <circle cx="60" cy="59" r="7" fill="#6bd7ff"/>
+        <circle cx="60" cy="59" r="2.6" fill="#0a1418"/>
+        <!-- antenna -->
+        <line x1="60" y1="22" x2="60" y2="10" stroke="#3b4351" stroke-width="2.2"/>
+        <circle cx="60" cy="8" r="3" fill="#d78a32"/>
+        <!-- base / ports -->
+        <rect x="34" y="96" width="52" height="9" rx="2" fill="#151820" stroke="#3b4351" stroke-width="1.6"/>
+        <circle cx="44" cy="100.5" r="1.6" fill="#b8d96b"/>
+        <circle cx="52" cy="100.5" r="1.6" fill="#3b4351"/>
+        <line x1="46" y1="105" x2="46" y2="116" stroke="#3b4351" stroke-width="2"/>
+        <line x1="74" y1="105" x2="74" y2="116" stroke="#3b4351" stroke-width="2"/>
+        <line x1="38" y1="116" x2="82" y2="116" stroke="#3b4351" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- LEVERS -->
+  <section class="section">
+    <div class="sec-head"><span class="num">01</span><h2>Why it's worth it</h2><span class="tail"></span><span class="meta">VALUE EQUATION</span></div>
+    <div class="levers">
+      <div class="lever" style="--accent:var(--sodium)">
+        <div class="top"><span class="dot" style="background:var(--sodium)"></span><span class="lbl">DREAM OUTCOME</span></div>
+        <h3>It's right there</h3>
+        <p>Ask <b>"what did I save about X?"</b> and get an answer built from your own files — no more twelve open apps.</p>
+      </div>
+      <div class="lever" style="--accent:var(--cyan)">
+        <div class="top"><span class="dot" style="background:var(--cyan)"></span><span class="lbl">LIKELIHOOD</span></div>
+        <h3>Grounded, not guessing</h3>
+        <p>Every answer traces to your source document. If it isn't in your stuff, it won't make it up. <b>I run this exact system daily.</b></p>
+      </div>
+      <div class="lever" style="--accent:var(--toxic)">
+        <div class="top"><span class="dot" style="background:var(--toxic)"></span><span class="lbl">TIME DELAY</span></div>
+        <h3>First win, one sitting</h3>
+        <p>A single <b>1–2 hour session.</b> You leave with a working structure and one real output — not a roadmap.</p>
+      </div>
+      <div class="lever" style="--accent:var(--fog)">
+        <div class="top"><span class="dot" style="background:var(--fog)"></span><span class="lbl">EFFORT</span></div>
+        <h3>You do almost nothing</h3>
+        <p>No migration homework, no new app. <b>The mess is the starting material.</b> You show up; I do the wiring.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUE STACK = SOURCE LEDGER -->
+  <section class="section">
+    <div class="sec-head"><span class="num">02</span><h2>What you get — source ledger</h2><span class="tail"></span><span class="meta">6 CAPABILITIES</span></div>
+    <div class="ledger">
+      <div class="lhead"><span>#</span><span>CAPABILITY</span><span>SOURCE</span></div>
+      <div class="lrow">
+        <span class="idx">01</span>
+        <div class="body"><h4>A home for everything</h4><p>Clean vault structure organized by project and topic — so "where did I put it" stops being a question.</p></div>
+        <div class="src"><span class="st">scope</span>notes · files · PDFs · shots</div>
+      </div>
+      <div class="lrow">
+        <span class="idx">02</span>
+        <div class="body"><h4>The pile stops rebuilding</h4><p>A capture inbox gives new material a place to land the moment you save it.</p></div>
+        <div class="src"><span class="st">capture</span>auto-land on save</div>
+      </div>
+      <div class="lrow">
+        <span class="idx">03</span>
+        <div class="body"><h4>Trust what you're looking at</h4><p>Source tracking on everything — each item knows where it came from, traceable back.</p></div>
+        <div class="src"><span class="st">provenance</span>origin on every item</div>
+      </div>
+      <div class="lrow">
+        <span class="idx">04</span>
+        <div class="body"><h4>Ask in plain language</h4><p>AI-assisted search and Q&amp;A <span class="grnd">grounded in your own files</span> — not a generic web guess.</p></div>
+        <div class="src"><span class="st">query</span>your-material only</div>
+      </div>
+      <div class="lrow">
+        <span class="idx">05</span>
+        <div class="body"><h4>Saved chaos becomes a draft</h4><p>Brief- and summary-generation turns what you've saved into a usable draft or next-action list — each point traceable.</p></div>
+        <div class="src"><span class="st">output</span>draft + cited sources</div>
+      </div>
+      <div class="lrow">
+        <span class="idx">06</span>
+        <div class="body"><h4>Suggestions with receipts</h4><p>Writeback proposes additions and connections and shows the evidence — you stay in control.</p></div>
+        <div class="src"><span class="st">writeback</span>proposed + evidence</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILOT + GUARANTEE -->
+  <section class="section">
+    <div class="sec-head"><span class="num">03</span><h2>The pilot &amp; the reversal</h2><span class="tail"></span><span class="meta">SCOPED RUN</span></div>
+    <div class="two-col">
+      <div class="card pilot">
+        <div class="ctop"><span class="dot" style="background:var(--sodium)"></span><span class="lbl">PILOT RUN — 1–2 HR SITTING</span></div>
+        <h3>One sitting. You walk out with something working.</h3>
+        <ul class="pilot-list">
+          <li><span class="step">→</span>Go through your current notes, files, research mess</li>
+          <li><span class="step">→</span>Design a simple structure that fits how you think</li>
+          <li><span class="step">→</span>Set up capture and source tracking</li>
+          <li><span class="step">→</span>Produce one real output from your material before we're done</li>
+        </ul>
+      </div>
+      <div class="card guar">
+        <div class="ctop"><span class="dot" style="background:var(--toxic)"></span><span class="lbl">RISK REVERSAL</span><span class="rec-chip">Confirm</span></div>
+        <p class="gquote">You keep everything we build — <em>no matter what.</em></p>
+        <p>Vault, structure, capture inbox, source tracking — all live on your machine and stay yours, working, whether or not you hire me again. No platform to get locked out of, no subscription holding your data hostage. And if the first session doesn't produce a working structure and one useful output from your material, you don't move to the full setup — you owe nothing more.</p>
+        <span class="supply-chip"><b>[Ayaz to supply:</b> is the pilot fee refundable if the gate isn't met, or is "keep what we built + no upsell" the full reversal?]</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICE LADDER -->
+  <section class="section">
+    <div class="sec-head"><span class="num">04</span><h2>Price ladder — three rungs</h2><span class="tail"></span><span class="meta"><span class="rec-chip">Recommendation — confirm</span></span></div>
+    <div class="ladder3">
+      <div class="tier">
+        <div class="troute"><span class="dot" style="background:var(--fog)"></span><span class="tname">Audit-only</span></div>
+        <p class="tdesc">The 1–2 hr pilot: review your mess, design the structure, set up capture + source tracking, produce one output.</p>
+        <div class="tprice">$150–250</div>
+      </div>
+      <div class="tier feature">
+        <span class="feat-tag">where value lands</span>
+        <div class="troute"><span class="dot" style="background:var(--sodium)"></span><span class="tname">Full setup</span></div>
+        <p class="tdesc">Everything in the audit, plus full vault build-out across your real material, Q&amp;A wired and tested, multiple generated outputs.</p>
+        <div class="tprice">$600–1,200</div>
+      </div>
+      <div class="tier">
+        <div class="troute"><span class="dot" style="background:var(--cyan)"></span><span class="tname">Setup + retainer</span></div>
+        <p class="tdesc">Full setup plus ongoing upkeep — monthly maintenance, new-material ingestion, structure tuning.</p>
+        <div class="tprice">+$75–150<span> /mo</span></div>
+      </div>
+    </div>
+    <p class="price-note">Priced as expert done-for-you time, not software. The audit tier sits near impulse-buy territory so the pilot funnels into the full setup.<br>
+      <span class="supply-chip"><b>[Ayaz to supply:</b> your hourly floor and how long a real setup actually takes — this tightens the numbers fast.]</span>
+    </p>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <span class="lbl">● SEND ME YOUR MESS</span>
+    <h2>Book the 1–2 hour pilot and walk away with a working vault and <em>one real answer from your own files.</em></h2>
+    <a class="cta-btn" href="#">▸ Book the pilot</a>
+    <div class="booking"><span class="supply-chip"><b>[Ayaz to supply:</b> booking method — DM link / Calendly / email / Telegram]</span></div>
+  </section>
+
+  <!-- CLOSER -->
+  <div class="closer">
+    <span class="glyph">▣</span>
+    <p><span class="lead">The goal is not another app.</span> <em>It's making the stuff you already save actually searchable, connected, and useful.</em></p>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <span class="badge"><span class="dot" style="background:var(--toxic)"></span>LOCAL-FIRST</span>
+    <span class="badge"><span class="dot" style="background:var(--cyan)"></span>SOURCE-GROUNDED</span>
+    <span class="badge"><span class="dot" style="background:var(--sodium)"></span>HUMAN-GUIDED</span>
+    <span class="badge"><span class="dot" style="background:var(--snow)"></span>FIRST WIN IN ONE SESSION</span>
+  </div>
+
+</main>
+</body>
+</html>
