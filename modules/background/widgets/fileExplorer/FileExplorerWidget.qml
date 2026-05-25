@@ -44,7 +44,7 @@ AbstractBackgroundWidget {
     // Widget card background
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.rounding.unsharpen
+        radius: Appearance.controlPanel.radiusPanel
         color: Appearance.mission.colSurface
         opacity: 0.85
         border.color: Appearance.mission.colBorder

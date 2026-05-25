@@ -974,11 +974,11 @@ Singleton {
 
         readonly property int radiusPanel: root.angelEverywhere ? root.angel.roundingLarge
             : root.inirEverywhere ? root.inir.roundingLarge
-            : commandPreset ? root.courier.radiusMax
+            : commandPreset ? root.courier.radiusStructural
             : root.rounding.large
         readonly property int radiusCard: root.angelEverywhere ? root.angel.roundingNormal
             : root.inirEverywhere ? root.inir.roundingNormal
-            : commandPreset ? root.courier.radiusMax
+            : commandPreset ? root.courier.radiusStructural
             : root.rounding.normal
         readonly property int radiusButton: root.angelEverywhere ? root.angel.roundingSmall
             : root.inirEverywhere ? root.inir.roundingSmall

@@ -44,7 +44,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.rounding.unsharpen
+        radius: Appearance.controlPanel.radiusCard
         color: hoverHandler.hovered
             ? Appearance.mission.colSurfaceHover
             : "transparent"
@@ -90,7 +90,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.rounding.unsharpen
+                radius: Appearance.controlPanel.radiusCard
                 color: root._pillBg
             }
 

@@ -72,7 +72,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.controlPanel.radiusPanel
         color: "transparent"
         clip: true
 
