@@ -27,7 +27,7 @@ ColumnLayout {
         font.pixelSize: 52
         font.family: Appearance.font.family.numbers
         font.weight: Font.Bold
-        color: Appearance.colors.colPrimary
+        color: Appearance.mission.colAccent
     }
 
     // ── Compact date line ──
@@ -42,7 +42,7 @@ ColumnLayout {
         }
         font.pixelSize: Appearance.font.pixelSize.small
         font.weight: Font.Medium
-        color: Appearance.colors.colSubtext
+        color: Appearance.mission.colTextSecondary
     }
 
     // ── Month/Year navigation row ──
@@ -56,13 +56,13 @@ ColumnLayout {
             implicitWidth: 26; implicitHeight: 26
             buttonRadius: 13
             colBackground: "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: calendarView.scrollMonthsAndSnap(-1)
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "chevron_left"
                 iconSize: 16
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
 
@@ -73,20 +73,20 @@ ColumnLayout {
             }
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.DemiBold
-            color: Appearance.colors.colOnLayer0
+            color: Appearance.mission.colText
         }
 
         RippleButton {
             implicitWidth: 26; implicitHeight: 26
             buttonRadius: 13
             colBackground: "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: calendarView.scrollMonthsAndSnap(1)
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "chevron_right"
                 iconSize: 16
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
 
@@ -97,7 +97,7 @@ ColumnLayout {
             text: calendarView.focusedDate.getFullYear().toString()
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.DemiBold
-            color: Appearance.colors.colOnLayer0
+            color: Appearance.mission.colText
         }
     }
 
@@ -127,7 +127,7 @@ ColumnLayout {
                 text: modelData
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
     }
@@ -155,7 +155,7 @@ ColumnLayout {
                 width: 28
                 height: 28
                 radius: 14
-                color: dayDelegate.isToday ? Appearance.colors.colPrimary : "transparent"
+                color: dayDelegate.isToday ? Appearance.mission.colAccent : "transparent"
             }
 
             StyledText {
@@ -164,8 +164,8 @@ ColumnLayout {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: dayDelegate.isToday ? Font.Bold : Font.Normal
                 color: dayDelegate.isToday ? Appearance.colors.colOnPrimary
-                     : dayDelegate.isCurrentMonth ? Appearance.colors.colOnLayer0
-                     : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.6)
+                     : dayDelegate.isCurrentMonth ? Appearance.mission.colText
+                     : Appearance.mission.colTextMuted
             }
         }
     }

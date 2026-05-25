@@ -77,7 +77,17 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: actionRow.implicitHeight + 10
-            color: Appearance.colors.colLayer2
+            color: Appearance.mission.colSurfaceRaised
+            border.width: 0
+
+            // Top separator between file list and action bar
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 1
+                color: Appearance.mission.colBorderSubtle
+            }
 
             RowLayout {
                 id: actionRow

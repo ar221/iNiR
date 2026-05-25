@@ -20,7 +20,8 @@ ColumnLayout {
         font.pixelSize: Appearance.font.pixelSize.smallest
         font.weight: Font.DemiBold
         font.letterSpacing: 2.0
-        color: Appearance.colors.colSubtext
+        font.family: Appearance.font.family.monospace
+        color: Appearance.mission.colTextSecondary
     }
 
     // Disk data model
@@ -28,9 +29,9 @@ ColumnLayout {
 
     // Color per partition index
     readonly property var barColors: [
-        Appearance.colors.colPrimary,
-        Appearance.colors.colSecondary,
-        Appearance.colors.colTertiary
+        Appearance.mission.colAccent,
+        Appearance.mission.colTextSecondary,
+        Appearance.mission.colTextMuted
     ]
 
     Process {
@@ -86,7 +87,7 @@ ColumnLayout {
 
             readonly property color diskColor: {
                 if (diskItem.modelData.percentage > 0.9)
-                    return Appearance.colors.colError
+                    return Appearance.mission.colCritical
                 return root.barColors[diskItem.index % root.barColors.length]
             }
 
@@ -105,7 +106,7 @@ ColumnLayout {
                     text: diskItem.modelData.label
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.Medium
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
 
                 StyledText {
@@ -113,7 +114,7 @@ ColumnLayout {
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.monospace
                     font.weight: Font.Medium
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
 
@@ -122,7 +123,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 8
                 radius: 4
-                color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.3)
+                color: Appearance.mission.colSurface
 
                 Rectangle {
                     width: parent.width * diskItem.modelData.percentage

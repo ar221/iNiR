@@ -44,15 +44,10 @@ AbstractBackgroundWidget {
     // Widget card background
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.rounding.normal
-        color: Appearance.colors.colLayer1
+        radius: Appearance.rounding.unsharpen
+        color: Appearance.mission.colSurface
         opacity: 0.85
-        border.color: Qt.rgba(
-            Appearance.colors.colOutline.r,
-            Appearance.colors.colOutline.g,
-            Appearance.colors.colOutline.b,
-            0.3
-        )
+        border.color: Appearance.mission.colBorder
         border.width: 1
     }
 
@@ -83,14 +78,14 @@ AbstractBackgroundWidget {
                     width: 6
                     height: 6
                     radius: 3
-                    color: Appearance.colors.colPrimary
+                    color: Appearance.mission.colAccent
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: DropShadow {
                         transparentBorder: true
                         color: Qt.rgba(
-                            Appearance.colors.colPrimary.r,
-                            Appearance.colors.colPrimary.g,
-                            Appearance.colors.colPrimary.b,
+                            Appearance.mission.colAccent.r,
+                            Appearance.mission.colAccent.g,
+                            Appearance.mission.colAccent.b,
                             0.7
                         )
                         spread: 0.2
@@ -103,8 +98,9 @@ AbstractBackgroundWidget {
                     Layout.fillWidth: true
                     text: Translation.tr("Files")
                     font.pixelSize: Appearance.font.pixelSize.small * root.fontScale
+                    font.family: Appearance.font.family.monospace
                     font.letterSpacing: 1.5
-                    color: Appearance.colors.colOnSurface
+                    color: Appearance.mission.colText
                     font.capitalization: Font.AllUppercase
                 }
             }
@@ -115,12 +111,7 @@ AbstractBackgroundWidget {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 1
-                color: Qt.rgba(
-                    Appearance.colors.colOutline.r,
-                    Appearance.colors.colOutline.g,
-                    Appearance.colors.colOutline.b,
-                    0.2
-                )
+                color: Appearance.mission.colBorderSubtle
             }
         }
 

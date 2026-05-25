@@ -18,7 +18,8 @@ ColumnLayout {
         font.pixelSize: Appearance.font.pixelSize.smallest
         font.weight: Font.DemiBold
         font.letterSpacing: 2.0
-        color: Appearance.colors.colSubtext
+        font.family: Appearance.font.family.monospace
+        color: Appearance.mission.colTextSecondary
     }
 
     RowLayout {
@@ -27,7 +28,7 @@ ColumnLayout {
         CircularProgressRing {
             Layout.alignment: Qt.AlignTop
             value: ResourceUsage.cpuUsage
-            ringColor: Appearance.colors.colPrimary
+            ringColor: Appearance.mission.colAccent
             icon: "settings"
             label: "CPU"
             valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
@@ -37,7 +38,7 @@ ColumnLayout {
         CircularProgressRing {
             Layout.alignment: Qt.AlignTop
             value: ResourceUsage.memoryUsedPercentage
-            ringColor: Appearance.colors.colSecondary
+            ringColor: Appearance.mission.colTextSecondary
             icon: "grid_view"
             label: "RAM"
             valueText: Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
@@ -47,7 +48,7 @@ ColumnLayout {
         CircularProgressRing {
             Layout.alignment: Qt.AlignTop
             value: ResourceUsage.cpuTemp > 0 ? Math.min(ResourceUsage.cpuTemp / 100, 1.0) : 0
-            ringColor: Appearance.colors.colTertiary
+            ringColor: Appearance.mission.colTextMuted
             icon: "thermostat"
             label: "TEMP"
             valueText: ResourceUsage.cpuTemp > 0 ? ResourceUsage.cpuTemp + "\u00B0C" : "--"
@@ -57,7 +58,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignTop
             visible: root.showGpu && ResourceUsage.vramTotal > 1
             value: ResourceUsage.vramUsedPercentage
-            ringColor: Appearance.m3colors.m3error
+            ringColor: Appearance.mission.colCritical
             icon: "memory"
             label: "VRAM"
             valueText: {

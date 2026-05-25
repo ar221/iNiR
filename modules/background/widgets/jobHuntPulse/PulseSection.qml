@@ -16,7 +16,7 @@ Item {
     property string label: ""
     property int    count: 0
     property string meta: ""
-    property color  accent: Appearance.colors.colPrimary
+    property color  accent: Appearance.mission.colAccent
 
     // Whether the count chip should render. (Hide for sections where the count
     // doesn't carry meaning, e.g. NEXT.)
@@ -63,7 +63,7 @@ Item {
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.weight: Font.Bold
                     font.letterSpacing: 1.5
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
 
                 StyledText {
@@ -82,7 +82,7 @@ Item {
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smallest
                     font.letterSpacing: 1.2
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
         }

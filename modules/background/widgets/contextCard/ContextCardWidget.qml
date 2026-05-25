@@ -135,7 +135,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.unsharpen
         color: "transparent"
         clip: true
 
@@ -145,7 +145,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -155,7 +155,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -165,7 +165,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: Appearance.mission.colBorder
         }
 
         // Inset depth — top edge gradient
@@ -177,20 +177,20 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
 
-        // ── #ff1100 left accent stripe (Context Card signature) ──
+        // ── Accent stripe (Context Card signature) ──
         Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.topMargin: Appearance.rounding.large
-            anchors.bottomMargin: Appearance.rounding.large
+            anchors.topMargin: Appearance.rounding.unsharpen
+            anchors.bottomMargin: Appearance.rounding.unsharpen
             width: 3
-            color: "#ff1100"
+            color: Appearance.mission.colAccent
             opacity: 0.85
         }
     }
@@ -207,9 +207,10 @@ AbstractBackgroundWidget {
         StyledText {
             text: "STATUS"
             font.pixelSize: Appearance.font.pixelSize.smallest
+            font.family: Appearance.font.family.monospace
             font.letterSpacing: 2.0
             font.weight: Font.DemiBold
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         // ── FocusMode chip ──
@@ -220,7 +221,7 @@ AbstractBackgroundWidget {
             radius: Appearance.rounding.small
             color: FocusMode.active
                 ? ColorUtils.transparentize(FocusMode.accentColor, 0.8)
-                : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                : ColorUtils.transparentize(Appearance.mission.colSurface, 0.4)
 
             MouseArea {
                 anchors.fill: parent
@@ -241,7 +242,7 @@ AbstractBackgroundWidget {
                     iconSize: 18
                     color: FocusMode.active
                         ? FocusMode.accentColor
-                        : Appearance.colors.colSubtext
+                        : Appearance.mission.colTextSecondary
                 }
 
                 StyledText {
@@ -251,7 +252,7 @@ AbstractBackgroundWidget {
                     font.weight: Font.Medium
                     color: FocusMode.active
                         ? FocusMode.accentColor
-                        : Appearance.colors.colOnLayer0
+                        : Appearance.mission.colText
                 }
 
                 StyledText {
@@ -271,7 +272,7 @@ AbstractBackgroundWidget {
             visible: root.showPomodoro && TimerService.pomodoroRunning
             radius: Appearance.rounding.small
             color: ColorUtils.transparentize(
-                TimerService.pomodoroBreak ? Appearance.colors.colTertiary : Appearance.colors.colPrimary,
+                TimerService.pomodoroBreak ? Appearance.mission.colWaiting : Appearance.mission.colAccent,
                 0.85
             )
 
@@ -301,8 +302,8 @@ AbstractBackgroundWidget {
                                 ? (TimerService.pomodoroLapDuration - TimerService.pomodoroSecondsLeft) / TimerService.pomodoroLapDuration
                                 : 0
                             const color = TimerService.pomodoroBreak
-                                ? Appearance.colors.colTertiary
-                                : Appearance.colors.colPrimary
+                                ? Appearance.mission.colWaiting
+                                : Appearance.mission.colAccent
 
                             // Track
                             ctx.beginPath()
@@ -339,7 +340,7 @@ AbstractBackgroundWidget {
                             : "Focus"
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
-                        color: Appearance.colors.colOnLayer0
+                        color: Appearance.mission.colText
                     }
 
                     StyledText {
@@ -353,8 +354,8 @@ AbstractBackgroundWidget {
                         font.family: Appearance.font.family.numbers
                         font.weight: Font.Bold
                         color: TimerService.pomodoroBreak
-                            ? Appearance.colors.colTertiary
-                            : Appearance.colors.colPrimary
+                            ? Appearance.mission.colWaiting
+                            : Appearance.mission.colAccent
                     }
                 }
 
@@ -362,7 +363,7 @@ AbstractBackgroundWidget {
                     text: (TimerService.pomodoroCycle + 1) + "/" + (TimerService.cyclesBeforeLongBreak ?? 4)
                     font.pixelSize: Appearance.font.pixelSize.smallest
                     font.family: Appearance.font.family.numbers
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
         }
@@ -372,7 +373,7 @@ AbstractBackgroundWidget {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
             visible: root.showMarketStatus || root.showPackageUpdates || root.showServiceHealth
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            color: Appearance.mission.colBorder
         }
 
         // ── Status badges ──
@@ -388,7 +389,7 @@ AbstractBackgroundWidget {
 
                 Rectangle {
                     width: 6; height: 6; radius: 3
-                    color: root.marketState === "open" ? "#4caf50" : Appearance.colors.colSubtext
+                    color: root.marketState === "open" ? Appearance.mission.colDone : Appearance.mission.colTextSecondary
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -397,8 +398,8 @@ AbstractBackgroundWidget {
                     text: root.marketState === "open" ? "NYSE Open" : "NYSE Closed"
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: root.marketState === "open"
-                        ? Appearance.colors.colOnLayer0
-                        : Appearance.colors.colSubtext
+                        ? Appearance.mission.colText
+                        : Appearance.mission.colTextSecondary
                 }
             }
 
@@ -412,8 +413,8 @@ AbstractBackgroundWidget {
                     text: root.pendingUpdates > 0 ? "system_update_alt" : "verified"
                     iconSize: 14
                     color: root.pendingUpdates > 0
-                        ? Appearance.colors.colPrimary
-                        : Appearance.colors.colSubtext
+                        ? Appearance.mission.colAccent
+                        : Appearance.mission.colTextSecondary
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -424,8 +425,8 @@ AbstractBackgroundWidget {
                         : root.pendingUpdates + " update" + (root.pendingUpdates !== 1 ? "s" : "") + " available"
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: root.pendingUpdates > 0
-                        ? Appearance.colors.colOnLayer0
-                        : Appearance.colors.colSubtext
+                        ? Appearance.mission.colText
+                        : Appearance.mission.colTextSecondary
                 }
             }
 
@@ -438,7 +439,7 @@ AbstractBackgroundWidget {
                 MaterialSymbol {
                     text: root.failedServices > 0 ? "error" : "check_circle"
                     iconSize: 14
-                    color: root.failedServices > 0 ? "#ff1100" : Appearance.colors.colSubtext
+                    color: root.failedServices > 0 ? Appearance.mission.colCritical : Appearance.mission.colTextSecondary
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -448,8 +449,8 @@ AbstractBackgroundWidget {
                         : root.failedServices + " failed service" + (root.failedServices !== 1 ? "s" : "")
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: root.failedServices > 0
-                        ? "#ff1100"
-                        : Appearance.colors.colSubtext
+                        ? Appearance.mission.colCritical
+                        : Appearance.mission.colTextSecondary
                 }
             }
         }

@@ -16,7 +16,7 @@ Item {
     // Parent sets this true only when playing + visible + showVisualizer.
     property bool active: false
     // Album-art dominant tint for the bars.
-    property color barColor: Appearance.colors.colPrimary
+    property color barColor: Appearance.mission.colAccent
     // Fixed bar count — decouples layout from the live stream's band count,
     // so a cava config regen can't tear down + rebuild the Repeater mid-stream.
     // 50 mirrors `bars = 50` in scripts/cava/generate_config.sh (the shared

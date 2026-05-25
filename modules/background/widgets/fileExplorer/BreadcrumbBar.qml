@@ -16,8 +16,17 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Appearance.colors.colLayer2
+        color: Appearance.mission.colSurfaceRaised
         radius: 0
+    }
+
+    // Bottom separator between breadcrumb bar and file list
+    Rectangle {
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 1
+        color: Appearance.mission.colBorderSubtle
     }
 
     RowLayout {
@@ -40,8 +49,8 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.rounding.small
-                color: backHover.hovered ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+                radius: Appearance.rounding.unsharpen
+                color: backHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
             }
 
             MaterialSymbol {
@@ -49,7 +58,7 @@ Item {
                 anchors.centerIn: parent
                 text: "arrow_back"
                 iconSize: Appearance.font.pixelSize.normal * root.fontScale
-                color: Appearance.colors.colOnLayer1
+                color: Appearance.mission.colText
             }
 
             TapHandler {
@@ -61,7 +70,8 @@ Item {
             Layout.fillWidth: true
             text: root.pathText
             font.pixelSize: Appearance.font.pixelSize.smaller * root.fontScale
-            color: Appearance.colors.colSubtext
+            font.family: Appearance.font.family.monospace
+            color: Appearance.mission.colTextSecondary
             elide: Text.ElideLeft
         }
     }

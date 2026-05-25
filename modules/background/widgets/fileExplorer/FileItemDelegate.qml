@@ -15,35 +15,24 @@ Item {
 
     signal activated()
 
-    // Accent palette — 4 solid M3 accent tokens + their on-colors
-    readonly property var _pillColors: [
-        Appearance.colors.colPrimary,
-        Appearance.colors.colSecondary,
-        Appearance.colors.colTertiary,
-        Appearance.colors.colError
-    ]
-    readonly property var _pillOnColors: [
-        Appearance.colors.colOnPrimary,
-        Appearance.colors.colOnSecondary,
-        Appearance.colors.colOnTertiary,
-        Appearance.colors.colOnError
-    ]
-
+    // Accent palette — mono-amber Courier/Apollo collapse: all bookmarks use mission accent.
+    // accentIndex >= 0 path (BookmarksView) → colAccent bg + colText fg for all entries.
+    // accentIndex -1 (FolderView) → colAccent for folders, colSurfaceRaised for files.
     readonly property color _pillBg: {
         if (root.accentIndex >= 0) {
-            return root._pillColors[root.accentIndex % 4];
+            return Appearance.mission.colAccent;
         }
         return root.isFolder
-            ? Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.80)
-            : Appearance.colors.colSurfaceContainerHighest;
+            ? Appearance.mission.colAccent
+            : Appearance.mission.colSurfaceRaised;
     }
     readonly property color _pillFg: {
         if (root.accentIndex >= 0) {
-            return root._pillOnColors[root.accentIndex % 4];
+            return Appearance.mission.colText;
         }
         return root.isFolder
-            ? Appearance.colors.colOnPrimary
-            : Appearance.colors.colOnSurfaceVariant;
+            ? Appearance.mission.colText
+            : Appearance.mission.colTextSecondary;
     }
 
     implicitHeight: rowLayout.implicitHeight + 8
@@ -55,9 +44,9 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.rounding.small
+        radius: Appearance.rounding.unsharpen
         color: hoverHandler.hovered
-            ? Qt.rgba(1, 1, 1, 0.05)
+            ? Appearance.mission.colSurfaceHover
             : "transparent"
     }
 
@@ -101,7 +90,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.rounding.small
+                radius: Appearance.rounding.unsharpen
                 color: root._pillBg
             }
 
@@ -120,8 +109,8 @@ Item {
             text: root.label
             font.pixelSize: Appearance.font.pixelSize.small * root.fontScale
             color: root.isFolder
-                ? Appearance.colors.colOnLayer1
-                : Appearance.colors.colSubtext
+                ? Appearance.mission.colText
+                : Appearance.mission.colTextSecondary
             elide: Text.ElideRight
         }
 
@@ -130,7 +119,7 @@ Item {
             visible: root.isFolder
             text: "chevron_right"
             iconSize: Appearance.font.pixelSize.small * root.fontScale
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextMuted
             opacity: hoverHandler.hovered ? 0.8 : 0.3
             Behavior on opacity {
                 NumberAnimation { duration: Appearance.animation.elementMoveFast.duration }

@@ -20,7 +20,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 1
-        color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+        color: Appearance.mission.colBorderSubtle
     }
 
     RowLayout {
@@ -32,13 +32,13 @@ Item {
             text: root.footerText
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.DemiBold
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
         }
 
         MaterialSymbol {
             text: "spa"
             iconSize: 16
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
         }
     }
 }

@@ -60,7 +60,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -70,7 +70,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -109,7 +109,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: ColorUtils.transparentize(Appearance.mission.colBorder, 0.88)
         }
 
         // Inset depth — top edge gradient
@@ -121,7 +121,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -155,7 +155,7 @@ AbstractBackgroundWidget {
                     : (StringUtils.cleanMusicTitle(playerBase.effectiveTitle) || "—")
                 font.pixelSize: Appearance.font.pixelSize.large
                 font.weight: Font.DemiBold
-                color: root.idle ? Appearance.colors.colSubtext : Appearance.colors.colOnLayer0
+                color: root.idle ? Appearance.mission.colTextMuted : Appearance.mission.colText
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
@@ -172,7 +172,9 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.weight: Font.Medium
-                color: Appearance.colors.colSubtext
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1.1
+                color: Appearance.mission.colTextSecondary
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
@@ -202,7 +204,7 @@ AbstractBackgroundWidget {
                     text: StringUtils.friendlyTimeForSeconds(playerBase.effectivePosition)
                     font.family: Appearance.font.family.numbers
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextMuted
                 }
 
                 Item { Layout.fillWidth: true }
@@ -211,7 +213,7 @@ AbstractBackgroundWidget {
                     text: StringUtils.friendlyTimeForSeconds(playerBase.effectiveLength)
                     font.family: Appearance.font.family.numbers
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextMuted
                 }
             }
         }

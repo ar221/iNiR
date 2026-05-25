@@ -105,7 +105,7 @@ Item {
         width: pillContent.implicitWidth + 14
         height: 26
         radius: 13
-        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+        color: Appearance.mission.colSurface
 
         RowLayout {
             id: pillContent
@@ -115,13 +115,13 @@ Item {
             MaterialSymbol {
                 text: parent.parent.icon
                 iconSize: 13
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
 
             StyledText {
                 text: parent.parent.text
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
         }
     }

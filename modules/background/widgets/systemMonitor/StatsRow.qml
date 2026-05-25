@@ -18,18 +18,18 @@ RowLayout {
         Layout.preferredHeight: 28
         Layout.preferredWidth: diskRow.implicitWidth + 16
         radius: 14
-        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+        color: Appearance.mission.colSurface
 
         RowLayout {
             id: diskRow
             anchors.centerIn: parent
             spacing: 4
-            MaterialSymbol { text: "hard_drive"; iconSize: 14; color: Appearance.colors.colPrimary }
+            MaterialSymbol { text: "hard_drive"; iconSize: 14; color: Appearance.mission.colAccent }
             StyledText {
                 text: Math.round(ResourceUsage.diskUsedPercentage * 100) + "%"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
         }
     }
@@ -40,18 +40,18 @@ RowLayout {
         Layout.preferredHeight: 28
         Layout.preferredWidth: swapRow.implicitWidth + 16
         radius: 14
-        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+        color: Appearance.mission.colSurface
 
         RowLayout {
             id: swapRow
             anchors.centerIn: parent
             spacing: 4
-            MaterialSymbol { text: "swap_horiz"; iconSize: 14; color: Appearance.colors.colSecondary }
+            MaterialSymbol { text: "swap_horiz"; iconSize: 14; color: Appearance.mission.colTextSecondary }
             StyledText {
                 text: Math.round(ResourceUsage.swapUsedPercentage * 100) + "%"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
         }
     }
@@ -62,7 +62,7 @@ RowLayout {
         Layout.preferredHeight: 28
         Layout.preferredWidth: tempRow.implicitWidth + 16
         radius: 14
-        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+        color: Appearance.mission.colSurface
 
         RowLayout {
             id: tempRow
@@ -71,13 +71,13 @@ RowLayout {
             MaterialSymbol {
                 text: "thermostat"
                 iconSize: 14
-                color: ResourceUsage.maxTemp >= 80 ? Appearance.colors.colError : Appearance.colors.colTertiary
+                color: ResourceUsage.maxTemp >= 80 ? Appearance.mission.colCritical : Appearance.mission.colTextMuted
             }
             StyledText {
                 text: ResourceUsage.maxTemp + "°C"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
         }
     }

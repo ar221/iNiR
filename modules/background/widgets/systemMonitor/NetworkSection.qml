@@ -140,7 +140,7 @@ ColumnLayout {
             font.pixelSize: Appearance.font.pixelSize.normal
             font.family: Appearance.font.family.monospace
             font.weight: Font.Medium
-            color: copiedTimer.running ? Appearance.colors.colPrimary : Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
 
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
@@ -191,11 +191,11 @@ ColumnLayout {
 
                 // Draw RX (download) — top half, line going up
                 drawSparkline(ctx, root.rxHistory, w, midY, 0, maxVal,
-                    Appearance.colors.colPrimary.toString(), true)
+                    Appearance.mission.colAccent.toString(), true)
 
                 // Draw TX (upload) — bottom half, line going down
                 drawSparkline(ctx, root.txHistory, w, midY, midY, maxVal,
-                    Appearance.colors.colSecondary.toString(), false)
+                    Appearance.mission.colTextSecondary.toString(), false)
             }
 
             function drawSparkline(ctx, data, w, halfH, yOffset, maxVal, color, flipUp) {
@@ -240,13 +240,13 @@ ColumnLayout {
                 text: "\u2193"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
             StyledText {
                 text: "\u2191"
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold
-                color: Appearance.colors.colSecondary
+                color: Appearance.mission.colTextSecondary
             }
         }
     }

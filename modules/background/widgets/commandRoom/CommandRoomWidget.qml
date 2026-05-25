@@ -50,14 +50,14 @@ AbstractBackgroundWidget {
     readonly property string statusLabel: CommandRoom.anomalyCount > 0 ? "ALERT" : CommandRoom.freshnessState.toUpperCase()
     readonly property color statusColor: {
         if (CommandRoom.anomalyCount > 0)
-            return Appearance.colors.colError
+            return Appearance.mission.colCritical
         if (CommandRoom.staleRunCount > 0)
-            return Appearance.colors.colTertiary
+            return Appearance.mission.colWaiting
         if (CommandRoom.freshnessState === "fresh")
-            return Appearance.m3colors.m3primary
+            return Appearance.mission.colAccent
         if (CommandRoom.freshnessState === "stale")
-            return Appearance.colors.colTertiary
-        return Appearance.colors.colError
+            return Appearance.mission.colWaiting
+        return Appearance.mission.colCritical
     }
     readonly property string ageLabel: {
         if (CommandRoom.ageMinutes < 0)
@@ -70,25 +70,25 @@ AbstractBackgroundWidget {
     function _stageColor(stage) {
         switch (String(stage)) {
         case "in_progress":
-            return Appearance.colors.colPrimary
+            return Appearance.mission.colAccent
         case "stale":
-            return Appearance.colors.colTertiary
+            return Appearance.mission.colWaiting
         case "anomaly":
-            return Appearance.colors.colError
+            return Appearance.mission.colCritical
         default:
-            return Appearance.colors.colOnLayer0
+            return Appearance.mission.colText
         }
     }
 
     function _severityColor(severity) {
         const value = String(severity || "UNKNOWN").toUpperCase()
         if (value === "FAIL")
-            return Appearance.colors.colError
+            return Appearance.mission.colCritical
         if (value === "WARN")
-            return Appearance.colors.colTertiary
+            return Appearance.mission.colWaiting
         if (value === "OK")
-            return Appearance.m3colors.m3primary
-        return Appearance.colors.colSubtext
+            return Appearance.mission.colAccent
+        return Appearance.mission.colTextSecondary
     }
 
     function _isValidLogPath(p) {
@@ -119,14 +119,14 @@ AbstractBackgroundWidget {
             radius: parent.radius
             screenX: root.screenPos.x
             screenY: root.screenPos.y
-            fallbackColor: ColorUtils.transparentize(Appearance.colors.colLayer0, 1.0 - root.cardOpacity)
+            fallbackColor: ColorUtils.transparentize(Appearance.mission.colCanvas, 1.0 - root.cardOpacity)
         }
 
         Rectangle {
             anchors.fill: parent
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
-            color: ColorUtils.transparentize(Appearance.colors.colLayer0, 1.0 - root.cardOpacity)
+            color: ColorUtils.transparentize(Appearance.mission.colCanvas, 1.0 - root.cardOpacity)
         }
 
         Rectangle {
@@ -134,7 +134,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: ColorUtils.transparentize(Appearance.mission.colText, 0.88)
         }
 
         Rectangle {
@@ -145,7 +145,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -168,7 +168,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Bold
                 font.letterSpacing: 2
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
 
             Item { Layout.fillWidth: true }
@@ -199,7 +199,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.DemiBold
                         font.letterSpacing: 1.1
-                        color: Appearance.colors.colOnLayer0
+                        color: Appearance.mission.colText
                     }
                 }
             }
@@ -208,7 +208,7 @@ AbstractBackgroundWidget {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 1
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
+            color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.82)
         }
 
         // ── Stats row ──────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.numbers
                 font.pixelSize: Appearance.font.pixelSize.larger
                 font.weight: Font.Bold
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
 
             StyledText {
@@ -230,7 +230,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.DemiBold
                 font.letterSpacing: 1.1
-                color: CommandRoom.staleRunCount > 0 ? Appearance.colors.colTertiary : Appearance.colors.colSubtext
+                color: CommandRoom.staleRunCount > 0 ? Appearance.mission.colWaiting : Appearance.mission.colTextSecondary
             }
 
             StyledText {
@@ -240,7 +240,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold
                 font.letterSpacing: 1.1
-                color: Appearance.colors.colError
+                color: Appearance.mission.colCritical
             }
 
             StyledText {
@@ -249,7 +249,7 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1.1
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
@@ -274,7 +274,7 @@ AbstractBackgroundWidget {
             text: CommandRoom.lastError === "Projection missing" ? "No cockpit projection yet." : CommandRoom.lastError
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.Medium
-            color: CommandRoom.lastError === "Projection missing" ? Appearance.colors.colSubtext : Appearance.colors.colError
+            color: CommandRoom.lastError === "Projection missing" ? Appearance.mission.colTextSecondary : Appearance.mission.colCritical
             wrapMode: Text.WordWrap
         }
 
@@ -292,7 +292,7 @@ AbstractBackgroundWidget {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 1
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                    color: ColorUtils.transparentize(Appearance.mission.colBorderSubtle, 0.4)
                 }
 
                 RowLayout {
@@ -304,7 +304,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1.4
-                        color: Appearance.colors.colPrimary
+                        color: Appearance.mission.colAccent
                     }
 
                     Item { Layout.fillWidth: true }
@@ -313,9 +313,9 @@ AbstractBackgroundWidget {
                         implicitWidth: ipBadge.implicitWidth + 10
                         implicitHeight: ipBadge.implicitHeight + 6
                         radius: 2
-                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.86)
+                        color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.86)
                         border.width: 1
-                        border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.45)
+                        border.color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.45)
 
                         StyledText {
                             id: ipBadge
@@ -323,7 +323,7 @@ AbstractBackgroundWidget {
                             text: String(root.tasksByStage.in_progress.length)
                             font.family: Appearance.font.family.monospace
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colPrimary
+                            color: Appearance.mission.colAccent
                         }
                     }
                 }
@@ -343,7 +343,7 @@ AbstractBackgroundWidget {
                     text: "—"
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
 
@@ -355,7 +355,7 @@ AbstractBackgroundWidget {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 1
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                    color: ColorUtils.transparentize(Appearance.mission.colBorderSubtle, 0.4)
                 }
 
                 RowLayout {
@@ -367,7 +367,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1.4
-                        color: Appearance.colors.colOnLayer0
+                        color: Appearance.mission.colText
                     }
 
                     Item { Layout.fillWidth: true }
@@ -376,9 +376,9 @@ AbstractBackgroundWidget {
                         implicitWidth: pendingBadge.implicitWidth + 10
                         implicitHeight: pendingBadge.implicitHeight + 6
                         radius: 2
-                        color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
+                        color: ColorUtils.transparentize(Appearance.mission.colText, 0.9)
                         border.width: 1
-                        border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.65)
+                        border.color: ColorUtils.transparentize(Appearance.mission.colText, 0.65)
 
                         StyledText {
                             id: pendingBadge
@@ -386,7 +386,7 @@ AbstractBackgroundWidget {
                             text: String(root.tasksByStage.pending.length)
                             font.family: Appearance.font.family.monospace
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colOnLayer0
+                            color: Appearance.mission.colText
                         }
                     }
                 }
@@ -406,7 +406,7 @@ AbstractBackgroundWidget {
                     text: "—"
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
 
                 AddTaskControl {
@@ -424,7 +424,7 @@ AbstractBackgroundWidget {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 1
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                    color: ColorUtils.transparentize(Appearance.mission.colBorderSubtle, 0.4)
                 }
 
                 RowLayout {
@@ -436,7 +436,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1.4
-                        color: Appearance.colors.colTertiary
+                        color: Appearance.mission.colWaiting
                     }
 
                     Item { Layout.fillWidth: true }
@@ -445,9 +445,9 @@ AbstractBackgroundWidget {
                         implicitWidth: staleBadge.implicitWidth + 10
                         implicitHeight: staleBadge.implicitHeight + 6
                         radius: 2
-                        color: ColorUtils.transparentize(Appearance.colors.colTertiary, 0.86)
+                        color: ColorUtils.transparentize(Appearance.mission.colWaiting, 0.86)
                         border.width: 1
-                        border.color: ColorUtils.transparentize(Appearance.colors.colTertiary, 0.45)
+                        border.color: ColorUtils.transparentize(Appearance.mission.colWaiting, 0.45)
 
                         StyledText {
                             id: staleBadge
@@ -455,7 +455,7 @@ AbstractBackgroundWidget {
                             text: String(root.tasksByStage.stale.length)
                             font.family: Appearance.font.family.monospace
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colTertiary
+                            color: Appearance.mission.colWaiting
                         }
                     }
                 }
@@ -479,7 +479,7 @@ AbstractBackgroundWidget {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 1
-                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.4)
+                    color: ColorUtils.transparentize(Appearance.mission.colBorderSubtle, 0.4)
                 }
 
                 RowLayout {
@@ -491,7 +491,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1.4
-                        color: Appearance.colors.colError
+                        color: Appearance.mission.colCritical
                     }
 
                     Item { Layout.fillWidth: true }
@@ -500,9 +500,9 @@ AbstractBackgroundWidget {
                         implicitWidth: anomalyBadge.implicitWidth + 10
                         implicitHeight: anomalyBadge.implicitHeight + 6
                         radius: 2
-                        color: ColorUtils.transparentize(Appearance.colors.colError, 0.86)
+                        color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.86)
                         border.width: 1
-                        border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+                        border.color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.45)
 
                         StyledText {
                             id: anomalyBadge
@@ -510,7 +510,7 @@ AbstractBackgroundWidget {
                             text: String(root.tasksByStage.anomaly.length)
                             font.family: Appearance.font.family.monospace
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colError
+                            color: Appearance.mission.colCritical
                         }
                     }
                 }
@@ -552,10 +552,10 @@ AbstractBackgroundWidget {
 
         Layout.fillWidth: true
         radius: 4
-        color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.34)
+        color: ColorUtils.transparentize(Appearance.mission.colSurface, 0.34)
         border.width: 1
         border.color: cardRow.flashing
-            ? Appearance.colors.colPrimary
+            ? Appearance.mission.colAccent
             : ColorUtils.transparentize(root._stageColor(cardRow.stage), 0.62)
         implicitHeight: cardInnerColumn.implicitHeight
         Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -691,7 +691,7 @@ AbstractBackgroundWidget {
                             text: String(cardRow.modelData?.title ?? cardRow.modelData?.id ?? "Command-room card")
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.DemiBold
-                            color: Appearance.colors.colOnLayer0
+                            color: Appearance.mission.colText
                             elide: Text.ElideRight
                             maximumLineCount: 1
                         }
@@ -702,7 +702,7 @@ AbstractBackgroundWidget {
                         visible: text.length > 0
                         text: String(cardRow.modelData?.summary ?? cardRow.modelData?.owner ?? "")
                         font.pixelSize: Appearance.font.pixelSize.smallest
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.mission.colTextSecondary
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }
@@ -725,7 +725,7 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: promoteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: promoteHitHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: promoteHitHover }
                         TapHandler {
                             onTapped: {
@@ -740,7 +740,7 @@ AbstractBackgroundWidget {
                             anchors.centerIn: parent
                             text: "play_arrow"
                             iconSize: 16
-                            color: Appearance.colors.colPrimary
+                            color: Appearance.mission.colAccent
                         }
                     }
 
@@ -752,14 +752,14 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: logToggleHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: logToggleHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: logToggleHover }
                         TapHandler { onTapped: cardRow.logExpanded = !cardRow.logExpanded }
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: cardRow.logExpanded ? "expand_less" : "terminal"
                             iconSize: 16
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextSecondary
                         }
                     }
 
@@ -768,14 +768,14 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: cancelHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: cancelHitHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: cancelHitHover }
                         TapHandler { onTapped: cardRow.cancelPending = !cardRow.cancelPending }
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: "cancel"
                             iconSize: 16
-                            color: Appearance.colors.colError
+                            color: Appearance.mission.colCritical
                         }
                     }
                 }
@@ -786,9 +786,9 @@ AbstractBackgroundWidget {
                 Layout.fillWidth: true
                 implicitHeight: cardRow.cancelPending ? 36 : 0
                 clip: true
-                color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.9)
                 border.width: cardRow.cancelPending ? 1 : 0
-                border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+                border.color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.45)
                 Behavior on implicitHeight { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
                 RowLayout {
@@ -801,7 +801,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1
-                        color: Appearance.colors.colError
+                        color: Appearance.mission.colCritical
                         TapHandler {
                             onTapped: {
                                 if (cancelProc.running)
@@ -816,7 +816,7 @@ AbstractBackgroundWidget {
                         font.family: Appearance.font.family.monospace
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.letterSpacing: 1
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.mission.colTextSecondary
                         TapHandler {
                             onTapped: {
                                 cancelProc.running = false
@@ -832,16 +832,16 @@ AbstractBackgroundWidget {
                 Layout.fillWidth: true
                 implicitHeight: (cardRow.logExpanded && cardRow.stage === "in_progress" && root.width >= 380) ? (5 * 18 + 16) : 0
                 clip: true
-                color: Appearance.colors.colLayer0
+                color: Appearance.mission.colCanvas
                 Behavior on implicitHeight { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-                // Left rail — 2px colPrimary signal
+                // Left rail — 2px accent signal
                 Rectangle {
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: 2
-                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.3)
+                    color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.3)
                 }
 
                 Flickable {
@@ -876,7 +876,7 @@ AbstractBackgroundWidget {
                                     text: String(modelData?.ts ?? modelData?.timestamp ?? "")
                                     font.family: Appearance.font.family.monospace
                                     font.pixelSize: Appearance.font.pixelSize.smallest
-                                    color: Appearance.colors.colSubtext
+                                    color: Appearance.mission.colTextSecondary
                                 }
 
                                 StyledText {
@@ -890,12 +890,12 @@ AbstractBackgroundWidget {
                                     color: {
                                         const m = typeof modelData === "string" ? modelData : String(modelData?.msg ?? modelData?.message ?? "")
                                         if (/^(ERROR|FAIL|✗)/.test(m))
-                                            return Appearance.colors.colError
+                                            return Appearance.mission.colCritical
                                         if (/^(WARN|⚠)/.test(m))
-                                            return Appearance.colors.colTertiary
+                                            return Appearance.mission.colWaiting
                                         if (/^(OK|DONE|✓)/.test(m))
-                                            return Appearance.colors.colPrimary
-                                        return Appearance.colors.colOnLayer0
+                                            return Appearance.mission.colAccent
+                                        return Appearance.mission.colText
                                     }
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
@@ -932,7 +932,7 @@ AbstractBackgroundWidget {
             radius: 2
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.7)
+            border.color: ColorUtils.transparentize(Appearance.mission.colText, 0.7)
 
             StyledText {
                 anchors.centerIn: parent
@@ -940,7 +940,7 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
 
             TapHandler {
@@ -956,9 +956,9 @@ AbstractBackgroundWidget {
             anchors.fill: parent
             visible: addTaskCtrl.active
             radius: 2
-            color: Appearance.colors.colLayer1
+            color: Appearance.mission.colSurface
             border.width: 1
-            border.color: Appearance.colors.colPrimary
+            border.color: Appearance.mission.colAccent
 
             TextInput {
                 id: addInput
@@ -969,7 +969,7 @@ AbstractBackgroundWidget {
                 anchors.rightMargin: 8
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
                 clip: true
 
                 Keys.onReturnPressed: {
@@ -995,9 +995,9 @@ AbstractBackgroundWidget {
         Layout.fillWidth: true
         implicitHeight: metricRow.implicitHeight + 10
         radius: 4
-        color: ColorUtils.transparentize(hot ? Appearance.colors.colTertiary : Appearance.colors.colLayer1, hot ? 0.86 : 0.42)
+        color: ColorUtils.transparentize(hot ? Appearance.mission.colWaiting : Appearance.mission.colSurface, hot ? 0.86 : 0.42)
         border.width: 1
-        border.color: ColorUtils.transparentize(hot ? Appearance.colors.colTertiary : Appearance.colors.colOnLayer0, hot ? 0.45 : 0.9)
+        border.color: ColorUtils.transparentize(hot ? Appearance.mission.colWaiting : Appearance.mission.colText, hot ? 0.45 : 0.9)
 
         RowLayout {
             id: metricRow
@@ -1009,7 +1009,7 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.numbers
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Bold
-                color: hot ? Appearance.colors.colTertiary : Appearance.colors.colOnLayer0
+                color: hot ? Appearance.mission.colWaiting : Appearance.mission.colText
             }
 
             StyledText {
@@ -1018,7 +1018,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.DemiBold
                 font.letterSpacing: 1
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
     }

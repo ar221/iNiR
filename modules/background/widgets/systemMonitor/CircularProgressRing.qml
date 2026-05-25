@@ -9,17 +9,19 @@ Item {
     property real value: 0
     property int ringSize: 80
     property int lineWidth: 5
-    property color ringColor: Appearance.colors.colPrimary
+    property color ringColor: Appearance.mission.colAccent
     property string label: ""
     property string icon: ""
     property string valueText: ""
     property var history: []  // Optional: list<real> 0–1, drawn as lower-half area fill
 
-    // Critical threshold — ring turns #ff1100 when value exceeds this
+    // Critical threshold — ring turns colCritical when value exceeds this
     property real criticalThreshold: 0.85
     property bool isCritical: value >= criticalThreshold
-    property color effectiveRingColor: isCritical ? "#ff1100" : ringColor
+    property color effectiveRingColor: isCritical ? Appearance.mission.colCritical : ringColor
     property color effectiveTrackColor: ColorUtils.transparentize(effectiveRingColor, 0.82)
+    property color effectiveSparkFill: ColorUtils.transparentize(effectiveRingColor, 0.88)
+    property color effectiveSparkStroke: ColorUtils.transparentize(effectiveRingColor, 0.75)
 
     implicitWidth: ringSize
     implicitHeight: contentColumn.implicitHeight
@@ -113,8 +115,7 @@ Item {
                         ctx.lineTo(pts[pts.length - 1].x, sparkTop + sparkH)
                         ctx.closePath()
 
-                        const c = root.effectiveRingColor
-                        ctx.fillStyle = Qt.rgba(c.r, c.g, c.b, 0.12)
+                        ctx.fillStyle = root.effectiveSparkFill.toString()
                         ctx.fill()
 
                         // Thin stroke on top
@@ -127,7 +128,7 @@ Item {
                             const cpx2 = curr.x - (curr.x - prev.x) * 0.3
                             ctx.bezierCurveTo(cpx1, prev.y, cpx2, curr.y, curr.x, curr.y)
                         }
-                        ctx.strokeStyle = Qt.rgba(c.r, c.g, c.b, 0.25)
+                        ctx.strokeStyle = root.effectiveSparkStroke.toString()
                         ctx.lineWidth = 0.8
                         ctx.stroke()
 
@@ -144,6 +145,8 @@ Item {
                 target: root
                 function onEffectiveRingColorChanged() { canvas.requestPaint() }
                 function onEffectiveTrackColorChanged() { canvas.requestPaint() }
+                function onEffectiveSparkFillChanged() { canvas.requestPaint() }
+                function onEffectiveSparkStrokeChanged() { canvas.requestPaint() }
                 function onHistoryChanged() { canvas.requestPaint() }
             }
 
@@ -167,9 +170,10 @@ Item {
                 return root.label || root.valueText
             }
             font.pixelSize: Appearance.font.pixelSize.small
-            font.family: Appearance.font.family.numbers
+            font.family: Appearance.font.family.monospace
             font.weight: Font.Medium
-            color: Appearance.colors.colOnLayer0
+            font.letterSpacing: 1.1
+            color: Appearance.mission.colText
         }
     }
 }

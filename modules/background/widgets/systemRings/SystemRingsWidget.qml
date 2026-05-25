@@ -46,7 +46,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.unsharpen
         color: "transparent"
         clip: true
 
@@ -56,7 +56,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -66,7 +66,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -76,7 +76,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: Appearance.mission.colBorder
         }
 
         // Inset depth — top edge gradient
@@ -88,7 +88,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -126,7 +126,7 @@ AbstractBackgroundWidget {
                 letterSpacing: 2.0
                 capitalization: Font.AllUppercase
             }
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         // Rings row
@@ -137,7 +137,7 @@ AbstractBackgroundWidget {
             CircularProgressRing {
                 Layout.alignment: Qt.AlignTop
                 value: ResourceUsage.cpuUsage
-                ringColor: Appearance.colors.colPrimary
+                ringColor: Appearance.mission.colAccent
                 icon: "settings"
                 label: "CPU"
                 valueText: Math.round(ResourceUsage.cpuUsage * 100) + "%"
@@ -167,7 +167,7 @@ AbstractBackgroundWidget {
                 Layout.alignment: Qt.AlignTop
                 visible: root.showGpu && ResourceUsage.vramTotal > 1
                 value: ResourceUsage.vramUsedPercentage
-                ringColor: Appearance.m3colors.m3error
+                ringColor: Appearance.mission.colCritical
                 icon: "memory"
                 label: "VRAM"
                 valueText: {

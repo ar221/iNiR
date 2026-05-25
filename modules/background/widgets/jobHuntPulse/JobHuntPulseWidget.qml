@@ -117,7 +117,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -126,7 +126,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -135,7 +135,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: ColorUtils.transparentize(Appearance.mission.colBorder, 0.88)
         }
         Rectangle {
             anchors.left: parent.left
@@ -145,7 +145,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -169,7 +169,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Bold
                 font.letterSpacing: 2
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
 
             Item { Layout.fillWidth: true }
@@ -181,7 +181,7 @@ AbstractBackgroundWidget {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1.5
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
 
             // Freshness dot
@@ -190,9 +190,9 @@ AbstractBackgroundWidget {
                 height: 6
                 radius: 3
                 color: {
-                    if (root.freshnessColor === "green") return Appearance.m3colors.m3primary
-                    if (root.freshnessColor === "amber") return Appearance.colors.colTertiary
-                    return Appearance.colors.colError
+                    if (root.freshnessColor === "green") return Appearance.mission.colDone
+                    if (root.freshnessColor === "amber") return Appearance.mission.colWaiting
+                    return Appearance.mission.colCritical
                 }
             }
 
@@ -202,7 +202,7 @@ AbstractBackgroundWidget {
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1.5
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
 
@@ -210,7 +210,7 @@ AbstractBackgroundWidget {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 1
-            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82)
+            color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.82)
         }
 
         // — NEXT —
@@ -219,7 +219,7 @@ AbstractBackgroundWidget {
             visible: !!root.nextAction
             label: "NEXT"
             meta: "task"
-            accent: Appearance.colors.colPrimary
+            accent: Appearance.mission.colAccent
             showCount: false
 
             PulseRow {
@@ -239,7 +239,7 @@ AbstractBackgroundWidget {
             visible: !!root.nextAction && (root.showApplied || (root.showPackageReady && root.packageReady.length > 0) || root.showShortlist)
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.82) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -251,7 +251,7 @@ AbstractBackgroundWidget {
             label: "APPLIED"
             count: root.applied.length
             meta: root.waitingFollowup + " waiting · " + root.staleCount + " stale"
-            accent: Appearance.colors.colSecondary
+            accent: Appearance.mission.colActive
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -288,7 +288,7 @@ AbstractBackgroundWidget {
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.letterSpacing: 1.2
                             font.weight: Font.DemiBold
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextMuted
                             opacity: 0.85
                         }
 
@@ -309,7 +309,7 @@ AbstractBackgroundWidget {
             visible: root.showApplied && (root.showPackageReady && root.packageReady.length > 0 || root.showShortlist)
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.82) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -321,7 +321,7 @@ AbstractBackgroundWidget {
             label: "PACKAGE READY"
             count: root.packageReady.length
             meta: "not submitted"
-            accent: Appearance.colors.colTertiary
+            accent: Appearance.mission.colWaiting
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -351,7 +351,7 @@ AbstractBackgroundWidget {
             visible: root.showPackageReady && root.packageReady.length > 0 && root.showShortlist
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.82) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.82) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -363,7 +363,7 @@ AbstractBackgroundWidget {
             label: "SHORTLIST"
             count: root.shortlist.length
             meta: "to apply"
-            accent: Appearance.colors.colSubtext
+            accent: Appearance.mission.colTextMuted
 
             ColumnLayout {
                 anchors.left: parent.left
@@ -494,7 +494,7 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: promoteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: promoteHitHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: promoteHitHover }
                         TapHandler {
                             onTapped: {
@@ -507,7 +507,7 @@ AbstractBackgroundWidget {
                             anchors.centerIn: parent
                             text: "play_arrow"
                             iconSize: 16
-                            color: Appearance.colors.colPrimary
+                            color: Appearance.mission.colAccent
                         }
                     }
 
@@ -516,7 +516,7 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: noteHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: noteHitHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: noteHitHover }
                         TapHandler {
                             onTapped: {
@@ -528,7 +528,7 @@ AbstractBackgroundWidget {
                             anchors.centerIn: parent
                             text: "add_comment"
                             iconSize: 16
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextSecondary
                         }
                     }
 
@@ -537,7 +537,7 @@ AbstractBackgroundWidget {
                         width: 32
                         height: 32
                         radius: 2
-                        color: cancelHitHover.hovered ? Appearance.colors.colLayer2 : "transparent"
+                        color: cancelHitHover.hovered ? Appearance.mission.colSurfaceHover : "transparent"
                         HoverHandler { id: cancelHitHover }
                         TapHandler {
                             onTapped: {
@@ -549,7 +549,7 @@ AbstractBackgroundWidget {
                             anchors.centerIn: parent
                             text: "cancel"
                             iconSize: 16
-                            color: Appearance.colors.colError
+                            color: Appearance.mission.colCritical
                         }
                     }
                 }
@@ -560,9 +560,9 @@ AbstractBackgroundWidget {
                 Layout.fillWidth: true
                 implicitHeight: appCard.cancelPending ? 36 : 0
                 clip: true
-                color: ColorUtils.transparentize(Appearance.colors.colError, 0.9)
+                color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.9)
                 border.width: appCard.cancelPending ? 1 : 0
-                border.color: ColorUtils.transparentize(Appearance.colors.colError, 0.45)
+                border.color: ColorUtils.transparentize(Appearance.mission.colCritical, 0.45)
                 Behavior on implicitHeight {
                     NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                 }
@@ -577,7 +577,7 @@ AbstractBackgroundWidget {
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold
                         font.letterSpacing: 1
-                        color: Appearance.colors.colError
+                        color: Appearance.mission.colCritical
                         TapHandler {
                             onTapped: {
                                 if (cancelProc.running)
@@ -592,7 +592,7 @@ AbstractBackgroundWidget {
                         font.family: Appearance.font.family.monospace
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.letterSpacing: 1
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.mission.colTextSecondary
                         TapHandler {
                             onTapped: {
                                 // in-flight cancel allowed to complete — cancelPending resets UI only
@@ -608,9 +608,9 @@ AbstractBackgroundWidget {
                 Layout.fillWidth: true
                 implicitHeight: appCard.noteMode ? 36 : 0
                 clip: true
-                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.6)
+                color: ColorUtils.transparentize(Appearance.mission.colSurface, 0.6)
                 border.width: appCard.noteMode ? 1 : 0
-                border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.55)
+                border.color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.55)
                 Behavior on implicitHeight {
                     NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                 }
@@ -625,7 +625,7 @@ AbstractBackgroundWidget {
                     text: appCard.noteText
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                     maximumLength: 280
                     clip: true
                     onTextChanged: appCard.noteText = text

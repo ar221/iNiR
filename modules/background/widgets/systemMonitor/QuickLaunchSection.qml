@@ -45,8 +45,8 @@ GridLayout {
             Layout.preferredHeight: 48
             buttonRadius: Appearance.rounding.small
 
-            colBackground: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.15)
+            colBackground: Appearance.mission.colSurface
+            colBackgroundHover: Appearance.mission.colSurfaceHover
 
             onClicked: {
                 if (modelData.cmd && modelData.cmd !== "")
@@ -57,10 +57,10 @@ GridLayout {
                 anchors.centerIn: parent
                 text: launchBtn.modelData.icon ?? "apps"
                 iconSize: 24
-                color: index === 0 ? Appearance.colors.colPrimary
-                     : index === 1 ? Appearance.colors.colSecondary
-                     : index === 2 ? Appearance.colors.colTertiary
-                     : Appearance.colors.colOnLayer0
+                color: index === 0 ? Appearance.mission.colAccent
+                     : index === 1 ? Appearance.mission.colTextSecondary
+                     : index === 2 ? Appearance.mission.colTextMuted
+                     : Appearance.mission.colText
             }
 
             StyledToolTip {

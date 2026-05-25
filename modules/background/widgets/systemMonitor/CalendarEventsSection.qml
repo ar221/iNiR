@@ -25,7 +25,7 @@ ColumnLayout {
         MaterialSymbol {
             text: "event"
             iconSize: 16
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         StyledText {
@@ -33,7 +33,7 @@ ColumnLayout {
             text: "Today's Events"
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.DemiBold
-            color: Appearance.colors.colOnLayer0
+            color: Appearance.mission.colText
         }
 
         // Refresh button
@@ -42,13 +42,13 @@ ColumnLayout {
             buttonRadius: 11
             visible: root.gcalAvailable
             colBackground: "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: fetchEvents()
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "refresh"
                 iconSize: 14
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
     }
@@ -127,7 +127,7 @@ ColumnLayout {
             Layout.preferredHeight: noGcalCol.implicitHeight + 16
             visible: !root.gcalAvailable && !root.loading
             radius: Appearance.rounding.small
-            color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+            color: Appearance.mission.colSurface
 
             ColumnLayout {
                 id: noGcalCol
@@ -141,7 +141,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: "Google Calendar not connected"
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                     horizontalAlignment: Text.AlignHCenter
                 }
 
@@ -149,7 +149,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: "Install gcalcli to see events"
                     font.pixelSize: Appearance.font.pixelSize.smallest
-                    color: ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
+                    color: Appearance.mission.colTextMuted
                     horizontalAlignment: Text.AlignHCenter
                 }
             }
@@ -160,7 +160,7 @@ ColumnLayout {
             visible: root.loading
             text: "Loading events..."
             font.pixelSize: Appearance.font.pixelSize.smallest
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         // No events today
@@ -169,13 +169,13 @@ ColumnLayout {
             Layout.preferredHeight: 32
             visible: root.gcalAvailable && !root.loading && root.events.length === 0
             radius: Appearance.rounding.small
-            color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+            color: Appearance.mission.colSurface
 
             StyledText {
                 anchors.centerIn: parent
                 text: "No events today"
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
 
@@ -190,7 +190,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: eventRow.implicitHeight + 10
                 radius: Appearance.rounding.small
-                color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                color: Appearance.mission.colSurface
 
                 RowLayout {
                     id: eventRow
@@ -205,9 +205,9 @@ ColumnLayout {
                         Layout.preferredWidth: 3
                         Layout.fillHeight: true
                         radius: 1.5
-                        color: index === 0 ? Appearance.colors.colPrimary
-                             : index === 1 ? Appearance.colors.colSecondary
-                             : Appearance.colors.colTertiary
+                        color: index === 0 ? Appearance.mission.colAccent
+                             : index === 1 ? Appearance.mission.colTextSecondary
+                             : Appearance.mission.colTextMuted
                     }
 
                     ColumnLayout {
@@ -219,7 +219,7 @@ ColumnLayout {
                             text: eventItem.modelData.title
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.Medium
-                            color: Appearance.colors.colOnLayer0
+                            color: Appearance.mission.colText
                             elide: Text.ElideRight
                             maximumLineCount: 1
                         }
@@ -232,7 +232,7 @@ ColumnLayout {
                                 return t
                             }
                             font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextSecondary
                         }
                     }
                 }

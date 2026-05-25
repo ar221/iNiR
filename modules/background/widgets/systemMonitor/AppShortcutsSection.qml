@@ -49,9 +49,9 @@ ColumnLayout {
             implicitWidth: 28; implicitHeight: 28
             buttonRadius: 14
             colBackground: root.editMode
-                ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.8)
+                ? ColorUtils.transparentize(Appearance.mission.colAccent, 0.8)
                 : "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: {
                 root.editMode = !root.editMode
                 if (!root.editMode) root.showSearch = false
@@ -61,8 +61,8 @@ ColumnLayout {
                 text: root.editMode ? "done" : "edit"
                 iconSize: 16
                 color: root.editMode
-                    ? Appearance.colors.colPrimary
-                    : Appearance.colors.colSubtext
+                    ? Appearance.mission.colAccent
+                    : Appearance.mission.colTextSecondary
             }
         }
     }
@@ -99,8 +99,8 @@ ColumnLayout {
                     anchors.fill: parent
                     radius: Appearance.rounding.small
                     color: appMouse.containsMouse
-                        ? ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.3)
-                        : ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.5)
+                        ? Appearance.mission.colSurfaceHover
+                        : Appearance.mission.colSurface
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
@@ -121,7 +121,7 @@ ColumnLayout {
                     visible: iconImg.status !== Image.Ready
                     text: "apps"
                     iconSize: 22
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
 
                 MouseArea {
@@ -152,7 +152,7 @@ ColumnLayout {
                     anchors.right: parent.right
                     anchors.margins: -4
                     width: 18; height: 18; radius: 9
-                    color: Appearance.colors.colError
+                    color: Appearance.mission.colCritical
                     z: 10
 
                     MaterialSymbol {
@@ -181,10 +181,10 @@ ColumnLayout {
                 anchors.fill: parent
                 radius: Appearance.rounding.small
                 color: addMouse.containsMouse
-                    ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.7)
+                    ? ColorUtils.transparentize(Appearance.mission.colAccent, 0.7)
                     : "transparent"
                 border.width: 2
-                border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                border.color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.5)
                 border.pixelAligned: true
 
                 Behavior on color { ColorAnimation { duration: 150 } }
@@ -194,7 +194,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 text: "add"
                 iconSize: 22
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
 
             MouseArea {
@@ -225,11 +225,11 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 36
             radius: Appearance.rounding.small
-            color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.3)
+            color: Appearance.mission.colSurface
             border.width: 1
             border.color: searchInput.activeFocus
-                ? Appearance.colors.colPrimary
-                : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                ? Appearance.mission.colAccent
+                : Appearance.mission.colBorderSubtle
 
             RowLayout {
                 anchors.fill: parent
@@ -240,7 +240,7 @@ ColumnLayout {
                 MaterialSymbol {
                     text: "search"
                     iconSize: 16
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
 
                 TextInput {
@@ -248,7 +248,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.main
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                     clip: true
                     onTextChanged: {
                         root.searchQuery = text
@@ -262,7 +262,7 @@ ColumnLayout {
                     visible: searchInput.text === ""
                     text: "Search apps..."
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                     anchors.left: parent.children[1].left
                 }
             }
@@ -325,7 +325,7 @@ ColumnLayout {
                     Layout.preferredHeight: 36
                     radius: Appearance.rounding.small
                     color: resultMouse.containsMouse
-                        ? ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.3)
+                        ? Appearance.mission.colSurfaceHover
                         : "transparent"
 
                     RowLayout {
@@ -346,14 +346,14 @@ ColumnLayout {
                             visible: resultIcon.status !== Image.Ready
                             text: "apps"
                             iconSize: 20
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextSecondary
                         }
 
                         StyledText {
                             Layout.fillWidth: true
                             text: resultItem.modelData.name ?? ""
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colOnLayer0
+                            color: Appearance.mission.colText
                             elide: Text.ElideRight
                         }
 
@@ -361,7 +361,7 @@ ColumnLayout {
                             text: resultItem.modelData.exec ?? ""
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.family: Appearance.font.family.monospace
-                            color: Appearance.colors.colSubtext
+                            color: Appearance.mission.colTextSecondary
                             elide: Text.ElideRight
                             Layout.maximumWidth: 100
                         }
@@ -369,7 +369,7 @@ ColumnLayout {
                         MaterialSymbol {
                             text: "add_circle"
                             iconSize: 18
-                            color: Appearance.colors.colPrimary
+                            color: Appearance.mission.colAccent
                         }
                     }
 
@@ -394,7 +394,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             text: "No apps found"
             font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
     }
 

@@ -23,7 +23,7 @@ ColumnLayout {
         MaterialSymbol {
             text: Icons.getWeatherIcon(Weather.data?.wCode, Weather.isNightNow()) ?? "cloud"
             iconSize: 32
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
         }
 
         StyledText {
@@ -31,7 +31,7 @@ ColumnLayout {
             font.pixelSize: Appearance.font.pixelSize.huge
             font.weight: Font.Medium
             font.family: Appearance.font.family.numbers
-            color: Appearance.colors.colOnLayer0
+            color: Appearance.mission.colText
         }
     }
 
@@ -40,7 +40,7 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         text: Weather.data?.description ?? ""
         font.pixelSize: Appearance.font.pixelSize.small
-        color: Appearance.colors.colOnLayer0
+        color: Appearance.mission.colText
         visible: text !== ""
     }
 
@@ -58,7 +58,7 @@ ColumnLayout {
             return parts.join("  ·  ")
         }
         font.pixelSize: Appearance.font.pixelSize.smallest
-        color: Appearance.colors.colSubtext
+        color: Appearance.mission.colTextSecondary
         visible: text !== ""
     }
 }

@@ -38,7 +38,7 @@ Item {
             visible: distroLogo.status !== Image.Ready
             text: "deployed_code"
             iconSize: 52
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
         }
 
         // Labels column
@@ -48,49 +48,49 @@ Item {
 
             RowLayout {
                 spacing: 6
-                MaterialSymbol { text: "computer"; iconSize: 14; color: Appearance.colors.colPrimary }
+                MaterialSymbol { text: "computer"; iconSize: 14; color: Appearance.mission.colAccent }
                 StyledText {
                     text: "os"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
-                    color: Appearance.colors.colPrimary
+                    color: Appearance.mission.colAccent
                 }
                 StyledText {
                     text: osName
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
             }
 
             RowLayout {
                 spacing: 6
-                MaterialSymbol { text: "desktop_windows"; iconSize: 14; color: Appearance.colors.colPrimary }
+                MaterialSymbol { text: "desktop_windows"; iconSize: 14; color: Appearance.mission.colAccent }
                 StyledText {
                     text: "wm"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
-                    color: Appearance.colors.colPrimary
+                    color: Appearance.mission.colAccent
                 }
                 StyledText {
                     text: wmName
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
             }
 
             RowLayout {
                 spacing: 6
-                MaterialSymbol { text: "terminal"; iconSize: 14; color: Appearance.colors.colPrimary }
+                MaterialSymbol { text: "terminal"; iconSize: 14; color: Appearance.mission.colAccent }
                 StyledText {
                     text: "sh"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
-                    color: Appearance.colors.colPrimary
+                    color: Appearance.mission.colAccent
                 }
                 StyledText {
                     text: shellName
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
             }
         }

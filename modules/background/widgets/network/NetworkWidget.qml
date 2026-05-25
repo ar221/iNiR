@@ -46,10 +46,10 @@ AbstractBackgroundWidget {
     // ── Ping quality ──
     property real pingMs: -1
     property color pingColor: {
-        if (pingMs < 0) return Appearance.colors.colSubtext
-        if (pingMs < 20) return "#4caf50"
-        if (pingMs <= 100) return "#ffc107"
-        return "#f44336"
+        if (pingMs < 0) return Appearance.mission.colTextSecondary
+        if (pingMs < 20) return Appearance.mission.colDone
+        if (pingMs <= 100) return Appearance.mission.colWaiting
+        return Appearance.mission.colCritical
     }
 
     // ── Copy feedback ──
@@ -203,7 +203,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.unsharpen
         color: "transparent"
         clip: true
 
@@ -213,7 +213,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -223,7 +223,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -233,7 +233,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: Appearance.mission.colBorder
         }
 
         // Inset depth — top edge gradient
@@ -245,7 +245,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -265,16 +265,17 @@ AbstractBackgroundWidget {
             StyledText {
                 text: "NETWORK"
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                font.letterSpacing: 2.0
+                font.family: Appearance.font.family.monospace
+                font.letterSpacing: 1.1
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
 
             Item { Layout.fillWidth: true }
 
             MaterialSymbol {
                 iconSize: Appearance.font.pixelSize.normal
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
                 text: {
                     if (root.connectionType === "wifi") return "wifi"
                     if (root.connectionType === "ethernet" || root.connectionType === "bridge") return "lan"
@@ -315,8 +316,8 @@ AbstractBackgroundWidget {
                     font.family: Appearance.font.family.monospace
                     font.weight: Font.Medium
                     color: root.showCopied
-                        ? Appearance.colors.colSecondary
-                        : Appearance.colors.colPrimary
+                        ? Appearance.mission.colDone
+                        : Appearance.mission.colAccent
                 }
             }
         }
@@ -330,14 +331,14 @@ AbstractBackgroundWidget {
                 text: "\u2193 " + formatSpeed(root.rxSpeed)
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
 
             StyledText {
                 text: "\u2191 " + formatSpeed(root.txSpeed)
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.family: Appearance.font.family.monospace
-                color: Appearance.colors.colSecondary
+                color: Appearance.mission.colAccentMuted
             }
         }
 
@@ -365,21 +366,16 @@ AbstractBackgroundWidget {
 
                     // RX (download) — fills from midY toward top
                     drawAreaFill(ctx, root.rxHistory, w, h, midY, maxVal,
-                        Appearance.colors.colPrimary, true)
+                        Appearance.mission.colAccent, true)
                     // TX (upload) — fills from midY toward bottom
                     drawAreaFill(ctx, root.txHistory, w, h, midY, maxVal,
-                        Appearance.colors.colSecondary, false)
+                        Appearance.mission.colAccentMuted, false)
 
                     // Center baseline
                     ctx.beginPath()
                     ctx.moveTo(0, midY)
                     ctx.lineTo(w, midY)
-                    ctx.strokeStyle = Qt.rgba(
-                        Appearance.colors.colSubtext.r,
-                        Appearance.colors.colSubtext.g,
-                        Appearance.colors.colSubtext.b,
-                        0.2
-                    )
+                    ctx.strokeStyle = ColorUtils.transparentize(Appearance.mission.colTextSecondary, 0.8)
                     ctx.lineWidth = 0.5
                     ctx.stroke()
                 }

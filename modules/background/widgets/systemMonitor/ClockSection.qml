@@ -22,7 +22,7 @@ ColumnLayout {
         font.pixelSize: 52
         font.family: Appearance.font.family.numbers
         font.weight: Font.Bold
-        color: Appearance.colors.colPrimary
+        color: Appearance.mission.colAccent
         lineHeight: 0.9
     }
 
@@ -36,7 +36,7 @@ ColumnLayout {
                 width: 5
                 height: 5
                 radius: 2.5
-                color: Appearance.colors.colPrimary
+                color: Appearance.mission.colAccent
             }
         }
     }
@@ -51,7 +51,7 @@ ColumnLayout {
         font.pixelSize: 52
         font.family: Appearance.font.family.numbers
         font.weight: Font.Bold
-        color: Appearance.colors.colPrimary
+        color: Appearance.mission.colAccent
         lineHeight: 0.9
     }
 
@@ -66,6 +66,6 @@ ColumnLayout {
         }
         font.pixelSize: Appearance.font.pixelSize.small
         font.weight: Font.Medium
-        color: Appearance.colors.colPrimary
+        color: Appearance.mission.colAccent
     }
 }

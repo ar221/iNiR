@@ -54,7 +54,7 @@ ColumnLayout {
         MaterialSymbol {
             text: "devices"
             iconSize: 14
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         StyledText {
@@ -62,7 +62,7 @@ ColumnLayout {
             text: root.player?.identity ?? "Unknown Player"
             font.pixelSize: Appearance.font.pixelSize.smallest
             font.weight: Font.Medium
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
             elide: Text.ElideRight
         }
 
@@ -70,7 +70,7 @@ ColumnLayout {
             implicitWidth: 24; implicitHeight: 24
             buttonRadius: 12
             colBackground: "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: {
                 const players = root.allPlayers
                 const currentIdx = players.indexOf(root.player)
@@ -81,7 +81,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 text: "chevron_left"
                 iconSize: 16
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
 
@@ -89,7 +89,7 @@ ColumnLayout {
             implicitWidth: 24; implicitHeight: 24
             buttonRadius: 12
             colBackground: "transparent"
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
             onClicked: {
                 const players = root.allPlayers
                 const currentIdx = players.indexOf(root.player)
@@ -100,7 +100,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 text: "chevron_right"
                 iconSize: 16
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
     }
@@ -122,7 +122,7 @@ ColumnLayout {
             anchors.right: parent.right
             height: 120
             radius: Appearance.rounding.normal
-            color: Appearance.colors.colSurfaceContainer
+            color: Appearance.mission.colSurface
             clip: true
 
             Image {
@@ -153,7 +153,7 @@ ColumnLayout {
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
                     GradientStop { position: 0.5; color: "transparent" }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.7) }
+                    GradientStop { position: 1.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.3) }
                 }
             }
 
@@ -181,7 +181,7 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             height: 3
             radius: 1.5
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+            color: Appearance.mission.colBorderSubtle
         }
 
         // Progress fill
@@ -191,7 +191,7 @@ ColumnLayout {
             height: 3
             radius: 1.5
             width: parent.width * Math.min(1, Math.max(0, (root.player?.position ?? 0) / Math.max(1, root.player?.length ?? 1)))
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
 
             Behavior on width {
                 enabled: Appearance.animationsEnabled
@@ -210,14 +210,14 @@ ColumnLayout {
                 text: formatTime(root.player?.position ?? 0)
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.numbers
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
             Item { Layout.fillWidth: true }
             StyledText {
                 text: formatTime(root.player?.length ?? 0)
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.family: Appearance.font.family.numbers
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
         }
     }
@@ -232,7 +232,7 @@ ColumnLayout {
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40
             radius: Appearance.rounding.small
-            color: Appearance.colors.colSurfaceContainer
+            color: Appearance.mission.colSurface
             visible: !root.isPlaying || !root.hasArt
             clip: true
 
@@ -256,7 +256,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 text: "music_note"
                 iconSize: 20
-                color: ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
+                color: Appearance.mission.colTextMuted
                 visible: thumbArt.status !== Image.Ready
             }
         }
@@ -270,7 +270,7 @@ ColumnLayout {
                 text: root.player?.trackTitle ?? "Nothing Playing"
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.Medium
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
@@ -279,7 +279,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: root.player?.trackArtist ?? ""
                 font.pixelSize: Appearance.font.pixelSize.small
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
                 elide: Text.ElideRight
                 maximumLineCount: 1
                 visible: text !== ""
@@ -293,21 +293,21 @@ ColumnLayout {
                 implicitWidth: 30; implicitHeight: 30
                 buttonRadius: 15
                 colBackground: "transparent"
-                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
                 onClicked: MprisController.previous()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_previous"
                     iconSize: 20
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
             }
 
             RippleButton {
                 implicitWidth: 36; implicitHeight: 36
                 buttonRadius: 18
-                colBackground: Appearance.colors.colPrimary
-                colBackgroundHover: ColorUtils.lighten(Appearance.colors.colPrimary, 0.1)
+                colBackground: Appearance.mission.colAccent
+                colBackgroundHover: ColorUtils.lighten(Appearance.mission.colAccent, 0.1)
                 onClicked: MprisController.togglePlaying()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
@@ -321,13 +321,13 @@ ColumnLayout {
                 implicitWidth: 30; implicitHeight: 30
                 buttonRadius: 15
                 colBackground: "transparent"
-                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                colBackgroundHover: ColorUtils.transparentize(Appearance.mission.colText, 0.85)
                 onClicked: MprisController.next()
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "skip_next"
                     iconSize: 20
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
             }
         }

@@ -43,7 +43,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.unsharpen
         color: "transparent"
         clip: true
 
@@ -53,7 +53,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -63,7 +63,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - root.cardOpacity
             )
         }
@@ -73,7 +73,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: Appearance.mission.colBorder
         }
 
         // Inset depth — top edge gradient
@@ -85,7 +85,7 @@ AbstractBackgroundWidget {
             height: 6
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.7) }
+                GradientStop { position: 0.0; color: ColorUtils.transparentize(Appearance.mission.colCanvas, 0.7) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -103,9 +103,9 @@ AbstractBackgroundWidget {
             Layout.alignment: Qt.AlignHCenter
             text: DateTime.time
             font.pixelSize: 52
-            font.family: Appearance.font.family.numbers
+            font.family: Appearance.font.family.monospace
             font.weight: Font.Bold
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
         }
 
         // ── Compact date line ──
@@ -120,7 +120,7 @@ AbstractBackgroundWidget {
             }
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.Medium
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
         }
 
         // ── Separator ──
@@ -128,7 +128,7 @@ AbstractBackgroundWidget {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
             Layout.topMargin: 4
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            color: Appearance.mission.colBorderSubtle
         }
 
         // ── Month/Year navigation row ──
@@ -141,13 +141,13 @@ AbstractBackgroundWidget {
                 implicitWidth: 26; implicitHeight: 26
                 buttonRadius: 13
                 colBackground: "transparent"
-                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                colBackgroundHover: Appearance.mission.colSurfaceHover
                 onClicked: calendarView.scrollMonthsAndSnap(-1)
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "chevron_left"
                     iconSize: 16
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
 
@@ -157,21 +157,22 @@ AbstractBackgroundWidget {
                     return d.toLocaleDateString(root.locale, "MMMM")
                 }
                 font.pixelSize: Appearance.font.pixelSize.small
+                font.family: Appearance.font.family.monospace
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
 
             RippleButton {
                 implicitWidth: 26; implicitHeight: 26
                 buttonRadius: 13
                 colBackground: "transparent"
-                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                colBackgroundHover: Appearance.mission.colSurfaceHover
                 onClicked: calendarView.scrollMonthsAndSnap(1)
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "chevron_right"
                     iconSize: 16
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
 
@@ -180,8 +181,9 @@ AbstractBackgroundWidget {
             StyledText {
                 text: calendarView.focusedDate.getFullYear().toString()
                 font.pixelSize: Appearance.font.pixelSize.small
+                font.family: Appearance.font.family.monospace
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colOnLayer0
+                color: Appearance.mission.colText
             }
         }
 
@@ -198,7 +200,7 @@ AbstractBackgroundWidget {
                     for (let i = 0; i < 7; i++) {
                         const dayIdx = (fdow + i) % 7
                         const refDate = new Date(2024, 0, 7 + dayIdx)
-                        items.push(refDate.toLocaleDateString(root.locale, "ddd").substring(0, 3).toLowerCase())
+                        items.push(refDate.toLocaleDateString(root.locale, "ddd").substring(0, 3).toUpperCase())
                     }
                     return items
                 }
@@ -209,8 +211,10 @@ AbstractBackgroundWidget {
                     horizontalAlignment: Text.AlignHCenter
                     text: modelData
                     font.pixelSize: Appearance.font.pixelSize.smallest
+                    font.family: Appearance.font.family.monospace
                     font.weight: Font.DemiBold
-                    color: Appearance.colors.colSubtext
+                    font.letterSpacing: 1.0
+                    color: Appearance.mission.colTextSecondary
                 }
             }
         }
@@ -237,8 +241,8 @@ AbstractBackgroundWidget {
                     anchors.centerIn: parent
                     width: 28
                     height: 28
-                    radius: 14
-                    color: dayDelegate.isToday ? Appearance.colors.colPrimary : "transparent"
+                    radius: Appearance.rounding.unsharpenmore
+                    color: dayDelegate.isToday ? Appearance.mission.colAccent : "transparent"
                 }
 
                 StyledText {
@@ -246,9 +250,9 @@ AbstractBackgroundWidget {
                     text: model.day
                     font.pixelSize: Appearance.font.pixelSize.smallest
                     font.weight: dayDelegate.isToday ? Font.Bold : Font.Normal
-                    color: dayDelegate.isToday ? Appearance.colors.colOnPrimary
-                         : dayDelegate.isCurrentMonth ? Appearance.colors.colOnLayer0
-                         : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.6)
+                    color: dayDelegate.isToday ? Appearance.mission.colCanvas
+                         : dayDelegate.isCurrentMonth ? Appearance.mission.colText
+                         : Appearance.mission.colTextMuted
                 }
             }
         }
@@ -263,7 +267,7 @@ AbstractBackgroundWidget {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+                color: Appearance.mission.colBorderSubtle
             }
 
             // Section header
@@ -274,7 +278,7 @@ AbstractBackgroundWidget {
                 MaterialSymbol {
                     text: "event"
                     iconSize: 16
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
 
                 StyledText {
@@ -282,20 +286,20 @@ AbstractBackgroundWidget {
                     text: "Today's Events"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
-                    color: Appearance.colors.colOnLayer0
+                    color: Appearance.mission.colText
                 }
 
                 RippleButton {
                     implicitWidth: 22; implicitHeight: 22
                     buttonRadius: 11
                     colBackground: "transparent"
-                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.85)
+                    colBackgroundHover: Appearance.mission.colSurfaceHover
                     onClicked: root.fetchEvents()
                     contentItem: MaterialSymbol {
                         anchors.centerIn: parent
                         text: "refresh"
                         iconSize: 14
-                        color: Appearance.colors.colSubtext
+                        color: Appearance.mission.colTextSecondary
                     }
                 }
             }
@@ -305,7 +309,7 @@ AbstractBackgroundWidget {
                 visible: root.eventsLoading
                 text: "Loading events..."
                 font.pixelSize: Appearance.font.pixelSize.smallest
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextSecondary
             }
 
             // No events
@@ -314,13 +318,13 @@ AbstractBackgroundWidget {
                 Layout.preferredHeight: 32
                 visible: root.gcalAvailable && !root.eventsLoading && root.events.length === 0
                 radius: Appearance.rounding.small
-                color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                color: ColorUtils.transparentize(Appearance.mission.colSurface, 0.4)
 
                 StyledText {
                     anchors.centerIn: parent
                     text: "No events today"
                     font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colSubtext
+                    color: Appearance.mission.colTextSecondary
                 }
             }
 
@@ -335,7 +339,7 @@ AbstractBackgroundWidget {
                     Layout.fillWidth: true
                     Layout.preferredHeight: eventRow.implicitHeight + 10
                     radius: Appearance.rounding.small
-                    color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer, 0.4)
+                    color: ColorUtils.transparentize(Appearance.mission.colSurface, 0.4)
 
                     RowLayout {
                         id: eventRow
@@ -349,9 +353,9 @@ AbstractBackgroundWidget {
                             Layout.preferredWidth: 3
                             Layout.fillHeight: true
                             radius: 1.5
-                            color: eventItem.index === 0 ? Appearance.colors.colPrimary
-                                 : eventItem.index === 1 ? Appearance.colors.colSecondary
-                                 : Appearance.colors.colTertiary
+                            color: eventItem.index === 0 ? Appearance.mission.colAccent
+                                 : eventItem.index === 1 ? Appearance.mission.colAccentMuted
+                                 : Appearance.mission.colAccentDim
                         }
 
                         ColumnLayout {
@@ -363,7 +367,7 @@ AbstractBackgroundWidget {
                                 text: eventItem.modelData.title
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 font.weight: Font.Medium
-                                color: Appearance.colors.colOnLayer0
+                                color: Appearance.mission.colText
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                             }
@@ -376,7 +380,7 @@ AbstractBackgroundWidget {
                                     return t
                                 }
                                 font.pixelSize: Appearance.font.pixelSize.smallest
-                                color: Appearance.colors.colSubtext
+                                color: Appearance.mission.colTextSecondary
                             }
                         }
                     }
@@ -392,7 +396,7 @@ AbstractBackgroundWidget {
             visible: text !== ""
             font.pixelSize: Appearance.font.pixelSize.small
             font.weight: Font.Medium
-            color: Appearance.colors.colPrimary
+            color: Appearance.mission.colAccent
 
             text: {
                 void root._countdownTick // force re-eval every minute

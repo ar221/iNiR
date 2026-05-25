@@ -43,7 +43,7 @@ AbstractBackgroundWidget {
     Rectangle {
         id: cardBackground
         anchors.fill: parent
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.unsharpen
         color: "transparent"
         clip: true
 
@@ -53,7 +53,7 @@ AbstractBackgroundWidget {
             screenX: root.screenPos.x
             screenY: root.screenPos.y
             fallbackColor: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - (root.monitorConfig.cardOpacity ?? 0.85)
             )
         }
@@ -63,7 +63,7 @@ AbstractBackgroundWidget {
             visible: !Appearance.auroraEverywhere && !Appearance.angelEverywhere
             radius: parent.radius
             color: ColorUtils.transparentize(
-                Appearance.colors.colLayer0,
+                Appearance.mission.colCanvas,
                 1.0 - (root.monitorConfig.cardOpacity ?? 0.85)
             )
         }
@@ -73,7 +73,7 @@ AbstractBackgroundWidget {
             radius: parent.radius
             color: "transparent"
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+            border.color: Appearance.mission.colBorder
         }
     }
 
@@ -110,7 +110,7 @@ AbstractBackgroundWidget {
                 width: 2; height: 2; radius: 1
                 x: 14 - 6 + index * 3
                 y: 14 - 6 + (2 - index) * 3
-                color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.6)
+                color: Appearance.mission.colTextMuted
                 visible: resizeHandle.containsMouse || resizeHandle.pressed
             }
         }
@@ -235,6 +235,6 @@ AbstractBackgroundWidget {
     component SectionSeparator: Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 1
-        color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.88)
+        color: Appearance.mission.colBorderSubtle
     }
 }

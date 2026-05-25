@@ -63,7 +63,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 2
-        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.92)
+        color: ColorUtils.transparentize(Appearance.mission.colAccent, 0.92)
         visible: _hover.containsMouse
         z: -1
     }
@@ -92,11 +92,11 @@ Item {
                 ? Appearance.font.pixelSize.smallie
                 : Appearance.font.pixelSize.smaller
             color: {
-                if (root.variant === "applied")   return Appearance.colors.colSecondary
-                if (root.variant === "ready")     return Appearance.colors.colTertiary
-                if (root.variant === "shortlist") return Appearance.colors.colSubtext
-                if (root.variant === "next")      return Appearance.colors.colPrimary
-                return Appearance.colors.colSubtext
+                if (root.variant === "applied")   return Appearance.mission.colActive
+                if (root.variant === "ready")     return Appearance.mission.colWaiting
+                if (root.variant === "shortlist") return Appearance.mission.colTextMuted
+                if (root.variant === "next")      return Appearance.mission.colAccent
+                return Appearance.mission.colTextMuted
             }
             Layout.alignment: Qt.AlignBaseline
         }
@@ -104,7 +104,7 @@ Item {
         // — Priority tag (shortlist) —
         Rectangle {
             visible: root.variant === "shortlist" && root.priorityTag.length > 0
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.96)
+            color: Appearance.mission.colSurfaceRaised
             radius: 2
             implicitWidth: prioLabel.implicitWidth + 10
             implicitHeight: prioLabel.implicitHeight + 4
@@ -117,7 +117,7 @@ Item {
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.weight: Font.DemiBold
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextMuted
             }
         }
 
@@ -128,8 +128,8 @@ Item {
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.weight: Font.Bold
             color: root.variant === "shortlist"
-                ? Appearance.colors.colSubtext
-                : Appearance.colors.colOnLayer0
+                ? Appearance.mission.colTextMuted
+                : Appearance.mission.colText
             Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: root.variant === "next"
             opacity: root.passive ? 0.55 : 1.0
@@ -143,7 +143,7 @@ Item {
             text: root.role
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smallie
-            color: Appearance.colors.colSubtext
+            color: Appearance.mission.colTextSecondary
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignBaseline
             elide: Text.ElideRight
@@ -154,7 +154,7 @@ Item {
         // — Passive tag (applied + passive) —
         Rectangle {
             visible: root.variant === "applied" && root.passive
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.96)
+            color: Appearance.mission.colSurfaceRaised
             radius: 2
             implicitWidth: passLabel.implicitWidth + 10
             implicitHeight: passLabel.implicitHeight + 4
@@ -168,14 +168,14 @@ Item {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.DemiBold
                 font.letterSpacing: 1
-                color: Appearance.colors.colSubtext
+                color: Appearance.mission.colTextMuted
             }
         }
 
         // — SHIP marker (ready) —
         Rectangle {
             visible: root.variant === "ready" && root.marker.length > 0
-            color: Appearance.colors.colTertiary
+            color: Appearance.mission.colWaiting
             radius: 2
             implicitWidth: shipLabel.implicitWidth + 10
             implicitHeight: shipLabel.implicitHeight + 4
@@ -189,7 +189,7 @@ Item {
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold
                 font.letterSpacing: 1
-                color: Appearance.colors.colOnLayer0   // dark text on amber
+                color: Appearance.mission.colText   // dark text on amber
             }
         }
     }
