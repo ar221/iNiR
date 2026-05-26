@@ -45,6 +45,8 @@ ShellRoot {
         Hyprsunset.load();
         FirstRunExperience.load();
         ConflictKiller.load();
+        // Force MemoryPressureService instantiation for IPC (#164)
+        void MemoryPressureService.enabled;
         // Reset shell entry state (hot-reload may preserve singletons)
         GlobalStates.shellEntryReady = false;
         if (Config.ready) shellEntryTimer.start();
