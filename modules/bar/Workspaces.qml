@@ -68,6 +68,7 @@ Item {
     }
     readonly property int workspacesShown: actualWorkspaceCount
     readonly property bool wrapAround: wsConfig.wrapAround ?? true
+    readonly property bool invertScroll: wsConfig.invertScroll ?? false
     
     readonly property int workspaceGroup: Math.floor((currentWorkspaceNumber - 1) / root.workspacesShown)
     property list<bool> workspaceOccupied: []
@@ -96,7 +97,7 @@ Item {
     property bool showNumbers: false
     Timer {
         id: showNumbersTimer
-        interval: (Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100)
+        interval: Math.max(0, root.wsConfig.showNumberDelay ?? 300)
         repeat: false
         onTriggered: {
             root.showNumbers = true
@@ -214,7 +215,7 @@ Item {
             const delta = deltaX !== 0 ? deltaX : -deltaY
             if (delta === 0) return
             
-            const direction = delta > 0 ? 1 : -1
+            const direction = (delta > 0 ? 1 : -1) * (root.invertScroll ? -1 : 1)
 
             if (CompositorService.isNiri) {
                 if (root.columnMode) {
@@ -401,10 +402,7 @@ Item {
                     }
 
                     StyledText { // Workspace number text
-                        opacity: root.showNumbers
-                            || ((wsConfig.alwaysShowNumbers && (!wsConfig.showAppIcons || !workspaceButtonBackground.biggestWindow || root.showNumbers))
-                            || (root.showNumbers && !wsConfig.showAppIcons)
-                            )  ? 1 : 0
+                        opacity: (root.showNumbers || wsConfig.alwaysShowNumbers) ? 1 : 0
                         z: 3
 
                         anchors.centerIn: parent
@@ -457,20 +455,20 @@ Item {
                         width: workspaceButtonWidth
                         height: workspaceButtonWidth
                         opacity: !wsConfig.showAppIcons ? 0 :
-                            (workspaceButtonBackground.biggestWindow && !root.showNumbers && wsConfig.showAppIcons) ? 
+                            (workspaceButtonBackground.biggestWindow && !(root.showNumbers || wsConfig.alwaysShowNumbers)) ?
                             1 : workspaceButtonBackground.biggestWindow ? workspaceIconOpacityShrinked : 0
                             visible: opacity > 0
                         IconImage {
                             id: mainAppIcon
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
-                            anchors.bottomMargin: (!root.showNumbers && wsConfig.showAppIcons) ? 
+                            anchors.bottomMargin: (!(root.showNumbers || wsConfig.alwaysShowNumbers) && wsConfig.showAppIcons) ?
                                 (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
-                            anchors.rightMargin: (!root.showNumbers && wsConfig.showAppIcons) ? 
+                            anchors.rightMargin: (!(root.showNumbers || wsConfig.alwaysShowNumbers) && wsConfig.showAppIcons) ?
                                 (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
 
                             source: workspaceButtonBackground.mainAppIconSource
-                            implicitSize: (!root.showNumbers && wsConfig.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
+                            implicitSize: (!(root.showNumbers || wsConfig.alwaysShowNumbers) && wsConfig.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
 
                             Behavior on opacity {
                                 animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
@@ -610,10 +608,10 @@ Item {
                     property bool isActive: columnButton.index === root.currentWindowIndex
                     property color dotColor: isActive ? Appearance.m3colors.m3onPrimary : Appearance.m3colors.m3onSecondaryContainer
 
-                    // Dot (when showAppIcons is off) - always hidden in column mode
+                    // Dot fallback when app icons are hidden
                     Rectangle {
                         id: columnDot
-                        opacity: 0  // Column mode always shows icons
+                        opacity: wsConfig.showAppIcons ? 0 : 1
                         visible: opacity > 0
                         anchors.centerIn: parent
                         width: workspaceButtonWidth * 0.18
@@ -626,13 +624,13 @@ Item {
                         }
                     }
 
-                    // App icon - always visible in column mode
+                    // App icon
                     Item {
                         anchors.centerIn: parent
                         width: workspaceButtonWidth
                         height: workspaceButtonWidth
-                        opacity: 1
-                        visible: true
+                        opacity: wsConfig.showAppIcons ? 1 : 0
+                        visible: opacity > 0
 
                         IconImage {
                             id: columnAppIcon
@@ -646,7 +644,7 @@ Item {
                         }
 
                         Tint {
-                            active: wsConfig.monochromeIcons
+                            active: wsConfig.showAppIcons && wsConfig.monochromeIcons
                             anchors.fill: columnAppIcon
                             source: columnAppIcon
                             tintColor: columnDot.color
