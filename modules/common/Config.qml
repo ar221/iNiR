@@ -468,6 +468,7 @@ Singleton {
 
             property JsonObject compositor: JsonObject {
                 property bool autoExpandSingleTilingWindow: false
+                property JsonObject outputLayoutProfiles: JsonObject {}
             }
 
             property JsonObject apps: JsonObject {

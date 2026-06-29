@@ -211,7 +211,8 @@
     }
   },
   "compositor": {
-    "autoExpandSingleTilingWindow": false
+    "autoExpandSingleTilingWindow": false,
+    "outputLayoutProfiles": {}
   },
   "background": {
     "backdrop": {

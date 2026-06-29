@@ -270,6 +270,9 @@ ContentPage {
     readonly property string activeLayoutPresetId: detectActiveLayoutPreset()
     readonly property string selectedLayoutPresetId: activeLayoutPresetId.length > 0 && activeLayoutPresetId !== "custom" ? activeLayoutPresetId : (lastLayoutPresetId.length > 0 ? lastLayoutPresetId : "balanced")
     readonly property var selectedLayoutPreset: layoutPresetById(selectedLayoutPresetId)
+    readonly property var outputLayoutProfiles: Config.options?.compositor?.outputLayoutProfiles ?? ({})
+    readonly property string currentOutputLayoutProfileId: currentOutputName.length > 0 ? String(outputLayoutProfiles[currentOutputName] ?? "") : ""
+    readonly property var currentOutputLayoutProfile: currentOutputLayoutProfileId.length > 0 ? layoutPresetById(currentOutputLayoutProfileId) : null
     readonly property var warpMouseModeOptions: [
         { displayName: Translation.tr("Separate axes"), value: "separate" },
         { displayName: Translation.tr("Center window"), value: "center-xy" },
@@ -616,6 +619,34 @@ ContentPage {
         setConfig("layout", "struts.top", struts.top ?? 0)
         setConfig("layout", "struts.bottom", struts.bottom ?? 0)
         resetBanner(Translation.tr("Queued layout preset: %1").arg(preset.displayName))
+    }
+
+    function assignLayoutProfileForOutput(outputName, presetId) {
+        if (!outputName.length || !presetId.length)
+            return
+
+        const profiles = Object.assign({}, outputLayoutProfiles)
+        profiles[outputName] = presetId
+        Config.setNestedValue("compositor.outputLayoutProfiles", profiles)
+        const preset = layoutPresetById(presetId)
+        resetBanner(Translation.tr("Assigned %1 layout intent to %2. Use Apply assigned profile when you want to write it to Niri.").arg(preset.displayName).arg(outputName))
+    }
+
+    function clearLayoutProfileForOutput(outputName) {
+        if (!outputName.length)
+            return
+
+        const profiles = Object.assign({}, outputLayoutProfiles)
+        delete profiles[outputName]
+        Config.setNestedValue("compositor.outputLayoutProfiles", profiles)
+        resetBanner(Translation.tr("Cleared layout intent for %1.").arg(outputName))
+    }
+
+    function applyCurrentOutputLayoutProfile() {
+        if (!currentOutputLayoutProfileId.length || !layoutReady)
+            return
+        applyLayoutPreset(currentOutputLayoutProfileId)
+        resetBanner(Translation.tr("Applied %1 layout intent for %2.").arg(layoutPresetById(currentOutputLayoutProfileId).displayName).arg(currentOutputName))
     }
 
     function setFocusFollowsMouse(enabled, percent) {
@@ -1742,6 +1773,133 @@ ContentPage {
                         value: preset.id
                     }))
                     onSelected: newValue => root.applyLayoutPreset(newValue)
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Per-monitor layout intent")
+                tooltip: Translation.tr("Manual output-scoped intent only. This records which preset belongs to the selected monitor; it does not auto-switch on monitor changes.")
+                visible: root.currentOutput !== null
+
+                ConfigSelectionArray {
+                    enabled: root.currentOutputName.length > 0
+                    currentValue: root.currentOutputLayoutProfileId.length > 0 ? root.currentOutputLayoutProfileId : "__none__"
+                    options: [{ displayName: Translation.tr("No assignment"), icon: "link_off", value: "__none__" }].concat(root.layoutPresetDeck.map(preset => ({
+                        displayName: preset.displayName,
+                        icon: preset.icon,
+                        value: preset.id
+                    })))
+                    onSelected: newValue => {
+                        if (newValue === "__none__")
+                            root.clearLayoutProfileForOutput(root.currentOutputName)
+                        else
+                            root.assignLayoutProfileForOutput(root.currentOutputName, newValue)
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                visible: root.currentOutput !== null
+                color: Appearance.colors.colLayer2
+                radius: Appearance.rounding.small
+                border.width: 1
+                border.color: root.currentOutputLayoutProfileId.length > 0 ? Appearance.colors.colPrimary : Appearance.colors.colOutlineVariant
+                implicitHeight: outputLayoutProfileReceipt.implicitHeight + 20
+
+                ColumnLayout {
+                    id: outputLayoutProfileReceipt
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            text: root.currentOutputLayoutProfileId.length > 0 ? (root.currentOutputLayoutProfile?.icon ?? "monitor") : "monitor"
+                            iconSize: Appearance.font.pixelSize.large
+                            color: root.currentOutputLayoutProfileId.length > 0 ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.currentOutputLayoutProfileId.length > 0
+                                ? Translation.tr("%1 → %2 intent").arg(root.currentOutputName).arg(root.currentOutputLayoutProfile?.displayName ?? "")
+                                : Translation.tr("%1 has no layout intent yet").arg(root.currentOutputName)
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.currentOutputLayoutProfileId.length > 0
+                            ? Translation.tr("Manual only: this remembers the selected monitor's preferred layout. It will not auto-apply when the monitor appears.")
+                            : Translation.tr("Pick a preset above to record a monitor-specific preference without changing Niri immediately.")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colSubtext
+                        wrapMode: Text.WordWrap
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.currentOutputLayoutProfileId.length > 0 ? (root.currentOutputLayoutProfile?.receipt ?? "") : Translation.tr("Recorded assignments live in config.json under compositor.outputLayoutProfiles.")
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.family: Appearance.font.family.monospace
+                        color: Appearance.colors.colOnLayer1
+                        wrapMode: Text.WordWrap
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        visible: root.currentOutputLayoutProfileId.length > 0
+
+                        Button {
+                            text: Translation.tr("Apply assigned profile")
+                            enabled: root.layoutReady && root.currentOutputLayoutProfileId.length > 0
+                            onClicked: root.applyCurrentOutputLayoutProfile()
+
+                            background: Rectangle {
+                                implicitWidth: 160
+                                implicitHeight: 36
+                                radius: Appearance.rounding.small
+                                color: parent.enabled ? Appearance.colors.colPrimary : Appearance.colors.colLayer1
+                            }
+
+                            contentItem: StyledText {
+                                text: parent.text
+                                color: parent.enabled ? Appearance.colors.colOnPrimary : Appearance.colors.colSubtext
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: Appearance.font.pixelSize.small
+                            }
+                        }
+
+                        Button {
+                            text: Translation.tr("Clear intent")
+                            onClicked: root.clearLayoutProfileForOutput(root.currentOutputName)
+
+                            background: Rectangle {
+                                implicitWidth: 110
+                                implicitHeight: 36
+                                radius: Appearance.rounding.small
+                                color: Appearance.colors.colLayer1
+                            }
+
+                            contentItem: StyledText {
+                                text: parent.text
+                                color: Appearance.colors.colOnLayer1
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: Appearance.font.pixelSize.small
+                            }
+                        }
+                    }
                 }
             }
 
