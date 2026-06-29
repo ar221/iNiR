@@ -405,6 +405,19 @@ Floating media controls panel.
 
 ---
 
+### memory
+
+Memory pressure service. Monitors Quickshell JSGCHeap accumulation and can force collection or schedule a managed reload.
+
+| Function | Description |
+|----------|-------------|
+| `collect` | Force JavaScript garbage collection |
+| `stats` | Return current memory pressure stats as JSON |
+| `reload` | Schedule a managed reload after the idle delay |
+| `cancel` | Cancel a scheduled reload |
+
+---
+
 ### osk
 
 On-screen keyboard.

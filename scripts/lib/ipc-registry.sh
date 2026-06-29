@@ -2,8 +2,8 @@
 # Auto-generated from QML IpcHandler declarations + docs/IPC.md metadata.
 # Do not edit manually.
 # Regenerate: python3 scripts/lib/generate-ipc-registry.py
-# IPC.md hash: 8fe95ef325dac7d9
-# Targets: 55
+# IPC.md hash: 0478eb40a0ea080a
+# Targets: 56
 
 declare -gA IPC_TARGET_DESC=(
   [ai]="AI chat service. Multi-provider (Gemini, OpenAI, Mistral) with tool support."
@@ -30,6 +30,7 @@ declare -gA IPC_TARGET_DESC=(
   [gptProxy]="GPT proxy service control. Thin wrapper around \`systemctl --user\` for the GPT proxy systemd unit."
   [lock]="Lock screen. For when you need to pretend you're working."
   [mediaControls]="Floating media controls panel."
+  [memory]="Memory pressure service. Monitors Quickshell JSGCHeap accumulation and can force collection or schedule a managed reload."
   [minimize]="Window minimization (Niri workaround - moves windows to hidden workspace)."
   [mpris]="Media player control. Automatically detects and uses YtMusic controls when active, otherwise uses the active MPRIS player."
   [notifications]="Notification management."
@@ -88,6 +89,7 @@ declare -gA IPC_TARGET_FAMILY=(
   [gptProxy]="waffle"
   [lock]="shared"
   [mediaControls]="shared"
+  [memory]="shared"
   [minimize]="shared"
   [mpris]="shared"
   [notifications]="shared"
@@ -146,6 +148,7 @@ declare -gA IPC_TARGET_FUNCTIONS=(
   [gptProxy]="toggle start stop status"
   [lock]="activate deactivate status focus"
   [mediaControls]="toggle close open"
+  [memory]="collect stats reload cancel"
   [minimize]="minimize restore"
   [mpris]="pauseAll playPause previous next"
   [notifications]="test clearAll toggleSilent"
@@ -257,6 +260,10 @@ declare -gA IPC_FUNCTION_DESC=(
   ["mediaControls:toggle"]="Open/close media controls"
   ["mediaControls:close"]="Hide media controls"
   ["mediaControls:open"]="Show media controls"
+  ["memory:collect"]="Force JavaScript garbage collection"
+  ["memory:stats"]="Return current memory pressure stats as JSON"
+  ["memory:reload"]="Schedule a managed reload after the idle delay"
+  ["memory:cancel"]="Cancel a scheduled reload"
   ["minimize:minimize"]="Minimize focused window"
   ["minimize:restore"]="Restore a minimized window by ID"
   ["mpris:pauseAll"]="Pause all players"
@@ -404,8 +411,8 @@ bind "Super+Shift+A" { spawn "inir" "region" "search"; }'
   [ytmusic]='bind "Mod+M+Space" { spawn "inir" "ytmusic" "playPause"; }'
 )
 
-IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar widget wnotificationCenter wwidgets ytmusic zoom)
-IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector widget ytmusic zoom)
+IPC_ALL_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom contracts controlPanel courierRail coverflowSelector dashboard dictation focus gamemode globalActions gptProxy lock mediaControls memory minimize mpris notifications osd osdVolume osk overlay overview packageSearch panelFamily plugins proxy region search session settings shellUpdate sidebarLeft sidebarRight taskview tiling voiceSearch wactionCenter waffleAltSwitcher wallpaperSelector wbar widget wnotificationCenter wwidgets ytmusic zoom)
+IPC_SHARED_TARGETS=(ai altSwitcher appCatalog audio bar brightness cheatsheet clipboard cliphistService closeConfirm commandRoomPanel commandroom controlPanel coverflowSelector dashboard gamemode globalActions lock mediaControls memory minimize mpris notifications osdVolume osk overview packageSearch panelFamily region session settings shellUpdate sidebarLeft sidebarRight tiling voiceSearch wallpaperSelector widget ytmusic zoom)
 IPC_II_TARGETS=(overlay)
 IPC_WAFFLE_TARGETS=(contracts courierRail dictation focus gptProxy osd plugins proxy search taskview wactionCenter waffleAltSwitcher wbar wnotificationCenter wwidgets)
 
