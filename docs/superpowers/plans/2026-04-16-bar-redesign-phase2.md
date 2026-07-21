@@ -1,3 +1,9 @@
+---
+status: do-not-implement-as-is
+classification: stale-superseded-by-current-inir-courier-direction
+reason: Older Command Center dashboard plan; current Command Room/Courier plans are the live lane.
+audit: /home/ayaz/Documents/Ayaz OS/03 Projects/System/04 Audits & Logs/™ Non-Vault Plan Surfaces Triage — 2026-07-11.md
+---
 # Command Center Dashboard (Phase 2) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
