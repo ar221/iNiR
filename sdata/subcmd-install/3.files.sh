@@ -960,6 +960,40 @@ if [[ -n "${II_TARGET}" && -d "${II_TARGET}" ]]; then
 fi
 
 #####################################################################################
+# Enable the tracked git hooks (contributor checkouts only)
+#####################################################################################
+# scripts/git-hooks/pre-commit blocks a commit that would land a stale
+# scripts/lib/ipc-registry.sh. Git will not point itself at tracked hooks on
+# clone — a repo that could would run arbitrary tracked code the moment you
+# cloned it — so core.hooksPath has to be set once per checkout. Setting it
+# here introduces no new trust boundary: running ./setup already runs this
+# repo's code.
+#
+# Guarded on the checkout actually being one. A release tarball has no .git and
+# no scripts/git-hooks/, so this is skipped in silence rather than nagging
+# someone who is installing rather than contributing. `git rev-parse` rather
+# than `-d .git` because a worktree's .git is a file, not a directory.
+#
+# An existing core.hooksPath is never overwritten — it may be deliberate (a
+# shared hooks directory, or hooks pointed at /dev/null to disable them). Say
+# so instead, and leave the choice with whoever made it.
+if command -v git &>/dev/null \
+   && git -C "${REPO_ROOT}" rev-parse --git-dir &>/dev/null \
+   && [[ -d "${REPO_ROOT}/scripts/git-hooks" ]]; then
+  EXISTING_HOOKS_PATH="$(git -C "${REPO_ROOT}" config --local --get core.hooksPath 2>/dev/null || true)"
+
+  if [[ -z "${EXISTING_HOOKS_PATH}" ]]; then
+    if git -C "${REPO_ROOT}" config --local core.hooksPath scripts/git-hooks 2>/dev/null; then
+      log_success "Git hooks enabled (core.hooksPath -> scripts/git-hooks)"
+    else
+      log_warning "Could not set core.hooksPath; run: git config core.hooksPath scripts/git-hooks"
+    fi
+  elif [[ "${EXISTING_HOOKS_PATH}" != "scripts/git-hooks" ]]; then
+    log_info "core.hooksPath already set to '${EXISTING_HOOKS_PATH}' — left as-is"
+  fi
+fi
+
+#####################################################################################
 # Final status checks
 #####################################################################################
 WARNINGS=()

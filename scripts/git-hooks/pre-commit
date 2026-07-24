@@ -4,13 +4,15 @@
 # Originally installed by INI-4 (IPC registry drift guard) straight into
 # .git/hooks/, which is not tracked: the guard existed on exactly one machine,
 # never reached a fresh clone, and would have vanished silently with .git.
-# It is tracked here instead, and enabled per clone with:
+# It is tracked here instead, and enabled per checkout with:
 #
 #     git config core.hooksPath scripts/git-hooks
 #
 # Git cannot set that itself — a repo that could point its own hooks at
-# arbitrary tracked scripts would execute attacker code on clone — so each
-# clone runs it once. See CONTRIBUTING.md "Development Setup".
+# arbitrary tracked scripts would execute attacker code on clone. `./setup
+# install` runs the line for you (sdata/subcmd-install/3.files.sh); do it by
+# hand in a checkout where you have not run the installer. See CONTRIBUTING.md
+# "Development Setup".
 #
 # Note the directory is scripts/git-hooks, not scripts/hooks: .gitignore's
 # AI-tooling block ignores a bare `hooks/` at any depth.
