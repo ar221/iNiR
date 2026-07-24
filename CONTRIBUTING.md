@@ -14,9 +14,18 @@
 ```bash
 git clone https://github.com/YOUR_USERNAME/inir.git
 cd inir
+git config core.hooksPath scripts/git-hooks   # enable the pre-commit guards
 ./setup install
 inir run
 ```
+
+Run the `core.hooksPath` line once per clone. The hooks are tracked in
+`scripts/git-hooks/`, but Git will not point itself at them automatically — a
+repo that could redirect its own hooks would execute arbitrary tracked code on
+clone. Skip it and commits are unguarded: nothing will stop a stale
+`scripts/lib/ipc-registry.sh` from landing. Setting `core.hooksPath` also
+retires `.git/hooks/` entirely, so delete any hook you previously installed
+there or it will look like it silently stopped working.
 
 After making changes:
 
@@ -128,6 +137,16 @@ IpcHandler {
     function doThing(): void { /* ... */ }
 }
 ```
+
+Adding or renaming a `target` means regenerating the CLI registry:
+
+```bash
+python3 scripts/lib/generate-ipc-registry.py
+```
+
+Skip it and `inir myService` answers "Unknown command" while completion goes
+stale. The pre-commit hook runs the same script with `--check` and blocks the
+commit, but only if you enabled `core.hooksPath` above.
 
 ### New QML Files
 
