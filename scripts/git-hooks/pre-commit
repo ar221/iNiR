@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# iNiR pre-commit hook — runs project guards before allowing a commit.
+#
+# Originally installed by INI-4 (IPC registry drift guard) straight into
+# .git/hooks/, which is not tracked: the guard existed on exactly one machine,
+# never reached a fresh clone, and would have vanished silently with .git.
+# It is tracked here instead, and enabled per clone with:
+#
+#     git config core.hooksPath scripts/git-hooks
+#
+# Git cannot set that itself — a repo that could point its own hooks at
+# arbitrary tracked scripts would execute attacker code on clone — so each
+# clone runs it once. See CONTRIBUTING.md "Development Setup".
+#
+# Note the directory is scripts/git-hooks, not scripts/hooks: .gitignore's
+# AI-tooling block ignores a bare `hooks/` at any depth.
+#
+# Extend this file with additional checks; keep them fast (<1s) so commits stay
+# snappy. Each check should print actionable remediation on failure, and set
+# `fail=1` rather than exiting, so one failure does not mask the rest.
+
+set -uo pipefail
+
+# Resolve repo root so checks can be invoked from anywhere git calls us.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+fail=0
+
+# -----------------------------------------------------------------------------
+# Check: IPC registry freshness
+# -----------------------------------------------------------------------------
+# Catches the "added IpcHandler { target: \"foo\" } in QML but forgot to
+# regenerate scripts/lib/ipc-registry.sh" trap. If the registry is stale,
+# `inir foo` returns "Unknown command" and the CLI completion is out of date.
+if ! python3 scripts/lib/generate-ipc-registry.py --check; then
+    fail=1
+fi
+
+if [[ $fail -ne 0 ]]; then
+    echo "" >&2
+    echo "pre-commit: one or more checks failed; commit blocked." >&2
+    echo "Fix the issues above (or skip with 'git commit --no-verify' at your own risk)." >&2
+    exit 1
+fi
+
+exit 0
