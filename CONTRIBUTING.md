@@ -14,18 +14,25 @@
 ```bash
 git clone https://github.com/YOUR_USERNAME/inir.git
 cd inir
-git config core.hooksPath scripts/git-hooks   # enable the pre-commit guards
 ./setup install
 inir run
 ```
 
-Run the `core.hooksPath` line once per clone. The hooks are tracked in
-`scripts/git-hooks/`, but Git will not point itself at them automatically — a
-repo that could redirect its own hooks would execute arbitrary tracked code on
-clone. Skip it and commits are unguarded: nothing will stop a stale
-`scripts/lib/ipc-registry.sh` from landing. Setting `core.hooksPath` also
-retires `.git/hooks/` entirely, so delete any hook you previously installed
-there or it will look like it silently stopped working.
+`./setup install` enables the tracked pre-commit hooks for you, by setting
+`core.hooksPath` to `scripts/git-hooks/`. Git will not do this on its own — a
+repo that could redirect its own hooks would execute arbitrary tracked code the
+moment you cloned it — so if you work in a checkout where you have not run
+`./setup install`, set it by hand:
+
+```bash
+git config core.hooksPath scripts/git-hooks
+```
+
+Without it commits are unguarded, and nothing stops a stale
+`scripts/lib/ipc-registry.sh` from landing. Note that `core.hooksPath` retires
+`.git/hooks/` entirely, so delete any hook you previously installed there or it
+will look like it silently stopped working. An existing `core.hooksPath` is
+left alone by the installer, on the assumption you set it deliberately.
 
 After making changes:
 
