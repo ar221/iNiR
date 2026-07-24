@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# Syncs missing iNiR git commits into the Ayaz OS vault's iNiR History.md.
+# Idempotent — uses a sentinel at end of file to track the last-synced SHA.
+
+set -euo pipefail
+
+readonly REPO="$HOME/Github/inir"
+readonly NOTE_PATH="03 Projects/iNiR/™ iNiR History"
+readonly FALLBACK_VAULT="$HOME/Documents/Ayaz OS"
+readonly SENTINEL_PREFIX="<!-- inir-log-sync:last-sha="
+readonly SENTINEL_SUFFIX=" -->"
+
+info()  { printf '\033[32m[inir-log-sync]\033[0m %s\n' "$*"; }
+warn()  { printf '\033[33m[inir-log-sync]\033[0m %s\n' "$*" >&2; }
+die()   { printf '\033[31m[inir-log-sync]\033[0m %s\n' "$*" >&2; exit 1; }
+
+# Derive vault path from obsidian-cli, with fallback.
+resolve_vault() {
+    if command -v obsidian-cli &>/dev/null; then
+        local raw
+        raw=$(obsidian-cli print-default 2>/dev/null) || true
+        local path
+        path=$(printf '%s\n' "$raw" | grep -i '^Default vault path:' | sed 's/^Default vault path:[[:space:]]*//' || true)
+        if [[ -n "$path" ]]; then
+            printf '%s' "$path"
+            return
+        fi
+        warn "obsidian-cli print-default returned no path — falling back to hardcoded vault."
+    else
+        warn "obsidian-cli not found — falling back to hardcoded vault path."
+    fi
+    printf '%s' "$FALLBACK_VAULT"
+}
+
+vault=$(resolve_vault)
+readonly VAULT_FILE="${vault}/${NOTE_PATH}.md"
+
+[[ -d "$REPO/.git" ]] || die "Not a git repo: $REPO"
+[[ -f "$VAULT_FILE" ]] || die "Vault file not found: $VAULT_FILE"
+
+# Extract last-synced SHA from sentinel via obsidian-cli, falling back to direct grep.
+read_sentinel() {
+    if command -v obsidian-cli &>/dev/null; then
+        local content
+        content=$(obsidian-cli print "${NOTE_PATH}" 2>/dev/null) || true
+        if [[ -n "$content" ]]; then
+            printf '%s\n' "$content" | grep -oP "${SENTINEL_PREFIX//\//\\/}\K[a-f0-9]{7,40}" | tail -1 || true
+            return
+        fi
+    fi
+    grep -oP "${SENTINEL_PREFIX//\//\\/}\K[a-f0-9]{7,40}" "$VAULT_FILE" | tail -1 || true
+}
+
+last_sha=$(read_sentinel)
+
+cd "$REPO"
+head_sha=$(git rev-parse HEAD)
+head_short=$(git rev-parse --short HEAD)
+
+if [[ -z "$last_sha" ]]; then
+    warn "No sentinel found in $VAULT_FILE — seeding with current HEAD ($head_short) only. Run again after future commits."
+    range="HEAD~1..HEAD"
+elif [[ "$last_sha" == "$head_sha"* ]] || [[ "$head_sha" == "$last_sha"* ]]; then
+    info "Already up to date at $head_short — nothing to do."
+    exit 0
+else
+    if ! git cat-file -e "$last_sha" 2>/dev/null; then
+        die "Sentinel SHA $last_sha is unreachable in $REPO (force-push? rewrite?). Edit the sentinel manually."
+    fi
+    range="${last_sha}..HEAD"
+fi
+
+# Build the new entries block. Grouped under today's date heading.
+today=$(date +%Y-%m-%d)
+mapfile -t new_commits < <(git log --reverse --pretty='%h %s' "$range")
+
+if [[ ${#new_commits[@]} -eq 0 ]]; then
+    info "No new commits in range $range — nothing to do."
+    exit 0
+fi
+
+info "Found ${#new_commits[@]} new commit(s). Appending to vault…"
+
+# Build the block to insert.
+tmp_block=$(mktemp)
+trap 'rm -f "$tmp_block"' EXIT
+
+# Check if today's date heading already exists in the file.
+if grep -qE "^## ${today}\$" "$VAULT_FILE"; then
+    # Append under the existing date section — insert after the heading line.
+    # Produce just the bullets.
+    for line in "${new_commits[@]}"; do
+        printf -- '- %s\n' "$line" >> "$tmp_block"
+    done
+    awk -v today="$today" -v block_file="$tmp_block" '
+        BEGIN { inserted = 0 }
+        /^## / && $2 == today && !inserted {
+            print
+            while ((getline line < block_file) > 0) print line
+            close(block_file)
+            inserted = 1
+            next
+        }
+        { print }
+    ' "$VAULT_FILE" > "${VAULT_FILE}.tmp" && mv "${VAULT_FILE}.tmp" "$VAULT_FILE"
+else
+    # Create a new date section. Insert before the first existing date heading (older entries).
+    {
+        printf '## %s\n' "$today"
+        for line in "${new_commits[@]}"; do
+            printf -- '- %s\n' "$line"
+        done
+        printf '\n'
+    } > "$tmp_block"
+
+    awk -v block_file="$tmp_block" '
+        BEGIN { inserted = 0 }
+        /^## [0-9]{4}-[0-9]{2}-[0-9]{2}/ && !inserted {
+            while ((getline line < block_file) > 0) print line
+            close(block_file)
+            inserted = 1
+        }
+        { print }
+        END {
+            if (!inserted) {
+                while ((getline line < block_file) > 0) print line
+                close(block_file)
+            }
+        }
+    ' "$VAULT_FILE" > "${VAULT_FILE}.tmp" && mv "${VAULT_FILE}.tmp" "$VAULT_FILE"
+fi
+
+# Update (or add) the sentinel at end of file.
+new_sentinel="${SENTINEL_PREFIX}${head_sha}${SENTINEL_SUFFIX}"
+if grep -q "^${SENTINEL_PREFIX}" "$VAULT_FILE"; then
+    sed -i "s|^${SENTINEL_PREFIX}.*${SENTINEL_SUFFIX}\$|${new_sentinel}|" "$VAULT_FILE"
+else
+    [[ $(tail -c1 "$VAULT_FILE") == $'\n' ]] || printf '\n' >> "$VAULT_FILE"
+    printf '%s\n' "$new_sentinel" >> "$VAULT_FILE"
+fi
+
+info "Synced to $head_short. Sentinel updated."

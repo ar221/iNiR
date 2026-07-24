@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Whitelisted command runner for KineticWE KWin hotkeys."""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+from gi.repository import GLib
+
+BUS_NAME = "dev.ayaz.KineticWEHotkeys"
+OBJ_PATH = "/dev/ayaz/KineticWEHotkeys"
+IFACE = "dev.ayaz.KineticWEHotkeys"
+
+HOME = os.path.expanduser("~")
+COMMANDS = {
+    "terminal": ["bash", "-lc", f"{HOME}/.config/quickshell/ii/scripts/launch-terminal.sh"],
+    "clipboard": ["bash", "-lc", "noctalia msg panel-toggle clipboard"],
+    "dictate": ["bash", "-lc", f"{HOME}/.local/bin/dictate toggle"],
+    "dictate-rp": ["bash", "-lc", f"{HOME}/.local/bin/dictate --rp toggle"],
+    "dictate-rp-plus": ["bash", "-lc", f"{HOME}/.local/bin/dictate --rp+ toggle"],
+}
+
+class Hotkeys(dbus.service.Object):
+    @dbus.service.method(IFACE, in_signature="s", out_signature="b")
+    def Run(self, action: str) -> bool:
+        cmd = COMMANDS.get(str(action))
+        if not cmd:
+            return False
+        env = os.environ.copy()
+        env.setdefault("PATH", f"{HOME}/.local/bin:/usr/local/bin:/usr/bin")
+        subprocess.Popen(cmd, env=env, start_new_session=True)
+        return True
+
+
+def main() -> int:
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    bus = dbus.SessionBus()
+    name = dbus.service.BusName(BUS_NAME, bus, do_not_queue=True)
+    Hotkeys(bus, OBJ_PATH)
+    GLib.MainLoop().run()
+    return 0
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except dbus.exceptions.NameExistsException:
+        print(f"{BUS_NAME} already running", file=sys.stderr)
+        raise SystemExit(0)

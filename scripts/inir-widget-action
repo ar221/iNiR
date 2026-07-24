@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+"""inir-widget-action — iNiR QML widget action dispatcher
+
+Called from Quickshell Process nodes. Wraps existing CLIs.
+Prints exactly one line: OK <action> [<id>]  OR  ERR <reason>
+Exits 0 on success, 2 on bad args or backend error.
+
+Usage:
+  inir-widget-action <widget> <action> [--id <item-id>] [--data <json>]
+
+Widgets / actions:
+  commandroom:
+    promote-task <id>          advance task to next pipeline stage
+    cancel-task  <id>          request cancellation (queues for approval)
+    refresh                    trigger command-room projection reload
+    add-task     --data '{...}' add task; JSON keys: title (req), project (opt)
+
+  jobhunt:
+    promote-app  <id>          advance job application stage
+    cancel-app   <id>          mark application cancelled
+    add-note     <id>          append note; JSON key: note (req)
+
+Stage progression (commandroom):
+  open → in_progress  (auto-applied by writeback classifier)
+  in_progress → closed (queues for Ayaz approval)
+  terminal states (closed, blocked) → ERR
+
+Routes through:
+  command-room-request  (commandroom writes)
+  command-room-refresh  (refresh)
+  command-room task add (add-task)
+  command-room task show (status lookup)
+  job-hunt-ledger       (jobhunt — promote/cancel require update subcommand,
+                         not yet implemented; will ERR clearly)
+
+NOT tracked in dotfiles until Ayaz confirms promotion.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import subprocess
+import sys
+import time
+from typing import Optional
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _run(cmd: list[str], *, capture: bool = True) -> subprocess.CompletedProcess:
+    """Run a subprocess. Always captures stdout/stderr when capture=True."""
+    return subprocess.run(
+        cmd,
+        capture_output=capture,
+        text=True,
+    )
+
+
+def ok(action: str, item_id: Optional[str] = None) -> None:
+    if item_id:
+        print(f"OK {action} {item_id}")
+    else:
+        print(f"OK {action}")
+    sys.exit(0)
+
+
+def err(reason: str) -> None:
+    print(f"ERR {reason}")
+    sys.exit(2)
+
+
+def require_id(item_id: Optional[str], action: str) -> str:
+    if not item_id:
+        err(f"{action}: --id is required")
+    return item_id  # type: ignore[return-value]
+
+
+# ---------------------------------------------------------------------------
+# command-room-request wrapper
+# ---------------------------------------------------------------------------
+
+def _submit_request(type_alias: str, target_id: str, extra: list[str]) -> dict:
+    """
+    Call command-room-request and return parsed JSON.
+    Raises ValueError with reason string on failure.
+    """
+    cmd = [
+        "command-room-request",
+        type_alias,
+        str(target_id),
+        "--requester", "inir-widget-action",
+        "--json",
+    ] + extra
+
+    proc = _run(cmd)
+
+    # Parse response per writeback contract:
+    # exit 0  → applied / pending / idempotent
+    # exit 2  → hard_blocked (rejected before DB write)
+    # other   → failed
+    try:
+        data = json.loads(proc.stdout.strip()) if proc.stdout.strip() else {}
+    except json.JSONDecodeError:
+        data = {}
+
+    if proc.returncode == 2:
+        reason = data.get("reason") or data.get("error") or "hard_blocked"
+        raise ValueError(f"request rejected: {reason}")
+
+    if proc.returncode != 0:
+        reason = proc.stderr.strip().splitlines()[0] if proc.stderr.strip() else "backend error"
+        raise ValueError(f"command-room-request failed: {reason}")
+
+    return data
+
+
+# ---------------------------------------------------------------------------
+# commandroom actions
+# ---------------------------------------------------------------------------
+
+def _task_current_status(task_id: str) -> str:
+    """Return current status string for a task, or raise ValueError."""
+    proc = _run(["command-room", "task", "show", task_id, "--json"])
+    if proc.returncode != 0:
+        msg = proc.stderr.strip().splitlines()[0] if proc.stderr.strip() else "task not found"
+        raise ValueError(f"task lookup failed: {msg}")
+    try:
+        data = json.loads(proc.stdout.strip())
+    except json.JSONDecodeError:
+        raise ValueError("task show returned unparseable JSON")
+    # schema: {"id":..., "status":..., ...}
+    status = data.get("status") or data.get("task", {}).get("status")
+    if not status:
+        raise ValueError("task show JSON has no status field")
+    return str(status)
+
+
+def cmd_promote_task(task_id: str) -> None:
+    try:
+        current = _task_current_status(task_id)
+    except ValueError as e:
+        err(str(e))
+
+    # Determine next stage
+    if current == "open":
+        next_status = "in_progress"
+    elif current == "in_progress":
+        next_status = "closed"
+    else:
+        err(f"promote-task: task {task_id} is already terminal (status={current})")
+
+    try:
+        result = _submit_request(
+            "task-status",
+            task_id,
+            ["--status", next_status, "--reason", f"widget promote ({current}→{next_status})"],
+        )
+    except ValueError as e:
+        err(str(e))
+
+    # Report queued vs applied in OK line (both are success from widget POV)
+    status_label = result.get("status", "applied")
+    ok(f"promote-task:{status_label}", task_id)
+
+
+def cmd_cancel_task(task_id: str) -> None:
+    try:
+        current = _task_current_status(task_id)
+    except ValueError as e:
+        err(str(e))
+
+    if current == "closed":
+        err(f"cancel-task: task {task_id} already closed")
+
+    try:
+        result = _submit_request(
+            "task-status",
+            task_id,
+            ["--status", "closed", "--reason", "widget cancel request"],
+        )
+    except ValueError as e:
+        err(str(e))
+
+    status_label = result.get("status", "queued")
+    ok(f"cancel-task:{status_label}", task_id)
+
+
+def cmd_refresh() -> None:
+    proc = _run(["command-room-refresh", "--json"])
+    if proc.returncode != 0:
+        try:
+            data = json.loads(proc.stdout.strip())
+            reason = data.get("error") or data.get("reason") or "refresh failed"
+        except (json.JSONDecodeError, ValueError):
+            reason = proc.stderr.strip().splitlines()[0] if proc.stderr.strip() else "refresh failed"
+        err(f"refresh: {reason}")
+    ok("refresh")
+
+
+def cmd_add_task(data_json: Optional[str]) -> None:
+    if not data_json:
+        err("add-task: --data is required (JSON: {\"title\":\"...\",\"project\":\"...\"})")
+    try:
+        payload = json.loads(data_json)
+    except json.JSONDecodeError as e:
+        err(f"add-task: invalid JSON in --data: {e}")
+
+    title = payload.get("title", "").strip()
+    if not title:
+        err("add-task: --data JSON must include non-empty 'title'")
+
+    project = payload.get("project", "").strip()
+
+    # Deterministic dedupe key so re-submissions are idempotent
+    ts = int(time.time())
+    raw = f"widget:add-task:{title}:{project}:{ts}"
+    dedupe = "widget:" + hashlib.sha256(raw.encode()).hexdigest()[:12]
+
+    cmd = ["command-room", "task", "add", title, "--json", "--dedupe-key", dedupe]
+    if project:
+        cmd += ["--source", project]
+
+    proc = _run(cmd)
+    if proc.returncode != 0:
+        reason = proc.stderr.strip().splitlines()[0] if proc.stderr.strip() else "task add failed"
+        err(f"add-task: {reason}")
+
+    try:
+        result = json.loads(proc.stdout.strip())
+        task_id = str(result.get("id") or result.get("task", {}).get("id") or "new")
+    except (json.JSONDecodeError, ValueError):
+        task_id = "new"
+
+    ok("add-task", task_id)
+
+
+# ---------------------------------------------------------------------------
+# jobhunt actions
+# ---------------------------------------------------------------------------
+
+_JH_NO_UPDATE = (
+    "job-hunt-ledger has no stage-update subcommand; "
+    "extend job-hunt-ledger first (add `update` subcommand)"
+)
+
+
+def jh_promote_app(app_id: str) -> None:
+    # No update path exists in job-hunt-ledger yet.
+    err(f"promote-app {app_id}: {_JH_NO_UPDATE}")
+
+
+def jh_cancel_app(app_id: str) -> None:
+    # No update path exists in job-hunt-ledger yet.
+    err(f"cancel-app {app_id}: {_JH_NO_UPDATE}")
+
+
+def jh_add_note(app_id: str, data_json: Optional[str]) -> None:
+    # job-hunt-ledger has no note-append either.
+    # Note: command-room-request task-note targets command-room tasks, not job-hunt apps.
+    err(
+        f"add-note {app_id}: job-hunt-ledger has no note-append path; "
+        "extend job-hunt-ledger with `note` subcommand first"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Routing
+# ---------------------------------------------------------------------------
+
+USAGE_HINT = (
+    "Usage: inir-widget-action <widget> <action> [--id <id>] [--data <json>]\n"
+    "Widgets: commandroom (promote-task|cancel-task|refresh|add-task), "
+    "jobhunt (promote-app|cancel-app|add-note)"
+)
+
+COMMANDROOM_ACTIONS = {"promote-task", "cancel-task", "refresh", "add-task"}
+JOBHUNT_ACTIONS = {"promote-app", "cancel-app", "add-note"}
+KNOWN_WIDGETS = {"commandroom", "jobhunt"}
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=True,
+    )
+    p.add_argument("widget", nargs="?", help="commandroom | jobhunt")
+    p.add_argument("action", nargs="?", help="action verb")
+    p.add_argument("--id", dest="item_id", default=None, help="item id")
+    p.add_argument("--data", dest="data", default=None, help="JSON payload")
+    return p.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+
+    # Validate widget
+    if not args.widget or args.widget not in KNOWN_WIDGETS:
+        print(f"ERR unknown widget: {args.widget!r}\n{USAGE_HINT}", file=sys.stderr)
+        return 2
+
+    widget = args.widget
+    action = args.action
+
+    # Validate action
+    valid_actions = COMMANDROOM_ACTIONS if widget == "commandroom" else JOBHUNT_ACTIONS
+    if not action or action not in valid_actions:
+        print(f"ERR unknown action: {action!r} for widget {widget!r}\n{USAGE_HINT}", file=sys.stderr)
+        return 2
+
+    # Route
+    if widget == "commandroom":
+        if action == "promote-task":
+            task_id = require_id(args.item_id, "promote-task")
+            cmd_promote_task(task_id)
+        elif action == "cancel-task":
+            task_id = require_id(args.item_id, "cancel-task")
+            cmd_cancel_task(task_id)
+        elif action == "refresh":
+            cmd_refresh()
+        elif action == "add-task":
+            cmd_add_task(args.data)
+    elif widget == "jobhunt":
+        if action == "promote-app":
+            app_id = require_id(args.item_id, "promote-app")
+            jh_promote_app(app_id)
+        elif action == "cancel-app":
+            app_id = require_id(args.item_id, "cancel-app")
+            jh_cancel_app(app_id)
+        elif action == "add-note":
+            app_id = require_id(args.item_id, "add-note")
+            jh_add_note(app_id, args.data)
+
+    return 0  # unreachable — all paths call ok() or err()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

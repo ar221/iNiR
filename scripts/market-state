@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# market-state — write NA equities open/closed state for iNiR monogram
+# NOTE: does NOT handle market holidays (MLK Day, Thanksgiving, etc.).
+#       A holiday will produce a false "open" reading. Acceptable for v1.
+set -euo pipefail
+
+STATE_DIR="${HOME}/.local/state/inir"
+STATE_FILE="${STATE_DIR}/market-state"
+
+usage() {
+    cat >&2 <<EOF
+Usage: market-state [--once|--status]
+  --once   (default) Write open/closed to ${STATE_FILE}
+  --status Print open/closed to stdout only, don't write
+EOF
+    exit 1
+}
+
+get_state() {
+    local dow
+    local hhmm
+    # DOW: 1=Mon .. 7=Sun (ISO), time HH:MM in ET
+    dow=$(TZ=America/New_York date +%u)
+    hhmm=$(TZ=America/New_York date +%H%M)
+
+    # Mon–Fri only
+    if [[ "$dow" -lt 1 || "$dow" -gt 5 ]]; then
+        echo "closed"
+        return
+    fi
+
+    # 09:30 <= time < 16:00  →  open
+    if [[ "$hhmm" -ge 930 && "$hhmm" -lt 1600 ]]; then
+        echo "open"
+    else
+        echo "closed"
+    fi
+}
+
+mode="${1:---once}"
+
+case "$mode" in
+    --once)
+        state=$(get_state)
+        mkdir -p "$STATE_DIR"
+        printf '%s' "$state" > "${STATE_FILE}.tmp"
+        mv "${STATE_FILE}.tmp" "$STATE_FILE"
+        ;;
+    --status)
+        get_state
+        ;;
+    *)
+        usage
+        ;;
+esac

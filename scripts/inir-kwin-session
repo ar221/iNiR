@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Local prototype login session: KWin compositor + iNiR/Quickshell shell.
+# Installed via ~/.local/share/wayland-sessions/inir-kwin.desktop.
+# Deliberately does NOT start plasmashell or the full Plasma desktop session.
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/inir-kwin"
+LOG_FILE="$STATE_DIR/session.log"
+mkdir -p "$STATE_DIR"
+
+if [[ "${1:-}" == "--check" ]]; then
+  printf 'inir-kwin-session: ok\n'
+  command -v kwin_wayland >/dev/null || { echo 'missing kwin_wayland' >&2; exit 1; }
+  [[ -x /home/ayaz/.local/bin/inir-kwin-shell ]] || { echo 'missing inir-kwin-shell' >&2; exit 1; }
+  [[ -x /home/ayaz/.local/bin/inir ]] || { echo 'missing inir launcher' >&2; exit 1; }
+  exit 0
+fi
+
+if [[ "${1:-}" == "--smoke-virtual" ]]; then
+  exec kwin_wayland --virtual --socket inir-kwin-smoke --width 1280 --height 720 --xwayland --no-lockscreen --exit-with-session /usr/bin/true
+fi
+
+# Ensure a session bus exists when launched by a display manager that does not wrap us.
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -z "${INIR_KWIN_INSIDE_DBUS:-}" ]] && command -v dbus-run-session >/dev/null 2>&1; then
+  export INIR_KWIN_INSIDE_DBUS=1
+  exec dbus-run-session -- "$0" "$@"
+fi
+
+exec >>"$LOG_FILE" 2>&1
+printf '\n==== iNiR on KWin session start: %s ====\n' "$(date --iso-8601=seconds)"
+
+export XDG_SESSION_TYPE="wayland"
+export XDG_SESSION_DESKTOP="inir-kwin"
+export DESKTOP_SESSION="inir-kwin"
+export XDG_CURRENT_DESKTOP="KDE:inir"
+export KDE_FULL_SESSION="true"
+export KDE_SESSION_VERSION="6"
+export KDE_APPLICATIONS_AS_SCOPE="1"
+export QT_QPA_PLATFORM="wayland"
+export QT_QPA_PLATFORMTHEME="kde"
+export QT_WAYLAND_RECONNECT="1"
+
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl --user import-environment \
+    XDG_SESSION_TYPE XDG_SESSION_DESKTOP DESKTOP_SESSION XDG_CURRENT_DESKTOP \
+    KDE_FULL_SESSION KDE_SESSION_VERSION KDE_APPLICATIONS_AS_SCOPE \
+    QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_RECONNECT 2>/dev/null || true
+fi
+
+# KWin owns the compositor/window-management layer; iNiR owns shell UI.
+# --exit-with-session makes the login session lifetime follow the foreground qs process.
+exec kwin_wayland --xwayland --no-lockscreen --exit-with-session /home/ayaz/.local/bin/inir-kwin-shell
