@@ -1,0 +1,246 @@
+#!/usr/bin/env python3
+"""Install/restore an iNiR-on-KWin shortcut profile.
+
+This is intentionally file-based: it writes KDE's kglobalshortcutsrc and
+creates small .desktop launchers for iNiR shell IPC actions. It does not
+require full Plasma Settings.
+"""
+from __future__ import annotations
+
+import argparse
+import difflib
+import os
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG = HOME / ".config" / "kglobalshortcutsrc"
+APPDIR = HOME / ".local" / "share" / "applications"
+STATE = HOME / ".local" / "state" / "inir-kwin"
+BACKUP_DIR = STATE / "hotkey-backups"
+MAP_FILE = STATE / "hotkeys.md"
+INIR = "/home/ayaz/.local/bin/inir"
+
+# group, key, value. KDE shortcut tuple format is: active,default,description.
+KWIN_ENTRIES = [
+    ("kwin", "Window Close", "Meta+Q,Alt+F4,Close Window"),
+    ("kwin", "Window Fullscreen", "Meta+F,none,Make Window Fullscreen"),
+    ("kwin", "Window Maximize", "Meta+D,Meta+PgUp,Maximize Window"),
+    ("kwin", "Window Quick Tile Left", "Meta+Left,Meta+Left,Quick Tile Window to the Left"),
+    ("kwin", "Window Quick Tile Right", "Meta+Right,Meta+Right,Quick Tile Window to the Right"),
+    ("kwin", "Window Quick Tile Top", "Meta+Up,Meta+Up,Quick Tile Window to the Top"),
+    ("kwin", "Window Quick Tile Bottom", "Meta+Down,Meta+Down,Quick Tile Window to the Bottom"),
+    ("kwin", "Walk Through Windows", "Alt+Tab,Alt+Tab,Walk Through Windows"),
+    ("kwin", "Walk Through Windows (Reverse)", "Alt+Shift+Tab,Alt+Shift+Tab,Walk Through Windows (Reverse)"),
+    ("kwin", "Overview", "Meta+W,Meta+W,Toggle Overview"),
+    ("kwin", "Grid View", "Meta+Ctrl+W,Meta+G,Toggle Grid View"),
+    ("kwin", "Switch to Desktop 1", "Meta+1,Ctrl+F1,Switch to Desktop 1"),
+    ("kwin", "Switch to Desktop 2", "Meta+2,Ctrl+F2,Switch to Desktop 2"),
+    ("kwin", "Switch to Desktop 3", "Meta+3,Ctrl+F3,Switch to Desktop 3"),
+    ("kwin", "Switch to Desktop 4", "Meta+4,Ctrl+F4,Switch to Desktop 4"),
+    ("kwin", "Switch to Desktop 5", "Meta+5,none,Switch to Desktop 5"),
+    ("kwin", "Switch to Desktop 6", "Meta+6,none,Switch to Desktop 6"),
+    ("kwin", "Switch to Desktop 7", "Meta+7,none,Switch to Desktop 7"),
+    ("kwin", "Switch to Desktop 8", "Meta+8,none,Switch to Desktop 8"),
+    ("kwin", "Switch to Desktop 9", "Meta+9,none,Switch to Desktop 9"),
+]
+
+# desktop id, key, visible name, command args after INIR
+INIR_ACTIONS = [
+    ("inir-kwin-overview.desktop", "Meta+Space", "iNiR Overview", ["overview", "toggle"]),
+    ("inir-kwin-overlay.desktop", "Meta+G", "iNiR Overlay", ["overlay", "toggle"]),
+    ("inir-kwin-clipboard.desktop", "Meta+V", "iNiR Clipboard", ["clipboard", "toggle"]),
+    ("inir-kwin-courier-rail.desktop", "Meta+Backslash", "iNiR Courier Rail", ["courierRail", "toggle"]),
+    ("inir-kwin-lock.desktop", "Meta+Alt+L", "iNiR Lock", ["lock", "activate"]),
+    ("inir-kwin-region-screenshot.desktop", "Meta+Shift+S", "iNiR Region Screenshot", ["region", "screenshot"]),
+    ("inir-kwin-region-ocr.desktop", "Meta+Shift+X", "iNiR Region OCR", ["region", "ocr"]),
+    ("inir-kwin-region-search.desktop", "Meta+Shift+A", "iNiR Region Search", ["region", "search"]),
+    ("inir-kwin-wallpaper-selector.desktop", "Ctrl+Alt+T", "iNiR Wallpaper Selector", ["wallpaperSelector", "toggle"]),
+    ("inir-kwin-settings.desktop", "Meta+Comma", "iNiR Settings", ["settings"]),
+    ("inir-kwin-cheatsheet.desktop", "Meta+Slash", "iNiR Cheatsheet", ["cheatsheet", "toggle"]),
+    ("inir-kwin-command-room.desktop", "Meta+F9", "iNiR Command Room", ["command-room-panel", "toggle"]),
+    ("inir-kwin-panel-family.desktop", "Meta+Shift+W", "iNiR Panel Family Cycle", ["panelFamily", "cycle"]),
+    ("inir-kwin-session-menu.desktop", "Meta+Shift+Q", "iNiR Session Menu", ["session", "toggle"]),
+    ("inir-kwin-clear-notifications.desktop", "Meta+Shift+D", "iNiR Clear Notifications", ["notifications", "clearAll"]),
+    ("inir-kwin-sidebar-left.desktop", "Meta+Backspace", "iNiR Left Sidebar", ["sidebarLeft", "toggle"]),
+    ("inir-kwin-sidebar-right.desktop", "Meta+Shift+Backspace", "iNiR Right Sidebar", ["sidebarRight", "toggle"]),
+    ("inir-kwin-dashboard.desktop", "Meta+Shift+Backslash", "iNiR Dashboard", ["dashboard", "toggle"]),
+    ("inir-kwin-terminal.desktop", "Meta+Return", "iNiR Terminal", ["terminal"]),
+    ("inir-kwin-browser.desktop", "Meta+B", "Open Browser", ["browser"]),
+    ("inir-kwin-audio-up.desktop", "Volume Up", "iNiR Volume Up", ["audio", "volumeUp"]),
+    ("inir-kwin-audio-down.desktop", "Volume Down", "iNiR Volume Down", ["audio", "volumeDown"]),
+    ("inir-kwin-audio-mute.desktop", "Volume Mute", "iNiR Volume Mute", ["audio", "mute"]),
+    ("inir-kwin-mic-mute.desktop", "Microphone Mute", "iNiR Mic Mute", ["audio", "micMute"]),
+    ("inir-kwin-media-playpause.desktop", "Media Play", "iNiR Play/Pause", ["mpris", "playPause"]),
+    ("inir-kwin-media-next.desktop", "Media Next", "iNiR Next Track", ["mpris", "next"]),
+    ("inir-kwin-media-prev.desktop", "Media Previous", "iNiR Previous Track", ["mpris", "previous"]),
+]
+
+# desktop id, key, visible name, shell command
+SHELL_ACTIONS = [
+    ("inir-kwin-dictate.desktop", "Meta+Shift+M", "Dictation Toggle", "/home/ayaz/.local/bin/dictate --mode plain toggle"),
+    ("inir-kwin-dictate-rp.desktop", "Meta+Ctrl+M", "Dictation RP Toggle", "/home/ayaz/.local/bin/dictate --mode rp_format toggle"),
+    ("inir-kwin-read-selection.desktop", "Meta+Alt+S", "Read Selection Aloud", "/home/ayaz/.local/bin/read-aloud-selection"),
+    ("inir-kwin-wezterm.desktop", "Meta+T", "WezTerm Cockpit", "/home/ayaz/.config/wezterm/wezterm-launch.sh"),
+    ("inir-kwin-dolphin.desktop", "Meta+E", "File Manager", "dolphin"),
+    ("inir-kwin-gaming-mode.desktop", "Meta+Shift+G", "Gaming Mode Toggle", "if [ -f \"$HOME/.cache/gaming-session/active\" ]; then exec gaming-mode exit; else exec kitty --class gaming-mode-tui --title 'Gaming Mode' -e gaming-mode enter; fi"),
+    ("inir-kwin-focus-mode.desktop", "Meta+Shift+F", "Focus Mode Toggle", "focus-mode toggle"),
+    ("inir-kwin-scratchpad.desktop", "Meta+Grave", "Scratchpad Terminal", "scratchpad-term"),
+    ("inir-kwin-newsboat.desktop", "Meta+N", "Newsboat", "scratchpad-term newsboat"),
+    ("inir-kwin-opencode.desktop", "Meta+O", "Apollo Launchpad", "fish -c 'oc --ephemeral'"),
+    ("inir-kwin-obsidian-daily.desktop", "Meta+I", "Obsidian Daily Note", "xdg-open 'obsidian://daily'"),
+    ("inir-kwin-ulauncher.desktop", "Ctrl+Space", "Ulauncher", "ulauncher-toggle"),
+]
+
+
+def nowstamp() -> str:
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def read_lines(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    return path.read_text(errors="replace").splitlines()
+
+
+def set_entry(lines: list[str], group: str, key: str, value: str) -> list[str]:
+    header = f"[{group}]"
+    out = list(lines)
+    start = None
+    for i, line in enumerate(out):
+        if line.strip() == header:
+            start = i
+            break
+    if start is None:
+        if out and out[-1] != "":
+            out.append("")
+        out.extend([header, f"{key}={value}"])
+        return out
+    end = len(out)
+    for j in range(start + 1, len(out)):
+        if out[j].startswith("[") and out[j].endswith("]"):
+            end = j
+            break
+    prefix = f"{key}="
+    for j in range(start + 1, end):
+        if out[j].startswith(prefix):
+            out[j] = f"{key}={value}"
+            return out
+    out.insert(end, f"{key}={value}")
+    return out
+
+
+def write_desktop(desktop_id: str, name: str, command: str) -> None:
+    APPDIR.mkdir(parents=True, exist_ok=True)
+    path = APPDIR / desktop_id
+    path.write_text(
+        "[Desktop Entry]\n"
+        "Type=Application\n"
+        f"Name={name}\n"
+        f"Exec={command}\n"
+        "NoDisplay=true\n"
+        "Categories=Utility;\n",
+    )
+
+
+def shell_quote_args(args: list[str]) -> str:
+    import shlex
+    return " ".join(shlex.quote(a) for a in args)
+
+
+def backup() -> Path | None:
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    if not CONFIG.exists():
+        return None
+    dest = BACKUP_DIR / f"kglobalshortcutsrc.{nowstamp()}"
+    shutil.copy2(CONFIG, dest)
+    return dest
+
+
+def build_new_config(lines: list[str]) -> list[str]:
+    for group, key, value in KWIN_ENTRIES:
+        lines = set_entry(lines, group, key, value)
+    for desktop_id, key, name, args in INIR_ACTIONS:
+        write_desktop(desktop_id, name, f"{INIR} {shell_quote_args(args)}")
+        lines = set_entry(lines, f"services/{desktop_id}", "_launch", f"{key},{key},{name}")
+    import shlex
+    for desktop_id, key, name, cmd in SHELL_ACTIONS:
+        write_desktop(desktop_id, name, f"bash -lc {shlex.quote(cmd)}")
+        lines = set_entry(lines, f"services/{desktop_id}", "_launch", f"{key},{key},{name}")
+    return lines
+
+
+def write_map() -> None:
+    STATE.mkdir(parents=True, exist_ok=True)
+    rows = ["# iNiR on KWin Hotkeys", "", "## iNiR shell actions", "", "| Shortcut | Action |", "|---|---|"]
+    for _, key, name, *_ in INIR_ACTIONS + SHELL_ACTIONS:
+        rows.append(f"| `{key}` | {name} |")
+    rows += ["", "## KWin compositor actions", "", "| Shortcut | Action |", "|---|---|"]
+    for _, key, val in KWIN_ENTRIES:
+        rows.append(f"| `{val.split(',', 1)[0]}` | {key} |")
+    MAP_FILE.write_text("\n".join(rows) + "\n")
+
+
+def install(args: argparse.Namespace) -> None:
+    before = read_lines(CONFIG)
+    b = backup()
+    after = build_new_config(before)
+    CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG.write_text("\n".join(after) + "\n")
+    write_map()
+    if not args.no_notify:
+        subprocess.run(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # If KGlobalAccel is running inside the current session, nudge it. If not,
+        # the next KWin login reads the file fresh.
+        subprocess.run(["qdbus6", "org.kde.KGlobalAccel", "/kglobalaccel", "org.kde.KGlobalAccel.reloadConfig"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("Installed iNiR-on-KWin hotkey profile.")
+    if b:
+        print(f"Backup: {b}")
+    print(f"Map: {MAP_FILE}")
+
+
+def diff_cmd(_: argparse.Namespace) -> None:
+    before = read_lines(CONFIG)
+    after = build_new_config(list(before))
+    print("\n".join(difflib.unified_diff(before, after, fromfile=str(CONFIG), tofile="after-inir-kwin-hotkeys", lineterm="")))
+
+
+def status(_: argparse.Namespace) -> None:
+    print(f"Config: {CONFIG} {'exists' if CONFIG.exists() else 'missing'}")
+    print(f"Map: {MAP_FILE} {'exists' if MAP_FILE.exists() else 'missing'}")
+    print(f"Backups: {BACKUP_DIR}")
+    for p in sorted(BACKUP_DIR.glob('kglobalshortcutsrc.*'))[-5:]:
+        print(f"  {p.name}")
+
+
+def restore(args: argparse.Namespace) -> None:
+    candidates = sorted(BACKUP_DIR.glob("kglobalshortcutsrc.*"))
+    if not candidates:
+        raise SystemExit("No backups found")
+    src = Path(args.backup) if args.backup else candidates[-1]
+    shutil.copy2(src, CONFIG)
+    subprocess.run(["kbuildsycoca6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["qdbus6", "org.kde.KGlobalAccel", "/kglobalaccel", "org.kde.KGlobalAccel.reloadConfig"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print(f"Restored {src} -> {CONFIG}")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("install")
+    p.add_argument("--no-notify", action="store_true")
+    p.set_defaults(func=install)
+    sub.add_parser("diff").set_defaults(func=diff_cmd)
+    sub.add_parser("status").set_defaults(func=status)
+    r = sub.add_parser("restore")
+    r.add_argument("backup", nargs="?")
+    r.set_defaults(func=restore)
+    args = ap.parse_args()
+    args.func(args)
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())

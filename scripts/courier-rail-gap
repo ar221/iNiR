@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# courier-rail-gap on|off
+#   on  -> niri gaps 0   (used when CourierRail is visible-by-default, single-window flush mode)
+#   off -> niri gaps 25  (multi-window mode, normal niri gaps return)
+#
+# Edits ~/.config/niri/config.d/20-layout-and-overview.kdl atomically + reloads niri.
+# Auto-restores from backup if niri validate fails.
+set -euo pipefail
+
+mode="${1:-}"
+case "$mode" in
+    on)  new_gaps=0 ;;
+    off) new_gaps=25 ;;
+    *)   echo "usage: courier-rail-gap on|off" >&2; exit 2 ;;
+esac
+
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.d/20-layout-and-overview.kdl"
+[ -f "$cfg" ] || { echo "config not found: $cfg" >&2; exit 1; }
+
+current_gaps="$(awk '/^[[:space:]]*gaps[[:space:]]+[0-9]+/{print $2; exit}' "$cfg")"
+if [ "$current_gaps" = "$new_gaps" ]; then
+    exit 0
+fi
+
+bak="$cfg.courier-rail.bak"
+cp "$cfg" "$bak"
+
+tmp="$(mktemp "$cfg.tmp.XXXXXX")"
+sed -E "s/^([[:space:]]*)gaps[[:space:]]+[0-9]+/\1gaps $new_gaps/" "$cfg" > "$tmp"
+
+if ! niri validate -c "$tmp" >/dev/null 2>&1; then
+    rm -f "$tmp"
+    echo "niri validate failed; aborting gap toggle" >&2
+    exit 1
+fi
+
+mv "$tmp" "$cfg"
+
+if ! niri msg action load-config-file >/dev/null 2>&1; then
+    cp "$bak" "$cfg"
+    niri msg action load-config-file >/dev/null 2>&1 || true
+    echo "niri reload failed; restored from $bak" >&2
+    exit 1
+fi
+
+exit 0

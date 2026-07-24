@@ -1,0 +1,283 @@
+#!/bin/bash
+# =============================================================================
+# KineticWE - A Kwin Window Environment
+# Session startup script
+# =============================================================================
+# This script launches the KineticWE Wayland session. It can be run directly
+# from a TTY after logging in, or invoked by a display manager / greeter.
+#
+# Environment:
+#   INSTALL_PREFIX  - Override the installation prefix (default: $HOME/.local)
+# =============================================================================
+
+set -e
+
+# Installation prefix for KineticWE binaries and libraries.
+# When installed via install-fedora.sh this is set automatically.
+# When run manually it defaults to $HOME/.local.
+_INSTALL_PREFIX_="/home/ayaz/.local"
+if [[ "$_INSTALL_PREFIX_" == "/home/ayaz/.local" ]]; then
+    INSTALL_PREFIX="${INSTALL_PREFIX:-$HOME/.local}"
+else
+    INSTALL_PREFIX="${INSTALL_PREFIX:-$_INSTALL_PREFIX_}"
+fi
+
+# ---------------------------------------------------------------------------
+# 1. Core paths for the custom KWin build
+# ---------------------------------------------------------------------------
+export PATH="$INSTALL_PREFIX/bin:$PATH"
+export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib:$INSTALL_PREFIX/lib64:$INSTALL_PREFIX/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+
+# KDE and KCM discovery. KineticWE installs KWin KCM metadata under
+# $INSTALL_PREFIX/share and KCM plugins under $INSTALL_PREFIX/lib*/plugins.
+# Without these, System Settings only sees the distro Plasma modules.
+export XDG_DATA_DIRS="$INSTALL_PREFIX/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export XDG_CONFIG_DIRS="$INSTALL_PREFIX/etc/xdg:${XDG_CONFIG_DIRS:-/etc/xdg}"
+
+# KWin needs this to find its own plugins (screencast.so, screenshot.so, etc.)
+export QT_PLUGIN_PATH="$INSTALL_PREFIX/lib/plugins:$INSTALL_PREFIX/lib64/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+
+# ---------------------------------------------------------------------------
+# 2. Session / Desktop identity
+# ---------------------------------------------------------------------------
+export XDG_CURRENT_DESKTOP=KDE
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=KDE
+# KDE's "Open With" app chooser (KOpenWithDialog / portal AppChooser) builds
+# its application tree from ${XDG_MENU_PREFIX}applications.menu. Only
+# plasma-applications.menu ships on this system; without this prefix KDE looks
+# for a bare applications.menu that doesn't exist, so the chooser list is empty
+# and users are forced to type a binary path.
+export XDG_MENU_PREFIX=plasma-
+# Tell xdg-open (used by Electron apps like Discord/Firebot) that this is a
+# Plasma 6 session, so it calls kde-open instead of the long-removed kfmclient.
+# Without this, URL and folder clicks in Electron apps silently do nothing.
+export KDE_SESSION_VERSION=6
+# Prefer native Wayland for KDE/Qt settings tools launched from this session.
+export QT_QPA_PLATFORM=wayland
+
+# ---------------------------------------------------------------------------
+# 3. Helper: locate xdg-desktop-portal executables
+# ---------------------------------------------------------------------------
+find_portal() {
+    local name="$1"
+    for path in \
+        "/usr/libexec/$name" \
+        "/usr/lib/$name" \
+        "$INSTALL_PREFIX/libexec/$name"
+    do
+        if [[ -x "$path" ]]; then
+            printf '%s\n' "$path"
+            return 0
+        fi
+    done
+    command -v "$name" 2>/dev/null || true
+}
+
+PORTAL_KDE="$(find_portal xdg-desktop-portal-kde)"
+PORTAL="$(find_portal xdg-desktop-portal)"
+
+# ---------------------------------------------------------------------------
+# 4. Build the KWin startup payload (runs as KWin's child)
+# ---------------------------------------------------------------------------
+STARTUP_PAYLOAD_DIR="${XDG_RUNTIME_DIR:-/tmp}/kineticwe-$USER"
+mkdir -p "$STARTUP_PAYLOAD_DIR"
+STARTUP_PAYLOAD="$STARTUP_PAYLOAD_DIR/startup.sh"
+
+# Write payload script
+cat > "$STARTUP_PAYLOAD" << EOF
+#!/bin/bash
+# KineticWE startup payload — run by KWin as a detached child process.
+
+export PATH="$INSTALL_PREFIX/bin:\$PATH"
+export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib:$INSTALL_PREFIX/lib64:$INSTALL_PREFIX/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
+export XDG_DATA_DIRS="$INSTALL_PREFIX/share:\${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export XDG_CONFIG_DIRS="$INSTALL_PREFIX/etc/xdg:\${XDG_CONFIG_DIRS:-/etc/xdg}"
+export QT_PLUGIN_PATH="$INSTALL_PREFIX/lib/plugins:$INSTALL_PREFIX/lib64/plugins\${QT_PLUGIN_PATH:+:\$QT_PLUGIN_PATH}"
+export XDG_CURRENT_DESKTOP=KDE
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=KDE
+# KDE's "Open With" app chooser (KOpenWithDialog / portal AppChooser) builds
+# its application tree from ${XDG_MENU_PREFIX}applications.menu. Only
+# plasma-applications.menu ships on this system; without this prefix KDE looks
+# for a bare applications.menu that doesn't exist, so the chooser list is empty
+# and users are forced to type a binary path.
+export XDG_MENU_PREFIX=plasma-
+export KDE_SESSION_VERSION=6
+export QT_QPA_PLATFORM=wayland
+
+# Make the session identity visible to D-Bus activated KDE services.
+# Deliberately identity-only: loader/toolkit vars (PATH, LD_LIBRARY_PATH,
+# QT_PLUGIN_PATH, QT_QPA_PLATFORM) must NOT be pushed into the systemd user
+# manager — they persist past this session and leak fork libraries into every
+# user service (pipewire, gpg-agent, portals) and later Plasma/TTY logins.
+# Qt services find the Wayland display via WAYLAND_DISPLAY on their own.
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd \
+        DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
+        XDG_SESSION_DESKTOP KDE_SESSION_VERSION XDG_MENU_PREFIX \
+        XDG_DATA_DIRS XDG_CONFIG_DIRS 2>/dev/null || true
+fi
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user import-environment \
+        DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
+        XDG_SESSION_DESKTOP KDE_SESSION_VERSION XDG_MENU_PREFIX \
+        XDG_DATA_DIRS XDG_CONFIG_DIRS 2>/dev/null || true
+fi
+
+# ---------------------------------------------------------------------------
+# 1. Rebuild KDE service cache so System Settings finds installed KCMs
+# ---------------------------------------------------------------------------
+if command -v kbuildsycoca6 >/dev/null 2>&1; then
+    kbuildsycoca6 --noincremental 2>/dev/null || true
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Start XDG Desktop Portals
+# ---------------------------------------------------------------------------
+# The KDE portal backend MUST start before the generic portal frontend so that
+# the frontend can discover the backend's capabilities (Screenshot, ScreenCast).
+
+killall -q xdg-desktop-portal-kde xdg-desktop-portal xdg-desktop-portal-gtk xdg-document-portal 2>/dev/null || true
+sleep 1
+
+mkdir -p "\$HOME/.local/share"
+
+if [[ -x "$PORTAL_KDE" ]]; then
+    nohup "$PORTAL_KDE" >"\$HOME/.local/share/xdg-desktop-portal-kde.log" 2>&1 &
+else
+    echo "Warning: xdg-desktop-portal-kde not found" >&2
+fi
+
+sleep 2
+
+if [[ -x "$PORTAL" ]]; then
+    nohup "$PORTAL" >"\$HOME/.local/share/xdg-desktop-portal.log" 2>&1 &
+else
+    echo "Warning: xdg-desktop-portal not found" >&2
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Start KDE session support services
+# ---------------------------------------------------------------------------
+# Keep this deliberately smaller than startplasma-wayland: KineticWE owns KWin
+# and embeds kglobalacceld, while these daemons provide settings backends that
+# System Settings and tray integrations expect in a KDE-flavoured session.
+mkdir -p "\$HOME/.local/share/kineticwe"
+
+# Start a systemd user unit and report whether it is actually running.
+# Checking list-unit-files is not enough: the unit file existing (Plasma
+# installed) does not mean the unit can start outside a Plasma session, and
+# a swallowed start failure used to block the direct-spawn fallbacks below.
+start_unit() {
+    command -v systemctl >/dev/null 2>&1 || return 1
+    systemctl --user start "\$1" 2>/dev/null || return 1
+    systemctl --user is-active --quiet "\$1"
+}
+
+# upowerd provides battery and power device monitoring via D-Bus. It is normally
+# D-Bus activated, but starting it explicitly keeps power settings alive in
+# minimal KineticWE sessions.
+if start_unit upower.service; then
+    :
+elif [[ -x /usr/libexec/upowerd ]]; then
+    nohup /usr/libexec/upowerd >"\$HOME/.local/share/kineticwe/upowerd.log" 2>&1 &
+fi
+
+if start_unit plasma-kded6.service; then
+    :
+elif command -v kded6 >/dev/null 2>&1; then
+    nohup kded6 >"\$HOME/.local/share/kineticwe/kded6.log" 2>&1 &
+else
+    echo "Warning: kded6 not found" >&2
+fi
+
+systemctl --user start plasma-kcminit.service 2>/dev/null || true
+
+systemctl --user start plasma-kscreen.service 2>/dev/null || true
+
+POWERDEVIL_BIN=""
+for candidate in /usr/lib/org_kde_powerdevil /usr/lib/libexec/org_kde_powerdevil /usr/lib64/libexec/org_kde_powerdevil /usr/libexec/org_kde_powerdevil; do
+    if [[ -x "\$candidate" ]]; then
+        POWERDEVIL_BIN="\$candidate"
+        break
+    fi
+done
+
+if start_unit plasma-powerdevil.service; then
+    :
+elif [[ -n "\$POWERDEVIL_BIN" ]]; then
+    nohup "\$POWERDEVIL_BIN" >"\$HOME/.local/share/kineticwe/powerdevil.log" 2>&1 &
+elif command -v org_kde_powerdevil >/dev/null 2>&1; then
+    nohup org_kde_powerdevil >"\$HOME/.local/share/kineticwe/powerdevil.log" 2>&1 &
+else
+    echo "Warning: PowerDevil not found; install powerdevil for KDE power settings" >&2
+fi
+
+if command -v nm-applet >/dev/null 2>&1; then
+    nohup nm-applet --indicator >"\$HOME/.local/share/kineticwe/nm-applet.log" 2>&1 &
+elif command -v plasmawindowed >/dev/null 2>&1 && kpackagetool6 --type Plasma/Applet --list 2>/dev/null | grep -q 'org.kde.plasma.networkmanagement'; then
+    nohup plasmawindowed org.kde.plasma.networkmanagement >"\$HOME/.local/share/kineticwe/plasma-nm.log" 2>&1 &
+else
+    echo "Warning: network tray applet not found; install network-manager-applet or plasma-nm" >&2
+fi
+
+if command -v blueman-applet >/dev/null 2>&1; then
+    nohup blueman-applet >"\$HOME/.local/share/kineticwe/blueman-applet.log" 2>&1 &
+fi
+
+if start_unit plasma-xembedsniproxy.service; then
+    :
+elif command -v xembedsniproxy >/dev/null 2>&1; then
+    nohup xembedsniproxy >"\$HOME/.local/share/kineticwe/xembedsniproxy.log" 2>&1 &
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Start user applications
+# ---------------------------------------------------------------------------
+noctalia &
+EOF
+
+chmod +x "$STARTUP_PAYLOAD"
+
+# ---------------------------------------------------------------------------
+# 5. Stop any competing global-shortcuts daemon
+# ---------------------------------------------------------------------------
+# kwin-we embeds kglobalacceld and registers the org.kde.kglobalaccel D-Bus
+# service at startup (KGlobalAccelD::init).  If a Plasma session was
+# previously active, the standalone plasma-kglobalaccel.service (which runs
+# /usr/libexec/kglobalacceld) may still own that D-Bus name.  When that
+# happens kwin-we's init() fails to register the service, m_kglobalAccel is
+# reset, and ALL keyboard shortcuts stop working with the error
+# "error communicating with global shortcuts service".
+#
+# Stop any competing daemon so kwin-we can claim the name cleanly.
+systemctl --user stop plasma-kglobalaccel.service 2>/dev/null || true
+pkill -x kglobalacceld 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+# 5b. Warn about global-shortcut collisions on Noctalia default keys
+# ---------------------------------------------------------------------------
+# kglobalacceld silently drops a default key that another stored action
+# already owns — the QAction registers but never fires, with no error
+# anywhere. Stale Plasma configs commonly hold Meta+V (klipper) and
+# Meta+Space (kded keyboard layout switcher). Detect and warn only; the
+# config belongs to the user and may still serve a Plasma session.
+KGS_RC="${XDG_CONFIG_HOME:-$HOME/.config}/kglobalshortcutsrc"
+if [[ -f "$KGS_RC" ]]; then
+    for combo in "Meta+V" "Meta+Space"; do
+        if grep -F "$combo" "$KGS_RC" 2>/dev/null | grep -qv "^Noctalia "; then
+            echo "Warning: $combo is bound to a non-Noctalia action in kglobalshortcutsrc;" \
+                 "the Noctalia default may be silently dropped." \
+                 "Reassign in System Settings > Shortcuts if it does not fire." >&2
+        fi
+    done
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Launch KWin
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# KWin will run the startup payload as a child process. The child inherits
+# the environment captured here (including QT_PLUGIN_PATH).
+exec kinetic-we --xwayland "$STARTUP_PAYLOAD"
