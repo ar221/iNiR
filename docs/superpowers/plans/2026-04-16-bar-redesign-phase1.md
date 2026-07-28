@@ -1,3 +1,9 @@
+---
+status: do-not-implement-as-is
+classification: stale-superseded-by-current-inir-courier-direction
+reason: Older Organic Flow bar redesign; superseded by later status-bar/Courier work unless explicitly reconciled.
+audit: /home/ayaz/Documents/Ayaz OS/03 Projects/System/04 Audits & Logs/™ Non-Vault Plan Surfaces Triage — 2026-07-11.md
+---
 # Bar Redesign Phase 1: Layout Overhaul + MiniRing Component
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

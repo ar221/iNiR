@@ -224,6 +224,52 @@ ContentPage {
         { displayName: Translation.tr("Normal"), value: "normal" },
         { displayName: Translation.tr("Tabbed"), value: "tabbed" }
     ]
+    readonly property var layoutPresetDeck: [
+        {
+            id: "balanced",
+            displayName: Translation.tr("Balanced"),
+            icon: "balance",
+            summary: Translation.tr("Daily desktop spacing with predictable, non-fussy tiling."),
+            receipt: Translation.tr("Gaps 25px · center on overflow · single columns centered · normal columns · no struts"),
+            values: { gaps: 25, centerFocused: "on-overflow", alwaysCenterSingleColumn: true, defaultColumnDisplay: "normal", struts: { left: 0, right: 0, top: 0, bottom: 0 } }
+        },
+        {
+            id: "focus",
+            displayName: Translation.tr("Focus"),
+            icon: "center_focus_strong",
+            summary: Translation.tr("Lower visual noise for writing, coding, and long reading sessions."),
+            receipt: Translation.tr("Gaps 12px · focused column always centered · single columns centered · normal columns · no struts"),
+            values: { gaps: 12, centerFocused: "always", alwaysCenterSingleColumn: true, defaultColumnDisplay: "normal", struts: { left: 0, right: 0, top: 0, bottom: 0 } }
+        },
+        {
+            id: "ultrawide",
+            displayName: Translation.tr("Ultrawide"),
+            icon: "panorama_wide_angle",
+            summary: Translation.tr("Center-comfort guard rails for very wide monitors."),
+            receipt: Translation.tr("Gaps 18px · center on overflow · single columns centered · normal columns · 96px left/right struts"),
+            values: { gaps: 18, centerFocused: "on-overflow", alwaysCenterSingleColumn: true, defaultColumnDisplay: "normal", struts: { left: 96, right: 96, top: 0, bottom: 0 } }
+        },
+        {
+            id: "recording",
+            displayName: Translation.tr("Recording"),
+            icon: "video_camera_front",
+            summary: Translation.tr("Stable capture framing with a little breathing room and no automatic monitor logic."),
+            receipt: Translation.tr("Gaps 16px · center on overflow · single columns centered · normal columns · 32px bottom strut"),
+            values: { gaps: 16, centerFocused: "on-overflow", alwaysCenterSingleColumn: true, defaultColumnDisplay: "normal", struts: { left: 0, right: 0, top: 0, bottom: 32 } }
+        },
+        {
+            id: "gaming",
+            displayName: Translation.tr("Gaming"),
+            icon: "sports_esports",
+            summary: Translation.tr("Minimal tiling interference for fullscreen/game sessions; GameMode integration comes later."),
+            receipt: Translation.tr("Gaps 6px · focused column never auto-centers · single-column centering off · normal columns · no struts"),
+            values: { gaps: 6, centerFocused: "never", alwaysCenterSingleColumn: false, defaultColumnDisplay: "normal", struts: { left: 0, right: 0, top: 0, bottom: 0 } }
+        }
+    ]
+    property string lastLayoutPresetId: "balanced"
+    readonly property string activeLayoutPresetId: detectActiveLayoutPreset()
+    readonly property string selectedLayoutPresetId: activeLayoutPresetId.length > 0 && activeLayoutPresetId !== "custom" ? activeLayoutPresetId : (lastLayoutPresetId.length > 0 ? lastLayoutPresetId : "balanced")
+    readonly property var selectedLayoutPreset: layoutPresetById(selectedLayoutPresetId)
     readonly property var warpMouseModeOptions: [
         { displayName: Translation.tr("Separate axes"), value: "separate" },
         { displayName: Translation.tr("Center window"), value: "center-xy" },
@@ -514,6 +560,62 @@ ContentPage {
 
     function setBooleanConfig(section, key, enabled) {
         setConfig(section, key, enabled ? "on" : "off")
+    }
+
+    function layoutPresetById(presetId) {
+        for (const preset of layoutPresetDeck) {
+            if (preset.id === presetId)
+                return preset
+        }
+        return layoutPresetDeck[0]
+    }
+
+    function currentLayoutMatchesPreset(preset) {
+        if (!preset || !layoutReady)
+            return false
+
+        const values = preset.values
+        const struts = values.struts ?? ({ left: 0, right: 0, top: 0, bottom: 0 })
+        const currentStruts = layoutData?.struts ?? ({ left: 0, right: 0, top: 0, bottom: 0 })
+
+        return Number(layoutData?.gaps ?? 25) === Number(values.gaps)
+            && String(layoutData?.center_focused ?? "never") === String(values.centerFocused)
+            && Boolean(layoutData?.always_center_single_column ?? false) === Boolean(values.alwaysCenterSingleColumn)
+            && String(layoutData?.default_column_display ?? "normal") === String(values.defaultColumnDisplay)
+            && Number(currentStruts.left ?? 0) === Number(struts.left ?? 0)
+            && Number(currentStruts.right ?? 0) === Number(struts.right ?? 0)
+            && Number(currentStruts.top ?? 0) === Number(struts.top ?? 0)
+            && Number(currentStruts.bottom ?? 0) === Number(struts.bottom ?? 0)
+    }
+
+    function detectActiveLayoutPreset() {
+        if (!layoutReady)
+            return ""
+        for (const preset of layoutPresetDeck) {
+            if (currentLayoutMatchesPreset(preset))
+                return preset.id
+        }
+        return "custom"
+    }
+
+    function applyLayoutPreset(presetId) {
+        const preset = layoutPresetById(presetId)
+        if (!preset || !layoutReady)
+            return
+
+        const values = preset.values
+        const struts = values.struts ?? ({ left: 0, right: 0, top: 0, bottom: 0 })
+
+        lastLayoutPresetId = preset.id
+        setConfig("layout", "gaps", values.gaps)
+        setConfig("layout", "center-focused-column", values.centerFocused)
+        setBooleanConfig("layout", "always-center-single-column", Boolean(values.alwaysCenterSingleColumn))
+        setConfig("layout", "default-column-display", values.defaultColumnDisplay ?? "normal")
+        setConfig("layout", "struts.left", struts.left ?? 0)
+        setConfig("layout", "struts.right", struts.right ?? 0)
+        setConfig("layout", "struts.top", struts.top ?? 0)
+        setConfig("layout", "struts.bottom", struts.bottom ?? 0)
+        resetBanner(Translation.tr("Queued layout preset: %1").arg(preset.displayName))
     }
 
     function setFocusFollowsMouse(enabled, percent) {
@@ -1627,6 +1729,99 @@ ContentPage {
         title: Translation.tr("Layout")
 
         SettingsGroup {
+            ContentSubsection {
+                title: Translation.tr("Layout preset deck")
+                tooltip: Translation.tr("Manual, safe Niri layout presets. No automatic per-monitor switching yet.")
+
+                ConfigSelectionArray {
+                    enabled: root.layoutReady
+                    currentValue: root.activeLayoutPresetId === "custom" ? root.selectedLayoutPresetId : root.activeLayoutPresetId
+                    options: root.layoutPresetDeck.map(preset => ({
+                        displayName: preset.displayName,
+                        icon: preset.icon,
+                        value: preset.id
+                    }))
+                    onSelected: newValue => root.applyLayoutPreset(newValue)
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                color: Appearance.colors.colLayer2
+                radius: Appearance.rounding.small
+                border.width: 1
+                border.color: root.activeLayoutPresetId === "custom" ? Appearance.colors.colOutlineVariant : Appearance.colors.colPrimary
+                implicitHeight: layoutPresetReceipt.implicitHeight + 20
+
+                ColumnLayout {
+                    id: layoutPresetReceipt
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            text: root.activeLayoutPresetId === "custom" ? "tune" : (root.selectedLayoutPreset?.icon ?? "grid_view")
+                            iconSize: Appearance.font.pixelSize.large
+                            color: root.activeLayoutPresetId === "custom" ? Appearance.colors.colSubtext : Appearance.colors.colPrimary
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.activeLayoutPresetId === "custom"
+                                ? Translation.tr("Custom layout")
+                                : Translation.tr("%1 preset").arg(root.selectedLayoutPreset?.displayName ?? "")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.activeLayoutPresetId === "custom"
+                            ? Translation.tr("Current Niri layout no longer exactly matches a preset. Pick a chip above to apply a known operator mode.")
+                            : (root.selectedLayoutPreset?.summary ?? "")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colSubtext
+                        wrapMode: Text.WordWrap
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.activeLayoutPresetId === "custom"
+                            ? Translation.tr("Current: gaps %1px · focus %2 · single-column %3 · columns %4 · struts L%5 R%6 T%7 B%8")
+                                .arg(root.layoutData?.gaps ?? 25)
+                                .arg(root.layoutData?.center_focused ?? "never")
+                                .arg((root.layoutData?.always_center_single_column ?? false) ? Translation.tr("on") : Translation.tr("off"))
+                                .arg(root.layoutData?.default_column_display ?? "normal")
+                                .arg(root.layoutData?.struts?.left ?? 0)
+                                .arg(root.layoutData?.struts?.right ?? 0)
+                                .arg(root.layoutData?.struts?.top ?? 0)
+                                .arg(root.layoutData?.struts?.bottom ?? 0)
+                            : (root.selectedLayoutPreset?.receipt ?? "")
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.family: Appearance.font.family.monospace
+                        color: Appearance.colors.colOnLayer1
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: Translation.tr("Preset deck writes the same existing Niri layout fields below: gaps, focus centering, single-column centering, default column display, and struts. It does not install KineticWE/KWin, switch per monitor, or touch GameMode yet.")
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.colors.colSubtext
+                wrapMode: Text.WordWrap
+            }
+
+            SettingsDivider {}
+
             ContentSubsection {
                 title: Translation.tr("Window gaps")
                 tooltip: Translation.tr("Space between windows and screen edges in pixels")
