@@ -1,3 +1,26 @@
+> ## ⚠ Retired — 2026-07-28
+>
+> **This shell is no longer in use.** noctalia v5 replaced it on every host:
+> `inir.service` has been masked since 2026-07-06, quickshell does not run, and
+> the deployed tree at `~/.config/quickshell/inir/` has been removed.
+>
+> The repository is kept for history and is not being developed. Code landed
+> here has nowhere to run until the shell is deliberately revived.
+>
+> **If you are reviving it, read this first:** `main` carries merge `11ab96da`,
+> which landed 6 of the 9 commits from `merge/upstream-v2.26.0`. Three were
+> deliberately held back and still exist only on that branch:
+>
+> - `9f0b611c` + `695a747a` — `MemoryPressureService`. It runs
+>   `systemctl --user restart inir.service` unattended on a 120s poll, ships
+>   enabled with no config key to disable it, and re-arms after `cancel()`. It
+>   is inert today only because its sensor reads the wrong process and the unit
+>   is masked. **Do not land as-is** — it needs a rewrite against #164.
+> - `42541e5c` — per-monitor layout intent. Held on design review: it separates
+>   the layout preset deck's receipt panel from the control it reports on, and
+>   renders unapplied intent with the same emphasis that elsewhere means live
+>   state.
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/da6beb4a-ccee-40ba-a372-5eea77b595f8" alt="iNiR" width="800">
 </p>
